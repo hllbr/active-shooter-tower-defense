@@ -4,10 +4,20 @@ import { GAME_CONSTANTS } from '../utils/Constants';
 let spawnInterval: number | null = null;
 
 function getRandomSpawnPosition() {
-  // Spawn enemies randomly along the bottom edge
-  const x = Math.random() * (window.innerWidth - GAME_CONSTANTS.ENEMY_SIZE) + GAME_CONSTANTS.ENEMY_SIZE / 2;
-  const y = window.innerHeight - GAME_CONSTANTS.ENEMY_SIZE / 2;
-  return { x, y };
+  // Spawn enemies from random screen edges
+  const edge = Math.floor(Math.random() * 4);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  switch (edge) {
+    case 0: // top
+      return { x: Math.random() * w, y: -GAME_CONSTANTS.ENEMY_SIZE / 2 };
+    case 1: // right
+      return { x: w + GAME_CONSTANTS.ENEMY_SIZE / 2, y: Math.random() * h };
+    case 2: // bottom
+      return { x: Math.random() * w, y: h + GAME_CONSTANTS.ENEMY_SIZE / 2 };
+    default: // left
+      return { x: -GAME_CONSTANTS.ENEMY_SIZE / 2, y: Math.random() * h };
+  }
 }
 
 function getNearestSlot(pos) {
@@ -36,6 +46,7 @@ function createEnemy(wave: number) {
     size: GAME_CONSTANTS.ENEMY_SIZE,
     isActive: true,
     health,
+    maxHealth: health,
     speed: GAME_CONSTANTS.ENEMY_SPEED + (wave - 1) * 5,
     goldValue: GAME_CONSTANTS.ENEMY_GOLD_DROP,
     color,

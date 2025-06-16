@@ -70,11 +70,10 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
         />
       ) : (
         <g>
-          <rect
-            x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2}
-            y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
-            width={GAME_CONSTANTS.TOWER_SIZE}
-            height={GAME_CONSTANTS.TOWER_SIZE}
+          <circle
+            cx={slot.x}
+            cy={slot.y}
+            r={GAME_CONSTANTS.TOWER_SIZE / 2}
             fill={GAME_CONSTANTS.TOWER_COLORS[slot.tower.level - 1]}
             stroke="#003366"
             strokeWidth={4}

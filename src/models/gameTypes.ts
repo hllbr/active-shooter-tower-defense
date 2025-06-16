@@ -26,6 +26,7 @@ export interface Enemy {
   size: number;
   isActive: boolean;
   health: number;
+  maxHealth: number;
   speed: number;
   goldValue: number;
   color: string;
