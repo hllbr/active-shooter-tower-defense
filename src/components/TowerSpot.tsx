@@ -15,7 +15,10 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   const unlockSlot = useGameStore((s) => s.unlockSlot);
 
   const canBuild = slot.unlocked && !slot.tower && gold >= GAME_CONSTANTS.TOWER_COST;
-  const canUpgrade = slot.tower && slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL && gold >= GAME_CONSTANTS.TOWER_UPGRADE_COST;
+  const canUpgrade =
+    slot.tower &&
+    slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL &&
+    gold >= GAME_CONSTANTS.TOWER_UPGRADE_COST;
   const canUnlock = !slot.unlocked && gold >= (GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] || 0);
 
   // Health bar for tower
@@ -48,8 +51,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           cx={slot.x}
           cy={slot.y}
           r={GAME_CONSTANTS.TOWER_SIZE / 2}
-          fill="#888"
-          stroke="#333"
+          fill={canUnlock ? '#ff6666' : '#661515'}
+          stroke="#330000"
           strokeWidth={4}
           style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
           onClick={() => canUnlock && unlockSlot(slotIdx)}
@@ -59,8 +62,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           cx={slot.x}
           cy={slot.y}
           r={GAME_CONSTANTS.TOWER_SIZE / 2}
-          fill={canBuild ? '#00cfff' : '#bbb'}
-          stroke="#0077ff"
+          fill={canBuild ? '#4ade80' : '#444'}
+          stroke="#166534"
           strokeWidth={4}
           style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
           onClick={() => canBuild && buildTower(slotIdx)}
@@ -81,6 +84,14 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           {/* Health bar */}
           {healthBar}
           {healthFill}
+          {canUpgrade && (
+            <polygon
+              points={`${slot.x},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 24} ${slot.x - GAME_CONSTANTS.UPGRADE_ARROW_SIZE / 2},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 10} ${slot.x + GAME_CONSTANTS.UPGRADE_ARROW_SIZE / 2},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 10}`}
+              fill={GAME_CONSTANTS.UPGRADE_ARROW_COLOR}
+              style={{ cursor: 'pointer' }}
+              onClick={() => upgradeTower(slotIdx)}
+            />
+          )}
         </g>
       )}
     </g>

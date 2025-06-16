@@ -58,7 +58,8 @@ export function startEnemyWave() {
 }
 
 export function updateEnemyMovement() {
-  const { enemies, towerSlots, damageTower, removeEnemy } = useGameStore.getState();
+  const { enemies, towerSlots, damageTower, removeEnemy, addGold } =
+    useGameStore.getState();
   enemies.forEach((enemy) => {
     const targetSlot = getNearestSlot(enemy.position);
     if (!targetSlot) return;
@@ -68,9 +69,12 @@ export function updateEnemyMovement() {
     if (dist < (enemy.size + GAME_CONSTANTS.TOWER_SIZE) / 2) {
       // Damage tower if present
       if (targetSlot.tower) {
-        const slotIdx = towerSlots.findIndex(s => s.x === targetSlot.x && s.y === targetSlot.y);
+        const slotIdx = towerSlots.findIndex(
+          (s) => s.x === targetSlot.x && s.y === targetSlot.y,
+        );
         damageTower(slotIdx, 10);
       }
+      addGold(enemy.goldValue);
       removeEnemy(enemy.id);
       return;
     }
