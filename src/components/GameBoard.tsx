@@ -105,25 +105,42 @@ export const GameBoard: React.FC = () => {
         ))}
         {/* Enemies */}
         {enemies.map((enemy) => (
-          <circle
-            key={enemy.id}
-            cx={enemy.position.x}
-            cy={enemy.position.y}
-            r={enemy.size / 2}
-            fill={enemy.color}
-            stroke="#b30000"
-            strokeWidth={4}
-          />
+          <g key={enemy.id}>
+            <rect
+              x={enemy.position.x - enemy.size / 2}
+              y={enemy.position.y - enemy.size / 2 - 10}
+              width={enemy.size}
+              height={GAME_CONSTANTS.ENEMY_HEALTHBAR_HEIGHT}
+              fill={GAME_CONSTANTS.HEALTHBAR_BG}
+              rx={3}
+            />
+            <rect
+              x={enemy.position.x - enemy.size / 2}
+              y={enemy.position.y - enemy.size / 2 - 10}
+              width={enemy.size * (enemy.health / enemy.maxHealth)}
+              height={GAME_CONSTANTS.ENEMY_HEALTHBAR_HEIGHT}
+              fill={enemy.health > enemy.maxHealth * 0.3 ? GAME_CONSTANTS.HEALTHBAR_GOOD : GAME_CONSTANTS.HEALTHBAR_BAD}
+              rx={3}
+            />
+            <circle
+              cx={enemy.position.x}
+              cy={enemy.position.y}
+              r={enemy.size / 2}
+              fill={enemy.color}
+              stroke="#b30000"
+              strokeWidth={4}
+            />
+          </g>
         ))}
         {/* Bullets */}
         {bullets.map((bullet) => (
-          <circle
+          <line
             key={bullet.id}
-            cx={bullet.position.x}
-            cy={bullet.position.y}
-            r={bullet.size / 2}
-            fill={bullet.color}
-            stroke="#b3b300"
+            x1={bullet.position.x - bullet.direction.x * bullet.size}
+            y1={bullet.position.y - bullet.direction.y * bullet.size}
+            x2={bullet.position.x + bullet.direction.x * bullet.size}
+            y2={bullet.position.y + bullet.direction.y * bullet.size}
+            stroke={bullet.color}
             strokeWidth={2}
           />
         ))}
