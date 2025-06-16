@@ -42,13 +42,23 @@ export interface Bullet {
   color: string;
 }
 
+export interface Effect {
+  id: string;
+  position: Position;
+  radius: number;
+  color: string;
+  life: number;
+  maxLife: number;
+}
+
 export interface GameState {
   towers: Tower[];
   towerSlots: TowerSlot[];
   enemies: Enemy[];
   bullets: Bullet[];
+  effects: Effect[];
   gold: number;
   currentWave: number;
   isGameOver: boolean;
   isStarted: boolean;
-} 
+}

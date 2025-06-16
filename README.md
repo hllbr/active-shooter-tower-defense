@@ -10,6 +10,8 @@ A hybrid shooter and tower defense game built with React, TypeScript, and Canvas
 - Weapon upgrade system
 - Gold economy
 - Tower placement and upgrades
+- Towers can be destroyed and rebuilt
+- Bullet hits trigger a fire effect
 
 ## Technologies Used
 

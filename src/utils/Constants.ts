@@ -1,6 +1,6 @@
 export const GAME_CONSTANTS = {
   // Canvas
-  CANVAS_BG: '#1e1e2f',
+  CANVAS_BG: '#c7b98a',
   CANVAS_WIDTH: 1920,
   CANVAS_HEIGHT: 1080,
 

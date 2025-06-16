@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState, Tower, TowerSlot, Enemy, Bullet, Position } from './gameTypes';
+import type { GameState, Tower, TowerSlot, Enemy, Bullet, Position, Effect } from './gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
 
 const initialSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.map((slot, i) => ({
@@ -13,6 +13,7 @@ const initialState: GameState = {
   towerSlots: initialSlots,
   enemies: [],
   bullets: [],
+  effects: [],
   gold: 200,
   currentWave: 1,
   isGameOver: false,
@@ -32,6 +33,8 @@ type Store = GameState & {
   damageEnemy: (enemyId: string, dmg: number) => void;
   addBullet: (bullet: Bullet) => void;
   removeBullet: (bulletId: string) => void;
+  addEffect: (effect: Effect) => void;
+  removeEffect: (effectId: string) => void;
   nextWave: () => void;
   resetGame: () => void;
   setStarted: (started: boolean) => void;
@@ -152,6 +155,8 @@ export const useGameStore = create<Store>((set, get) => ({
 
   addBullet: (bullet) => set((state) => ({ bullets: [...state.bullets, bullet] })),
   removeBullet: (bulletId) => set((state) => ({ bullets: state.bullets.filter(b => b.id !== bulletId) })),
+  addEffect: (effect) => set((state) => ({ effects: [...state.effects, effect] })),
+  removeEffect: (effectId) => set((state) => ({ effects: state.effects.filter(e => e.id !== effectId) })),
 
   nextWave: () => set((state) => ({ currentWave: state.currentWave + 1 })),
   resetGame: () => set(() => ({ ...initialState, towerSlots: initialSlots })),
