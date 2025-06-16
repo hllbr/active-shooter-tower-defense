@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { TowerSpot } from './TowerSpot';
+import { startEnemyWave } from '../logic/EnemySpawner';
+import { startGameLoop } from '../logic/GameLoop';
 
 export const GameBoard: React.FC = () => {
   const {
@@ -29,11 +31,27 @@ export const GameBoard: React.FC = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [resetGame, setStarted]);
 
+  const loopStopper = useRef<(() => void) | null>(null);
+
+  // Start game loops when game begins
+  useEffect(() => {
+    if (!isStarted) return;
+    startEnemyWave();
+    loopStopper.current = startGameLoop();
+    return () => {
+      loopStopper.current?.();
+      loopStopper.current = null;
+    };
+  }, [isStarted]);
+
   // Auto next wave
   useEffect(() => {
     if (!isStarted) return;
     if (enemies.length === 0) {
-      const timeout = setTimeout(() => nextWave(), 1200);
+      const timeout = setTimeout(() => {
+        nextWave();
+        startEnemyWave();
+      }, 1200);
       return () => clearTimeout(timeout);
     }
   }, [enemies, isStarted, nextWave]);
