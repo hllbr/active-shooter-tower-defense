@@ -10,6 +10,7 @@ export const GameBoard: React.FC = () => {
     towerSlots,
     enemies,
     bullets,
+    effects,
     gold,
     currentWave,
     isStarted,
@@ -124,6 +125,18 @@ export const GameBoard: React.FC = () => {
             fill={bullet.color}
             stroke="#b3b300"
             strokeWidth={2}
+          />
+        ))}
+        {/* Effects */}
+        {effects.map((effect) => (
+          <circle
+            key={effect.id}
+            cx={effect.position.x}
+            cy={effect.position.y}
+            r={(effect.radius * effect.life) / effect.maxLife}
+            fill={effect.color}
+            fillOpacity={effect.life / effect.maxLife}
+            stroke="none"
           />
         ))}
       </svg>

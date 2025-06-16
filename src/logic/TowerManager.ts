@@ -1,5 +1,6 @@
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
+import type { Effect } from '../models/gameTypes';
 import type { Enemy, Position } from '../models/gameTypes';
 
 function getDirection(from: Position, to: Position) {
@@ -67,6 +68,7 @@ export function updateBullets() {
     removeBullet,
     enemies,
     damageEnemy,
+    addEffect,
   } = useGameStore.getState();
   bullets.forEach((b) => {
     b.position.x += b.direction.x * b.speed * 0.016;
@@ -88,6 +90,15 @@ export function updateBullets() {
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < (e.size + b.size) / 2) {
         damageEnemy(e.id, b.damage);
+        const effect: Effect = {
+          id: `${Date.now()}-${Math.random()}`,
+          position: { x: b.position.x, y: b.position.y },
+          radius: 20,
+          color: '#ff6600',
+          life: 300,
+          maxLife: 300,
+        };
+        addEffect(effect);
         removeBullet(b.id);
         break;
       }
