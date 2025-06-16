@@ -1,6 +1,6 @@
 export const GAME_CONSTANTS = {
   // Canvas
-  CANVAS_BG: '#f0f0f0',
+  CANVAS_BG: '#1e1e2f',
   CANVAS_WIDTH: 1920,
   CANVAS_HEIGHT: 1080,
 
@@ -16,8 +16,10 @@ export const GAME_CONSTANTS = {
   TOWER_COST: 100,
   TOWER_UPGRADE_COST: 120,
   TOWER_MAX_LEVEL: 3,
-  TOWER_COLORS: ['#0077ff', '#00cfff', '#00ff99'],
+  TOWER_COLORS: ['#3b82f6', '#9333ea', '#f97316'],
   TOWER_HEALTHBAR_HEIGHT: 8,
+  UPGRADE_ARROW_SIZE: 14,
+  UPGRADE_ARROW_COLOR: '#4ade80',
 
   // Tower Upgrades
   TOWER_UPGRADES: [
@@ -49,7 +51,7 @@ export const GAME_CONSTANTS = {
   // Bullet
   BULLET_SIZE: 10,
   BULLET_SPEED: 420,
-  BULLET_COLOR: '#ffe600',
+  BULLET_COLOR: '#f43f5e',
 
   // UI
   GOLD_COLOR: '#FFD700',
