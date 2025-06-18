@@ -1,7 +1,7 @@
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { Enemy } from '../models/gameTypes';
-import type { Position } from '../models/gameTypes';
+import type { Position, TowerSlot } from '../models/gameTypes';
 
 let spawnInterval: number | null = null;
 let spawnTimeout: number | null = null;
@@ -14,31 +14,31 @@ function getRandomSpawnPosition(): Position {
   };
 }
 
-function findNearestTower(enemyPos: Position): Position | null {
-  const store = useGameStore.getState();
-  let nearestTower = null;
-  let minDistance = Infinity;
+function getNearestTowerSlot(pos: Position): TowerSlot | null {
+  const state = useGameStore.getState();
+  let nearest: TowerSlot | null = null;
+  let minDist = Infinity;
 
-  store.towerSlots.forEach((slot, index) => {
-    if (index >= store.unlockedSlots) return; // Skip locked slots
-    
-    const dx = slot.x - enemyPos.x;
-    const dy = slot.y - enemyPos.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+  state.towerSlots.forEach((slot) => {
+    if (!slot.unlocked || !slot.tower) return; // Only consider active towers
 
-    if (distance < minDistance) {
-      minDistance = distance;
-      nearestTower = slot;
+    const dx = slot.x - pos.x;
+    const dy = slot.y - pos.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < minDist) {
+      minDist = dist;
+      nearest = slot;
     }
   });
 
-  return nearestTower;
+  return nearest;
 }
 
 function moveTowardsTarget(enemy: Enemy) {
   if (!enemy.isActive) return;
 
-  const target = findNearestTower(enemy.position);
+  const target = getNearestTowerSlot(enemy.position);
   if (!target) return;
 
   // Calculate direction to target
@@ -54,9 +54,10 @@ function moveTowardsTarget(enemy: Enemy) {
     return;
   }
 
-  // Normalize direction and apply speed
-  enemy.position.x += (dx / distance) * enemy.speed;
-  enemy.position.y += (dy / distance) * enemy.speed;
+  // Normalize direction and apply speed (scaled for smoother movement)
+  const step = enemy.speed * 0.016; // approx 60 FPS
+  enemy.position.x += (dx / distance) * step;
+  enemy.position.y += (dy / distance) * step;
 }
 
 function createEnemy(wave: number): Enemy {
@@ -151,7 +152,7 @@ export function updateEnemyMovement() {
     if (enemy.frozenUntil && enemy.frozenUntil > performance.now()) {
       return;
     }
-    const targetSlot = getNearestSlot(enemy.position);
+    const targetSlot = getNearestTowerSlot(enemy.position);
     if (!targetSlot) return;
     const dx = targetSlot.x - enemy.position.x;
     const dy = targetSlot.y - enemy.position.y;
@@ -173,8 +174,9 @@ export function updateEnemyMovement() {
       return;
     }
     // Move toward slot
-    const moveX = (dx / dist) * enemy.speed * 0.016;
-    const moveY = (dy / dist) * enemy.speed * 0.016;
+    const step = enemy.speed * 0.016;
+    const moveX = (dx / dist) * step;
+    const moveY = (dy / dist) * step;
     enemy.position.x += moveX;
     enemy.position.y += moveY;
   });
