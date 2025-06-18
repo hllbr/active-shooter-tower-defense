@@ -6,6 +6,7 @@ const initialSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.map((slot, i) => ({
   ...slot,
   unlocked: i === 0, // Only first slot unlocked at start
   tower: undefined,
+  wasDestroyed: false,
 }));
 
 const initialState: GameState = {
@@ -59,7 +60,7 @@ export const useGameStore = create<Store>((set, get) => ({
       health: GAME_CONSTANTS.TOWER_HEALTH,
     };
     const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = { ...slot, tower: newTower };
+    newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
     return {
       towers: [...state.towers, newTower],
       towerSlots: newSlots,
@@ -93,7 +94,7 @@ export const useGameStore = create<Store>((set, get) => ({
     const newHealth = slot.tower.health - dmg;
     if (newHealth <= 0) {
       const newSlots = [...state.towerSlots];
-      newSlots[slotIdx] = { ...slot, tower: undefined };
+      newSlots[slotIdx] = { ...slot, tower: undefined, wasDestroyed: true };
       return {
         towers: state.towers.filter(t => t.id !== slot.tower!.id),
         towerSlots: newSlots,
@@ -113,7 +114,7 @@ export const useGameStore = create<Store>((set, get) => ({
     const slot = state.towerSlots[slotIdx];
     if (!slot.tower) return {};
     const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = { ...slot, tower: undefined };
+    newSlots[slotIdx] = { ...slot, tower: undefined, wasDestroyed: false };
     return {
       towers: state.towers.filter(t => t.id !== slot.tower!.id),
       towerSlots: newSlots,
@@ -125,7 +126,7 @@ export const useGameStore = create<Store>((set, get) => ({
     const unlockCost = GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] || 0;
     if (state.gold < unlockCost) return {};
     const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = { ...state.towerSlots[slotIdx], unlocked: true };
+    newSlots[slotIdx] = { ...state.towerSlots[slotIdx], unlocked: true, wasDestroyed: false };
     return {
       towerSlots: newSlots,
       gold: state.gold - unlockCost,

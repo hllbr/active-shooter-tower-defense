@@ -58,16 +58,38 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           onClick={() => canUnlock && unlockSlot(slotIdx)}
         />
       ) : !slot.tower ? (
-        <circle
-          cx={slot.x}
-          cy={slot.y}
-          r={GAME_CONSTANTS.TOWER_SIZE / 2}
-          fill={canBuild ? '#4ade80' : '#444'}
-          stroke="#166534"
-          strokeWidth={4}
-          style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
-          onClick={() => canBuild && buildTower(slotIdx)}
-        />
+        <g>
+          <circle
+            cx={slot.x}
+            cy={slot.y}
+            r={GAME_CONSTANTS.TOWER_SIZE / 2}
+            fill={canBuild ? '#4ade80' : '#444'}
+            stroke="#166534"
+            strokeWidth={4}
+            style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
+            onClick={() => canBuild && buildTower(slotIdx)}
+          />
+          <text
+            x={slot.x}
+            y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 30}
+            fill="#ffffff"
+            fontSize={14}
+            fontWeight="bold"
+            textAnchor="middle"
+            pointerEvents="none"
+          >
+            {slot.wasDestroyed ? 'Kuleniz yıkıldı' : 'Kule inşa et'}
+          </text>
+          <polygon
+            points={`${slot.x},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 24} ${
+              slot.x - 6
+            },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 14} ${
+              slot.x + 6
+            },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 14}`}
+            fill="#ffffff"
+            pointerEvents="none"
+          />
+        </g>
       ) : (
         <g>
           <circle
