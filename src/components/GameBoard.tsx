@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { TowerSpot } from './TowerSpot';
-import { startEnemyWave } from '../logic/EnemySpawner';
+import { startEnemyWave, stopEnemyWave } from '../logic/EnemySpawner';
 import { startGameLoop } from '../logic/GameLoop';
 
 export const GameBoard: React.FC = () => {
@@ -24,6 +24,7 @@ export const GameBoard: React.FC = () => {
   } = useGameStore();
 
   const [isRefreshing, setRefreshing] = React.useState(false);
+  const [upgradeBought, setUpgradeBought] = React.useState(false);
 
   useEffect(() => {
     if (!isRefreshing) return;
@@ -51,16 +52,25 @@ export const GameBoard: React.FC = () => {
 
   const loopStopper = useRef<(() => void) | null>(null);
 
-  // Start game loops when game begins
+  // Handle game loop start/stop based on game state and refresh screen
   useEffect(() => {
-    if (!isStarted) return;
-    startEnemyWave();
-    loopStopper.current = startGameLoop();
+    if (!isStarted || isRefreshing) {
+      stopEnemyWave();
+      loopStopper.current?.();
+      loopStopper.current = null;
+      if (isRefreshing) setUpgradeBought(false);
+      return;
+    }
+    if (!loopStopper.current) {
+      startEnemyWave();
+      loopStopper.current = startGameLoop();
+    }
     return () => {
+      stopEnemyWave();
       loopStopper.current?.();
       loopStopper.current = null;
     };
-  }, [isStarted]);
+  }, [isStarted, isRefreshing]);
 
   // Auto next wave and refresh handling
   useEffect(() => {
@@ -111,8 +121,15 @@ export const GameBoard: React.FC = () => {
             Savaş alanı yenileniyor...
           </span>
           <button
-            onClick={() => upgradeBullet()}
-            disabled={bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length || gold < GAME_CONSTANTS.BULLET_UPGRADE_COST}
+            onClick={() => {
+              upgradeBullet();
+              setUpgradeBought(true);
+            }}
+            disabled={
+              upgradeBought ||
+              bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length ||
+              gold < GAME_CONSTANTS.BULLET_UPGRADE_COST
+            }
             style={{ marginBottom: 16, padding: '12px 24px', fontSize: 24, borderRadius: 12, background: '#0077ff', color: '#fff', border: 'none', cursor: 'pointer' }}
           >
             {`Yeni Ateş: ${GAME_CONSTANTS.BULLET_TYPES[bulletLevel]?.name || ''}`} ({GAME_CONSTANTS.BULLET_UPGRADE_COST})

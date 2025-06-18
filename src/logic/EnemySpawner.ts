@@ -3,6 +3,13 @@ import { GAME_CONSTANTS } from '../utils/Constants';
 
 let spawnInterval: number | null = null;
 
+export function stopEnemyWave() {
+  if (spawnInterval) {
+    clearInterval(spawnInterval);
+    spawnInterval = null;
+  }
+}
+
 function getRandomSpawnPosition() {
   // Spawn enemies from random screen edges
   const edge = Math.floor(Math.random() * 4);
