@@ -88,27 +88,45 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  damageTower: (slotIdx, dmg) => set((state) => {
-    const slot = state.towerSlots[slotIdx];
-    if (!slot.tower) return {};
+  damageTower: (slotIdx, dmg) => {
+    const { towerSlots, isStarted, addEffect } = get();
+    const slot = towerSlots[slotIdx];
+    if (!slot.tower) return;
     const newHealth = slot.tower.health - dmg;
     if (newHealth <= 0) {
-      const newSlots = [...state.towerSlots];
-      newSlots[slotIdx] = { ...slot, tower: undefined, wasDestroyed: true };
-      return {
-        towers: state.towers.filter(t => t.id !== slot.tower!.id),
-        towerSlots: newSlots,
+      const effect: Effect = {
+        id: `${Date.now()}-${Math.random()}`,
+        position: { x: slot.x, y: slot.y },
+        radius: 60,
+        color: '#ff3333',
+        life: 600,
+        maxLife: 600,
       };
+      set((state) => {
+        const newSlots = [...state.towerSlots];
+        newSlots[slotIdx] = { ...slot, tower: undefined, wasDestroyed: true };
+        return {
+          towers: state.towers.filter(t => t.id !== slot.tower!.id),
+          towerSlots: newSlots,
+        };
+      });
+      addEffect(effect);
+      const remaining = get().towerSlots.some(s => s.tower);
+      if (isStarted && !remaining) {
+        set(() => ({ isGameOver: true }));
+      }
     } else {
-      const updatedTower = { ...slot.tower, health: newHealth };
-      const newSlots = [...state.towerSlots];
-      newSlots[slotIdx] = { ...slot, tower: updatedTower };
-      return {
-        towers: state.towers.map(t => t.id === updatedTower.id ? updatedTower : t),
-        towerSlots: newSlots,
-      };
+      set((state) => {
+        const updatedTower = { ...slot.tower!, health: newHealth };
+        const newSlots = [...state.towerSlots];
+        newSlots[slotIdx] = { ...slot, tower: updatedTower };
+        return {
+          towers: state.towers.map(t => t.id === updatedTower.id ? updatedTower : t),
+          towerSlots: newSlots,
+        };
+      });
     }
-  }),
+  },
 
   removeTower: (slotIdx) => set((state) => {
     const slot = state.towerSlots[slotIdx];

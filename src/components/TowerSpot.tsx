@@ -91,7 +91,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
             textAnchor="middle"
             pointerEvents="none"
           >
-            {slot.wasDestroyed ? 'Kuleniz yıkıldı' : 'Kule inşa et'}
+            Kule inşa et
           </text>
           <polygon
             points={`${slot.x},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 24} ${
@@ -121,12 +121,18 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           {healthBar}
           {healthFill}
           {canUpgrade && (
-            <polygon
-              points={`${slot.x},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 24} ${slot.x - GAME_CONSTANTS.UPGRADE_ARROW_SIZE / 2},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 10} ${slot.x + GAME_CONSTANTS.UPGRADE_ARROW_SIZE / 2},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 10}`}
-              fill={GAME_CONSTANTS.UPGRADE_ARROW_COLOR}
+            <text
+              x={slot.x}
+              y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 30}
+              fill="#ffffff"
+              fontSize={14}
+              fontWeight="bold"
+              textAnchor="middle"
               style={{ cursor: 'pointer' }}
               onClick={() => upgradeTower(slotIdx)}
-            />
+            >
+              Kule yükseltilebilir
+            </text>
           )}
         </g>
       )}
