@@ -18,6 +18,8 @@ export interface TowerSlot {
   y: number;
   unlocked: boolean;
   tower?: Tower;
+  /** Indicates that a tower existed here and was destroyed */
+  wasDestroyed?: boolean;
 }
 
 export interface Enemy {
