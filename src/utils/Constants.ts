@@ -57,6 +57,7 @@ export const GAME_CONSTANTS = {
     3000,
     3300,
   ],
+  INITIAL_SLOT_COUNT: 2,
 
   // Enemy
   ENEMY_SIZE: 36,
@@ -73,9 +74,28 @@ export const GAME_CONSTANTS = {
   BULLET_SIZE: 10,
   BULLET_SPEED: 420,
   BULLET_TYPES: [
-    { name: 'Ejderha Nefesi', color: '#ff0066', damageMultiplier: 1, fireRateMultiplier: 1 },
-    { name: 'Buz Kraliçesinin Bakışı', color: '#0066ff', damageMultiplier: 1.05, fireRateMultiplier: 1, freezeDuration: 1000 },
-    { name: 'Pembe Alev', color: '#ff66cc', damageMultiplier: 1.1, fireRateMultiplier: 0.9 },
+    {
+      name: 'Buz Kraliçesinin Bakışı',
+      color: '#00ccff',
+      damageMultiplier: 1,
+      fireRateMultiplier: 1,
+      speedMultiplier: 1,
+      freezeDuration: 1000,
+    },
+    {
+      name: 'Ejderha Nefesi',
+      color: '#ff4400',
+      damageMultiplier: 1.1,
+      fireRateMultiplier: 0.95,
+      speedMultiplier: 1.1,
+    },
+    {
+      name: 'Mamut Öfkesi',
+      color: '#ffcc00',
+      damageMultiplier: 1.3,
+      fireRateMultiplier: 0.85,
+      speedMultiplier: 1.2,
+    },
   ],
   BULLET_UPGRADE_COST: 300,
   WALL_COST: 150,
