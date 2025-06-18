@@ -5,9 +5,9 @@ import { GAME_CONSTANTS } from '../utils/Constants';
 const initialSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(
   0,
   GAME_CONSTANTS.INITIAL_SLOT_COUNT,
-).map((slot, i) => ({
+).map((slot) => ({
   ...slot,
-  unlocked: i === 0, // Only first slot unlocked at start
+  unlocked: true,
   tower: undefined,
   wasDestroyed: false,
 }));
@@ -21,6 +21,8 @@ const initialState: GameState = {
   gold: 200,
   bulletLevel: 1,
   currentWave: 1,
+  maxTowers: GAME_CONSTANTS.INITIAL_TOWER_LIMIT,
+  globalWallStrength: 0,
   isGameOver: false,
   isStarted: false,
 };
@@ -42,6 +44,7 @@ type Store = GameState & {
   removeEffect: (effectId: string) => void;
   buyWall: (slotIdx: number) => void;
   hitWall: (slotIdx: number) => void;
+  purchaseShield: (idx: number) => void;
   nextWave: () => void;
   resetGame: () => void;
   setStarted: (started: boolean) => void;
@@ -54,7 +57,12 @@ export const useGameStore = create<Store>((set, get) => ({
 
   buildTower: (slotIdx) => set((state) => {
     const slot = state.towerSlots[slotIdx];
-    if (!slot.unlocked || slot.tower || state.gold < GAME_CONSTANTS.TOWER_COST) return {};
+    if (
+      slot.tower ||
+      state.gold < GAME_CONSTANTS.TOWER_COST ||
+      state.towers.length >= state.maxTowers
+    )
+      return {};
     const newTower: Tower = {
       id: `${Date.now()}-${Math.random()}`,
       position: { x: slot.x, y: slot.y },
@@ -66,7 +74,7 @@ export const useGameStore = create<Store>((set, get) => ({
       fireRate: GAME_CONSTANTS.TOWER_FIRE_RATE,
       lastFired: 0,
       health: GAME_CONSTANTS.TOWER_HEALTH,
-      wallStrength: 0,
+      wallStrength: state.globalWallStrength,
     };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
@@ -148,17 +156,7 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  unlockSlot: (slotIdx) => set((state) => {
-    if (state.towerSlots[slotIdx].unlocked) return {};
-    const unlockCost = GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] || 0;
-    if (state.gold < unlockCost) return {};
-    const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = { ...state.towerSlots[slotIdx], unlocked: true, wasDestroyed: false };
-    return {
-      towerSlots: newSlots,
-      gold: state.gold - unlockCost,
-    };
-  }),
+  unlockSlot: () => {},
 
   addGold: (amount) => set((state) => ({ gold: state.gold + amount })),
   spendGold: (amount) => set((state) => ({ gold: state.gold - amount })),
@@ -188,9 +186,9 @@ export const useGameStore = create<Store>((set, get) => ({
 
   buyWall: (slotIdx) => set((state) => {
     const slot = state.towerSlots[slotIdx];
-    if (!slot.tower || slot.tower.wallStrength > 0) return {};
+    if (!slot.tower) return {};
     if (state.gold < GAME_CONSTANTS.WALL_COST) return {};
-    const updatedTower = { ...slot.tower, wallStrength: 1 };
+    const updatedTower = { ...slot.tower, wallStrength: slot.tower.wallStrength + 1 };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: updatedTower };
     return {
@@ -212,6 +210,19 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
+  purchaseShield: (idx) => set((state) => {
+    const shield = GAME_CONSTANTS.WALL_SHIELDS[idx];
+    if (!shield || state.gold < shield.cost) return {};
+    const newSlots = state.towerSlots.map((s) =>
+      s.tower ? { ...s, tower: { ...s.tower, wallStrength: s.tower.wallStrength + shield.strength } } : s,
+    );
+    return {
+      towerSlots: newSlots,
+      globalWallStrength: state.globalWallStrength + shield.strength,
+      gold: state.gold - shield.cost,
+    };
+  }),
+
   nextWave: () => set((state) => ({ currentWave: state.currentWave + 1 })),
   resetGame: () => set(() => ({ ...initialState, towerSlots: initialSlots })),
   setStarted: (started) => set(() => ({ isStarted: started })),
@@ -226,7 +237,7 @@ export const useGameStore = create<Store>((set, get) => ({
   refreshBattlefield: (slots) => set(() => {
     const newSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(0, slots).map((s, i) => ({
       ...s,
-      unlocked: i === 0,
+      unlocked: true,
       tower: undefined,
       wasDestroyed: false,
     }));

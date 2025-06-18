@@ -13,8 +13,8 @@ export const GAME_CONSTANTS = {
   TOWER_DAMAGE: 20,
   TOWER_FIRE_RATE: 800, // ms
   TOWER_HEALTH: 100,
-  TOWER_COST: 100,
-  TOWER_UPGRADE_COST: 120,
+  TOWER_COST: 50,
+  TOWER_UPGRADE_COST: 60,
   TOWER_MAX_LEVEL: 3,
   TOWER_COLORS: ['#00aaff', '#aa00ff', '#ffaa00'],
   TOWER_HEALTHBAR_HEIGHT: 8,
@@ -58,6 +58,7 @@ export const GAME_CONSTANTS = {
     3300,
   ],
   INITIAL_SLOT_COUNT: 2,
+  INITIAL_TOWER_LIMIT: 2,
 
   // Enemy
   ENEMY_SIZE: 36,
@@ -134,6 +135,18 @@ export const GAME_CONSTANTS = {
   ],
   BULLET_UPGRADE_COST: 300,
   WALL_COST: 150,
+  WALL_SHIELDS: [
+    { name: 'Taş Kalkanı', strength: 5, cost: 50 },
+    { name: 'Bronz Kalkanı', strength: 10, cost: 100 },
+    { name: 'Demir Kalkanı', strength: 15, cost: 150 },
+    { name: 'Çelik Kalkanı', strength: 20, cost: 200 },
+    { name: 'Mithril Kalkanı', strength: 25, cost: 250 },
+    { name: 'Adamantium Kalkanı', strength: 30, cost: 300 },
+    { name: 'Kristal Kalkanı', strength: 35, cost: 350 },
+    { name: 'Efsanevi Kalkan', strength: 40, cost: 400 },
+    { name: 'Gölge Kalkanı', strength: 45, cost: 450 },
+    { name: 'Işık Kalkanı', strength: 50, cost: 500 },
+  ],
 
   // UI
   GOLD_COLOR: '#FFD700',

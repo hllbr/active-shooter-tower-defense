@@ -12,16 +12,13 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   const gold = useGameStore((s) => s.gold);
   const buildTower = useGameStore((s) => s.buildTower);
   const upgradeTower = useGameStore((s) => s.upgradeTower);
-  const unlockSlot = useGameStore((s) => s.unlockSlot);
   const buyWall = useGameStore((s) => s.buyWall);
-
-  const canBuild = slot.unlocked && !slot.tower && gold >= GAME_CONSTANTS.TOWER_COST;
+  const canBuild = !slot.tower && gold >= GAME_CONSTANTS.TOWER_COST;
   const canUpgrade =
     slot.tower &&
     slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL &&
     gold >= GAME_CONSTANTS.TOWER_UPGRADE_COST;
-  const canUnlock = !slot.unlocked && gold >= (GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] || 0);
-  const canBuyWall = slot.tower && slot.tower.wallStrength <= 0 && gold >= GAME_CONSTANTS.WALL_COST;
+  const canBuyWall = slot.tower && gold >= GAME_CONSTANTS.WALL_COST;
 
   // Health bar for tower
   const healthBar = slot.tower && (
@@ -48,31 +45,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   return (
     <g>
       {/* Slot or Tower */}
-      {!slot.unlocked ? (
-        <g>
-          <circle
-            cx={slot.x}
-            cy={slot.y}
-            r={GAME_CONSTANTS.TOWER_SIZE / 2}
-            fill={canUnlock ? '#ff6666' : '#661515'}
-            stroke="#330000"
-            strokeWidth={4}
-            style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
-            onClick={() => canUnlock && unlockSlot(slotIdx)}
-          />
-          <text
-            x={slot.x}
-            y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 30}
-            fill="#ffffff"
-            fontSize={14}
-            fontWeight="bold"
-            textAnchor="middle"
-            pointerEvents="none"
-          >
-            Kule inşa et
-          </text>
-        </g>
-      ) : !slot.tower ? (
+      {!slot.tower ? (
         <g>
           <circle
             cx={slot.x}

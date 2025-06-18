@@ -66,6 +66,8 @@ export interface GameState {
   gold: number;
   bulletLevel: number;
   currentWave: number;
+  maxTowers: number;
+  globalWallStrength: number;
   isGameOver: boolean;
   isStarted: boolean;
 }
