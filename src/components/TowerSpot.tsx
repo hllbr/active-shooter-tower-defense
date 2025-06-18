@@ -13,6 +13,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   const buildTower = useGameStore((s) => s.buildTower);
   const upgradeTower = useGameStore((s) => s.upgradeTower);
   const unlockSlot = useGameStore((s) => s.unlockSlot);
+  const buyWall = useGameStore((s) => s.buyWall);
 
   const canBuild = slot.unlocked && !slot.tower && gold >= GAME_CONSTANTS.TOWER_COST;
   const canUpgrade =
@@ -20,6 +21,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
     slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL &&
     gold >= GAME_CONSTANTS.TOWER_UPGRADE_COST;
   const canUnlock = !slot.unlocked && gold >= (GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] || 0);
+  const canBuyWall = slot.tower && slot.tower.wallStrength <= 0 && gold >= GAME_CONSTANTS.WALL_COST;
 
   // Health bar for tower
   const healthBar = slot.tower && (
@@ -105,6 +107,16 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
         </g>
       ) : (
         <g>
+          {slot.tower.wallStrength > 0 && (
+            <circle
+              cx={slot.x}
+              cy={slot.y}
+              r={GAME_CONSTANTS.TOWER_SIZE / 2 + 10}
+              fill="none"
+              stroke="#cccccc"
+              strokeWidth={3}
+            />
+          )}
           <rect
             x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2}
             y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
@@ -132,6 +144,20 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
               onClick={() => upgradeTower(slotIdx)}
             >
               Kule yükseltilebilir
+            </text>
+          )}
+          {canBuyWall && (
+            <text
+              x={slot.x}
+              y={slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 20}
+              fill="#ffffff"
+              fontSize={12}
+              fontWeight="bold"
+              textAnchor="middle"
+              style={{ cursor: 'pointer' }}
+              onClick={() => buyWall(slotIdx)}
+            >
+              Sur Al ({GAME_CONSTANTS.WALL_COST})
             </text>
           )}
         </g>
