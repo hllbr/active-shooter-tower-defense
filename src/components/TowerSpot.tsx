@@ -47,16 +47,29 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
     <g>
       {/* Slot or Tower */}
       {!slot.unlocked ? (
-        <circle
-          cx={slot.x}
-          cy={slot.y}
-          r={GAME_CONSTANTS.TOWER_SIZE / 2}
-          fill={canUnlock ? '#ff6666' : '#661515'}
-          stroke="#330000"
-          strokeWidth={4}
-          style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
-          onClick={() => canUnlock && unlockSlot(slotIdx)}
-        />
+        <g>
+          <circle
+            cx={slot.x}
+            cy={slot.y}
+            r={GAME_CONSTANTS.TOWER_SIZE / 2}
+            fill={canUnlock ? '#ff6666' : '#661515'}
+            stroke="#330000"
+            strokeWidth={4}
+            style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
+            onClick={() => canUnlock && unlockSlot(slotIdx)}
+          />
+          <text
+            x={slot.x}
+            y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 30}
+            fill="#ffffff"
+            fontSize={14}
+            fontWeight="bold"
+            textAnchor="middle"
+            pointerEvents="none"
+          >
+            Kule inşa et
+          </text>
+        </g>
       ) : !slot.tower ? (
         <g>
           <circle
@@ -92,13 +105,15 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
         </g>
       ) : (
         <g>
-          <circle
-            cx={slot.x}
-            cy={slot.y}
-            r={GAME_CONSTANTS.TOWER_SIZE / 2}
+          <rect
+            x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2}
+            y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
+            width={GAME_CONSTANTS.TOWER_SIZE}
+            height={GAME_CONSTANTS.TOWER_SIZE}
             fill={GAME_CONSTANTS.TOWER_COLORS[slot.tower.level - 1]}
             stroke="#003366"
             strokeWidth={4}
+            rx={8}
             style={{ cursor: canUpgrade ? 'pointer' : 'default' }}
             onClick={() => canUpgrade && upgradeTower(slotIdx)}
           />
