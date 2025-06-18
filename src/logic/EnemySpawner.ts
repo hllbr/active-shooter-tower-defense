@@ -1,84 +1,152 @@
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
+import { Enemy } from '../models/gameTypes';
+import type { Position } from '../models/gameTypes';
 
 let spawnInterval: number | null = null;
+let spawnTimeout: number | null = null;
+
+function getRandomSpawnPosition(): Position {
+  // Spawn from left side of screen
+  return {
+    x: -GAME_CONSTANTS.ENEMY_SIZE,
+    y: Math.random() * (GAME_CONSTANTS.CANVAS_HEIGHT - GAME_CONSTANTS.ENEMY_SIZE)
+  };
+}
+
+function findNearestTower(enemyPos: Position): Position | null {
+  const store = useGameStore.getState();
+  let nearestTower = null;
+  let minDistance = Infinity;
+
+  store.towerSlots.forEach((slot, index) => {
+    if (index >= store.unlockedSlots) return; // Skip locked slots
+    
+    const dx = slot.x - enemyPos.x;
+    const dy = slot.y - enemyPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestTower = slot;
+    }
+  });
+
+  return nearestTower;
+}
+
+function moveTowardsTarget(enemy: Enemy) {
+  if (!enemy.isActive) return;
+
+  const target = findNearestTower(enemy.position);
+  if (!target) return;
+
+  // Calculate direction to target
+  const dx = target.x - enemy.position.x;
+  const dy = target.y - enemy.position.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance < 1) {
+    // Enemy reached the tower
+    enemy.isActive = false;
+    const store = useGameStore.getState();
+    // TODO: Implement damage to tower
+    return;
+  }
+
+  // Normalize direction and apply speed
+  enemy.position.x += (dx / distance) * enemy.speed;
+  enemy.position.y += (dy / distance) * enemy.speed;
+}
+
+function createEnemy(wave: number): Enemy {
+  const currentWave = Math.max(1, wave);
+  
+  const typeIndex = Math.min(
+    Math.floor((currentWave - 1) / 2),
+    GAME_CONSTANTS.ENEMY_TYPES.length - 1
+  );
+  const enemyType = GAME_CONSTANTS.ENEMY_TYPES[typeIndex];
+  
+  const baseHealth = GAME_CONSTANTS.ENEMY_HEALTH + (currentWave - 1) * GAME_CONSTANTS.ENEMY_HEALTH_INCREASE;
+  const health = Math.floor(baseHealth * enemyType.healthMult);
+
+  const colorIndex = Math.min(currentWave - 1, GAME_CONSTANTS.ENEMY_COLORS.length - 1);
+  const color = GAME_CONSTANTS.ENEMY_COLORS[colorIndex];
+  
+  const baseSpeed = GAME_CONSTANTS.ENEMY_SPEED + (currentWave - 1) * 0.2; // Reduced speed scaling
+  const speed = baseSpeed * enemyType.speedMult;
+  
+  const goldValue = Math.floor(GAME_CONSTANTS.ENEMY_GOLD_DROP * enemyType.goldMult);
+  const shieldStrength = Math.floor((currentWave * 2) * enemyType.shieldMult);
+
+  const enemy = new Enemy(
+    Date.now().toString(),
+    getRandomSpawnPosition(),
+    GAME_CONSTANTS.ENEMY_SIZE,
+    health,
+    speed,
+    goldValue,
+    color,
+    enemyType.name,
+    shieldStrength
+  );
+
+  // Override the default update method with pathfinding
+  enemy.update = function() {
+    moveTowardsTarget(this);
+  };
+
+  return enemy;
+}
+
+export function startEnemyWave() {
+  stopEnemyWave();
+  
+  const store = useGameStore.getState();
+  const currentWave = Math.max(1, store.currentWave);
+  let enemiesToSpawn = currentWave * GAME_CONSTANTS.ENEMY_WAVE_INCREASE + 3;
+  
+  console.log(`Starting wave ${currentWave} with ${enemiesToSpawn} enemies`);
+  
+  const spawnEnemy = () => {
+    if (enemiesToSpawn <= 0) {
+      console.log('Wave completed, stopping spawn');
+      stopEnemyWave();
+      return;
+    }
+    const enemy = createEnemy(currentWave);
+    store.addEnemy(enemy);
+    console.log(`Spawned enemy ${enemy.id}, ${enemiesToSpawn - 1} remaining`);
+    enemiesToSpawn--;
+  };
+
+  spawnEnemy();
+  spawnInterval = window.setInterval(spawnEnemy, GAME_CONSTANTS.ENEMY_SPAWN_RATE);
+}
 
 export function stopEnemyWave() {
   if (spawnInterval) {
     clearInterval(spawnInterval);
     spawnInterval = null;
   }
-}
-
-function getRandomSpawnPosition() {
-  // Spawn enemies from random screen edges
-  const edge = Math.floor(Math.random() * 4);
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  switch (edge) {
-    case 0: // top
-      return { x: Math.random() * w, y: -GAME_CONSTANTS.ENEMY_SIZE / 2 };
-    case 1: // right
-      return { x: w + GAME_CONSTANTS.ENEMY_SIZE / 2, y: Math.random() * h };
-    case 2: // bottom
-      return { x: Math.random() * w, y: h + GAME_CONSTANTS.ENEMY_SIZE / 2 };
-    default: // left
-      return { x: -GAME_CONSTANTS.ENEMY_SIZE / 2, y: Math.random() * h };
+  if (spawnTimeout) {
+    clearTimeout(spawnTimeout);
+    spawnTimeout = null;
   }
 }
 
-function getNearestSlot(pos) {
-  const slots = useGameStore.getState().towerSlots.filter(s => s.unlocked);
-  let minDist = Infinity;
-  let nearest = slots[0];
-  slots.forEach(slot => {
-    const dx = slot.x - pos.x;
-    const dy = slot.y - pos.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < minDist) {
-      minDist = dist;
-      nearest = slot;
-    }
-  });
-  return nearest;
-}
-
-function createEnemy(wave: number) {
-  const id = `${Date.now()}-${Math.random()}`;
-  const health = GAME_CONSTANTS.ENEMY_HEALTH + (wave - 1) * GAME_CONSTANTS.ENEMY_HEALTH_INCREASE;
-  const color = GAME_CONSTANTS.ENEMY_COLORS[(wave - 1) % GAME_CONSTANTS.ENEMY_COLORS.length];
-  return {
-    id,
-    position: getRandomSpawnPosition(),
-    size: GAME_CONSTANTS.ENEMY_SIZE,
-    isActive: true,
-    health,
-    maxHealth: health,
-    speed: GAME_CONSTANTS.ENEMY_SPEED + (wave - 1) * 5,
-    goldValue: GAME_CONSTANTS.ENEMY_GOLD_DROP,
-    color,
-    frozenUntil: 0,
-  };
-}
-
-export function startEnemyWave() {
-  const { currentWave, addEnemy } = useGameStore.getState();
-  let enemiesToSpawn = currentWave * GAME_CONSTANTS.ENEMY_WAVE_INCREASE + 3;
-  if (spawnInterval) clearInterval(spawnInterval);
-  spawnInterval = window.setInterval(() => {
-    if (enemiesToSpawn <= 0) {
-      clearInterval(spawnInterval!);
-      return;
-    }
-    const enemy = createEnemy(currentWave);
-    addEnemy(enemy);
-    enemiesToSpawn--;
-  }, GAME_CONSTANTS.ENEMY_SPAWN_RATE);
-}
-
 export function updateEnemyMovement() {
-  const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall } =
+  const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall, isGameOver, isStarted } =
     useGameStore.getState();
+  // If there are no towers, end the game and stop enemy movement
+  const hasAnyTower = towerSlots.some(s => s.tower);
+  if (!hasAnyTower && isStarted && !isGameOver) {
+    // End the game
+    setTimeout(() => useGameStore.getState().setStarted(false), 0);
+    setTimeout(() => useGameStore.getState().resetGame(), 0);
+    return;
+  }
   enemies.forEach((enemy) => {
     if (enemy.frozenUntil && enemy.frozenUntil > performance.now()) {
       return;
@@ -99,8 +167,8 @@ export function updateEnemyMovement() {
         } else {
           damageTower(slotIdx, 10);
         }
+        addGold(enemy.goldValue);
       }
-      addGold(enemy.goldValue);
       removeEnemy(enemy.id);
       return;
     }
@@ -110,4 +178,20 @@ export function updateEnemyMovement() {
     enemy.position.x += moveX;
     enemy.position.y += moveY;
   });
-} 
+}
+
+// Add update method to Enemy prototype
+(Enemy as any).prototype.update = function() {
+  if (!this.isActive) return;
+  
+  // Update position based on path and speed
+  this.position.x += this.speed;
+  this.position.y += this.speed;
+
+  // Check if enemy reached end of path
+  if (this.position.x > GAME_CONSTANTS.CANVAS_WIDTH || 
+      this.position.y > GAME_CONSTANTS.CANVAS_HEIGHT) {
+    this.isActive = false;
+    // Handle player damage
+  }
+}; 

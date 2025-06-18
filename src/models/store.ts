@@ -30,6 +30,7 @@ const initialState: GameState = {
 type Store = GameState & {
   buildTower: (slotIdx: number) => void;
   upgradeTower: (slotIdx: number) => void;
+  upgradePower: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
   removeTower: (slotIdx: number) => void;
   unlockSlot: (slotIdx: number) => void;
@@ -48,7 +49,7 @@ type Store = GameState & {
   nextWave: () => void;
   resetGame: () => void;
   setStarted: (started: boolean) => void;
-  upgradeBullet: () => void;
+  upgradeBullet: (slotIdx: number, bulletTypeId: string) => void;
   refreshBattlefield: (slots: number) => void;
 };
 
@@ -74,7 +75,11 @@ export const useGameStore = create<Store>((set, get) => ({
       fireRate: GAME_CONSTANTS.TOWER_FIRE_RATE,
       lastFired: 0,
       health: GAME_CONSTANTS.TOWER_HEALTH,
+      maxHealth: GAME_CONSTANTS.TOWER_HEALTH,
       wallStrength: state.globalWallStrength,
+      powerMultiplier: 1,
+      bulletTypeId: 'basic',
+      bulletLevel: 1,
     };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
@@ -90,11 +95,14 @@ export const useGameStore = create<Store>((set, get) => ({
     if (!slot.tower || state.gold < GAME_CONSTANTS.TOWER_UPGRADE_COST || slot.tower.level >= GAME_CONSTANTS.TOWER_MAX_LEVEL) return {};
     const nextLevel = slot.tower.level + 1;
     const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[nextLevel - 1];
+    const newMaxHealth = slot.tower.maxHealth + upgrade.healthBonus;
     const upgradedTower = {
       ...slot.tower,
       level: nextLevel,
       damage: upgrade.damage,
       fireRate: upgrade.fireRate,
+      health: slot.tower.health + upgrade.healthBonus,
+      maxHealth: newMaxHealth,
     };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: upgradedTower };
@@ -102,6 +110,28 @@ export const useGameStore = create<Store>((set, get) => ({
       towers: state.towers.map(t => t.id === upgradedTower.id ? upgradedTower : t),
       towerSlots: newSlots,
       gold: state.gold - GAME_CONSTANTS.TOWER_UPGRADE_COST,
+    };
+  }),
+
+  upgradePower: (slotIdx) => set((state) => {
+    const slot = state.towerSlots[slotIdx];
+    if (!slot.tower || state.gold < GAME_CONSTANTS.POWER_UPGRADE_COST) return {};
+    
+    // Check if we've reached the maximum power level (multiplier 6 = level 20)
+    if (slot.tower.powerMultiplier >= 6) return {};
+    
+    const upgradedTower = {
+      ...slot.tower,
+      powerMultiplier: slot.tower.powerMultiplier + 0.25,  // Each upgrade adds 25% damage (1 level = 4 power)
+    };
+    
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, tower: upgradedTower };
+    
+    return {
+      towers: state.towers.map(t => t.id === upgradedTower.id ? upgradedTower : t),
+      towerSlots: newSlots,
+      gold: state.gold - GAME_CONSTANTS.POWER_UPGRADE_COST,
     };
   }),
 
@@ -156,7 +186,18 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  unlockSlot: () => {},
+  unlockSlot: (slotIdx) => set((state) => {
+    const slot = state.towerSlots[slotIdx];
+    if (!slot.tower) return {};
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, unlocked: true };
+    return {
+      towers: state.towers.map(t => t.id === slot.tower!.id ? { ...t, wallStrength: t.wallStrength + 1 } : t),
+      towerSlots: newSlots,
+      globalWallStrength: state.globalWallStrength + 1,
+      gold: state.gold - GAME_CONSTANTS.WALL_COST,
+    };
+  }),
 
   addGold: (amount) => set((state) => ({ gold: state.gold + amount })),
   spendGold: (amount) => set((state) => ({ gold: state.gold - amount })),
@@ -166,7 +207,14 @@ export const useGameStore = create<Store>((set, get) => ({
   damageEnemy: (enemyId, dmg) => set((state) => {
     const enemy = state.enemies.find(e => e.id === enemyId);
     if (!enemy) return {};
-    const newHealth = enemy.health - dmg;
+    
+    // Apply damage reduction from shield if present
+    let actualDamage = dmg;
+    if (enemy.shield && enemy.shield > 0) {
+      actualDamage = Math.max(1, dmg * 0.5); // Shield reduces damage by 50%, minimum 1
+    }
+    
+    const newHealth = enemy.health - actualDamage;
     if (newHealth <= 0) {
       return {
         enemies: state.enemies.filter(e => e.id !== enemyId),
@@ -225,24 +273,100 @@ export const useGameStore = create<Store>((set, get) => ({
 
   nextWave: () => set((state) => ({ currentWave: state.currentWave + 1 })),
   resetGame: () => set(() => ({ ...initialState, towerSlots: initialSlots })),
-  setStarted: (started) => set(() => ({ isStarted: started })),
-  upgradeBullet: () => set((state) => {
-    if (state.bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length) return {};
-    if (state.gold < GAME_CONSTANTS.BULLET_UPGRADE_COST) return {};
+  setStarted: (started) => set((state) => {
+    const newState: Partial<GameState> = { isStarted: started };
+    if (started) {
+      // Always start with a level 1 tower in the first slot
+      const slot = state.towerSlots[0];
+      if (!slot.tower) {
+        const newTower: Tower = {
+          id: `${Date.now()}-${Math.random()}`,
+          position: { x: slot.x, y: slot.y },
+          size: GAME_CONSTANTS.TOWER_SIZE,
+          isActive: true,
+          level: 1,
+          range: GAME_CONSTANTS.TOWER_RANGE,
+          damage: GAME_CONSTANTS.TOWER_UPGRADES[0].damage,
+          fireRate: GAME_CONSTANTS.TOWER_UPGRADES[0].fireRate,
+          lastFired: 0,
+          health: GAME_CONSTANTS.TOWER_HEALTH,
+          maxHealth: GAME_CONSTANTS.TOWER_HEALTH,
+          wallStrength: state.globalWallStrength,
+          wallColor: GAME_CONSTANTS.TOWER_WALL_COLORS[0],
+          powerMultiplier: 1,
+          bulletTypeId: 'basic',
+          bulletLevel: 1,
+        };
+        const newSlots = [...state.towerSlots];
+        newSlots[0] = { ...slot, tower: newTower, wasDestroyed: false };
+        newState.towerSlots = newSlots;
+        newState.towers = [newTower];
+      }
+    }
+    return newState;
+  }),
+  upgradeBullet: (slotIdx, bulletTypeId) => set((state) => {
+    const slot = state.towerSlots[slotIdx];
+    if (!slot.tower || state.gold < GAME_CONSTANTS.BULLET_UPGRADE_COST) return {};
+
+    const bulletType = GAME_CONSTANTS.BULLET_TYPES.find(t => t.id === bulletTypeId);
+    if (!bulletType) return {};
+
+    // Check if tower level is high enough for this bullet type
+    if (slot.tower.level < bulletType.requiredTowerLevel) return {};
+
+    let newLevel = 1;
+    // If upgrading same type, increase level
+    if (slot.tower.bulletTypeId === bulletTypeId) {
+      if (slot.tower.bulletLevel >= bulletType.maxLevel) return {};
+      newLevel = slot.tower.bulletLevel + 1;
+    }
+
+    const upgradedTower = {
+      ...slot.tower,
+      bulletTypeId,
+      bulletLevel: newLevel,
+    };
+
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, tower: upgradedTower };
+
     return {
-      bulletLevel: state.bulletLevel + 1,
+      towers: state.towers.map(t => t.id === upgradedTower.id ? upgradedTower : t),
+      towerSlots: newSlots,
       gold: state.gold - GAME_CONSTANTS.BULLET_UPGRADE_COST,
     };
   }),
-  refreshBattlefield: (slots) => set(() => {
+  refreshBattlefield: (slots) => set((state) => {
     const newSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(0, slots).map((s, i) => ({
       ...s,
       unlocked: true,
       tower: undefined,
       wasDestroyed: false,
     }));
+    // Always add a level 1 tower to the first slot
+    const firstSlot = newSlots[0];
+    const newTower: Tower = {
+      id: `${Date.now()}-${Math.random()}`,
+      position: { x: firstSlot.x, y: firstSlot.y },
+      size: GAME_CONSTANTS.TOWER_SIZE,
+      isActive: true,
+      level: 1,
+      range: GAME_CONSTANTS.TOWER_RANGE,
+      damage: GAME_CONSTANTS.TOWER_DAMAGE,
+      fireRate: GAME_CONSTANTS.TOWER_FIRE_RATE,
+      lastFired: 0,
+      health: GAME_CONSTANTS.TOWER_HEALTH,
+      maxHealth: GAME_CONSTANTS.TOWER_HEALTH,
+      wallStrength: state.globalWallStrength,
+      wallColor: GAME_CONSTANTS.TOWER_WALL_COLORS[0],
+      powerMultiplier: 1,
+      bulletTypeId: 'basic',
+      bulletLevel: 1,
+    };
+    newSlots[0] = { ...firstSlot, tower: newTower, wasDestroyed: false };
     return {
-      towers: [],
+      towers: [newTower],
       towerSlots: newSlots,
       enemies: [],
       bullets: [],

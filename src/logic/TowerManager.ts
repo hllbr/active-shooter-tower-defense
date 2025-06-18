@@ -1,16 +1,23 @@
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
-import type { Effect } from '../models/gameTypes';
+import type { Effect, Tower, Bullet, BulletEffect, BulletSpecial } from '../models/gameTypes';
 import type { Enemy, Position } from '../models/gameTypes';
 
-function getDirection(from: Position, to: Position) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const len = Math.sqrt(dx * dx + dy * dy) || 1;
-  return { x: dx / len, y: dy / len };
+// Get a random wall color that hasn't been used yet
+function getRandomWallColor(existingColors: string[]): string {
+  const availableColors = GAME_CONSTANTS.TOWER_WALL_COLORS.filter(
+    color => !existingColors.includes(color)
+  );
+  if (availableColors.length === 0) {
+    // If all colors are used, start over
+    return GAME_CONSTANTS.TOWER_WALL_COLORS[
+      Math.floor(Math.random() * GAME_CONSTANTS.TOWER_WALL_COLORS.length)
+    ];
+  }
+  return availableColors[Math.floor(Math.random() * availableColors.length)];
 }
 
-function getNearestEnemy(pos: Position, enemies: Enemy[]) {
+function getNearestEnemy(pos: Position, enemies: Enemy[]): { enemy: Enemy | null; distance: number } {
   let min = Infinity;
   let nearest: Enemy | null = null;
   enemies.forEach((e) => {
@@ -25,39 +32,106 @@ function getNearestEnemy(pos: Position, enemies: Enemy[]) {
   return { enemy: nearest, distance: min };
 }
 
+// Apply tower upgrade stats
+function applyTowerUpgrade(tower: Tower, level: number) {
+  const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[level - 1];
+  tower.damage = upgrade.damage;
+  tower.fireRate = upgrade.fireRate;
+  tower.health += upgrade.healthBonus;
+  return tower;
+}
+
+// Create a new tower with initial stats
+export function createTower(position: Position): Tower {
+  const state = useGameStore.getState();
+  const existingWallColors = state.towerSlots
+    .filter(slot => slot.tower)
+    .map(slot => slot.tower?.wallColor || '');
+
+  const tower: Tower = {
+    id: `${Date.now()}-${Math.random()}`,
+    position,
+    size: GAME_CONSTANTS.TOWER_SIZE,
+    isActive: true,
+    level: 1,
+    range: GAME_CONSTANTS.TOWER_RANGE,
+    damage: GAME_CONSTANTS.TOWER_UPGRADES[0].damage,
+    fireRate: GAME_CONSTANTS.TOWER_UPGRADES[0].fireRate,
+    lastFired: 0,
+    health: GAME_CONSTANTS.TOWER_HEALTH,
+    wallStrength: 0,
+    wallColor: getRandomWallColor(existingWallColors),
+    powerMultiplier: 1, // Initialize power multiplier
+  };
+
+  return applyTowerUpgrade(tower, 1);
+}
+
+// Add update method to Bullet prototype
+function createBulletUpdate() {
+  return function update(this: Bullet) {
+    if (!this.isActive) return;
+    
+    // Update position based on direction and speed
+    this.position.x += this.direction.x * this.speed;
+    this.position.y += this.direction.y * this.speed;
+
+    // Check if bullet is out of bounds
+    if (this.position.x < 0 || this.position.x > GAME_CONSTANTS.CANVAS_WIDTH ||
+        this.position.y < 0 || this.position.y > GAME_CONSTANTS.CANVAS_HEIGHT) {
+      this.isActive = false;
+    }
+  };
+}
+
+// Attach update method to Bullet prototype
+Object.defineProperty(Bullet.prototype, 'update', {
+  value: createBulletUpdate(),
+  writable: false,
+  configurable: true
+});
+
 export function updateTowerFire() {
   const state = useGameStore.getState();
   const now = performance.now();
   state.towerSlots.forEach((slot) => {
     const tower = slot.tower;
     if (!tower) return;
-    const bulletType = GAME_CONSTANTS.BULLET_TYPES[state.bulletLevel - 1];
-    if (now - tower.lastFired < tower.fireRate * bulletType.fireRateMultiplier) return;
+    
+    const bulletType = GAME_CONSTANTS.BULLET_TYPES.find(t => t.id === tower.bulletTypeId);
+    if (!bulletType) return;
+
+    const bulletLevel = bulletType.levels[tower.bulletLevel - 1];
+    if (!bulletLevel) return;
+
+    if (now - tower.lastFired < tower.fireRate * bulletLevel.fireRateMultiplier) return;
     const { enemy, distance } = getNearestEnemy(tower.position, state.enemies);
     if (!enemy || distance > tower.range) return;
 
-    const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[tower.level - 1];
-    const bulletLevel = state.bulletLevel;
-    for (let i = 0; i < upgrade.multi; i++) {
+    for (let i = 0; i < (bulletLevel.count || 1); i++) {
       const angle = Math.atan2(
         enemy.position.y - tower.position.y,
         enemy.position.x - tower.position.x,
       );
-      const offset = ((i - (upgrade.multi - 1) / 2) * upgrade.spread * Math.PI) / 180;
+      const spread = (bulletLevel.count > 1) ? ((i - (bulletLevel.count - 1) / 2) * 10 * Math.PI) / 180 : 0;
       const dir = {
-        x: Math.cos(angle + offset),
-        y: Math.sin(angle + offset),
+        x: Math.cos(angle + spread),
+        y: Math.sin(angle + spread),
       };
-      const bullet = {
+
+      const bullet: Bullet = {
         id: `${Date.now()}-${Math.random()}`,
         position: { x: tower.position.x, y: tower.position.y },
         size: GAME_CONSTANTS.BULLET_SIZE,
         isActive: true,
-        speed: GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier,
-        damage: tower.damage * bulletType.damageMultiplier,
+        speed: GAME_CONSTANTS.BULLET_SPEED * bulletLevel.speedMultiplier,
+        damage: tower.damage * bulletLevel.damageMultiplier * tower.powerMultiplier,
         direction: dir,
-        color: bulletType.color,
-        typeIndex: state.bulletLevel - 1,
+        color: Array.isArray(bulletLevel.color) ? bulletLevel.color[Math.floor(Math.random() * bulletLevel.color.length)] : bulletLevel.color,
+        typeIndex: tower.bulletLevel - 1,
+        effect: bulletLevel.effect,
+        special: bulletLevel.special,
+        createdAt: now,
       };
       useGameStore.getState().addBullet(bullet);
     }
@@ -74,18 +148,7 @@ export function updateBullets() {
     addEffect,
   } = useGameStore.getState();
   bullets.forEach((b) => {
-    b.position.x += b.direction.x * b.speed * 0.016;
-    b.position.y += b.direction.y * b.speed * 0.016;
-
-    if (
-      b.position.x < 0 ||
-      b.position.x > window.innerWidth ||
-      b.position.y < 0 ||
-      b.position.y > window.innerHeight
-    ) {
-      removeBullet(b.id);
-      return;
-    }
+    b.update();
 
     for (const e of enemies) {
       const dx = e.position.x - b.position.x;
@@ -93,9 +156,8 @@ export function updateBullets() {
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < (e.size + b.size) / 2) {
         damageEnemy(e.id, b.damage);
-        const type = GAME_CONSTANTS.BULLET_TYPES[b.typeIndex];
-        if (type.freezeDuration) {
-          e.frozenUntil = performance.now() + type.freezeDuration;
+        if (b.effect === 'freeze') {
+          e.frozenUntil = performance.now() + 2000; // 2 seconds freeze
         }
         const effect: Effect = {
           id: `${Date.now()}-${Math.random()}`,

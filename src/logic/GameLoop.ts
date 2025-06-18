@@ -1,14 +1,27 @@
-import { updateTowerFire, updateBullets } from './TowerManager';
-import { updateEnemyMovement } from './EnemySpawner';
-import { updateEffects } from './Effects';
-import { GAME_CONSTANTS } from '../utils/Constants';
+import { useGameStore } from '../models/store';
 
-export function startGameLoop() {
-  const interval = window.setInterval(() => {
-    updateEnemyMovement();
-    updateTowerFire();
-    updateBullets();
-    updateEffects();
-  }, GAME_CONSTANTS.GAME_TICK);
-  return () => clearInterval(interval);
-}
+let animationFrameId: number | null = null;
+
+export const startGameLoop = () => {
+  const gameLoop = () => {
+    const { enemies, bullets, effects } = useGameStore.getState();
+    
+    // Update all game entities
+    enemies.forEach(enemy => enemy.update());
+    bullets.forEach(bullet => bullet.update());
+    effects.forEach(effect => effect.update());
+
+    // Request next frame
+    animationFrameId = requestAnimationFrame(gameLoop);
+  };
+
+  // Start the loop
+  gameLoop();
+};
+
+export const stopGameLoop = () => {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+};
