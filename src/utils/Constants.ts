@@ -35,8 +35,28 @@ export const GAME_CONSTANTS = {
     { x: 1200, y: 300 },
     { x: 600, y: 700 },
     { x: 1000, y: 700 },
+    { x: 400, y: 500 },
+    { x: 1200, y: 500 },
+    { x: 200, y: 200 },
+    { x: 1400, y: 200 },
+    { x: 200, y: 600 },
+    { x: 1400, y: 600 },
+    { x: 800, y: 550 },
   ],
-  TOWER_SLOT_UNLOCK_GOLD: [0, 200, 400, 700, 1200],
+  TOWER_SLOT_UNLOCK_GOLD: [
+    0,
+    200,
+    400,
+    700,
+    1200,
+    1500,
+    1800,
+    2100,
+    2400,
+    2700,
+    3000,
+    3300,
+  ],
 
   // Enemy
   ENEMY_SIZE: 36,
@@ -52,7 +72,8 @@ export const GAME_CONSTANTS = {
   // Bullet
   BULLET_SIZE: 10,
   BULLET_SPEED: 420,
-  BULLET_COLOR: '#ff0066',
+  BULLET_COLORS: ['#ff0066', '#0066ff'],
+  BULLET_UPGRADE_COST: 300,
 
   // UI
   GOLD_COLOR: '#FFD700',

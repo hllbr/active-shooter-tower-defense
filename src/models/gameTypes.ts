@@ -61,6 +61,7 @@ export interface GameState {
   bullets: Bullet[];
   effects: Effect[];
   gold: number;
+  bulletLevel: number;
   currentWave: number;
   isGameOver: boolean;
   isStarted: boolean;

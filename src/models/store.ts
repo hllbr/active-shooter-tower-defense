@@ -16,6 +16,7 @@ const initialState: GameState = {
   bullets: [],
   effects: [],
   gold: 200,
+  bulletLevel: 1,
   currentWave: 1,
   isGameOver: false,
   isStarted: false,
@@ -39,6 +40,8 @@ type Store = GameState & {
   nextWave: () => void;
   resetGame: () => void;
   setStarted: (started: boolean) => void;
+  upgradeBullet: () => void;
+  refreshBattlefield: (slots: number) => void;
 };
 
 export const useGameStore = create<Store>((set, get) => ({
@@ -180,4 +183,27 @@ export const useGameStore = create<Store>((set, get) => ({
   nextWave: () => set((state) => ({ currentWave: state.currentWave + 1 })),
   resetGame: () => set(() => ({ ...initialState, towerSlots: initialSlots })),
   setStarted: (started) => set(() => ({ isStarted: started })),
-})); 
+  upgradeBullet: () => set((state) => {
+    if (state.bulletLevel >= GAME_CONSTANTS.BULLET_COLORS.length) return {};
+    if (state.gold < GAME_CONSTANTS.BULLET_UPGRADE_COST) return {};
+    return {
+      bulletLevel: state.bulletLevel + 1,
+      gold: state.gold - GAME_CONSTANTS.BULLET_UPGRADE_COST,
+    };
+  }),
+  refreshBattlefield: (slots) => set(() => {
+    const newSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(0, slots).map((s, i) => ({
+      ...s,
+      unlocked: i === 0,
+      tower: undefined,
+      wasDestroyed: false,
+    }));
+    return {
+      towers: [],
+      towerSlots: newSlots,
+      enemies: [],
+      bullets: [],
+      effects: [],
+    };
+  }),
+}));
