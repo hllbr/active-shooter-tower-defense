@@ -41,7 +41,7 @@ export const GameBoard: React.FC = () => {
   // Handle continue button click
   const handleContinue = () => {
     const slotCount = Math.min(
-      GAME_CONSTANTS.TOWER_SLOTS.length,
+      GAME_CONSTANTS.TOTAL_SLOT_COUNT,
       GAME_CONSTANTS.INITIAL_SLOT_COUNT + Math.floor(currentWave / 5)
     );
     refreshBattlefield(slotCount);

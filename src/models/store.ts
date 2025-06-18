@@ -1,15 +1,17 @@
 import { create } from 'zustand';
 import type { GameState, Tower, TowerSlot, Enemy, Bullet, Position, Effect } from './gameTypes';
-import { GAME_CONSTANTS } from '../utils/Constants';
+import { GAME_CONSTANTS, generateRandomTowerSlots } from '../utils/Constants';
 
-const initialSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(
-  0,
-  GAME_CONSTANTS.INITIAL_SLOT_COUNT,
-).map((slot) => ({
-  ...slot,
-  unlocked: true,
+const allSlots: TowerSlot[] = generateRandomTowerSlots(GAME_CONSTANTS.TOTAL_SLOT_COUNT).map(s => ({
+  ...s,
+  unlocked: false,
   tower: undefined,
   wasDestroyed: false,
+}));
+
+const initialSlots: TowerSlot[] = allSlots.slice(0, GAME_CONSTANTS.INITIAL_SLOT_COUNT).map(slot => ({
+  ...slot,
+  unlocked: true,
 }));
 
 const initialState: GameState = {
@@ -338,7 +340,7 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
   refreshBattlefield: (slots) => set((state) => {
-    const newSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(0, slots).map((s, i) => ({
+    const newSlots: TowerSlot[] = generateRandomTowerSlots(slots).map((s) => ({
       ...s,
       unlocked: true,
       tower: undefined,

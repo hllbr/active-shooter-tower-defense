@@ -55,7 +55,7 @@ function moveTowardsTarget(enemy: Enemy) {
   }
 
   // Normalize direction and apply speed (scaled for smoother movement)
-  const step = enemy.speed * 0.016; // approx 60 FPS
+  const step = enemy.speed * 0.5; // smoother movement
   enemy.position.x += (dx / distance) * step;
   enemy.position.y += (dy / distance) * step;
 }
@@ -174,7 +174,7 @@ export function updateEnemyMovement() {
       return;
     }
     // Move toward slot
-    const step = enemy.speed * 0.016;
+    const step = enemy.speed * 0.5;
     const moveX = (dx / dist) * step;
     const moveY = (dy / dist) * step;
     enemy.position.x += moveX;
@@ -187,8 +187,9 @@ export function updateEnemyMovement() {
   if (!this.isActive) return;
   
   // Update position based on path and speed
-  this.position.x += this.speed;
-  this.position.y += this.speed;
+  const step = this.speed * 0.5;
+  this.position.x += step;
+  this.position.y += step;
 
   // Check if enemy reached end of path
   if (this.position.x > GAME_CONSTANTS.CANVAS_WIDTH || 

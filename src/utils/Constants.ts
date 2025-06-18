@@ -64,23 +64,7 @@ export const GAME_CONSTANTS = {
   ],
 
   // Tower Slots
-  TOWER_SLOTS: [
-    { x: 100, y: 100 },
-    { x: 200, y: 100 },
-    { x: 300, y: 100 },
-    { x: 400, y: 100 },
-    { x: 500, y: 100 },
-    { x: 100, y: 300 },
-    { x: 200, y: 300 },
-    { x: 300, y: 300 },
-    { x: 400, y: 300 },
-    { x: 500, y: 300 },
-    { x: 100, y: 500 },
-    { x: 200, y: 500 },
-    { x: 300, y: 500 },
-    { x: 400, y: 500 },
-    { x: 500, y: 500 }
-  ],
+  TOTAL_SLOT_COUNT: 15,
   TOWER_SLOT_UNLOCK_GOLD: [
     0,
     200,
@@ -389,4 +373,17 @@ export const GAME_CONSTANTS = {
   WAVE_DURATION: 30000,
   WAVE_ENEMY_INCREASE: 2,
   WAVE_ENEMY_HEALTH_INCREASE: 20,
-} as const; 
+} as const;
+
+export function generateRandomTowerSlots(count: number) {
+  const slots = [] as { x: number; y: number }[];
+  const cx = GAME_CONSTANTS.CANVAS_WIDTH / 2;
+  const cy = GAME_CONSTANTS.CANVAS_HEIGHT / 2;
+  const maxRadius = Math.min(cx, cy) * 0.7;
+  for (let i = 0; i < count; i++) {
+    const radius = maxRadius * (0.3 + Math.random() * 0.7);
+    const angle = Math.random() * Math.PI * 2;
+    slots.push({ x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) });
+  }
+  return slots;
+}
