@@ -31,7 +31,8 @@ export function updateTowerFire() {
   state.towerSlots.forEach((slot) => {
     const tower = slot.tower;
     if (!tower) return;
-    if (now - tower.lastFired < tower.fireRate) return;
+    const bulletType = GAME_CONSTANTS.BULLET_TYPES[state.bulletLevel - 1];
+    if (now - tower.lastFired < tower.fireRate * bulletType.fireRateMultiplier) return;
     const { enemy, distance } = getNearestEnemy(tower.position, state.enemies);
     if (!enemy || distance > tower.range) return;
 
@@ -53,9 +54,10 @@ export function updateTowerFire() {
         size: GAME_CONSTANTS.BULLET_SIZE,
         isActive: true,
         speed: GAME_CONSTANTS.BULLET_SPEED,
-        damage: tower.damage * bulletLevel,
+        damage: tower.damage * bulletType.damageMultiplier,
         direction: dir,
-        color: GAME_CONSTANTS.BULLET_COLORS[bulletLevel - 1],
+        color: bulletType.color,
+        typeIndex: state.bulletLevel - 1,
       };
       useGameStore.getState().addBullet(bullet);
     }
@@ -91,6 +93,10 @@ export function updateBullets() {
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < (e.size + b.size) / 2) {
         damageEnemy(e.id, b.damage);
+        const type = GAME_CONSTANTS.BULLET_TYPES[b.typeIndex];
+        if (type.freezeDuration) {
+          e.frozenUntil = performance.now() + type.freezeDuration;
+        }
         const effect: Effect = {
           id: `${Date.now()}-${Math.random()}`,
           position: { x: b.position.x, y: b.position.y },

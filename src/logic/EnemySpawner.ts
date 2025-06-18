@@ -50,6 +50,7 @@ function createEnemy(wave: number) {
     speed: GAME_CONSTANTS.ENEMY_SPEED + (wave - 1) * 5,
     goldValue: GAME_CONSTANTS.ENEMY_GOLD_DROP,
     color,
+    frozenUntil: 0,
   };
 }
 
@@ -69,9 +70,12 @@ export function startEnemyWave() {
 }
 
 export function updateEnemyMovement() {
-  const { enemies, towerSlots, damageTower, removeEnemy, addGold } =
+  const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall } =
     useGameStore.getState();
   enemies.forEach((enemy) => {
+    if (enemy.frozenUntil && enemy.frozenUntil > performance.now()) {
+      return;
+    }
     const targetSlot = getNearestSlot(enemy.position);
     if (!targetSlot) return;
     const dx = targetSlot.x - enemy.position.x;
@@ -83,7 +87,11 @@ export function updateEnemyMovement() {
         const slotIdx = towerSlots.findIndex(
           (s) => s.x === targetSlot.x && s.y === targetSlot.y,
         );
-        damageTower(slotIdx, 10);
+        if (targetSlot.tower.wallStrength > 0) {
+          hitWall(slotIdx);
+        } else {
+          damageTower(slotIdx, 10);
+        }
       }
       addGold(enemy.goldValue);
       removeEnemy(enemy.id);

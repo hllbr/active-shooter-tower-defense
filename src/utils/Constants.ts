@@ -72,8 +72,13 @@ export const GAME_CONSTANTS = {
   // Bullet
   BULLET_SIZE: 10,
   BULLET_SPEED: 420,
-  BULLET_COLORS: ['#ff0066', '#0066ff'],
+  BULLET_TYPES: [
+    { name: 'Ejderha Nefesi', color: '#ff0066', damageMultiplier: 1, fireRateMultiplier: 1 },
+    { name: 'Buz Kraliçesinin Bakışı', color: '#0066ff', damageMultiplier: 1.05, fireRateMultiplier: 1, freezeDuration: 1000 },
+    { name: 'Pembe Alev', color: '#ff66cc', damageMultiplier: 1.1, fireRateMultiplier: 0.9 },
+  ],
   BULLET_UPGRADE_COST: 300,
+  WALL_COST: 150,
 
   // UI
   GOLD_COLOR: '#FFD700',

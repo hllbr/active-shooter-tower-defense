@@ -109,10 +109,10 @@ export const GameBoard: React.FC = () => {
           </span>
           <button
             onClick={() => upgradeBullet()}
-            disabled={bulletLevel >= GAME_CONSTANTS.BULLET_COLORS.length || gold < GAME_CONSTANTS.BULLET_UPGRADE_COST}
+            disabled={bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length || gold < GAME_CONSTANTS.BULLET_UPGRADE_COST}
             style={{ marginBottom: 16, padding: '12px 24px', fontSize: 24, borderRadius: 12, background: '#0077ff', color: '#fff', border: 'none', cursor: 'pointer' }}
           >
-            Ateş Gücünü Artır ({GAME_CONSTANTS.BULLET_UPGRADE_COST})
+            {`Yeni Ateş: ${GAME_CONSTANTS.BULLET_TYPES[bulletLevel]?.name || ''}`} ({GAME_CONSTANTS.BULLET_UPGRADE_COST})
           </button>
           <button
             onClick={() => {

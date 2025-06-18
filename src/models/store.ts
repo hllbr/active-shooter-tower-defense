@@ -37,6 +37,8 @@ type Store = GameState & {
   removeBullet: (bulletId: string) => void;
   addEffect: (effect: Effect) => void;
   removeEffect: (effectId: string) => void;
+  buyWall: (slotIdx: number) => void;
+  hitWall: (slotIdx: number) => void;
   nextWave: () => void;
   resetGame: () => void;
   setStarted: (started: boolean) => void;
@@ -61,6 +63,7 @@ export const useGameStore = create<Store>((set, get) => ({
       fireRate: GAME_CONSTANTS.TOWER_FIRE_RATE,
       lastFired: 0,
       health: GAME_CONSTANTS.TOWER_HEALTH,
+      wallStrength: 0,
     };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
@@ -180,11 +183,37 @@ export const useGameStore = create<Store>((set, get) => ({
   addEffect: (effect) => set((state) => ({ effects: [...state.effects, effect] })),
   removeEffect: (effectId) => set((state) => ({ effects: state.effects.filter(e => e.id !== effectId) })),
 
+  buyWall: (slotIdx) => set((state) => {
+    const slot = state.towerSlots[slotIdx];
+    if (!slot.tower || slot.tower.wallStrength > 0) return {};
+    if (state.gold < GAME_CONSTANTS.WALL_COST) return {};
+    const updatedTower = { ...slot.tower, wallStrength: 1 };
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, tower: updatedTower };
+    return {
+      towers: state.towers.map(t => t.id === updatedTower.id ? updatedTower : t),
+      towerSlots: newSlots,
+      gold: state.gold - GAME_CONSTANTS.WALL_COST,
+    };
+  }),
+
+  hitWall: (slotIdx) => set((state) => {
+    const slot = state.towerSlots[slotIdx];
+    if (!slot.tower || slot.tower.wallStrength <= 0) return {};
+    const updatedTower = { ...slot.tower, wallStrength: slot.tower.wallStrength - 1 };
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, tower: updatedTower };
+    return {
+      towers: state.towers.map(t => t.id === updatedTower.id ? updatedTower : t),
+      towerSlots: newSlots,
+    };
+  }),
+
   nextWave: () => set((state) => ({ currentWave: state.currentWave + 1 })),
   resetGame: () => set(() => ({ ...initialState, towerSlots: initialSlots })),
   setStarted: (started) => set(() => ({ isStarted: started })),
   upgradeBullet: () => set((state) => {
-    if (state.bulletLevel >= GAME_CONSTANTS.BULLET_COLORS.length) return {};
+    if (state.bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length) return {};
     if (state.gold < GAME_CONSTANTS.BULLET_UPGRADE_COST) return {};
     return {
       bulletLevel: state.bulletLevel + 1,

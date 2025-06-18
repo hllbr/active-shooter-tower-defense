@@ -11,6 +11,7 @@ export interface Tower {
   fireRate: number;
   lastFired: number;
   health: number;
+  wallStrength: number;
 }
 
 export interface TowerSlot {
@@ -32,6 +33,7 @@ export interface Enemy {
   speed: number;
   goldValue: number;
   color: string;
+  frozenUntil?: number;
 }
 
 export interface Bullet {
@@ -43,6 +45,7 @@ export interface Bullet {
   damage: number;
   direction: Position;
   color: string;
+  typeIndex: number;
 }
 
 export interface Effect {
