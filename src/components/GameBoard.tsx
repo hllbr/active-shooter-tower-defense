@@ -160,6 +160,7 @@ export const GameBoard: React.FC = () => {
       {/* Game Over Overlay */}
       {isGameOver && (
         <div
+          className="fade-in"
           style={{
             position: 'absolute',
             top: 0,
@@ -174,11 +175,14 @@ export const GameBoard: React.FC = () => {
             flexDirection: 'column',
           }}
         >
-          <span style={{ color: '#ff3333', font: GAME_CONSTANTS.UI_FONT_BIG, fontWeight: 'bold', marginBottom: 32 }}>
-            GAME OVER
+          <span style={{ color: '#ff3333', font: GAME_CONSTANTS.UI_FONT_BIG, fontWeight: 'bold', marginBottom: 32, textAlign: 'center' }}>
+            Seni savunacak hiç kulen kalmadı. Yarın yine deneriz.
           </span>
-          <button onClick={() => { resetGame(); setStarted(false); }} style={{ fontSize: 32, padding: '16px 32px', borderRadius: 12, background: '#00cfff', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
-            Restart
+          <button
+            onClick={() => { resetGame(); setStarted(false); }}
+            style={{ fontSize: 32, padding: '16px 32px', borderRadius: 12, background: '#00cfff', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            Tekrar Dene
           </button>
         </div>
       )}
