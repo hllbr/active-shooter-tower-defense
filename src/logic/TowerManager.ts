@@ -53,7 +53,7 @@ export function updateTowerFire() {
         position: { x: tower.position.x, y: tower.position.y },
         size: GAME_CONSTANTS.BULLET_SIZE,
         isActive: true,
-        speed: GAME_CONSTANTS.BULLET_SPEED,
+        speed: GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier,
         damage: tower.damage * bulletType.damageMultiplier,
         direction: dir,
         color: bulletType.color,

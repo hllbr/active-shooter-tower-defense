@@ -28,7 +28,10 @@ export const GameBoard: React.FC = () => {
   useEffect(() => {
     if (!isRefreshing) return;
     const timeout = setTimeout(() => {
-      const slotCount = Math.min(5 + currentWave / 5, 12);
+      const slotCount = Math.min(
+        GAME_CONSTANTS.INITIAL_SLOT_COUNT + 2 * Math.floor(currentWave / 5),
+        12,
+      );
       refreshBattlefield(slotCount);
     }, 1000);
     return () => clearTimeout(timeout);

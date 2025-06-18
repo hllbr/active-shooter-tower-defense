@@ -2,7 +2,10 @@ import { create } from 'zustand';
 import type { GameState, Tower, TowerSlot, Enemy, Bullet, Position, Effect } from './gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
 
-const initialSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.map((slot, i) => ({
+const initialSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(
+  0,
+  GAME_CONSTANTS.INITIAL_SLOT_COUNT,
+).map((slot, i) => ({
   ...slot,
   unlocked: i === 0, // Only first slot unlocked at start
   tower: undefined,
