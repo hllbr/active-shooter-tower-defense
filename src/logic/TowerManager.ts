@@ -36,6 +36,7 @@ export function updateTowerFire() {
     if (!enemy || distance > tower.range) return;
 
     const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[tower.level - 1];
+    const bulletLevel = state.bulletLevel;
     for (let i = 0; i < upgrade.multi; i++) {
       const angle = Math.atan2(
         enemy.position.y - tower.position.y,
@@ -52,9 +53,9 @@ export function updateTowerFire() {
         size: GAME_CONSTANTS.BULLET_SIZE,
         isActive: true,
         speed: GAME_CONSTANTS.BULLET_SPEED,
-        damage: tower.damage,
+        damage: tower.damage * bulletLevel,
         direction: dir,
-        color: GAME_CONSTANTS.BULLET_COLOR,
+        color: GAME_CONSTANTS.BULLET_COLORS[bulletLevel - 1],
       };
       useGameStore.getState().addBullet(bullet);
     }

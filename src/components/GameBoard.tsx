@@ -12,13 +12,27 @@ export const GameBoard: React.FC = () => {
     bullets,
     effects,
     gold,
+    bulletLevel,
     currentWave,
     isStarted,
     isGameOver,
     setStarted,
     resetGame,
     nextWave,
+    upgradeBullet,
+    refreshBattlefield,
   } = useGameStore();
+
+  const [isRefreshing, setRefreshing] = React.useState(false);
+
+  useEffect(() => {
+    if (!isRefreshing) return;
+    const timeout = setTimeout(() => {
+      const slotCount = Math.min(5 + currentWave / 5, 12);
+      refreshBattlefield(slotCount);
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [isRefreshing, currentWave, refreshBattlefield]);
 
   // Start/reset logic
   useEffect(() => {
@@ -45,17 +59,21 @@ export const GameBoard: React.FC = () => {
     };
   }, [isStarted]);
 
-  // Auto next wave
+  // Auto next wave and refresh handling
   useEffect(() => {
-    if (!isStarted) return;
+    if (!isStarted || isRefreshing) return;
     if (enemies.length === 0) {
-      const timeout = setTimeout(() => {
-        nextWave();
-        startEnemyWave();
-      }, 1200);
-      return () => clearTimeout(timeout);
+      if (currentWave % 5 === 0) {
+        setRefreshing(true);
+      } else {
+        const timeout = setTimeout(() => {
+          nextWave();
+          startEnemyWave();
+        }, 1200);
+        return () => clearTimeout(timeout);
+      }
     }
-  }, [enemies, isStarted, nextWave]);
+  }, [enemies, isStarted, nextWave, currentWave, isRefreshing]);
 
   // SVG size
   const width = window.innerWidth;
@@ -70,6 +88,44 @@ export const GameBoard: React.FC = () => {
       <div style={{ position: 'absolute', top: 24, right: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
         Wave: {currentWave}
       </div>
+      {isRefreshing && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 5,
+          }}
+        >
+          <span style={{ color: '#00cfff', font: GAME_CONSTANTS.UI_FONT_BIG, fontWeight: 'bold', marginBottom: 24 }}>
+            Savaş alanı yenileniyor...
+          </span>
+          <button
+            onClick={() => upgradeBullet()}
+            disabled={bulletLevel >= GAME_CONSTANTS.BULLET_COLORS.length || gold < GAME_CONSTANTS.BULLET_UPGRADE_COST}
+            style={{ marginBottom: 16, padding: '12px 24px', fontSize: 24, borderRadius: 12, background: '#0077ff', color: '#fff', border: 'none', cursor: 'pointer' }}
+          >
+            Ateş Gücünü Artır ({GAME_CONSTANTS.BULLET_UPGRADE_COST})
+          </button>
+          <button
+            onClick={() => {
+              setRefreshing(false);
+              nextWave();
+              startEnemyWave();
+            }}
+            style={{ padding: '12px 24px', fontSize: 24, borderRadius: 12, background: '#4ade80', color: '#000', border: 'none', cursor: 'pointer' }}
+          >
+            Devam Et
+          </button>
+        </div>
+      )}
       {/* Start Overlay */}
       {!isStarted && (
         <div
