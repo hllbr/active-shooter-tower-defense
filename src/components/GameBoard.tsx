@@ -20,6 +20,7 @@ export const GameBoard: React.FC = () => {
     resetGame,
     nextWave,
     upgradeBullet,
+    purchaseShield,
     refreshBattlefield,
   } = useGameStore();
 
@@ -134,6 +135,16 @@ export const GameBoard: React.FC = () => {
           >
             {`Yeni Ateş: ${GAME_CONSTANTS.BULLET_TYPES[bulletLevel]?.name || ''}`} ({GAME_CONSTANTS.BULLET_UPGRADE_COST})
           </button>
+          {GAME_CONSTANTS.WALL_SHIELDS.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => purchaseShield(i)}
+              disabled={gold < s.cost}
+              style={{ marginBottom: 8, padding: '8px 16px', fontSize: 20, borderRadius: 8, background: '#ffa500', color: '#000', border: 'none', cursor: 'pointer' }}
+            >
+              {`${s.name} (+${s.strength}) (${s.cost})`}
+            </button>
+          ))}
           <button
             onClick={() => {
               setRefreshing(false);
