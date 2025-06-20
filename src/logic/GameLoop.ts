@@ -1,14 +1,24 @@
 import { updateTowerFire, updateBullets } from './TowerManager';
 import { updateEnemyMovement } from './EnemySpawner';
 import { updateEffects } from './Effects';
-import { GAME_CONSTANTS } from '../utils/Constants';
+import { useGameStore } from '../models/store';
 
 export function startGameLoop() {
-  const interval = window.setInterval(() => {
+  let frameId = 0;
+
+  const loop = () => {
     updateEnemyMovement();
     updateTowerFire();
     updateBullets();
     updateEffects();
-  }, GAME_CONSTANTS.GAME_TICK);
-  return () => clearInterval(interval);
+
+    // Force state update so React re-renders with new positions
+    useGameStore.setState({});
+
+    frameId = requestAnimationFrame(loop);
+  };
+
+  frameId = requestAnimationFrame(loop);
+
+  return () => cancelAnimationFrame(frameId);
 }
