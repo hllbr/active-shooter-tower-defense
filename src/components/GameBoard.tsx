@@ -76,6 +76,8 @@ export const GameBoard: React.FC = () => {
   useEffect(() => {
     if (isPreparing) {
       waveManager.scheduleAutoStart(currentWave, GAME_CONSTANTS.PREP_TIME);
+    } else {
+      waveManager.cancelAutoStart();
     }
   }, [isPreparing, currentWave]);
 

@@ -3,6 +3,7 @@ import { GAME_CONSTANTS } from '../utils/Constants';
 import type { Effect } from '../models/gameTypes';
 import type { Enemy, Position, Tower } from '../models/gameTypes';
 import { playSound } from '../utils/sound';
+import { energyManager } from './EnergyManager';
 
 export function getDirection(from: Position, to: Position) {
   const dx = to.x - from.x;
@@ -65,6 +66,10 @@ function fireTower(
 function handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect: Effect) => void, damageEnemy: (id: string, damage: number) => void) {
   const now = performance.now();
   if (now - tower.lastSpecialUse < tower.specialCooldown) return;
+
+  if (!energyManager.consume(GAME_CONSTANTS.ENERGY_COSTS.specialAbility, `ability_${tower.specialAbility}`)) {
+    return;
+  }
 
   const detectable = enemies.filter(e => {
     if (e.behaviorTag === 'ghost') {

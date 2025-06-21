@@ -472,12 +472,9 @@ export const useGameStore = create<Store>((set, get) => ({
       isPaused: false,
       lostTowerThisWave: false,
       waveStartTime: 0,
+    };
     });
 
-    let bonus = GAME_CONSTANTS.ENERGY_REGEN_WAVE;
-    if (!lostTowerThisWave) bonus += 5;
-    if (performance.now() - waveStartTime < 60000) bonus += 5;
-    energyManager.add(bonus, 'waveComplete');
   },
   resetGame: () => {
     set(() => ({
@@ -763,12 +760,19 @@ export const useGameStore = create<Store>((set, get) => ({
   speedUpPreparation: (amount) => set((state) => ({
     prepRemaining: Math.max(0, state.prepRemaining - amount),
   })),
-  startWave: () => set(() => ({
-    isPreparing: false,
-    prepRemaining: 0,
-    waveStartTime: performance.now(),
-    lostTowerThisWave: false,
-  })),
+  startWave: () => set((state) => {
+    if (state.enemies.length > 0) return {} as any;
+    const slots = state.towerSlots.map(s =>
+      s.tower ? { ...s, tower: { ...s.tower, lastFired: 0, acidStack: 0 } } : s,
+    );
+    return {
+      isPreparing: false,
+      prepRemaining: 0,
+      waveStartTime: performance.now(),
+      lostTowerThisWave: false,
+      towerSlots: slots,
+    };
+  }),
   consumeEnergy: (amount, action) => energyManager.consume(amount, action),
   addEnergy: (amount, action) => energyManager.add(amount, action),
   clearEnergyWarning: () => set(() => ({ energyWarning: null })),
@@ -778,3 +782,12 @@ export const useGameStore = create<Store>((set, get) => ({
 }));
 
 energyManager.init(initialState.energy, (e, w) => useGameStore.setState({ energy: e, energyWarning: w ?? null }));
+
+// Energy regeneration when a wave completes
+waveManager.on('complete', () => {
+  const { lostTowerThisWave, waveStartTime } = useGameStore.getState();
+  let bonus = GAME_CONSTANTS.ENERGY_REGEN_WAVE;
+  if (!lostTowerThisWave) bonus += 5;
+  if (performance.now() - waveStartTime < 60000) bonus += 5;
+  energyManager.add(bonus, 'waveComplete');
+});

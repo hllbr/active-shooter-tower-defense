@@ -55,6 +55,7 @@ export function updateWaveTiles(wave: number, current: TowerSlot[]): TowerSlot[]
     } else if (slot.type === 'fixed') {
       persisted.push(slot);
     }
+    // dynamic slots without towers are discarded
   }
 
   const TOTAL_NEW = 5;
