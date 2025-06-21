@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { TowerSpot } from './TowerSpot';
-import { startEnemyWave, stopEnemyWave } from '../logic/EnemySpawner';
+import { startEnemyWave } from '../logic/EnemySpawner';
+import { stopEnemyWave } from '../logic/EnemySpawner';
 import { startGameLoop } from '../logic/GameLoop';
+import { waveManager } from '../logic/WaveManager';
 import { initUpgradeEffects } from '../logic/UpgradeEffects';
 import { UpgradeScreen } from './game/UpgradeScreen';
 import { playSound } from '../utils/sound';
@@ -59,6 +61,23 @@ export const GameBoard: React.FC = () => {
   useEffect(() => {
     initUpgradeEffects();
   }, []);
+
+  useEffect(() => {
+    waveManager.setHandlers(
+      () => startEnemyWave(currentWave),
+      () => {
+        setRefreshing(true);
+        nextWave();
+        resetDice();
+      },
+    );
+  }, [currentWave, nextWave, resetDice]);
+
+  useEffect(() => {
+    if (isPreparing) {
+      waveManager.scheduleAutoStart(currentWave, GAME_CONSTANTS.PREP_TIME);
+    }
+  }, [isPreparing, currentWave]);
 
   // Deploy mines at the start of each wave
   useEffect(() => {
@@ -133,35 +152,15 @@ export const GameBoard: React.FC = () => {
       return;
     }
     if (!loopStopper.current) {
-      startEnemyWave();
       loopStopper.current = startGameLoop();
     }
+    waveManager.startWave(currentWave);
     return () => {
       stopEnemyWave();
       loopStopper.current?.();
       loopStopper.current = null;
     };
-  }, [isStarted, isRefreshing, isPreparing]);
-
-  // Auto next wave and refresh handling
-  useEffect(() => {
-    if (!isStarted || isRefreshing || isPreparing) return;
-
-    // Wave is complete when the kill requirement is met.
-    if (enemiesKilled >= enemiesRequired) {
-      setRefreshing(true); // Show upgrade screen
-      nextWave(); // Progress to the next wave state
-      resetDice(); // Reset dice for the new upgrade round
-    }
-  }, [
-    enemiesKilled,
-    enemiesRequired,
-    isStarted,
-    isRefreshing,
-    isPreparing,
-    nextWave,
-    resetDice,
-  ]);
+  }, [isStarted, isRefreshing, isPreparing, currentWave]);
 
   const warningPlayed = useRef(false);
 

@@ -2,6 +2,7 @@ import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import type { Position, Enemy } from '../models/gameTypes';
 import { waveCompositions } from '../config/waves';
+import { waveManager } from "./WaveManager";
 
 let spawnInterval: number | null = null;
 let spawnQueue: string[] = [];
@@ -111,8 +112,8 @@ function createEnemy(wave: number, type: string = 'Basic'): Enemy {
   }
 }
 
-export function startEnemyWave() {
-  const { currentWave, addEnemy, towers, towerSlots, buildTower, currentWaveModifier } = useGameStore.getState();
+export function startEnemyWave(wave: number) {
+  const { addEnemy, towers, towerSlots, buildTower, currentWaveModifier } = useGameStore.getState();
 
   if (towers.length === 0) {
     const firstEmptySlotIndex = towerSlots.findIndex((s) => s.unlocked && !s.tower);
@@ -127,13 +128,16 @@ export function startEnemyWave() {
 
   spawnQueue = [];
   spawnIndex = 0;
-  const composition = waveCompositions[currentWave];
+  const composition = waveCompositions[wave];
   if (composition) {
     composition.forEach(cfg => {
       for (let i = 0; i < cfg.count; i++) spawnQueue.push(cfg.type);
     });
   } else {
-    const count = GAME_CONSTANTS.ENEMY_WAVE_INCREASE * currentWave;
+    if (GAME_CONSTANTS.DEBUG_MODE) {
+      console.error(`[WaveManager] No spawn config found for wave ${wave}`);
+    }
+    const count = GAME_CONSTANTS.ENEMY_WAVE_INCREASE * wave;
     for (let i = 0; i < count; i++) spawnQueue.push('Basic');
   }
 
@@ -143,10 +147,10 @@ export function startEnemyWave() {
       return;
     }
     const type = spawnQueue[spawnIndex++];
-    const enemy = createEnemy(currentWave, type);
+    const enemy = createEnemy(wave, type);
     addEnemy(enemy);
     if (currentWaveModifier?.bonusEnemies) {
-      addEnemy(createEnemy(currentWave, type));
+      addEnemy(createEnemy(wave, type));
     }
   }, GAME_CONSTANTS.ENEMY_SPAWN_RATE);
 }
@@ -228,4 +232,7 @@ export function updateEnemyMovement() {
     enemy.position.x += moveX;
     enemy.position.y += moveY;
   });
-} 
+  const { currentWave, enemiesKilled } = useGameStore.getState();
+  const pending = spawnInterval !== null && spawnIndex < spawnQueue.length;
+  waveManager.checkComplete(currentWave, enemies.length, pending, enemiesKilled);
+}
