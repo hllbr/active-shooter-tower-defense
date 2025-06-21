@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position } from './gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { updateWaveTiles } from '../logic/TowerPlacementManager';
+import { waveRules } from '../config/waveRules';
 
 const initialSlots: TowerSlot[] = updateWaveTiles(1, []);
 
@@ -37,6 +38,7 @@ const initialState: GameState = {
   globalWallActive: true,
   lastWallDestroyed: 0,
   wallRegenerationActive: false,
+  currentWaveModifier: waveRules[1],
 };
 
 type Store = GameState & {
@@ -138,6 +140,7 @@ export const useGameStore = create<Store>((set, get) => ({
   upgradeTower: (slotIdx) => set((state) => {
     const slot = state.towerSlots[slotIdx];
     if (!slot.tower || slot.tower.level >= GAME_CONSTANTS.TOWER_MAX_LEVEL) return {};
+    if (state.currentWaveModifier?.noUpgrades) return {};
     
     const nextLevel = slot.tower.level + 1;
     const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[nextLevel - 1];
@@ -355,11 +358,13 @@ export const useGameStore = create<Store>((set, get) => ({
       shieldUpgradesPurchased: 0,
       packagesPurchased: 0,
       towerSlots: updateWaveTiles(newWave, state.towerSlots),
+      currentWaveModifier: waveRules[newWave],
     };
   }),
   resetGame: () => set(() => ({
     ...initialState,
     towerSlots: updateWaveTiles(1, []),
+    currentWaveModifier: waveRules[1],
     enemiesKilled: 0,
     enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(1),
     totalEnemiesKilled: 0,

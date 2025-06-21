@@ -50,6 +50,7 @@ function getNearestSlot(pos: Position) {
 }
 
 function createEnemy(wave: number) {
+  const { currentWaveModifier } = useGameStore.getState();
   const id = `${Date.now()}-${Math.random()}`;
   
   // Special enemy spawn logic for waves 10+
@@ -75,7 +76,7 @@ function createEnemy(wave: number) {
       isActive: true,
       health: healthScaling,
       maxHealth: healthScaling,
-      speed: speedScaling,
+      speed: speedScaling * (currentWaveModifier?.speedMultiplier ?? 1),
       goldValue: goldScaling,
       color: GAME_CONSTANTS.MICROBE_ENEMY.color,
       frozenUntil: 0,
@@ -93,7 +94,7 @@ function createEnemy(wave: number) {
       isActive: true,
       health,
       maxHealth: health,
-      speed: GAME_CONSTANTS.ENEMY_SPEED + (wave - 1) * 5,
+      speed: (GAME_CONSTANTS.ENEMY_SPEED + (wave - 1) * 5) * (currentWaveModifier?.speedMultiplier ?? 1),
       goldValue: GAME_CONSTANTS.ENEMY_GOLD_DROP,
       color,
       frozenUntil: 0,
@@ -103,7 +104,7 @@ function createEnemy(wave: number) {
 }
 
 export function startEnemyWave() {
-  const { currentWave, addEnemy, towers, towerSlots, buildTower } = useGameStore.getState();
+  const { currentWave, addEnemy, towers, towerSlots, buildTower, currentWaveModifier } = useGameStore.getState();
 
   if (towers.length === 0) {
     const firstEmptySlotIndex = towerSlots.findIndex((s) => s.unlocked && !s.tower);
@@ -120,6 +121,9 @@ export function startEnemyWave() {
   spawnInterval = window.setInterval(() => {
     const enemy = createEnemy(currentWave);
     addEnemy(enemy);
+    if (currentWaveModifier?.bonusEnemies) {
+      addEnemy(createEnemy(currentWave));
+    }
   }, GAME_CONSTANTS.ENEMY_SPAWN_RATE);
 }
 

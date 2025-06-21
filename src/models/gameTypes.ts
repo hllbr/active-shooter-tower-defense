@@ -92,6 +92,15 @@ export interface Mine {
   radius: number;
 }
 
+export interface WaveModifier {
+  speedMultiplier?: number;
+  disableTowerType?: string;
+  bonusEnemies?: boolean;
+  towerRangeReduced?: boolean;
+  noUpgrades?: boolean;
+  disableArea?: { x: number; y: number; radius: number };
+}
+
 export interface GameState {
   towers: Tower[];
   towerSlots: TowerSlot[];
@@ -127,4 +136,5 @@ export interface GameState {
   frostEffectActive: boolean;
   frostEffectStartTime: number;
   originalEnemySpeeds: Map<string, number>;
+  currentWaveModifier?: WaveModifier;
 }

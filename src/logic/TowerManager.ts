@@ -227,6 +227,7 @@ function handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect
 
 export function updateTowerFire() {
   const state = useGameStore.getState();
+  const modifier = state.currentWaveModifier;
   const now = performance.now();
   
   // Sur yenileme kontrolü
@@ -237,6 +238,13 @@ export function updateTowerFire() {
   state.towerSlots.forEach((slot) => {
     const tower = slot.tower;
     if (!tower) return;
+
+    if (modifier?.disableTowerType && tower.specialAbility === modifier.disableTowerType) return;
+    if (modifier?.disableArea) {
+      const dx = tower.position.x - modifier.disableArea.x;
+      const dy = tower.position.y - modifier.disableArea.y;
+      if (Math.sqrt(dx * dx + dy * dy) <= modifier.disableArea.radius) return;
+    }
 
     // Health regeneration
     if (tower.healthRegenRate > 0 && now - tower.lastHealthRegen > 1000) {
@@ -270,7 +278,8 @@ export function updateTowerFire() {
     if (now - tower.lastFired < tower.fireRate * fireRateMultiplier) return;
     
     const { enemy, distance } = getNearestEnemy(tower.position, state.enemies);
-    if (!enemy || distance > tower.range) return;
+    const rangeMult = modifier?.towerRangeReduced ? 0.5 : 1;
+    if (!enemy || distance > tower.range * rangeMult) return;
     
     // Create bullet(s)
     const bullet = {
