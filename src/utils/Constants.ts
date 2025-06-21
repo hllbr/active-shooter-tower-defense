@@ -19,6 +19,11 @@ export const GAME_CONSTANTS = {
   RELOCATE_COOLDOWN: 5000,
   BUILD_TILE_DISTANCE: 120,
   DISMANTLE_REFUND: 0.5,
+  BUILD_TILE_COLORS: {
+    fixed: '#4ade80',
+    dynamic: '#60a5fa',
+  },
+  ROAD_PADDING: 80,
   TOWER_COLORS: [
     '#D2B48C', '#A9A9A9', '#FFD700', '#9370DB', '#FF69B4', // 1-5
     '#00CED1', '#32CD32', '#FF4500', '#8A2BE2', '#FF1493', // 6-10

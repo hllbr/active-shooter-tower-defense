@@ -969,7 +969,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
             width={GAME_CONSTANTS.TOWER_SIZE + 8}
             height={GAME_CONSTANTS.TOWER_SIZE + 8}
             fill={canBuild ? '#2d5016' : '#333333'}
-            stroke={canBuild ? '#4ade80' : '#666666'}
+            stroke={canBuild ? (slot.type === 'dynamic' ? '#3b82f6' : '#4ade80') : '#666666'}
             strokeWidth={3}
             rx={8}
             style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
@@ -980,8 +980,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
             y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
             width={GAME_CONSTANTS.TOWER_SIZE}
             height={GAME_CONSTANTS.TOWER_SIZE}
-            fill={canBuild ? '#4ade80' : '#444444'}
-            stroke={canBuild ? '#166534' : '#555555'}
+            fill={canBuild ? (slot.type === 'dynamic' ? GAME_CONSTANTS.BUILD_TILE_COLORS.dynamic : GAME_CONSTANTS.BUILD_TILE_COLORS.fixed) : '#444444'}
+            stroke={canBuild ? (slot.type === 'dynamic' ? '#1e3a8a' : '#166534') : '#555555'}
             strokeWidth={2}
             rx={6}
             style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}

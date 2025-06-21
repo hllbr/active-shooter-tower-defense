@@ -1,77 +1,66 @@
-export type TileType = 'fixed' | 'dynamic' | 'temporary';
-
 import { GAME_CONSTANTS } from '../utils/Constants';
 import type { TowerSlot } from '../models/gameTypes';
 
-function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
+type TileType = 'fixed' | 'dynamic';
+
+type Position = { x: number; y: number };
+
+function distance(a: Position, b: Position) {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
 function randomPosition(width: number, height: number) {
-  const padding = GAME_CONSTANTS.BUILD_TILE_DISTANCE;
+  const pad = GAME_CONSTANTS.ROAD_PADDING;
   return {
-    x: Math.random() * (width - padding * 2) + padding,
-    y: Math.random() * (height - padding * 2) + padding,
+    x: Math.random() * (width - pad * 2) + pad,
+    y: Math.random() * (height - pad * 2) + pad,
   };
 }
 
-function createTiles(count: number, type: TileType, existing: TowerSlot[]): TowerSlot[] {
+function createDynamicTiles(count: number, existing: TowerSlot[]): TowerSlot[] {
+  const width = GAME_CONSTANTS.CANVAS_WIDTH;
+  const height = GAME_CONSTANTS.CANVAS_HEIGHT;
   const tiles: TowerSlot[] = [];
-  const width = window.innerWidth;
-  const height = window.innerHeight;
 
   while (tiles.length < count) {
     const pos = randomPosition(width, height);
-    const tooClose = [...existing, ...tiles].some(t =>
-      distance(pos, { x: t.x, y: t.y }) < GAME_CONSTANTS.BUILD_TILE_DISTANCE
+    const tooClose = [...existing, ...tiles].some(
+      t => distance(pos, { x: t.x, y: t.y }) < GAME_CONSTANTS.BUILD_TILE_DISTANCE,
     );
     if (tooClose) continue;
-    tiles.push({ x: pos.x, y: pos.y, unlocked: true, type, tower: undefined });
+    tiles.push({ x: pos.x, y: pos.y, unlocked: true, type: 'dynamic', tower: undefined });
   }
   return tiles;
 }
 
+function createStaticTiles(count: number, existing: TowerSlot[]): TowerSlot[] {
+  const used = new Set(existing.map(s => `${s.x},${s.y}`));
+  const candidates = GAME_CONSTANTS.TOWER_SLOTS.filter(p => !used.has(`${p.x},${p.y}`));
+  return candidates.slice(0, count).map(p => ({
+    x: p.x,
+    y: p.y,
+    unlocked: true,
+    type: 'fixed' as TileType,
+    tower: undefined,
+  }));
+}
+
 export function updateWaveTiles(wave: number, current: TowerSlot[]): TowerSlot[] {
-  // Persist existing towers and any fixed slots. Dynamic/temporary slots without
-  // towers are removed each wave so they can be regenerated.
   const persisted: TowerSlot[] = [];
   for (const slot of current) {
     if (slot.tower) {
-      // Once a tower is built the slot effectively becomes fixed
       persisted.push({ ...slot, type: 'fixed' });
     } else if (slot.type === 'fixed') {
       persisted.push(slot);
     }
   }
 
-  const baseCount = wave >= 21 ? 3 : 5;
-  let newTiles: TowerSlot[] = [];
+  const TOTAL_NEW = 5;
+  const newStatic = createStaticTiles(TOTAL_NEW, persisted);
+  const remaining = TOTAL_NEW - newStatic.length;
+  const newDynamic = remaining > 0 ? createDynamicTiles(remaining, [...persisted, ...newStatic]) : [];
 
-  if (wave <= 5) {
-    newTiles = createTiles(baseCount, 'fixed', persisted);
-  } else if (wave <= 10) {
-    newTiles = [
-      ...createTiles(3, 'fixed', persisted),
-      ...createTiles(baseCount - 3, 'dynamic', persisted),
-    ];
-  } else if (wave <= 15) {
-    newTiles = [
-      ...createTiles(3, 'fixed', persisted),
-      ...createTiles(baseCount - 3, 'dynamic', persisted),
-    ];
-  } else if (wave <= 20) {
-    newTiles = [
-      ...createTiles(2, 'fixed', persisted),
-      ...createTiles(baseCount - 2, 'temporary', persisted),
-    ];
-  } else {
-    newTiles = [
-      ...createTiles(1, 'fixed', persisted),
-      ...createTiles(baseCount - 1, 'dynamic', persisted),
-    ];
-  }
-
-  return [...persisted, ...newTiles];
+  return [...persisted, ...newStatic, ...newDynamic];
 }

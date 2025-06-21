@@ -42,7 +42,7 @@ export interface TowerSlot {
   y: number;
   unlocked: boolean;
   /** build tile type */
-  type?: 'fixed' | 'dynamic' | 'temporary';
+  type?: 'fixed' | 'dynamic';
   tower?: Tower;
   /** Indicates that a tower existed here and was destroyed */
   wasDestroyed?: boolean;
