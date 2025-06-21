@@ -4,6 +4,7 @@ import { GAME_CONSTANTS } from '../utils/Constants';
 import { TowerSpot } from './TowerSpot';
 import { startEnemyWave, stopEnemyWave } from '../logic/EnemySpawner';
 import { startGameLoop } from '../logic/GameLoop';
+import { initUpgradeEffects } from '../logic/UpgradeEffects';
 import { UpgradeScreen } from './game/UpgradeScreen';
 
 export const GameBoard: React.FC = () => {
@@ -34,6 +35,10 @@ export const GameBoard: React.FC = () => {
   } = useGameStore();
 
   const [isRefreshing, setRefreshing] = React.useState(false);
+
+  useEffect(() => {
+    initUpgradeEffects();
+  }, []);
 
   // Deploy mines at the start of each wave
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import type { Effect } from '../models/gameTypes';
 import type { Enemy, Position, Tower } from '../models/gameTypes';
+import { playSound } from '../utils/sound';
 
 function getDirection(from: Position, to: Position) {
   const dx = to.x - from.x;
@@ -295,6 +296,7 @@ export function updateTowerFire() {
     };
     
     useGameStore.getState().addBullet(bullet);
+    playSound(tower.attackSound);
     tower.lastFired = now;
   });
 }

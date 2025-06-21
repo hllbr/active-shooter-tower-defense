@@ -1,5 +1,12 @@
 export type Position = { x: number; y: number };
 
+export interface TowerVisual {
+  level: number;
+  model: string;
+  glow?: boolean;
+  effect?: string;
+}
+
 export interface Tower {
   id: string;
   position: Position;
@@ -35,6 +42,8 @@ export interface Tower {
   godModeActive: boolean;
   /** Timestamp of last relocation for cooldown checks */
   lastRelocated?: number;
+  attackSound?: string;
+  visual?: TowerVisual;
 }
 
 export interface TowerSlot {
@@ -101,6 +110,12 @@ export interface WaveModifier {
   disableArea?: { x: number; y: number; radius: number };
 }
 
+export type TowerUpgradeListener = (
+  tower: Tower,
+  oldLevel: number,
+  newLevel: number,
+) => void;
+
 export interface GameState {
   towers: Tower[];
   towerSlots: TowerSlot[];
@@ -137,4 +152,5 @@ export interface GameState {
   frostEffectStartTime: number;
   originalEnemySpeeds: Map<string, number>;
   currentWaveModifier?: WaveModifier;
+  towerUpgradeListeners: TowerUpgradeListener[];
 }

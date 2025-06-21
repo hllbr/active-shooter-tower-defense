@@ -1,3 +1,5 @@
+import type { TowerVisual } from '../models/gameTypes';
+
 export const GAME_CONSTANTS = {
   // Canvas
   CANVAS_BG: '#222831',
@@ -24,6 +26,12 @@ export const GAME_CONSTANTS = {
     dynamic: '#60a5fa',
   },
   ROAD_PADDING: 80,
+  TOWER_ATTACK_SOUNDS: Array.from({ length: 25 }, (_, i) => `tower_attack_${i + 1}`),
+  TOWER_VISUALS: [
+    { level: 1, model: 'basic' },
+    { level: 2, model: 'spiked', glow: true },
+    { level: 3, model: 'cannon', effect: 'electric_aura' },
+  ] as TowerVisual[],
   TOWER_COLORS: [
     '#D2B48C', '#A9A9A9', '#FFD700', '#9370DB', '#FF69B4', // 1-5
     '#00CED1', '#32CD32', '#FF4500', '#8A2BE2', '#FF1493', // 6-10

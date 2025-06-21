@@ -957,6 +957,22 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
     );
   };
 
+  const renderVisualExtras = () => {
+    if (!slot.tower) return null;
+    const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === slot.tower!.level);
+    if (!visual) return null;
+    return (
+      <>
+        {visual.glow && (
+          <circle cx={slot.x} cy={slot.y} r={GAME_CONSTANTS.TOWER_SIZE} fill="none" stroke="#aef" strokeWidth={3} opacity={0.6} />
+        )}
+        {visual.effect === 'electric_aura' && (
+          <circle cx={slot.x} cy={slot.y} r={GAME_CONSTANTS.TOWER_SIZE + 10} fill="none" stroke="#33f" strokeDasharray="4 2" />
+        )}
+      </>
+    );
+  };
+
   return (
     <g>
       {/* Slot or Tower */}
@@ -1014,6 +1030,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           {renderWall()}
           {/* Render detailed tower */}
           {renderTower(slot.tower.level)}
+          {renderVisualExtras()}
           
           {/* Info panel below tower */}
           {currentTowerInfo && (

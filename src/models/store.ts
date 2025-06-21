@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position } from './gameTypes';
+import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from './gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { updateWaveTiles } from '../logic/TowerPlacementManager';
 import { waveRules } from '../config/waveRules';
@@ -39,6 +39,7 @@ const initialState: GameState = {
   lastWallDestroyed: 0,
   wallRegenerationActive: false,
   currentWaveModifier: waveRules[1],
+  towerUpgradeListeners: [],
 };
 
 type Store = GameState & {
@@ -77,6 +78,7 @@ type Store = GameState & {
   regenerateWalls: () => void;
   activateFrostEffect: () => void;
   deactivateFrostEffect: () => void;
+  addTowerUpgradeListener: (fn: TowerUpgradeListener) => void;
 };
 
 export const useGameStore = create<Store>((set, get) => ({
@@ -126,9 +128,12 @@ export const useGameStore = create<Store>((set, get) => ({
       cosmicEnergy: 100,
       infinityLoop: false,
       godModeActive: false,
+      attackSound: GAME_CONSTANTS.TOWER_ATTACK_SOUNDS[0],
+      visual: GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === 1),
     };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
+    state.towerUpgradeListeners.forEach(fn => fn(newTower, 0, 1));
     return {
       towers: [...state.towers, newTower],
       towerSlots: newSlots,
@@ -155,6 +160,8 @@ export const useGameStore = create<Store>((set, get) => ({
       health: upgrade.health,
       maxHealth: upgrade.health,
       specialAbility: upgrade.special,
+      attackSound: GAME_CONSTANTS.TOWER_ATTACK_SOUNDS[nextLevel - 1],
+      visual: GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === nextLevel),
       // Level-based special improvements
       healthRegenRate: nextLevel >= 20 ? 5 : nextLevel >= 15 ? 3 : nextLevel >= 10 ? 2 : nextLevel >= 5 ? 1 : 0,
       multiShotCount: nextLevel >= 7 ? 5 : nextLevel >= 6 ? 4 : 3,
@@ -170,6 +177,7 @@ export const useGameStore = create<Store>((set, get) => ({
     
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: upgradedTower };
+    state.towerUpgradeListeners.forEach(fn => fn(upgradedTower, nextLevel - 1, nextLevel));
     return {
       towers: state.towers.map(t => t.id === upgradedTower.id ? upgradedTower : t),
       towerSlots: newSlots,
@@ -616,11 +624,14 @@ export const useGameStore = create<Store>((set, get) => ({
         enemy.speed = originalSpeed;
       }
     });
-    
+
     return {
       frostEffectActive: false,
       frostEffectStartTime: 0,
       originalEnemySpeeds: new Map(),
     };
   }),
+  addTowerUpgradeListener: (fn) => set((state) => ({
+    towerUpgradeListeners: [...state.towerUpgradeListeners, fn],
+  })),
 }));
