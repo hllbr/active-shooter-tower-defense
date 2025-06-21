@@ -5,6 +5,7 @@ import { updateWaveTiles } from '../logic/TowerPlacementManager';
 import { waveRules } from '../config/waveRules';
 import { economyConfig } from '../config/economy';
 import { energyManager } from '../logic/EnergyManager';
+import { waveManager } from '../logic/WaveManager';
 
 const initialSlots: TowerSlot[] = updateWaveTiles(1, []);
 
@@ -40,6 +41,9 @@ const initialState: GameState = {
   globalWallActive: true,
   lastWallDestroyed: 0,
   wallRegenerationActive: false,
+  frostEffectActive: false,
+  frostEffectStartTime: 0,
+  originalEnemySpeeds: new Map(),
   currentWaveModifier: waveRules[1],
   towerUpgradeListeners: [],
   energy: GAME_CONSTANTS.BASE_ENERGY,
