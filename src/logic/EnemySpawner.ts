@@ -112,6 +112,8 @@ export function startEnemyWave() {
     }
   }
 
+  // Clear any existing interval. This is important when the upgrade screen
+  // temporarily stops waves to ensure spawning resumes correctly.
   if (spawnInterval) clearInterval(spawnInterval);
 
   // This interval will now run indefinitely until stopEnemyWave is explicitly called
