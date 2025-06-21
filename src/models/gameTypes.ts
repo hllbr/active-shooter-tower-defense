@@ -70,4 +70,8 @@ export interface GameState {
   globalWallStrength: number;
   isGameOver: boolean;
   isStarted: boolean;
+  diceRoll: number | null;
+  diceUsed: boolean;
+  discountMultiplier: number;
+  isDiceRolling: boolean;
 }

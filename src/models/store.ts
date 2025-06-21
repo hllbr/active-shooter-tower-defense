@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState, Tower, TowerSlot, Enemy, Bullet, Position, Effect } from './gameTypes';
+import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect } from './gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
 
 const initialSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(
@@ -25,6 +25,10 @@ const initialState: GameState = {
   globalWallStrength: 0,
   isGameOver: false,
   isStarted: false,
+  diceRoll: null,
+  diceUsed: false,
+  discountMultiplier: 1,
+  isDiceRolling: false,
 };
 
 type Store = GameState & {
@@ -50,6 +54,9 @@ type Store = GameState & {
   setStarted: (started: boolean) => void;
   upgradeBullet: () => void;
   refreshBattlefield: (slots: number) => void;
+  rollDice: () => void;
+  resetDice: () => void;
+  setDiceResult: (roll: number, multiplier: number) => void;
 };
 
 export const useGameStore = create<Store>((set, get) => ({
@@ -223,7 +230,10 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  nextWave: () => set((state) => ({ currentWave: state.currentWave + 1 })),
+  nextWave: () => set((state) => ({ 
+    currentWave: state.currentWave + 1,
+    diceUsed: false, // Her wave'de zar hakkını yenile
+  })),
   resetGame: () => set(() => ({ ...initialState, towerSlots: initialSlots })),
   setStarted: (started) => set(() => ({ isStarted: started })),
   upgradeBullet: () => set((state) => {
@@ -235,7 +245,7 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
   refreshBattlefield: (slots) => set(() => {
-    const newSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(0, slots).map((s, i) => ({
+    const newSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(0, slots).map((s) => ({
       ...s,
       unlocked: true,
       tower: undefined,
@@ -249,4 +259,39 @@ export const useGameStore = create<Store>((set, get) => ({
       effects: [],
     };
   }),
+  rollDice: () => set((state) => {
+    if (state.diceUsed || state.isDiceRolling) return {};
+    
+    // Zar atma animasyonu için önce rolling state'ini true yap
+    setTimeout(() => {
+      const roll = Math.floor(Math.random() * 6) + 1;
+      let discountMultiplier = 1;
+      
+      if (roll <= 3) {
+        // 3 ve altında: indirimler iptal edilir
+        discountMultiplier = 0;
+      } else {
+        // 4-6 arası: mevcut indirim + %50 daha fazla
+        discountMultiplier = 1 + (roll - 3) * 0.5;
+      }
+      
+      get().setDiceResult(roll, discountMultiplier);
+    }, 2000); // 2 saniye animasyon
+    
+    return {
+      isDiceRolling: true,
+    };
+  }),
+  resetDice: () => set(() => ({
+    diceRoll: null,
+    diceUsed: false,
+    discountMultiplier: 1,
+    isDiceRolling: false,
+  })),
+  setDiceResult: (roll: number, multiplier: number) => set(() => ({
+    diceRoll: roll,
+    diceUsed: true,
+    discountMultiplier: multiplier,
+    isDiceRolling: false,
+  })),
 }));

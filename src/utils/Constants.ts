@@ -148,6 +148,73 @@ export const GAME_CONSTANTS = {
     { name: 'Işık Kalkanı', strength: 50, cost: 500 },
   ],
 
+  // Avantajlı Paketler - Matematiksel hesaplama ile %15-25 indirim
+  UPGRADE_PACKAGES: [
+    {
+      name: 'Başlangıç Paketi',
+      bulletLevel: 1, // Ejderha Nefesi
+      shieldIndex: 0, // Taş Kalkanı
+      originalCost: 300 + 50, // 350
+      discountedCost: 300, // %14 indirim
+      description: 'Ejderha Nefesi + Taş Kalkanı',
+      color: '#ff4400',
+    },
+    {
+      name: 'Güç Paketi',
+      bulletLevel: 2, // Mamut Öfkesi
+      shieldIndex: 2, // Demir Kalkanı
+      originalCost: 300 + 150, // 450
+      discountedCost: 380, // %16 indirim
+      description: 'Mamut Öfkesi + Demir Kalkanı',
+      color: '#ffcc00',
+    },
+    {
+      name: 'Savaş Paketi',
+      bulletLevel: 3, // Alevor
+      shieldIndex: 4, // Mithril Kalkanı
+      originalCost: 300 + 250, // 550
+      discountedCost: 450, // %18 indirim
+      description: 'Alevor + Mithril Kalkanı',
+      color: '#ff5500',
+    },
+    {
+      name: 'Efsanevi Paket',
+      bulletLevel: 4, // Yakhar
+      shieldIndex: 6, // Kristal Kalkanı
+      originalCost: 300 + 350, // 650
+      discountedCost: 520, // %20 indirim
+      description: 'Yakhar + Kristal Kalkanı',
+      color: '#cc3300',
+    },
+    {
+      name: 'Gölge Paketi',
+      bulletLevel: 5, // Ignorak
+      shieldIndex: 8, // Gölge Kalkanı
+      originalCost: 300 + 450, // 750
+      discountedCost: 580, // %23 indirim
+      description: 'Ignorak + Gölge Kalkanı',
+      color: '#ff0066',
+    },
+    {
+      name: 'Volkan Paketi',
+      bulletLevel: 6, // Volkanor
+      shieldIndex: 9, // Işık Kalkanı
+      originalCost: 300 + 500, // 800
+      discountedCost: 600, // %25 indirim
+      description: 'Volkanor + Işık Kalkanı',
+      color: '#ff6600',
+    },
+    {
+      name: 'Ultimate Paket',
+      bulletLevel: 7, // Pyrax
+      shieldIndex: 9, // Işık Kalkanı
+      originalCost: 300 + 500, // 800
+      discountedCost: 650, // %19 indirim (en güçlü paket)
+      description: 'Pyrax + Işık Kalkanı',
+      color: '#ff3300',
+    },
+  ],
+
   // UI
   GOLD_COLOR: '#FFD700',
   HEALTHBAR_BG: '#333',
