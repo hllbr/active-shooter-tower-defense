@@ -85,6 +85,7 @@ export interface GameState {
   packagesPurchased: number;
   defenseUpgradesPurchased: number;
   mineLevel: number;
+  mineRegeneration: boolean;
   mines: Mine[];
   maxTowers: number;
   globalWallStrength: number;

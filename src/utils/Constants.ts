@@ -89,6 +89,13 @@ export const GAME_CONSTANTS = {
     { cost: 4100, count: 10, damage: 350, radius: 150 },
     { cost: 5000, count: 12, damage: 400, radius: 160 },
     { cost: 6000, count: 15, damage: 500, radius: 180 },
+    {
+      cost: 5000,
+      count: 10,
+      damage: 175,
+      radius: 120,
+      description: 'Sınırsız Mayın: Patlayan her mayının yerine anında yenisi gelir.',
+    },
   ],
 
   // Knockback effect

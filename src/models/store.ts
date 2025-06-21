@@ -30,6 +30,7 @@ const initialState: GameState = {
   packagesPurchased: 0,
   defenseUpgradesPurchased: 0,
   mineLevel: 0,
+  mineRegeneration: false,
   mines: [],
   maxTowers: GAME_CONSTANTS.INITIAL_TOWER_LIMIT,
   globalWallStrength: 0,
@@ -358,9 +359,12 @@ export const useGameStore = create<Store>((set, get) => ({
     const upgrade = GAME_CONSTANTS.MINE_UPGRADES[currentLevel];
     if (state.gold < upgrade.cost) return {};
 
+    const isRegenUpgrade = currentLevel === GAME_CONSTANTS.MINE_UPGRADES.length - 2;
+
     return {
       gold: state.gold - upgrade.cost,
       mineLevel: currentLevel + 1,
+      mineRegeneration: state.mineRegeneration || isRegenUpgrade,
       totalGoldSpent: state.totalGoldSpent + upgrade.cost,
       defenseUpgradesPurchased: state.defenseUpgradesPurchased + 1,
     };
@@ -395,7 +399,34 @@ export const useGameStore = create<Store>((set, get) => ({
     }
     return { mines: newMines };
   }),
-  triggerMine: (mineId) => set((state) => ({
-    mines: state.mines.filter(m => m.id !== mineId),
-  })),
+  triggerMine: (mineId) => set((state) => {
+    const newMines = state.mines.filter(m => m.id !== mineId);
+
+    if (state.mineRegeneration) {
+      const level = state.mineLevel - 1;
+      const upgrade = GAME_CONSTANTS.MINE_UPGRADES[level];
+      const towerSlotPositions = new Set(state.towerSlots.map(s => `${s.x},${s.y}`));
+      
+      let position: Position;
+      let isOverlapping;
+      do {
+        position = {
+          x: Math.random() * (window.innerWidth - 100) + 50,
+          y: Math.random() * (window.innerHeight - 100) + 50,
+        };
+        isOverlapping = towerSlotPositions.has(`${position.x},${position.y}`);
+      } while (isOverlapping);
+
+      const newMine: Mine = {
+        id: `mine-${Date.now()}-${Math.random()}`,
+        position,
+        size: GAME_CONSTANTS.MINE_VISUALS.size,
+        damage: upgrade.damage,
+        radius: upgrade.radius,
+      };
+      newMines.push(newMine);
+    }
+    
+    return { mines: newMines };
+  }),
 }));
