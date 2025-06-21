@@ -33,12 +33,16 @@ export interface Tower {
   cosmicEnergy: number;
   infinityLoop: boolean;
   godModeActive: boolean;
+  /** Timestamp of last relocation for cooldown checks */
+  lastRelocated?: number;
 }
 
 export interface TowerSlot {
   x: number;
   y: number;
   unlocked: boolean;
+  /** build tile type */
+  type?: 'fixed' | 'dynamic' | 'temporary';
   tower?: Tower;
   /** Indicates that a tower existed here and was destroyed */
   wasDestroyed?: boolean;

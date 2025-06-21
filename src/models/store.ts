@@ -1,16 +1,9 @@
 import { create } from 'zustand';
 import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position } from './gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
+import { updateWaveTiles } from '../logic/TowerPlacementManager';
 
-const initialSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(
-  0,
-  GAME_CONSTANTS.INITIAL_SLOT_COUNT,
-).map((slot) => ({
-  ...slot,
-  unlocked: true,
-  tower: undefined,
-  wasDestroyed: false,
-}));
+const initialSlots: TowerSlot[] = updateWaveTiles(1, []);
 
 const initialState: GameState = {
   towers: [],
@@ -51,6 +44,8 @@ type Store = GameState & {
   upgradeTower: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
   removeTower: (slotIdx: number) => void;
+  dismantleTower: (slotIdx: number) => void;
+  moveTower: (fromIdx: number, toIdx: number) => void;
   unlockSlot: (slotIdx: number) => void;
   addGold: (amount: number) => void;
   spendGold: (amount: number) => void;
@@ -231,6 +226,35 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
+  dismantleTower: (slotIdx) => set((state) => {
+    const slot = state.towerSlots[slotIdx];
+    if (!slot.tower) return {};
+    const refund = Math.floor(GAME_CONSTANTS.TOWER_COST * GAME_CONSTANTS.DISMANTLE_REFUND);
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, tower: undefined, wasDestroyed: false };
+    return {
+      towers: state.towers.filter(t => t.id !== slot.tower!.id),
+      towerSlots: newSlots,
+      gold: state.gold + refund,
+    };
+  }),
+
+  moveTower: (fromIdx, toIdx) => set((state) => {
+    const from = state.towerSlots[fromIdx];
+    const to = state.towerSlots[toIdx];
+    if (!from.tower || to.tower) return {};
+    const now = performance.now();
+    if (from.tower.lastRelocated && now - from.tower.lastRelocated < GAME_CONSTANTS.RELOCATE_COOLDOWN) return {};
+    const moved = { ...from.tower, position: { x: to.x, y: to.y }, lastRelocated: now };
+    const newSlots = [...state.towerSlots];
+    newSlots[fromIdx] = { ...from, tower: undefined };
+    newSlots[toIdx] = { ...to, tower: moved };
+    return {
+      towerSlots: newSlots,
+      towers: state.towers.map(t => t.id === moved.id ? moved : t),
+    };
+  }),
+
   unlockSlot: () => {},
 
   addGold: (amount) => set((state) => ({ gold: state.gold + amount })),
@@ -330,11 +354,12 @@ export const useGameStore = create<Store>((set, get) => ({
       fireUpgradesPurchased: 0,
       shieldUpgradesPurchased: 0,
       packagesPurchased: 0,
+      towerSlots: updateWaveTiles(newWave, state.towerSlots),
     };
   }),
-  resetGame: () => set(() => ({ 
-    ...initialState, 
-    towerSlots: initialSlots,
+  resetGame: () => set(() => ({
+    ...initialState,
+    towerSlots: updateWaveTiles(1, []),
     enemiesKilled: 0,
     enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(1),
     totalEnemiesKilled: 0,
