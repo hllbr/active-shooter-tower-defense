@@ -1,5 +1,6 @@
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
+import type { Position } from '../models/gameTypes';
 
 let spawnInterval: number | null = null;
 
@@ -27,11 +28,16 @@ function getRandomSpawnPosition() {
   }
 }
 
-function getNearestSlot(pos) {
-  const slots = useGameStore.getState().towerSlots.filter(s => s.unlocked);
+function getNearestSlot(pos: Position) {
+  const slotsWithTowers = useGameStore.getState().towerSlots.filter((s) => s.unlocked && s.tower);
+
+  if (slotsWithTowers.length === 0) {
+    return null;
+  }
+
   let minDist = Infinity;
-  let nearest = slots[0];
-  slots.forEach(slot => {
+  let nearest = slotsWithTowers[0];
+  slotsWithTowers.forEach((slot) => {
     const dx = slot.x - pos.x;
     const dy = slot.y - pos.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -62,7 +68,15 @@ function createEnemy(wave: number) {
 }
 
 export function startEnemyWave() {
-  const { currentWave, addEnemy } = useGameStore.getState();
+  const { currentWave, addEnemy, towers, towerSlots, buildTower } = useGameStore.getState();
+
+  if (towers.length === 0) {
+    const firstEmptySlotIndex = towerSlots.findIndex((s) => s.unlocked && !s.tower);
+    if (firstEmptySlotIndex !== -1) {
+      buildTower(firstEmptySlotIndex, true);
+    }
+  }
+
   let enemiesToSpawn = currentWave * GAME_CONSTANTS.ENEMY_WAVE_INCREASE + 3;
   if (spawnInterval) clearInterval(spawnInterval);
   spawnInterval = window.setInterval(() => {

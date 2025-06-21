@@ -32,7 +32,7 @@ const initialState: GameState = {
 };
 
 type Store = GameState & {
-  buildTower: (slotIdx: number) => void;
+  buildTower: (slotIdx: number, free?: boolean) => void;
   upgradeTower: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
   removeTower: (slotIdx: number) => void;
@@ -48,11 +48,11 @@ type Store = GameState & {
   removeEffect: (effectId: string) => void;
   buyWall: (slotIdx: number) => void;
   hitWall: (slotIdx: number) => void;
-  purchaseShield: (idx: number) => void;
+  purchaseShield: (idx: number, free?: boolean) => void;
   nextWave: () => void;
   resetGame: () => void;
   setStarted: (started: boolean) => void;
-  upgradeBullet: () => void;
+  upgradeBullet: (free?: boolean) => void;
   refreshBattlefield: (slots: number) => void;
   rollDice: () => void;
   resetDice: () => void;
@@ -62,11 +62,12 @@ type Store = GameState & {
 export const useGameStore = create<Store>((set, get) => ({
   ...initialState,
 
-  buildTower: (slotIdx) => set((state) => {
+  buildTower: (slotIdx, free = false) => set((state) => {
     const slot = state.towerSlots[slotIdx];
+    const cost = free ? 0 : GAME_CONSTANTS.TOWER_COST;
     if (
       slot.tower ||
-      state.gold < GAME_CONSTANTS.TOWER_COST ||
+      state.gold < cost ||
       state.towers.length >= state.maxTowers
     )
       return {};
@@ -88,7 +89,7 @@ export const useGameStore = create<Store>((set, get) => ({
     return {
       towers: [...state.towers, newTower],
       towerSlots: newSlots,
-      gold: state.gold - GAME_CONSTANTS.TOWER_COST,
+      gold: state.gold - cost,
     };
   }),
 
@@ -217,16 +218,16 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  purchaseShield: (idx) => set((state) => {
+  purchaseShield: (idx, free = false) => set((state) => {
     const shield = GAME_CONSTANTS.WALL_SHIELDS[idx];
-    if (!shield || state.gold < shield.cost) return {};
+    if (!shield || (!free && state.gold < shield.cost)) return {};
     const newSlots = state.towerSlots.map((s) =>
       s.tower ? { ...s, tower: { ...s.tower, wallStrength: s.tower.wallStrength + shield.strength } } : s,
     );
     return {
       towerSlots: newSlots,
       globalWallStrength: state.globalWallStrength + shield.strength,
-      gold: state.gold - shield.cost,
+      gold: free ? state.gold : state.gold - shield.cost,
     };
   }),
 
@@ -236,12 +237,12 @@ export const useGameStore = create<Store>((set, get) => ({
   })),
   resetGame: () => set(() => ({ ...initialState, towerSlots: initialSlots })),
   setStarted: (started) => set(() => ({ isStarted: started })),
-  upgradeBullet: () => set((state) => {
+  upgradeBullet: (free = false) => set((state) => {
     if (state.bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length) return {};
-    if (state.gold < GAME_CONSTANTS.BULLET_UPGRADE_COST) return {};
+    if (!free && state.gold < GAME_CONSTANTS.BULLET_UPGRADE_COST) return {};
     return {
       bulletLevel: state.bulletLevel + 1,
-      gold: state.gold - GAME_CONSTANTS.BULLET_UPGRADE_COST,
+      gold: free ? state.gold : state.gold - GAME_CONSTANTS.BULLET_UPGRADE_COST,
     };
   }),
   refreshBattlefield: (slots) => set(() => {
