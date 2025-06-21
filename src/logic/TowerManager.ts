@@ -335,29 +335,49 @@ export function updateBullets() {
   const now = performance.now();
   
   state.bullets.forEach((bullet) => {
+    // Store previous position for interpolated collision
+    const prevPos = { x: bullet.position.x, y: bullet.position.y };
+    
     // Move bullet
-    bullet.position.x += bullet.direction.x * bullet.speed * 0.016;
-    bullet.position.y += bullet.direction.y * bullet.speed * 0.016;
+    const deltaX = bullet.direction.x * bullet.speed * 0.016;
+    const deltaY = bullet.direction.y * bullet.speed * 0.016;
+    bullet.position.x += deltaX;
+    bullet.position.y += deltaY;
     bullet.life -= 16;
+    
     if (bullet.life <= 0) {
       state.removeBullet(bullet.id);
       return;
     }
 
-    // Check for collision
+    // Check for collision with interpolation
+    let collisionDetected = false;
     state.enemies.forEach((enemy) => {
+      if (collisionDetected) return; // Already hit something
       if (enemy.frozenUntil && enemy.frozenUntil > now) return; // Skip frozen
-      const dx = enemy.position.x - bullet.position.x;
-      const dy = enemy.position.y - bullet.position.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < (enemy.size + bullet.size) / 2) {
-        state.damageEnemy(enemy.id, bullet.damage);
-        state.removeBullet(bullet.id);
+      
+      // Check collision along the bullet's path (interpolated)
+      const steps = Math.max(1, Math.ceil(Math.sqrt(deltaX * deltaX + deltaY * deltaY) / (bullet.size + enemy.size)));
+      for (let step = 0; step <= steps; step++) {
+        const t = step / steps;
+        const checkX = prevPos.x + deltaX * t;
+        const checkY = prevPos.y + deltaY * t;
+        
+        const dx = enemy.position.x - checkX;
+        const dy = enemy.position.y - checkY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < (enemy.size + bullet.size) / 2) {
+          state.damageEnemy(enemy.id, bullet.damage);
+          state.removeBullet(bullet.id);
+          collisionDetected = true;
 
-        // Apply bullet effects
-        const bulletType = GAME_CONSTANTS.BULLET_TYPES[bullet.typeIndex];
-        if ('freezeDuration' in bulletType && bulletType.freezeDuration) {
-          enemy.frozenUntil = now + bulletType.freezeDuration;
+          // Apply bullet effects
+          const bulletType = GAME_CONSTANTS.BULLET_TYPES[bullet.typeIndex];
+          if ('freezeDuration' in bulletType && bulletType.freezeDuration) {
+            enemy.frozenUntil = now + bulletType.freezeDuration;
+          }
+          break;
         }
       }
     });

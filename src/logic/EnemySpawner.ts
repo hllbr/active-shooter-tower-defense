@@ -59,8 +59,19 @@ function getRandomSpawnPosition() {
 function getNearestSlot(pos: Position) {
   const slotsWithTowers = useGameStore.getState().towerSlots.filter((s) => s.unlocked && s.tower);
 
+  // Eğer hiç kule yoksa, merkezi hedef al
   if (slotsWithTowers.length === 0) {
-    return null;
+    const centerX = GAME_CONSTANTS.CANVAS_WIDTH / 2;
+    const centerY = GAME_CONSTANTS.CANVAS_HEIGHT / 2;
+    return {
+      x: centerX,
+      y: centerY,
+      unlocked: true,
+      tower: null,
+      type: 'fixed' as const,
+      wasDestroyed: false,
+      modifier: undefined
+    };
   }
 
   let minDist = Infinity;

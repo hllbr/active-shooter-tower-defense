@@ -195,18 +195,14 @@ export const GAME_CONSTANTS = {
   TOWER_SLOTS: generateCircularTowerSlots(8, 1920 / 2 - 100, 1080 / 2 - 100, 300),
   
   TOWER_SLOT_UNLOCK_GOLD: [
-    0,
-    200,
-    400,
-    700,
-    1200,
-    1500,
-    1800,
-    2100,
-    2400,
-    2700,
-    3000,
-    3300,
+    0,    // Slot 0 - Free (starting slot)
+    0,    // Slot 1 - Free (starting slot)
+    0,    // Slot 2 - Free (starting slot)
+    0,    // Slot 3 - Free (starting slot)
+    300,  // Slot 4 - First paid slot
+    600,  // Slot 5 - Second paid slot
+    1200, // Slot 6 - Third paid slot
+    2400, // Slot 7 - Fourth paid slot (very expensive)
   ],
   INITIAL_SLOT_COUNT: 4,
   INITIAL_TOWER_LIMIT: 4,

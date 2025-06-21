@@ -6,16 +6,31 @@ import { useGameStore } from '../models/store';
 
 export function startGameLoop() {
   let frameId = 0;
+  let lastUpdateTime = performance.now();
 
-  const loop = () => {
-    updateEnemyMovement();
-    updateTowerFire();
-    updateBullets();
-    updateEffects();
-    updateMineCollisions();
+  const loop = (currentTime: number) => {
+    const deltaTime = currentTime - lastUpdateTime;
+    
+    // Only update if enough time has passed (60 FPS cap)
+    if (deltaTime >= 16) {
+      updateEnemyMovement();
+      updateTowerFire();
+      updateBullets();
+      updateEffects();
+      updateMineCollisions();
 
-    // Force state update so React re-renders with new positions
-    useGameStore.setState({});
+      // Only force re-render if there are active game objects
+      const state = useGameStore.getState();
+      if (state.enemies.length > 0 || state.bullets.length > 0 || state.effects.length > 0) {
+        // Selective state update - only trigger re-render when needed
+        useGameStore.setState({ 
+          // Force re-render by updating a timestamp
+          lastUpdate: currentTime 
+        });
+      }
+      
+      lastUpdateTime = currentTime;
+    }
 
     frameId = requestAnimationFrame(loop);
   };

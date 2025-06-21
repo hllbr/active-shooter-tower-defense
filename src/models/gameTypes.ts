@@ -193,4 +193,6 @@ export interface GameState {
   waveStartTime: number;
   /** Whether a tower was destroyed this wave */
   lostTowerThisWave: boolean;
+  /** Last game loop update timestamp for performance optimization */
+  lastUpdate?: number;
 }

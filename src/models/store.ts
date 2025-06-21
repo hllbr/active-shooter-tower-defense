@@ -3,7 +3,7 @@ import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { updateWaveTiles } from '../logic/TowerPlacementManager';
 import { waveRules } from '../config/waveRules';
-import { economyConfig } from '../config/economy';
+import { economyConfig, getExtractorIncome } from '../config/economy';
 import { energyManager } from '../logic/EnergyManager';
 import { waveManager } from '../logic/WaveManager';
 
@@ -73,6 +73,7 @@ const initialState: GameState = {
   isPaused: false,
   waveStartTime: 0,
   lostTowerThisWave: false,
+  lastUpdate: 0,
 };
 
 type Store = GameState & {
@@ -131,14 +132,32 @@ export const useGameStore = create<Store>((set, get) => ({
   buildTower: (slotIdx, free = false, towerType: 'attack' | 'economy' = 'attack') => set((state) => {
     const slot = state.towerSlots[slotIdx];
     const cost = free ? 0 : GAME_CONSTANTS.TOWER_COST;
-    if (
-      slot.tower ||
-      state.gold < cost ||
-      state.towers.length >= state.maxTowers
-    )
+    
+    // Enhanced validation with proper checks
+    if (!slot.unlocked) {
+      console.log(`❌ Cannot build tower: Slot ${slotIdx} is locked`);
       return {};
+    }
+    if (slot.tower) {
+      console.log(`❌ Cannot build tower: Slot ${slotIdx} already has a tower`);
+      return {};
+    }
+    if (state.gold < cost) {
+      console.log(`❌ Cannot build tower: Need ${cost} gold, have ${state.gold}`);
+      return {};
+    }
+    if (state.towers.length >= state.maxTowers) {
+      console.log(`❌ Cannot build tower: Tower limit reached (${state.towers.length}/${state.maxTowers})`);
+      return {};
+    }
+    
     const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower;
-    if (!energyManager.consume(energyCost, 'buildTower')) return {};
+    if (!energyManager.consume(energyCost, 'buildTower')) {
+      console.log(`❌ Cannot build tower: Not enough energy (need ${energyCost})`);
+      return {};
+    }
+    
+    console.log(`✅ Building ${towerType} tower at slot ${slotIdx}. Towers: ${state.towers.length + 1}/${state.maxTowers}`);
     
     const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[0]; // Level 1
     const newTower: Tower = {
@@ -361,7 +380,43 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  unlockSlot: () => {},
+  unlockSlot: (slotIdx) => set((state) => {
+    const slot = state.towerSlots[slotIdx];
+    console.log(`🔓 Trying to unlock slot ${slotIdx}:`, { 
+      unlocked: slot.unlocked, 
+      gold: state.gold, 
+      maxTowers: state.maxTowers 
+    });
+    
+    if (slot.unlocked) {
+      console.log(`❌ Slot ${slotIdx} already unlocked`);
+      return {}; // Already unlocked
+    }
+    
+    const cost = GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] ?? 2400;
+    if (state.gold < cost) {
+      console.log(`❌ Not enough gold: need ${cost}, have ${state.gold}`);
+      return {}; // Not enough gold
+    }
+    
+    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower; // Same as building
+    if (!energyManager.consume(energyCost, 'unlockSlot')) {
+      console.log(`❌ Not enough energy: need ${energyCost}`);
+      return {};
+    }
+    
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, unlocked: true };
+    
+    console.log(`✅ Slot ${slotIdx} unlocked! Cost: ${cost}💰, New tower limit: ${state.maxTowers + 1}`);
+    
+    return {
+      towerSlots: newSlots,
+      gold: state.gold - cost,
+      maxTowers: state.maxTowers + 1, // ← CRITICAL FIX: Increase tower limit!
+      totalGoldSpent: state.totalGoldSpent + cost,
+    };
+  }),
 
   addGold: (amount) => set((state) => ({ gold: state.gold + amount })),
   spendGold: (amount) => set((state) => ({
@@ -457,8 +512,16 @@ export const useGameStore = create<Store>((set, get) => ({
     set((state) => {
       const newWave = state.currentWave + 1;
 
-    const extractorCount = state.towers.filter(t => t.towerType === 'economy').length;
-    let income = economyConfig.baseIncome + extractorCount * economyConfig.extractorIncome;
+    const extractors = state.towers.filter(t => t.towerType === 'economy');
+    let income = economyConfig.baseIncome;
+    
+    // Calculate income from extractors with level-based bonuses
+    extractors.forEach(extractor => {
+      income += getExtractorIncome(extractor.level, state.currentWave);
+    });
+    
+    // Add wave-based bonus
+    income += economyConfig.waveIncomeBonus(state.currentWave);
     
     economyConfig.missionBonuses.forEach(mission => {
       if (mission.wave === state.currentWave) {
@@ -519,8 +582,10 @@ export const useGameStore = create<Store>((set, get) => ({
       packagesPurchased: 0,
       waveStartTime: 0,
       lostTowerThisWave: false,
+      maxTowers: GAME_CONSTANTS.INITIAL_TOWER_LIMIT, // ← CRITICAL: Reset tower limit
     }));
     energyManager.init(GAME_CONSTANTS.BASE_ENERGY, (e, w) => set({ energy: e, energyWarning: w ?? null }));
+    console.log(`🔄 Game reset. Tower limit: ${GAME_CONSTANTS.INITIAL_TOWER_LIMIT}`);
   },
   setStarted: (started) => set(() => ({ isStarted: started })),
   setRefreshing: (refreshing) => set(() => ({ isRefreshing: refreshing })),
@@ -547,6 +612,7 @@ export const useGameStore = create<Store>((set, get) => ({
       enemies: [],
       bullets: [],
       effects: [],
+      maxTowers: slots, // Set tower limit to number of slots
     };
   }),
   rollDice: () => set((state) => {
