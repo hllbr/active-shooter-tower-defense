@@ -3,6 +3,7 @@ import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { updateWaveTiles } from '../logic/TowerPlacementManager';
 import { waveRules } from '../config/waveRules';
+import { economyConfig } from '../config/economy';
 
 const initialSlots: TowerSlot[] = updateWaveTiles(1, []);
 
@@ -45,10 +46,12 @@ const initialState: GameState = {
   prepRemaining: GAME_CONSTANTS.PREP_TIME,
   isPreparing: false,
   isPaused: false,
+  waveStartTime: 0,
+  lostTowerThisWave: false,
 };
 
 type Store = GameState & {
-  buildTower: (slotIdx: number, free?: boolean) => void;
+  buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy') => void;
   upgradeTower: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
   removeTower: (slotIdx: number) => void;
@@ -96,7 +99,7 @@ type Store = GameState & {
 export const useGameStore = create<Store>((set, get) => ({
   ...initialState,
 
-  buildTower: (slotIdx, free = false) => set((state) => {
+  buildTower: (slotIdx, free = false, towerType: 'attack' | 'economy' = 'attack') => set((state) => {
     const slot = state.towerSlots[slotIdx];
     const cost = free ? 0 : GAME_CONSTANTS.TOWER_COST;
     if (
@@ -113,9 +116,9 @@ export const useGameStore = create<Store>((set, get) => ({
       size: GAME_CONSTANTS.TOWER_SIZE,
       isActive: true,
       level: 1,
-      range: GAME_CONSTANTS.TOWER_RANGE,
-      damage: upgrade.damage,
-      fireRate: upgrade.fireRate,
+      range: towerType === 'economy' ? 0 : GAME_CONSTANTS.TOWER_RANGE,
+      damage: towerType === 'economy' ? 0 : upgrade.damage,
+      fireRate: towerType === 'economy' ? 0 : upgrade.fireRate,
       lastFired: 0,
       health: upgrade.health,
       maxHealth: upgrade.health,
@@ -140,11 +143,12 @@ export const useGameStore = create<Store>((set, get) => ({
       cosmicEnergy: 100,
       infinityLoop: false,
       godModeActive: false,
-      attackSound: GAME_CONSTANTS.TOWER_ATTACK_SOUNDS[0],
+      attackSound: towerType === 'economy' ? undefined : GAME_CONSTANTS.TOWER_ATTACK_SOUNDS[0],
       visual: GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === 1),
       rangeMultiplier: slot.modifier?.type === 'buff'
         ? GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER
         : 1,
+      towerType,
     };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
@@ -224,6 +228,7 @@ export const useGameStore = create<Store>((set, get) => ({
         return {
           towers: state.towers.filter(t => t.id !== slot.tower!.id),
           towerSlots: newSlots,
+          lostTowerThisWave: true,
         };
       });
       addEffect(effect);
@@ -416,6 +421,18 @@ export const useGameStore = create<Store>((set, get) => ({
 
   nextWave: () => set((state) => {
     const newWave = state.currentWave + 1;
+
+    const extractorCount = state.towers.filter(t => t.towerType === 'economy').length;
+    let income = economyConfig.baseIncome + extractorCount * economyConfig.extractorIncome;
+    const mission = economyConfig.missionBonus;
+    if (mission && mission.wave === state.currentWave) {
+      if (mission.condition === 'noLoss' && !state.lostTowerThisWave) {
+        income += mission.bonus;
+      }
+      if (mission.condition === 'under60' && performance.now() - state.waveStartTime < 60000) {
+        income += mission.bonus;
+      }
+    }
     
     // Check if player completed all 100 waves
     if (newWave > 100) {
@@ -438,9 +455,12 @@ export const useGameStore = create<Store>((set, get) => ({
       currentWaveModifier: waveRules[newWave],
       actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
       energy: state.energy,
+      gold: state.gold + income,
       isPreparing: true,
       prepRemaining: GAME_CONSTANTS.PREP_TIME,
       isPaused: false,
+      lostTowerThisWave: false,
+      waveStartTime: 0,
     };
   }),
   resetGame: () => set(() => ({
@@ -456,6 +476,8 @@ export const useGameStore = create<Store>((set, get) => ({
     fireUpgradesPurchased: 0,
     shieldUpgradesPurchased: 0,
     packagesPurchased: 0,
+    waveStartTime: 0,
+    lostTowerThisWave: false,
   })),
   setStarted: (started) => set(() => ({ isStarted: started })),
   upgradeBullet: (free = false) => set((state) => {
@@ -722,7 +744,12 @@ export const useGameStore = create<Store>((set, get) => ({
   speedUpPreparation: (amount) => set((state) => ({
     prepRemaining: Math.max(0, state.prepRemaining - amount),
   })),
-  startWave: () => set(() => ({ isPreparing: false, prepRemaining: 0 })),
+  startWave: () => set(() => ({
+    isPreparing: false,
+    prepRemaining: 0,
+    waveStartTime: performance.now(),
+    lostTowerThisWave: false,
+  })),
   addTowerUpgradeListener: (fn) => set((state) => ({
     towerUpgradeListeners: [...state.towerUpgradeListeners, fn],
   })),

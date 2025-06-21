@@ -45,6 +45,8 @@ export interface Tower {
   attackSound?: string;
   visual?: TowerVisual;
   rangeMultiplier?: number;
+  /** 'attack' towers shoot enemies, 'economy' towers generate gold */
+  towerType?: 'attack' | 'economy';
 }
 
 export interface TowerSlot {
@@ -183,4 +185,8 @@ export interface GameState {
   prepRemaining: number;
   isPreparing: boolean;
   isPaused: boolean;
+  /** Timestamp when the current wave began */
+  waveStartTime: number;
+  /** Whether a tower was destroyed this wave */
+  lostTowerThisWave: boolean;
 }

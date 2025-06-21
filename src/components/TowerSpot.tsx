@@ -1009,6 +1009,11 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
 
   const renderVisualExtras = () => {
     if (!slot.tower) return null;
+    if (slot.tower.towerType === 'economy') {
+      return (
+        <text x={slot.x} y={slot.y + 4} textAnchor="middle" fontSize={20} pointerEvents="none">💰</text>
+      );
+    }
     const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === slot.tower!.level);
     if (!visual) return null;
     return (
@@ -1121,8 +1126,13 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
         </g>
       )}
       {menuPos && (
-        <foreignObject x={menuPos.x} y={menuPos.y} width="120" height="80" style={{ pointerEvents: 'auto' }}>
+        <foreignObject x={menuPos.x} y={menuPos.y} width="140" height="110" style={{ pointerEvents: 'auto' }}>
           <div style={{ background: '#222', color: '#fff', border: '1px solid #555', fontSize: 12 }}>
+            {!slot.tower && (
+              <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { buildTower(slotIdx, false, 'economy'); setMenuPos(null); }}>
+                Build Extractor
+              </div>
+            )}
             <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'wall'); setMenuPos(null); }}>
               Build Wall
             </div>
