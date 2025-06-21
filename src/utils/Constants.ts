@@ -1,6 +1,20 @@
 import type { TowerVisual } from '../models/gameTypes';
 import { waveCompositions } from '../config/waves';
 
+const generateCircularTowerSlots = (count: number, centerX: number, centerY: number, radius: number) => {
+  const slots = [];
+  const angleStep = (2 * Math.PI) / count;
+  for (let i = 0; i < count; i++) {
+    // Start from the top and distribute clockwise
+    const angle = i * angleStep - Math.PI / 2; 
+    slots.push({
+      x: Math.round(centerX + radius * Math.cos(angle)),
+      y: Math.round(centerY + radius * Math.sin(angle)),
+    });
+  }
+  return slots;
+};
+
 export const GAME_CONSTANTS = {
   DEBUG_MODE: false,
   // Canvas
@@ -44,7 +58,7 @@ export const GAME_CONSTANTS = {
   BUFF_RANGE_MULTIPLIER: 1.2,
   BUILD_TILE_COLORS: {
     fixed: '#4ade80',
-    dynamic: '#60a5fa',
+    dynamic: '#4ade80',
   },
   ROAD_PADDING: 80,
   TOWER_ATTACK_SOUNDS: Array.from({ length: 25 }, (_, i) => `tower_attack_${i + 1}`),
@@ -177,21 +191,9 @@ export const GAME_CONSTANTS = {
     }
   ],
 
-  // Tower Slots
-  TOWER_SLOTS: [
-    { x: 400, y: 300 },
-    { x: 800, y: 400 },
-    { x: 1200, y: 300 },
-    { x: 600, y: 700 },
-    { x: 1000, y: 700 },
-    { x: 400, y: 500 },
-    { x: 1200, y: 500 },
-    { x: 200, y: 200 },
-    { x: 1400, y: 200 },
-    { x: 200, y: 600 },
-    { x: 1400, y: 600 },
-    { x: 800, y: 550 },
-  ],
+  // Tower Slots - New circular layout
+  TOWER_SLOTS: generateCircularTowerSlots(8, 1920 / 2 - 100, 1080 / 2 - 100, 300),
+  
   TOWER_SLOT_UNLOCK_GOLD: [
     0,
     200,
@@ -206,8 +208,8 @@ export const GAME_CONSTANTS = {
     3000,
     3300,
   ],
-  INITIAL_SLOT_COUNT: 2,
-  INITIAL_TOWER_LIMIT: 2,
+  INITIAL_SLOT_COUNT: 4,
+  INITIAL_TOWER_LIMIT: 4,
 
   // Enemy
   ENEMY_SIZE: 36,
@@ -234,6 +236,7 @@ export const GAME_CONSTANTS = {
     borderColor: '#212121',
     lightColor: '#ff1111',
   },
+  MINE_MIN_DISTANCE_FROM_TOWER: 100,
   MINE_UPGRADES: [
     { cost: 500, count: 3, damage: 100, radius: 80 },
     { cost: 750, count: 4, damage: 120, radius: 90 },
@@ -378,7 +381,10 @@ export const GAME_CONSTANTS = {
       NO_WALL_DAMAGE_MULTIPLIER: 0.7, // Sur yokken hasar %30 azalır
       WALL_REGEN_DELAY: 5000, // Sur yok olduktan 5 saniye sonra yenilenmeye başlar
       FROST_EFFECT_DURATION: 3000, // Buz efekti süresi
-    }
+    },
+
+    // Duvar çarpışma hasarı
+    WALL_COLLISION_DAMAGE: [5, 10, 20, 35, 50, 75, 100, 150], // Her duvar seviyesi için
   },
 
   // Avantajlı Paketler - Matematiksel hesaplama ile %15-25 indirim

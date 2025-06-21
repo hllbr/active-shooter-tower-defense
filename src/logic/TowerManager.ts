@@ -114,7 +114,7 @@ function handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect
 
     case 'chain_lightning': {
       // Chain lightning: Jump between enemies
-      let currentEnemy = enemiesInRange[0];
+      let currentEnemy: Enemy | null = enemiesInRange[0];
       let jumpsLeft = tower.chainLightningJumps;
       const hitEnemies = new Set<string>();
 
@@ -299,13 +299,9 @@ export function updateTowerFire() {
     
     // Sur durumuna göre ateş hızı ve hasar hesaplama
     let fireRateMultiplier = bulletType.fireRateMultiplier;
-    let damageMultiplier = bulletType.damageMultiplier;
+    const damageMultiplier = bulletType.damageMultiplier;
     
-    if (!state.globalWallActive) {
-      // Sur yokken ateş hızı ve hasar azalır
-      fireRateMultiplier *= GAME_CONSTANTS.WALL_SYSTEM.GLOBAL_EFFECTS.NO_WALL_FIRE_RATE_MULTIPLIER;
-      damageMultiplier *= GAME_CONSTANTS.WALL_SYSTEM.GLOBAL_EFFECTS.NO_WALL_DAMAGE_MULTIPLIER;
-    } else if (state.wallLevel > 0) {
+    if (state.wallLevel > 0) {
       // Sur seviyesine göre bonus
       const wallLevel = GAME_CONSTANTS.WALL_SYSTEM.WALL_LEVELS[state.wallLevel - 1];
       if (wallLevel) {
@@ -313,6 +309,9 @@ export function updateTowerFire() {
       }
     }
     
+    const finalFireRate = tower.fireRate * fireRateMultiplier;
+    if (now - tower.lastFired < finalFireRate) return;
+
     const visibleEnemies = state.enemies.filter(e => {
       if (e.behaviorTag === 'ghost') {
         return state.towerSlots.some(s => s.tower && s.tower.specialAbility === 'psi' && Math.hypot(s.x - e.position.x, s.y - e.position.y) <= s.tower.psiRange);
@@ -323,13 +322,6 @@ export function updateTowerFire() {
     const rangeMult = (modifier?.towerRangeReduced ? 0.5 : 1) * (tower.rangeMultiplier ?? 1);
     if (!enemy || distance > tower.range * rangeMult) return;
 
-    if (now - tower.lastFired < tower.fireRate * fireRateMultiplier) {
-      if (GAME_CONSTANTS.DEBUG_MODE) {
-        console.log(`Tower ${tower.id} idle; enemy ${enemy.id} at ${distance.toFixed(1)}`);
-      }
-      return;
-    }
-
     fireTower(tower, enemy, {
       speedMultiplier: bulletType.speedMultiplier,
       damageMultiplier,
@@ -339,60 +331,35 @@ export function updateTowerFire() {
 }
 
 export function updateBullets() {
-  const {
-    bullets,
-    removeBullet,
-    enemies,
-    damageEnemy,
-    addEffect,
-  } = useGameStore.getState();
-  bullets.forEach((b) => {
-    const target = b.targetId ? enemies.find((e) => e.id === b.targetId) : null;
-    if (target) {
-      b.direction = getDirection(b.position, target.position);
-    }
-    b.position.x += b.direction.x * b.speed * 0.016;
-    b.position.y += b.direction.y * b.speed * 0.016;
-    if (b.life !== undefined) {
-      b.life -= 16;
-      if (b.life <= 0) {
-        removeBullet(b.id);
-        return;
-      }
-    }
-
-    if (
-      b.position.x < 0 ||
-      b.position.x > window.innerWidth ||
-      b.position.y < 0 ||
-      b.position.y > window.innerHeight
-    ) {
-      removeBullet(b.id);
+  const state = useGameStore.getState();
+  const now = performance.now();
+  
+  state.bullets.forEach((bullet) => {
+    // Move bullet
+    bullet.position.x += bullet.direction.x * bullet.speed * 0.016;
+    bullet.position.y += bullet.direction.y * bullet.speed * 0.016;
+    bullet.life -= 16;
+    if (bullet.life <= 0) {
+      state.removeBullet(bullet.id);
       return;
     }
 
-    for (const e of enemies) {
-      const dx = e.position.x - b.position.x;
-      const dy = e.position.y - b.position.y;
+    // Check for collision
+    state.enemies.forEach((enemy) => {
+      if (enemy.frozenUntil && enemy.frozenUntil > now) return; // Skip frozen
+      const dx = enemy.position.x - bullet.position.x;
+      const dy = enemy.position.y - bullet.position.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < (e.size + b.size) / 2) {
-        damageEnemy(e.id, b.damage);
-        const type = GAME_CONSTANTS.BULLET_TYPES[b.typeIndex];
-        if (type.freezeDuration) {
-          e.frozenUntil = performance.now() + type.freezeDuration;
+      if (dist < (enemy.size + bullet.size) / 2) {
+        state.damageEnemy(enemy.id, bullet.damage);
+        state.removeBullet(bullet.id);
+
+        // Apply bullet effects
+        const bulletType = GAME_CONSTANTS.BULLET_TYPES[bullet.typeIndex];
+        if ('freezeDuration' in bulletType && bulletType.freezeDuration) {
+          enemy.frozenUntil = now + bulletType.freezeDuration;
         }
-        const effect: Effect = {
-          id: `${Date.now()}-${Math.random()}`,
-          position: { x: b.position.x, y: b.position.y },
-          radius: 20,
-          color: '#ff6600',
-          life: 300,
-          maxLife: 300,
-        };
-        addEffect(effect);
-        removeBullet(b.id);
-        break;
       }
-    }
+    });
   });
 }

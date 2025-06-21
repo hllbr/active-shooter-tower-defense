@@ -97,7 +97,7 @@ export interface Bullet {
   color: string;
   typeIndex: number;
   targetId?: string;
-  life?: number;
+  life: number;
 }
 
 export interface Effect {
@@ -169,6 +169,7 @@ export interface GameState {
   globalWallStrength: number;
   isGameOver: boolean;
   isStarted: boolean;
+  isRefreshing: boolean;
   diceRoll: number | null;
   diceUsed: boolean;
   discountMultiplier: number;

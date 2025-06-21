@@ -8,15 +8,12 @@ import { ShieldUpgrades } from './upgrades/ShieldUpgrades';
 import { CurrentPowers } from './upgrades/CurrentPowers';
 import { DefenseUpgrades } from './upgrades/DefenseUpgrades';
 
-interface UpgradeScreenProps {
-  setRefreshing: (isRefreshing: boolean) => void;
-}
-
-export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ setRefreshing }) => {
+export const UpgradeScreen: React.FC = () => {
   const nextWave = useGameStore((s) => s.nextWave);
   const resetDice = useGameStore((s) => s.resetDice);
   const bulletLevel = useGameStore((s) => s.bulletLevel);
   const startPreparation = useGameStore(s => s.startPreparation);
+  const setRefreshing = useGameStore(s => s.setRefreshing);
 
   return (
     <div

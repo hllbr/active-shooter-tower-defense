@@ -7,6 +7,24 @@ import { economyConfig } from '../config/economy';
 import { energyManager } from '../logic/EnergyManager';
 import { waveManager } from '../logic/WaveManager';
 
+const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
+  let position: Position;
+  let isTooClose;
+  const { CANVAS_WIDTH, CANVAS_HEIGHT, MINE_MIN_DISTANCE_FROM_TOWER } = GAME_CONSTANTS;
+
+  do {
+    position = {
+      x: Math.random() * (CANVAS_WIDTH - 100) + 50,
+      y: Math.random() * (CANVAS_HEIGHT - 100) + 50,
+    };
+    isTooClose = towerSlots.some(
+      (slot) => Math.hypot(position.x - slot.x, position.y - slot.y) < MINE_MIN_DISTANCE_FROM_TOWER,
+    );
+  } while (isTooClose);
+
+  return position;
+};
+
 const initialSlots: TowerSlot[] = updateWaveTiles(1, []);
 
 const initialState: GameState = {
@@ -33,6 +51,7 @@ const initialState: GameState = {
   globalWallStrength: 0,
   isGameOver: false,
   isStarted: false,
+  isRefreshing: false,
   diceRoll: null,
   diceUsed: false,
   discountMultiplier: 1,
@@ -79,6 +98,7 @@ type Store = GameState & {
   nextWave: () => void;
   resetGame: () => void;
   setStarted: (started: boolean) => void;
+  setRefreshing: (refreshing: boolean) => void;
   upgradeBullet: (free?: boolean) => void;
   refreshBattlefield: (slots: number) => void;
   rollDice: () => void;
@@ -434,21 +454,21 @@ export const useGameStore = create<Store>((set, get) => ({
   }),
 
   nextWave: () => {
-    const { lostTowerThisWave, waveStartTime } = get();
     set((state) => {
       const newWave = state.currentWave + 1;
 
     const extractorCount = state.towers.filter(t => t.towerType === 'economy').length;
     let income = economyConfig.baseIncome + extractorCount * economyConfig.extractorIncome;
-    const mission = economyConfig.missionBonus;
-    if (mission && mission.wave === state.currentWave) {
-      if (mission.condition === 'noLoss' && !state.lostTowerThisWave) {
-        income += mission.bonus;
+    
+    economyConfig.missionBonuses.forEach(mission => {
+      if (mission.wave === state.currentWave) {
+        if (mission.condition === 'noLoss' && !state.lostTowerThisWave) {
+          income += mission.bonus;
+        } else if (mission.condition === 'under60' && performance.now() - state.waveStartTime < 60000) {
+          income += mission.bonus;
+        }
       }
-      if (mission.condition === 'under60' && performance.now() - state.waveStartTime < 60000) {
-        income += mission.bonus;
-      }
-    }
+    });
     
     // Check if player completed all 100 waves
     if (newWave > 100) {
@@ -460,6 +480,9 @@ export const useGameStore = create<Store>((set, get) => ({
     
     return {
       currentWave: newWave,
+      enemies: [],
+      bullets: [],
+      effects: [],
       enemiesKilled: 0,
       enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(newWave),
       totalEnemiesKilled: 0,
@@ -500,6 +523,7 @@ export const useGameStore = create<Store>((set, get) => ({
     energyManager.init(GAME_CONSTANTS.BASE_ENERGY, (e, w) => set({ energy: e, energyWarning: w ?? null }));
   },
   setStarted: (started) => set(() => ({ isStarted: started })),
+  setRefreshing: (refreshing) => set(() => ({ isRefreshing: refreshing })),
   upgradeBullet: (free = false) => set((state) => {
     if (state.bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length) return {};
     if (!free && state.gold < GAME_CONSTANTS.BULLET_UPGRADE_COST) return {};
@@ -582,20 +606,8 @@ export const useGameStore = create<Store>((set, get) => ({
     const upgrade = GAME_CONSTANTS.MINE_UPGRADES[level];
     const newMines: Mine[] = [];
     
-    // Simple random placement for now, avoiding tower slots
-    const towerSlotPositions = new Set(state.towerSlots.map(s => `${s.x},${s.y}`));
-
     for (let i = 0; i < upgrade.count; i++) {
-      let position: Position;
-      let isOverlapping;
-      do {
-        position = {
-          x: Math.random() * (window.innerWidth - 100) + 50,
-          y: Math.random() * (window.innerHeight - 100) + 50,
-        };
-        isOverlapping = towerSlotPositions.has(`${position.x},${position.y}`);
-      } while (isOverlapping);
-
+      const position = getValidMinePosition(state.towerSlots);
       newMines.push({
         id: `mine-${Date.now()}-${i}`,
         position,
@@ -607,22 +619,12 @@ export const useGameStore = create<Store>((set, get) => ({
     return { mines: newMines };
   }),
   triggerMine: (mineId) => set((state) => {
-    const newMines = state.mines.filter(m => m.id !== mineId);
+    const newMines = state.mines.filter((m) => m.id !== mineId);
 
     if (state.mineRegeneration) {
       const level = state.mineLevel - 1;
       const upgrade = GAME_CONSTANTS.MINE_UPGRADES[level];
-      const towerSlotPositions = new Set(state.towerSlots.map(s => `${s.x},${s.y}`));
-      
-      let position: Position;
-      let isOverlapping;
-      do {
-        position = {
-          x: Math.random() * (window.innerWidth - 100) + 50,
-          y: Math.random() * (window.innerHeight - 100) + 50,
-        };
-        isOverlapping = towerSlotPositions.has(`${position.x},${position.y}`);
-      } while (isOverlapping);
+      const position = getValidMinePosition(state.towerSlots);
 
       const newMine: Mine = {
         id: `mine-${Date.now()}-${Math.random()}`,
@@ -755,7 +757,7 @@ export const useGameStore = create<Store>((set, get) => ({
     isPaused: false,
   })),
   tickPreparation: (delta) => set((state) => {
-    if (!state.isPreparing || state.isPaused) return {} as any;
+    if (!state.isPreparing || state.isPaused) return {};
     const remaining = Math.max(0, state.prepRemaining - delta);
     return { prepRemaining: remaining };
   }),
@@ -765,7 +767,7 @@ export const useGameStore = create<Store>((set, get) => ({
     prepRemaining: Math.max(0, state.prepRemaining - amount),
   })),
   startWave: () => set((state) => {
-    if (state.enemies.length > 0) return {} as any;
+    if (state.enemies.length > 0) return {};
     const slots = state.towerSlots.map(s =>
       s.tower ? { ...s, tower: { ...s.tower, lastFired: 0, acidStack: 0 } } : s,
     );

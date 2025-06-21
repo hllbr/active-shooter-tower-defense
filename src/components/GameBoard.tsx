@@ -2,8 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { TowerSpot } from './TowerSpot';
-import { startEnemyWave } from '../logic/EnemySpawner';
-import { stopEnemyWave } from '../logic/EnemySpawner';
+import { stopEnemyWave, startContinuousSpawning, stopContinuousSpawning } from '../logic/EnemySpawner';
 import { startGameLoop } from '../logic/GameLoop';
 import { waveManager } from '../logic/WaveManager';
 import { initUpgradeEffects } from '../logic/UpgradeEffects';
@@ -23,7 +22,9 @@ export const GameBoard: React.FC = () => {
     enemiesRequired,
     isStarted,
     isGameOver,
+    isRefreshing,
     setStarted,
+    setRefreshing,
     resetGame,
     refreshBattlefield,
     nextWave,
@@ -49,8 +50,6 @@ export const GameBoard: React.FC = () => {
     startWave,
   } = useGameStore();
 
-  const [isRefreshing, setRefreshing] = React.useState(false);
-
   const clearEnergyWarning = useGameStore(s => s.clearEnergyWarning);
   React.useEffect(() => {
     if (!energyWarning) return;
@@ -64,14 +63,16 @@ export const GameBoard: React.FC = () => {
 
   useEffect(() => {
     waveManager.setHandlers(
-      () => startEnemyWave(currentWave),
+      () => {
+        // Continuous spawning handles this
+      },
       () => {
         setRefreshing(true);
         nextWave();
         resetDice();
       },
     );
-  }, [currentWave, nextWave, resetDice]);
+  }, [currentWave, nextWave, resetDice, setRefreshing]);
 
   useEffect(() => {
     if (isPreparing) {
@@ -117,20 +118,6 @@ export const GameBoard: React.FC = () => {
   const animatedShield = useAnimatedCounter(shieldUpgradesPurchased);
   const animatedPackages = useAnimatedCounter(packagesPurchased);
 
-  useEffect(() => {
-    if (!isRefreshing) return;
-    if (currentWave % 5 === 0) {
-      const timeout = setTimeout(() => {
-        const slotCount = Math.min(
-          GAME_CONSTANTS.INITIAL_SLOT_COUNT + 2 * Math.floor(currentWave / 5),
-          12,
-        );
-        refreshBattlefield(slotCount);
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [isRefreshing, currentWave, refreshBattlefield]);
-
   // Start/reset logic
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -149,6 +136,7 @@ export const GameBoard: React.FC = () => {
   useEffect(() => {
     if (!isStarted || isRefreshing || isPreparing) {
       stopEnemyWave();
+      stopContinuousSpawning();
       loopStopper.current?.();
       loopStopper.current = null;
       return;
@@ -156,9 +144,12 @@ export const GameBoard: React.FC = () => {
     if (!loopStopper.current) {
       loopStopper.current = startGameLoop();
     }
+    // Sürekli düşman yaratma sistemini başlat
+    startContinuousSpawning();
     waveManager.startWave(currentWave);
     return () => {
       stopEnemyWave();
+      stopContinuousSpawning();
       loopStopper.current?.();
       loopStopper.current = null;
     };
@@ -285,9 +276,9 @@ export const GameBoard: React.FC = () => {
       {isPreparing && (
         <div style={{
           position: 'absolute',
-          top: 120,
+          top: '50%',
           left: '50%',
-          transform: 'translateX(-50%)',
+          transform: 'translate(-50%, -50%)',
           zIndex: 2,
           textAlign: 'center',
           color: '#fff',
@@ -309,7 +300,7 @@ export const GameBoard: React.FC = () => {
         </div>
       )}
 
-      {isRefreshing && <UpgradeScreen setRefreshing={setRefreshing} />}
+      {isRefreshing && <UpgradeScreen />}
 
       {/* Start Overlay */}
       {!isStarted && (

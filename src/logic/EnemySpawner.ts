@@ -7,11 +7,35 @@ import { waveManager } from "./WaveManager";
 let spawnInterval: number | null = null;
 let spawnQueue: string[] = [];
 let spawnIndex = 0;
+let continuousSpawnInterval: number | null = null;
 
 export function stopEnemyWave() {
   if (spawnInterval) {
     clearInterval(spawnInterval);
     spawnInterval = null;
+  }
+}
+
+export function startContinuousSpawning() {
+  if (continuousSpawnInterval) {
+    clearInterval(continuousSpawnInterval);
+  }
+  
+  continuousSpawnInterval = window.setInterval(() => {
+    const state = useGameStore.getState();
+    
+    // Sadece oyun başlatılmışsa ve yükseltme ekranında değilse düşman yarat
+    if (state.isStarted && !state.isRefreshing) {
+      const enemy = createEnemy(state.currentWave, 'Basic');
+      state.addEnemy(enemy);
+    }
+  }, GAME_CONSTANTS.ENEMY_SPAWN_RATE);
+}
+
+export function stopContinuousSpawning() {
+  if (continuousSpawnInterval) {
+    clearInterval(continuousSpawnInterval);
+    continuousSpawnInterval = null;
   }
 }
 
@@ -53,7 +77,7 @@ function getNearestSlot(pos: Position) {
   return nearest;
 }
 
-function createEnemy(wave: number, type: string = 'Basic'): Enemy {
+function createEnemy(wave: number, type: keyof typeof GAME_CONSTANTS.ENEMY_TYPES = 'Basic'): Enemy {
   const { currentWaveModifier } = useGameStore.getState();
   const id = `${Date.now()}-${Math.random()}`;
   
@@ -91,7 +115,7 @@ function createEnemy(wave: number, type: string = 'Basic'): Enemy {
       type: 'Microbe',
     } as Enemy;
   } else {
-    const def = GAME_CONSTANTS.ENEMY_TYPES[type] || GAME_CONSTANTS.ENEMY_TYPES.Basic;
+    const def = GAME_CONSTANTS.ENEMY_TYPES[type];
     const health = def.hp + (type === 'Basic' ? (wave - 1) * GAME_CONSTANTS.ENEMY_HEALTH_INCREASE : 0);
     return {
       id,
@@ -146,7 +170,7 @@ export function startEnemyWave(wave: number) {
       stopEnemyWave();
       return;
     }
-    const type = spawnQueue[spawnIndex++];
+    const type = spawnQueue[spawnIndex++] as keyof typeof GAME_CONSTANTS.ENEMY_TYPES;
     const enemy = createEnemy(wave, type);
     addEnemy(enemy);
     if (currentWaveModifier?.bonusEnemies) {
@@ -156,7 +180,7 @@ export function startEnemyWave(wave: number) {
 }
 
 export function updateEnemyMovement() {
-  const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall } =
+  const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall, damageEnemy, wallLevel } =
     useGameStore.getState();
   
   enemies.forEach((enemy) => {
@@ -203,6 +227,12 @@ export function updateEnemyMovement() {
         if (targetSlot.tower.wallStrength > 0) {
           // Wall exists: Knockback and stun the enemy
           hitWall(slotIdx);
+
+          // Apply wall collision damage
+          const wallDamage = GAME_CONSTANTS.WALL_SYSTEM.WALL_COLLISION_DAMAGE[wallLevel] ?? 0;
+          if (wallDamage > 0) {
+            damageEnemy(enemy.id, wallDamage);
+          }
 
           // Apply knockback
           const knockbackVector = { x: -dx / dist, y: -dy / dist };
