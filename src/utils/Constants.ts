@@ -1,6 +1,7 @@
 import type { TowerVisual } from '../models/gameTypes';
 
 export const GAME_CONSTANTS = {
+  DEBUG_MODE: false,
   // Canvas
   CANVAS_BG: '#222831',
   CANVAS_WIDTH: 1920,

@@ -2,6 +2,7 @@ import React from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import type { TowerSlot } from '../models/gameTypes';
+import { getNearestEnemy } from '../logic/TowerManager';
 
 interface TowerSpotProps {
   slot: TowerSlot;
@@ -16,6 +17,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   const performTileAction = useGameStore(s => s.performTileAction);
   const actionsRemaining = useGameStore(s => s.actionsRemaining);
   const energy = useGameStore(s => s.energy);
+  const enemies = useGameStore(s => s.enemies);
   const canBuild = !slot.tower && gold >= GAME_CONSTANTS.TOWER_COST;
 
   const [menuPos, setMenuPos] = React.useState<{x:number;y:number}|null>(null);
@@ -27,6 +29,15 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   const currentTowerInfo = slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level - 1] : null;
 
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
+  const debugInfo = React.useMemo(() => {
+    if (!slot.tower || !GAME_CONSTANTS.DEBUG_MODE) return null;
+    const { enemy } = getNearestEnemy(slot.tower.position, enemies);
+    const firing = performance.now() - slot.tower.lastFired < 100;
+    return enemy && {
+      enemy,
+      firing,
+    };
+  }, [slot.tower, enemies]);
 
   // Health bar for tower
   const healthBar = slot.tower && (
@@ -1088,6 +1099,35 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           {/* Render detailed tower */}
           {renderTower(slot.tower.level)}
           {renderVisualExtras()}
+          {debugInfo && (
+            <>
+              <circle
+                cx={slot.x}
+                cy={slot.y}
+                r={slot.tower.range * (slot.tower.rangeMultiplier ?? 1)}
+                fill="none"
+                stroke="#ff0000"
+                strokeDasharray="4 2"
+              />
+              <line
+                x1={slot.x}
+                y1={slot.y}
+                x2={debugInfo.enemy.position.x}
+                y2={debugInfo.enemy.position.y}
+                stroke="#ff0000"
+                strokeWidth={1}
+              />
+              <text
+                x={slot.x}
+                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
+                fill={debugInfo.firing ? '#00ff00' : '#ff0000'}
+                fontSize={10}
+                textAnchor="middle"
+              >
+                {debugInfo.firing ? 'FIRE' : 'IDLE'}
+              </text>
+            </>
+          )}
           
           {/* Info panel below tower */}
           {currentTowerInfo && (

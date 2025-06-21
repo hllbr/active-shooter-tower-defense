@@ -96,6 +96,8 @@ export interface Bullet {
   direction: Position;
   color: string;
   typeIndex: number;
+  targetId?: string;
+  life?: number;
 }
 
 export interface Effect {

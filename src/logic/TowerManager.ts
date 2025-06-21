@@ -4,14 +4,14 @@ import type { Effect } from '../models/gameTypes';
 import type { Enemy, Position, Tower } from '../models/gameTypes';
 import { playSound } from '../utils/sound';
 
-function getDirection(from: Position, to: Position) {
+export function getDirection(from: Position, to: Position) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const len = Math.sqrt(dx * dx + dy * dy) || 1;
   return { x: dx / len, y: dy / len };
 }
 
-function getNearestEnemy(pos: Position, enemies: Enemy[]) {
+export function getNearestEnemy(pos: Position, enemies: Enemy[]) {
   let min = Infinity;
   let nearest: Enemy | null = null;
   enemies.forEach((e) => {
@@ -26,13 +26,39 @@ function getNearestEnemy(pos: Position, enemies: Enemy[]) {
   return { enemy: nearest, distance: min };
 }
 
-function getEnemiesInRange(pos: Position, range: number, enemies: Enemy[]) {
+export function getEnemiesInRange(pos: Position, range: number, enemies: Enemy[]) {
   return enemies.filter(e => {
     const dx = e.position.x - pos.x;
     const dy = e.position.y - pos.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     return dist <= range;
   });
+}
+
+function fireTower(
+  tower: Tower,
+  enemy: Enemy,
+  bulletType: { speedMultiplier: number; damageMultiplier: number; color: string },
+) {
+  const bullet = {
+    id: `${Date.now()}-${Math.random()}`,
+    position: { x: tower.position.x, y: tower.position.y },
+    size: GAME_CONSTANTS.BULLET_SIZE,
+    isActive: true,
+    speed: GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier,
+    damage: tower.damage * bulletType.damageMultiplier,
+    direction: getDirection(tower.position, enemy.position),
+    color: bulletType.color,
+    typeIndex: useGameStore.getState().bulletLevel - 1,
+    targetId: enemy.id,
+    life: 3000,
+  };
+  useGameStore.getState().addBullet(bullet);
+  playSound(tower.attackSound);
+  tower.lastFired = performance.now();
+  if (GAME_CONSTANTS.DEBUG_MODE) {
+    console.log(`Tower ${tower.id} fired at ${enemy.id}`);
+  }
 }
 
 // Special ability functions
@@ -282,8 +308,6 @@ export function updateTowerFire() {
       }
     }
     
-    if (now - tower.lastFired < tower.fireRate * fireRateMultiplier) return;
-    
     const visibleEnemies = state.enemies.filter(e => {
       if (e.behaviorTag === 'ghost') {
         return state.towerSlots.some(s => s.tower && s.tower.specialAbility === 'psi' && Math.hypot(s.x - e.position.x, s.y - e.position.y) <= s.tower.psiRange);
@@ -293,23 +317,19 @@ export function updateTowerFire() {
     const { enemy, distance } = getNearestEnemy(tower.position, visibleEnemies);
     const rangeMult = (modifier?.towerRangeReduced ? 0.5 : 1) * (tower.rangeMultiplier ?? 1);
     if (!enemy || distance > tower.range * rangeMult) return;
-    
-    // Create bullet(s)
-    const bullet = {
-      id: `${Date.now()}-${Math.random()}`,
-      position: { x: tower.position.x, y: tower.position.y },
-      size: GAME_CONSTANTS.BULLET_SIZE,
-      isActive: true,
-      speed: GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier,
-      damage: tower.damage * damageMultiplier,
-      direction: getDirection(tower.position, enemy.position),
+
+    if (now - tower.lastFired < tower.fireRate * fireRateMultiplier) {
+      if (GAME_CONSTANTS.DEBUG_MODE) {
+        console.log(`Tower ${tower.id} idle; enemy ${enemy.id} at ${distance.toFixed(1)}`);
+      }
+      return;
+    }
+
+    fireTower(tower, enemy, {
+      speedMultiplier: bulletType.speedMultiplier,
+      damageMultiplier,
       color: bulletType.color,
-      typeIndex: state.bulletLevel - 1,
-    };
-    
-    useGameStore.getState().addBullet(bullet);
-    playSound(tower.attackSound);
-    tower.lastFired = now;
+    });
   });
 }
 
@@ -322,8 +342,19 @@ export function updateBullets() {
     addEffect,
   } = useGameStore.getState();
   bullets.forEach((b) => {
+    const target = b.targetId ? enemies.find((e) => e.id === b.targetId) : null;
+    if (target) {
+      b.direction = getDirection(b.position, target.position);
+    }
     b.position.x += b.direction.x * b.speed * 0.016;
     b.position.y += b.direction.y * b.speed * 0.016;
+    if (b.life !== undefined) {
+      b.life -= 16;
+      if (b.life <= 0) {
+        removeBullet(b.id);
+        return;
+      }
+    }
 
     if (
       b.position.x < 0 ||
