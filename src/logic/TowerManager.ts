@@ -279,7 +279,7 @@ export function updateTowerFire() {
     if (now - tower.lastFired < tower.fireRate * fireRateMultiplier) return;
     
     const { enemy, distance } = getNearestEnemy(tower.position, state.enemies);
-    const rangeMult = modifier?.towerRangeReduced ? 0.5 : 1;
+    const rangeMult = (modifier?.towerRangeReduced ? 0.5 : 1) * (tower.rangeMultiplier ?? 1);
     if (!enemy || distance > tower.range * rangeMult) return;
     
     // Create bullet(s)

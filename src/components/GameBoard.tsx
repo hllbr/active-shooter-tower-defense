@@ -32,6 +32,8 @@ export const GameBoard: React.FC = () => {
     packagesPurchased,
     deployMines,
     frostEffectActive,
+    energy,
+    actionsRemaining,
   } = useGameStore();
 
   const [isRefreshing, setRefreshing] = React.useState(false);
@@ -180,6 +182,9 @@ export const GameBoard: React.FC = () => {
       {/* UI */}
       <div style={{ position: 'absolute', top: 24, left: 32, color: GAME_CONSTANTS.GOLD_COLOR, font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2, display: 'flex', alignItems: 'center' }}>
         <span style={{ marginRight: '8px', fontSize: '24px' }}>💰</span> Gold: {gold}
+      </div>
+      <div style={{ position: 'absolute', top: 56, left: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
+        Energy: {energy} ({actionsRemaining} actions)
       </div>
       <div style={{ position: 'absolute', top: 24, right: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
         Wave: {currentWave}/100

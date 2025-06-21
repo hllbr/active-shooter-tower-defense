@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from './gameTypes';
+import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener, TileModifier } from './gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { updateWaveTiles } from '../logic/TowerPlacementManager';
 import { waveRules } from '../config/waveRules';
@@ -40,6 +40,8 @@ const initialState: GameState = {
   wallRegenerationActive: false,
   currentWaveModifier: waveRules[1],
   towerUpgradeListeners: [],
+  energy: 100,
+  actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
 };
 
 type Store = GameState & {
@@ -78,6 +80,7 @@ type Store = GameState & {
   regenerateWalls: () => void;
   activateFrostEffect: () => void;
   deactivateFrostEffect: () => void;
+  performTileAction: (slotIdx: number, action: 'wall' | 'trench' | 'buff') => void;
   addTowerUpgradeListener: (fn: TowerUpgradeListener) => void;
 };
 
@@ -130,6 +133,9 @@ export const useGameStore = create<Store>((set, get) => ({
       godModeActive: false,
       attackSound: GAME_CONSTANTS.TOWER_ATTACK_SOUNDS[0],
       visual: GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === 1),
+      rangeMultiplier: slot.modifier?.type === 'buff'
+        ? GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER
+        : 1,
     };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
@@ -162,6 +168,9 @@ export const useGameStore = create<Store>((set, get) => ({
       specialAbility: upgrade.special,
       attackSound: GAME_CONSTANTS.TOWER_ATTACK_SOUNDS[nextLevel - 1],
       visual: GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === nextLevel),
+      rangeMultiplier: slot.modifier?.type === 'buff'
+        ? GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER
+        : slot.tower.rangeMultiplier ?? 1,
       // Level-based special improvements
       healthRegenRate: nextLevel >= 20 ? 5 : nextLevel >= 15 ? 3 : nextLevel >= 10 ? 2 : nextLevel >= 5 ? 1 : 0,
       multiShotCount: nextLevel >= 7 ? 5 : nextLevel >= 6 ? 4 : 3,
@@ -256,13 +265,51 @@ export const useGameStore = create<Store>((set, get) => ({
     if (!from.tower || to.tower) return {};
     const now = performance.now();
     if (from.tower.lastRelocated && now - from.tower.lastRelocated < GAME_CONSTANTS.RELOCATE_COOLDOWN) return {};
-    const moved = { ...from.tower, position: { x: to.x, y: to.y }, lastRelocated: now };
+    const moved = {
+      ...from.tower,
+      position: { x: to.x, y: to.y },
+      lastRelocated: now,
+      rangeMultiplier: to.modifier?.type === 'buff'
+        ? GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER
+        : from.tower.rangeMultiplier ?? 1,
+    };
     const newSlots = [...state.towerSlots];
     newSlots[fromIdx] = { ...from, tower: undefined };
     newSlots[toIdx] = { ...to, tower: moved };
     return {
       towerSlots: newSlots,
       towers: state.towers.map(t => t.id === moved.id ? moved : t),
+    };
+  }),
+
+  performTileAction: (slotIdx, action) => set((state) => {
+    const slot = state.towerSlots[slotIdx];
+    if (state.actionsRemaining <= 0) return {};
+    const cost = GAME_CONSTANTS.MAP_ACTION_ENERGY[action];
+    if (state.energy < cost) return {};
+    const now = performance.now();
+    let modifier: TileModifier | undefined;
+    if (action === 'wall') {
+      modifier = { type: 'wall', expiresAt: now + GAME_CONSTANTS.WALL_BLOCK_DURATION };
+    } else if (action === 'trench') {
+      modifier = { type: 'trench', expiresAt: now + GAME_CONSTANTS.WALL_BLOCK_DURATION };
+    } else {
+      modifier = { type: 'buff' };
+    }
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, modifier };
+    // Update tower if buff applied
+    if (modifier.type === 'buff' && slot.tower) {
+      const updated = { ...slot.tower, rangeMultiplier: GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER };
+      newSlots[slotIdx].tower = updated;
+    }
+    return {
+      towerSlots: newSlots,
+      energy: state.energy - cost,
+      actionsRemaining: state.actionsRemaining - 1,
+      towers: slot.tower && modifier.type === 'buff'
+        ? state.towers.map(t => t.id === slot.tower!.id ? { ...t, rangeMultiplier: GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER } : t)
+        : state.towers,
     };
   }),
 
@@ -367,12 +414,16 @@ export const useGameStore = create<Store>((set, get) => ({
       packagesPurchased: 0,
       towerSlots: updateWaveTiles(newWave, state.towerSlots),
       currentWaveModifier: waveRules[newWave],
+      actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
+      energy: state.energy,
     };
   }),
   resetGame: () => set(() => ({
     ...initialState,
     towerSlots: updateWaveTiles(1, []),
     currentWaveModifier: waveRules[1],
+    energy: 100,
+    actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
     enemiesKilled: 0,
     enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(1),
     totalEnemiesKilled: 0,

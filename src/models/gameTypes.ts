@@ -44,6 +44,7 @@ export interface Tower {
   lastRelocated?: number;
   attackSound?: string;
   visual?: TowerVisual;
+  rangeMultiplier?: number;
 }
 
 export interface TowerSlot {
@@ -53,8 +54,14 @@ export interface TowerSlot {
   /** build tile type */
   type?: 'fixed' | 'dynamic';
   tower?: Tower;
+  modifier?: TileModifier;
   /** Indicates that a tower existed here and was destroyed */
   wasDestroyed?: boolean;
+}
+
+export interface TileModifier {
+  type: 'wall' | 'trench' | 'buff';
+  expiresAt?: number;
 }
 
 export interface Enemy {
@@ -153,4 +160,6 @@ export interface GameState {
   originalEnemySpeeds: Map<string, number>;
   currentWaveModifier?: WaveModifier;
   towerUpgradeListeners: TowerUpgradeListener[];
+  energy: number;
+  actionsRemaining: number;
 }

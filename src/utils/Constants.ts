@@ -21,6 +21,15 @@ export const GAME_CONSTANTS = {
   RELOCATE_COOLDOWN: 5000,
   BUILD_TILE_DISTANCE: 120,
   DISMANTLE_REFUND: 0.5,
+  MAP_ACTIONS_PER_WAVE: 3,
+  MAP_ACTION_ENERGY: {
+    wall: 20,
+    trench: 15,
+    buff: 25,
+  },
+  WALL_BLOCK_DURATION: 5000,
+  TRENCH_SLOW_MULTIPLIER: 0.5,
+  BUFF_RANGE_MULTIPLIER: 1.2,
   BUILD_TILE_COLORS: {
     fixed: '#4ade80',
     dynamic: '#60a5fa',

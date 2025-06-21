@@ -147,6 +147,14 @@ export function updateEnemyMovement() {
 
     const targetSlot = getNearestSlot(enemy.position);
     if (!targetSlot) return;
+    if (targetSlot.modifier) {
+      const mod = targetSlot.modifier;
+      if (mod.expiresAt && mod.expiresAt < performance.now()) {
+        targetSlot.modifier = undefined;
+      } else if (mod.type === 'wall') {
+        return; // Block enemy
+      }
+    }
     const dx = targetSlot.x - enemy.position.x;
     const dy = targetSlot.y - enemy.position.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -178,8 +186,12 @@ export function updateEnemyMovement() {
       return;
     }
     // Move toward slot
-    const moveX = (dx / dist) * enemy.speed * 0.016;
-    const moveY = (dy / dist) * enemy.speed * 0.016;
+    let speedMult = 1;
+    if (targetSlot.modifier && targetSlot.modifier.type === 'trench') {
+      speedMult = GAME_CONSTANTS.TRENCH_SLOW_MULTIPLIER;
+    }
+    const moveX = (dx / dist) * enemy.speed * speedMult * 0.016;
+    const moveY = (dy / dist) * enemy.speed * speedMult * 0.016;
     enemy.position.x += moveX;
     enemy.position.y += moveY;
   });

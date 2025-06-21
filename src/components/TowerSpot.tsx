@@ -13,7 +13,12 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   const buildTower = useGameStore((s) => s.buildTower);
   const upgradeTower = useGameStore((s) => s.upgradeTower);
   const wallLevel = useGameStore((s) => s.wallLevel);
+  const performTileAction = useGameStore(s => s.performTileAction);
+  const actionsRemaining = useGameStore(s => s.actionsRemaining);
+  const energy = useGameStore(s => s.energy);
   const canBuild = !slot.tower && gold >= GAME_CONSTANTS.TOWER_COST;
+
+  const [menuPos, setMenuPos] = React.useState<{x:number;y:number}|null>(null);
   
   // Get upgrade info for current tower
   const canUpgrade = slot.tower && slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL;
@@ -957,6 +962,51 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
     );
   };
 
+  const renderModifier = () => {
+    if (!slot.modifier) return null;
+    const { type, expiresAt } = slot.modifier;
+    if (expiresAt && expiresAt < performance.now()) return null;
+    if (type === 'wall') {
+      return (
+        <rect
+          x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2 - 10}
+          y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 10}
+          width={GAME_CONSTANTS.TOWER_SIZE + 20}
+          height={GAME_CONSTANTS.TOWER_SIZE + 20}
+          fill="rgba(100,100,100,0.5)"
+          stroke="#666"
+          strokeWidth={2}
+        />
+      );
+    }
+    if (type === 'trench') {
+      return (
+        <circle
+          cx={slot.x}
+          cy={slot.y}
+          r={GAME_CONSTANTS.TOWER_SIZE / 2 + 12}
+          fill="rgba(0,0,0,0.3)"
+          stroke="#222"
+          strokeDasharray="4 2"
+          strokeWidth={2}
+        />
+      );
+    }
+    if (type === 'buff') {
+      return (
+        <circle
+          cx={slot.x}
+          cy={slot.y}
+          r={GAME_CONSTANTS.TOWER_SIZE / 2 + 16}
+          fill="none"
+          stroke="#0ff"
+          strokeWidth={3}
+        />
+      );
+    }
+    return null;
+  };
+
   const renderVisualExtras = () => {
     if (!slot.tower) return null;
     const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === slot.tower!.level);
@@ -974,11 +1024,12 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   };
 
   return (
-    <g>
+    <g onContextMenu={(e) => { e.preventDefault(); setMenuPos({ x: e.clientX, y: e.clientY }); }}>
       {/* Slot or Tower */}
       {!slot.tower ? (
         <g>
           {/* Empty slot with foundation */}
+          {renderModifier()}
           <rect
             x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
             y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
@@ -1026,6 +1077,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
         </g>
       ) : (
         <g>
+          {renderModifier()}
           {/* Render Wall first so it's behind the tower */}
           {renderWall()}
           {/* Render detailed tower */}
@@ -1068,6 +1120,21 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           )}
         </g>
       )}
+      {menuPos && (
+        <foreignObject x={menuPos.x} y={menuPos.y} width="120" height="80" style={{ pointerEvents: 'auto' }}>
+          <div style={{ background: '#222', color: '#fff', border: '1px solid #555', fontSize: 12 }}>
+            <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'wall'); setMenuPos(null); }}>
+              Build Wall
+            </div>
+            <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'trench'); setMenuPos(null); }}>
+              Dig Trench
+            </div>
+            <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'buff'); setMenuPos(null); }}>
+              Buff Tile
+            </div>
+          </div>
+        </foreignObject>
+      )}
     </g>
   );
-}; 
+};
