@@ -6,6 +6,7 @@ import { startEnemyWave, stopEnemyWave } from '../logic/EnemySpawner';
 import { startGameLoop } from '../logic/GameLoop';
 import { initUpgradeEffects } from '../logic/UpgradeEffects';
 import { UpgradeScreen } from './game/UpgradeScreen';
+import { playSound } from '../utils/sound';
 
 export const GameBoard: React.FC = () => {
   const {
@@ -34,6 +35,15 @@ export const GameBoard: React.FC = () => {
     frostEffectActive,
     energy,
     actionsRemaining,
+    prepRemaining,
+    isPreparing,
+    isPaused,
+    tickPreparation,
+    pausePreparation,
+    resumePreparation,
+    speedUpPreparation,
+    startPreparation,
+    startWave,
   } = useGameStore();
 
   const [isRefreshing, setRefreshing] = React.useState(false);
@@ -108,7 +118,7 @@ export const GameBoard: React.FC = () => {
 
   // Handle game loop start/stop based on game state and refresh screen
   useEffect(() => {
-    if (!isStarted || isRefreshing) {
+    if (!isStarted || isRefreshing || isPreparing) {
       stopEnemyWave();
       loopStopper.current?.();
       loopStopper.current = null;
@@ -123,11 +133,11 @@ export const GameBoard: React.FC = () => {
       loopStopper.current?.();
       loopStopper.current = null;
     };
-  }, [isStarted, isRefreshing]);
+  }, [isStarted, isRefreshing, isPreparing]);
 
   // Auto next wave and refresh handling
   useEffect(() => {
-    if (!isStarted || isRefreshing) return;
+    if (!isStarted || isRefreshing || isPreparing) return;
 
     // Wave is complete when the kill requirement is met.
     if (enemiesKilled >= enemiesRequired) {
@@ -140,9 +150,43 @@ export const GameBoard: React.FC = () => {
     enemiesRequired,
     isStarted,
     isRefreshing,
+    isPreparing,
     nextWave,
     resetDice,
   ]);
+
+  const warningPlayed = useRef(false);
+
+  useEffect(() => {
+    if (!isPreparing || isPaused) return;
+    const id = setInterval(() => tickPreparation(1000), 1000);
+    return () => clearInterval(id);
+  }, [isPreparing, isPaused, tickPreparation]);
+
+  useEffect(() => {
+    if (isPreparing && prepRemaining <= GAME_CONSTANTS.PREP_WARNING_THRESHOLD && !warningPlayed.current) {
+      playSound('warning');
+      warningPlayed.current = true;
+    }
+    if (isPreparing && prepRemaining <= 0) {
+      startWave();
+    }
+    if (!isPreparing) warningPlayed.current = false;
+  }, [prepRemaining, isPreparing, startWave]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!isPreparing) return;
+      if (e.key === 'p' || e.key === 'P') {
+        isPaused ? resumePreparation() : pausePreparation();
+      }
+      if (e.key === 'f' || e.key === 'F') {
+        speedUpPreparation(GAME_CONSTANTS.PREP_TIME);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isPreparing, isPaused, pausePreparation, resumePreparation, speedUpPreparation]);
 
   // SVG size
   const width = window.innerWidth;
@@ -224,12 +268,39 @@ export const GameBoard: React.FC = () => {
         </div>
       </div>
 
+      {isPreparing && (
+        <div style={{
+          position: 'absolute',
+          top: 120,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 2,
+          textAlign: 'center',
+          color: '#fff',
+        }}>
+          <div style={{ marginBottom: 4 }}>
+            Next wave in {Math.ceil(prepRemaining / 1000)}s{isPaused ? ' (paused)' : ''}
+          </div>
+          <div style={{ width: 200, height: 8, background: '#333', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{
+              width: `${(prepRemaining / GAME_CONSTANTS.PREP_TIME) * 100}%`,
+              height: '100%',
+              background: prepRemaining < GAME_CONSTANTS.PREP_WARNING_THRESHOLD ? '#ff5555' : '#00cfff',
+              transition: 'width 0.25s linear',
+            }} />
+          </div>
+          <button onClick={() => speedUpPreparation(GAME_CONSTANTS.PREP_TIME)} style={{ marginTop: 8, padding: '4px 12px', cursor: 'pointer' }}>
+            Start Wave
+          </button>
+        </div>
+      )}
+
       {isRefreshing && <UpgradeScreen setRefreshing={setRefreshing} />}
 
       {/* Start Overlay */}
       {!isStarted && (
         <div
-          onClick={() => setStarted(true)}
+          onClick={() => { setStarted(true); startPreparation(); }}
           style={{
             position: 'absolute',
             top: 0,

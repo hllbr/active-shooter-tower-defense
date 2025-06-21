@@ -180,4 +180,7 @@ export interface GameState {
   towerUpgradeListeners: TowerUpgradeListener[];
   energy: number;
   actionsRemaining: number;
+  prepRemaining: number;
+  isPreparing: boolean;
+  isPaused: boolean;
 }

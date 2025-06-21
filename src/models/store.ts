@@ -42,6 +42,9 @@ const initialState: GameState = {
   towerUpgradeListeners: [],
   energy: 100,
   actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
+  prepRemaining: GAME_CONSTANTS.PREP_TIME,
+  isPreparing: false,
+  isPaused: false,
 };
 
 type Store = GameState & {
@@ -82,6 +85,12 @@ type Store = GameState & {
   deactivateFrostEffect: () => void;
   performTileAction: (slotIdx: number, action: 'wall' | 'trench' | 'buff') => void;
   addTowerUpgradeListener: (fn: TowerUpgradeListener) => void;
+  startPreparation: () => void;
+  tickPreparation: (delta: number) => void;
+  pausePreparation: () => void;
+  resumePreparation: () => void;
+  speedUpPreparation: (amount: number) => void;
+  startWave: () => void;
 };
 
 export const useGameStore = create<Store>((set, get) => ({
@@ -429,6 +438,9 @@ export const useGameStore = create<Store>((set, get) => ({
       currentWaveModifier: waveRules[newWave],
       actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
       energy: state.energy,
+      isPreparing: true,
+      prepRemaining: GAME_CONSTANTS.PREP_TIME,
+      isPaused: false,
     };
   }),
   resetGame: () => set(() => ({
@@ -695,6 +707,22 @@ export const useGameStore = create<Store>((set, get) => ({
       originalEnemySpeeds: new Map(),
     };
   }),
+  startPreparation: () => set(() => ({
+    isPreparing: true,
+    prepRemaining: GAME_CONSTANTS.PREP_TIME,
+    isPaused: false,
+  })),
+  tickPreparation: (delta) => set((state) => {
+    if (!state.isPreparing || state.isPaused) return {} as any;
+    const remaining = Math.max(0, state.prepRemaining - delta);
+    return { prepRemaining: remaining };
+  }),
+  pausePreparation: () => set(() => ({ isPaused: true })),
+  resumePreparation: () => set(() => ({ isPaused: false })),
+  speedUpPreparation: (amount) => set((state) => ({
+    prepRemaining: Math.max(0, state.prepRemaining - amount),
+  })),
+  startWave: () => set(() => ({ isPreparing: false, prepRemaining: 0 })),
   addTowerUpgradeListener: (fn) => set((state) => ({
     towerUpgradeListeners: [...state.towerUpgradeListeners, fn],
   })),
