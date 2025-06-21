@@ -207,6 +207,13 @@ export const GAME_CONSTANTS = {
   ENEMY_HEALTH_INCREASE: 25,
   ENEMY_COLORS: ['#ff3333', '#ff8800', '#ffcc00'],
   ENEMY_HEALTHBAR_HEIGHT: 6,
+  ENEMY_TYPES: {
+    Basic: { speed: 80, hp: 60, damage: 10, color: '#ff3333', behaviorTag: 'normal' },
+    Scout: { speed: 140, hp: 40, damage: 8, color: '#6ee7b7', behaviorTag: 'avoid' },
+    Tank: { speed: 60, hp: 200, damage: 20, color: '#94a3b8', behaviorTag: 'tank' },
+    Ghost: { speed: 100, hp: 70, damage: 12, color: '#a78bfa', behaviorTag: 'ghost' },
+  },
+  TANK_DEATH_RADIUS: 80,
 
   // Mines
   MINE_VISUALS: {

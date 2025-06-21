@@ -77,6 +77,11 @@ export interface Enemy {
   frozenUntil?: number;
   isSpecial?: boolean; // For microbe/yadama enemies
   lastGoldDrop?: number; // For tracking continuous gold drops
+  damage: number;
+  /** Behavior tag used for special AI logic */
+  behaviorTag?: string;
+  /** Enemy type name */
+  type?: string;
 }
 
 export interface Bullet {
@@ -115,6 +120,19 @@ export interface WaveModifier {
   towerRangeReduced?: boolean;
   noUpgrades?: boolean;
   disableArea?: { x: number; y: number; radius: number };
+}
+
+export interface EnemyType {
+  speed: number;
+  hp: number;
+  damage: number;
+  color: string;
+  behaviorTag?: string;
+}
+
+export interface WaveEnemyConfig {
+  type: string;
+  count: number;
 }
 
 export type TowerUpgradeListener = (

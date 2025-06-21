@@ -324,25 +324,38 @@ export const useGameStore = create<Store>((set, get) => ({
 
   addEnemy: (enemy) => set((state) => ({ enemies: [...state.enemies, enemy] })),
   removeEnemy: (enemyId) => set((state) => ({ enemies: state.enemies.filter(e => e.id !== enemyId) })),
-  damageEnemy: (enemyId, dmg) => set((state) => {
-    const enemy = state.enemies.find(e => e.id === enemyId);
-    if (!enemy) return {};
-    const newHealth = enemy.health - dmg;
-    if (newHealth <= 0) {
-      // Don't count special enemies towards wave completion
-      const shouldCountKill = !enemy.isSpecial;
-      return {
-        enemies: state.enemies.filter(e => e.id !== enemyId),
-        gold: state.gold + enemy.goldValue,
-        enemiesKilled: shouldCountKill ? state.enemiesKilled + 1 : state.enemiesKilled,
-        totalEnemiesKilled: state.totalEnemiesKilled + 1,
-      };
-    } else {
-      return {
-        enemies: state.enemies.map(e => e.id === enemyId ? { ...e, health: newHealth } : e),
-      };
+  damageEnemy: (enemyId, dmg) => {
+    const { towerSlots } = get();
+    const enemyObj = get().enemies.find(e => e.id === enemyId);
+    set((state) => {
+      const enemy = state.enemies.find(e => e.id === enemyId);
+      if (!enemy) return {};
+      const newHealth = enemy.health - dmg;
+      if (newHealth <= 0) {
+        const shouldCountKill = !enemy.isSpecial;
+        return {
+          enemies: state.enemies.filter(e => e.id !== enemyId),
+          gold: state.gold + enemy.goldValue,
+          enemiesKilled: shouldCountKill ? state.enemiesKilled + 1 : state.enemiesKilled,
+          totalEnemiesKilled: state.totalEnemiesKilled + 1,
+        };
+      } else {
+        return {
+          enemies: state.enemies.map(e => e.id === enemyId ? { ...e, health: newHealth } : e),
+        };
+      }
+    });
+    if (enemyObj && enemyObj.health - dmg <= 0 && enemyObj.behaviorTag === 'tank') {
+      towerSlots.forEach((s, idx) => {
+        if (!s.tower) return;
+        const dx = s.x - enemyObj.position.x;
+        const dy = s.y - enemyObj.position.y;
+        if (Math.hypot(dx, dy) <= GAME_CONSTANTS.TANK_DEATH_RADIUS) {
+          get().damageTower(idx, enemyObj.damage);
+        }
+      });
     }
-  }),
+  },
 
   addBullet: (bullet) => set((state) => ({ bullets: [...state.bullets, bullet] })),
   removeBullet: (bulletId) => set((state) => ({ bullets: state.bullets.filter(b => b.id !== bulletId) })),

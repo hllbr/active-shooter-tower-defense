@@ -40,7 +40,13 @@ function handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect
   const now = performance.now();
   if (now - tower.lastSpecialUse < tower.specialCooldown) return;
 
-  const enemiesInRange = getEnemiesInRange(tower.position, tower.range, enemies);
+  const detectable = enemies.filter(e => {
+    if (e.behaviorTag === 'ghost') {
+      return tower.specialAbility === 'psi';
+    }
+    return true;
+  });
+  const enemiesInRange = getEnemiesInRange(tower.position, tower.range, detectable);
   if (enemiesInRange.length === 0) return;
 
   switch (tower.specialAbility) {
@@ -278,7 +284,13 @@ export function updateTowerFire() {
     
     if (now - tower.lastFired < tower.fireRate * fireRateMultiplier) return;
     
-    const { enemy, distance } = getNearestEnemy(tower.position, state.enemies);
+    const visibleEnemies = state.enemies.filter(e => {
+      if (e.behaviorTag === 'ghost') {
+        return state.towerSlots.some(s => s.tower && s.tower.specialAbility === 'psi' && Math.hypot(s.x - e.position.x, s.y - e.position.y) <= s.tower.psiRange);
+      }
+      return true;
+    });
+    const { enemy, distance } = getNearestEnemy(tower.position, visibleEnemies);
     const rangeMult = (modifier?.towerRangeReduced ? 0.5 : 1) * (tower.rangeMultiplier ?? 1);
     if (!enemy || distance > tower.range * rangeMult) return;
     
