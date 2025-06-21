@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState, Tower, TowerSlot, Enemy, Bullet, Position, Effect } from './gameTypes';
+import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position } from './gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
 
 const initialSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(
@@ -21,14 +21,29 @@ const initialState: GameState = {
   gold: 200,
   bulletLevel: 1,
   currentWave: 1,
+  enemiesKilled: 0,
+  enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(1),
+  totalEnemiesKilled: 0,
+  totalGoldSpent: 0,
+  fireUpgradesPurchased: 0,
+  shieldUpgradesPurchased: 0,
+  packagesPurchased: 0,
+  defenseUpgradesPurchased: 0,
+  mineLevel: 0,
+  mineRegeneration: false,
+  mines: [],
   maxTowers: GAME_CONSTANTS.INITIAL_TOWER_LIMIT,
   globalWallStrength: 0,
   isGameOver: false,
   isStarted: false,
+  diceRoll: null,
+  diceUsed: false,
+  discountMultiplier: 1,
+  isDiceRolling: false,
 };
 
 type Store = GameState & {
-  buildTower: (slotIdx: number) => void;
+  buildTower: (slotIdx: number, free?: boolean) => void;
   upgradeTower: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
   removeTower: (slotIdx: number) => void;
@@ -44,22 +59,29 @@ type Store = GameState & {
   removeEffect: (effectId: string) => void;
   buyWall: (slotIdx: number) => void;
   hitWall: (slotIdx: number) => void;
-  purchaseShield: (idx: number) => void;
+  purchaseShield: (idx: number, free?: boolean) => void;
   nextWave: () => void;
   resetGame: () => void;
   setStarted: (started: boolean) => void;
-  upgradeBullet: () => void;
+  upgradeBullet: (free?: boolean) => void;
   refreshBattlefield: (slots: number) => void;
+  rollDice: () => void;
+  resetDice: () => void;
+  setDiceResult: (roll: number, multiplier: number) => void;
+  upgradeMines: () => void;
+  deployMines: () => void;
+  triggerMine: (mineId: string) => void;
 };
 
 export const useGameStore = create<Store>((set, get) => ({
   ...initialState,
 
-  buildTower: (slotIdx) => set((state) => {
+  buildTower: (slotIdx, free = false) => set((state) => {
     const slot = state.towerSlots[slotIdx];
+    const cost = free ? 0 : GAME_CONSTANTS.TOWER_COST;
     if (
       slot.tower ||
-      state.gold < GAME_CONSTANTS.TOWER_COST ||
+      state.gold < cost ||
       state.towers.length >= state.maxTowers
     )
       return {};
@@ -81,7 +103,8 @@ export const useGameStore = create<Store>((set, get) => ({
     return {
       towers: [...state.towers, newTower],
       towerSlots: newSlots,
-      gold: state.gold - GAME_CONSTANTS.TOWER_COST,
+      gold: state.gold - cost,
+      totalGoldSpent: state.totalGoldSpent + cost,
     };
   }),
 
@@ -102,6 +125,7 @@ export const useGameStore = create<Store>((set, get) => ({
       towers: state.towers.map(t => t.id === upgradedTower.id ? upgradedTower : t),
       towerSlots: newSlots,
       gold: state.gold - GAME_CONSTANTS.TOWER_UPGRADE_COST,
+      totalGoldSpent: state.totalGoldSpent + GAME_CONSTANTS.TOWER_UPGRADE_COST,
     };
   }),
 
@@ -159,7 +183,11 @@ export const useGameStore = create<Store>((set, get) => ({
   unlockSlot: () => {},
 
   addGold: (amount) => set((state) => ({ gold: state.gold + amount })),
-  spendGold: (amount) => set((state) => ({ gold: state.gold - amount })),
+  spendGold: (amount) => set((state) => ({
+    gold: state.gold - amount,
+    totalGoldSpent: state.totalGoldSpent + amount,
+    packagesPurchased: state.packagesPurchased + 1, // Assume spendGold is only for packages
+  })),
 
   addEnemy: (enemy) => set((state) => ({ enemies: [...state.enemies, enemy] })),
   removeEnemy: (enemyId) => set((state) => ({ enemies: state.enemies.filter(e => e.id !== enemyId) })),
@@ -168,9 +196,13 @@ export const useGameStore = create<Store>((set, get) => ({
     if (!enemy) return {};
     const newHealth = enemy.health - dmg;
     if (newHealth <= 0) {
+      // Don't count special enemies towards wave completion
+      const shouldCountKill = !enemy.isSpecial;
       return {
         enemies: state.enemies.filter(e => e.id !== enemyId),
         gold: state.gold + enemy.goldValue,
+        enemiesKilled: shouldCountKill ? state.enemiesKilled + 1 : state.enemiesKilled,
+        totalEnemiesKilled: state.totalEnemiesKilled + 1,
       };
     } else {
       return {
@@ -195,6 +227,8 @@ export const useGameStore = create<Store>((set, get) => ({
       towers: state.towers.map(t => t.id === updatedTower.id ? updatedTower : t),
       towerSlots: newSlots,
       gold: state.gold - GAME_CONSTANTS.WALL_COST,
+      totalGoldSpent: state.totalGoldSpent + GAME_CONSTANTS.WALL_COST,
+      shieldUpgradesPurchased: state.shieldUpgradesPurchased + 1,
     };
   }),
 
@@ -210,32 +244,67 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  purchaseShield: (idx) => set((state) => {
+  purchaseShield: (idx, free = false) => set((state) => {
     const shield = GAME_CONSTANTS.WALL_SHIELDS[idx];
-    if (!shield || state.gold < shield.cost) return {};
+    if (!shield || (!free && state.gold < shield.cost)) return {};
     const newSlots = state.towerSlots.map((s) =>
       s.tower ? { ...s, tower: { ...s.tower, wallStrength: s.tower.wallStrength + shield.strength } } : s,
     );
     return {
       towerSlots: newSlots,
       globalWallStrength: state.globalWallStrength + shield.strength,
-      gold: state.gold - shield.cost,
+      gold: free ? state.gold : state.gold - shield.cost,
+      totalGoldSpent: free ? state.totalGoldSpent : state.totalGoldSpent + shield.cost,
+      shieldUpgradesPurchased: state.shieldUpgradesPurchased + 1,
     };
   }),
 
-  nextWave: () => set((state) => ({ currentWave: state.currentWave + 1 })),
-  resetGame: () => set(() => ({ ...initialState, towerSlots: initialSlots })),
+  nextWave: () => set((state) => {
+    const newWave = state.currentWave + 1;
+    
+    // Check if player completed all 100 waves
+    if (newWave > 100) {
+      return {
+        isGameOver: true,
+        // Victory condition - you could add a victory flag here
+      };
+    }
+    
+    return {
+      currentWave: newWave,
+      enemiesKilled: 0,
+      enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(newWave),
+      totalEnemiesKilled: 0,
+      totalGoldSpent: 0,
+      fireUpgradesPurchased: 0,
+      shieldUpgradesPurchased: 0,
+      packagesPurchased: 0,
+    };
+  }),
+  resetGame: () => set(() => ({ 
+    ...initialState, 
+    towerSlots: initialSlots,
+    enemiesKilled: 0,
+    enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(1),
+    totalEnemiesKilled: 0,
+    totalGoldSpent: 0,
+    fireUpgradesPurchased: 0,
+    shieldUpgradesPurchased: 0,
+    packagesPurchased: 0,
+  })),
   setStarted: (started) => set(() => ({ isStarted: started })),
-  upgradeBullet: () => set((state) => {
+  upgradeBullet: (free = false) => set((state) => {
     if (state.bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length) return {};
-    if (state.gold < GAME_CONSTANTS.BULLET_UPGRADE_COST) return {};
+    if (!free && state.gold < GAME_CONSTANTS.BULLET_UPGRADE_COST) return {};
     return {
       bulletLevel: state.bulletLevel + 1,
-      gold: state.gold - GAME_CONSTANTS.BULLET_UPGRADE_COST,
+      gold: free ? state.gold : state.gold - GAME_CONSTANTS.BULLET_UPGRADE_COST,
+      totalGoldSpent: free ? state.totalGoldSpent : state.totalGoldSpent + GAME_CONSTANTS.BULLET_UPGRADE_COST,
+      fireUpgradesPurchased: state.fireUpgradesPurchased + 1,
     };
   }),
   refreshBattlefield: (slots) => set(() => {
-    const newSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(0, slots).map((s, i) => ({
+    const newSlots: TowerSlot[] = GAME_CONSTANTS.TOWER_SLOTS.slice(0, slots).map((s) => ({
       ...s,
       unlocked: true,
       tower: undefined,
@@ -248,5 +317,116 @@ export const useGameStore = create<Store>((set, get) => ({
       bullets: [],
       effects: [],
     };
+  }),
+  rollDice: () => set((state) => {
+    if (state.diceUsed || state.isDiceRolling) return {};
+    
+    // Zar atma animasyonu için önce rolling state'ini true yap
+    setTimeout(() => {
+      const roll = Math.floor(Math.random() * 6) + 1;
+      let discountMultiplier = 1;
+      
+      if (roll <= 3) {
+        // 3 ve altında: indirimler iptal edilir
+        discountMultiplier = 0;
+      } else {
+        // 4-6 arası: mevcut indirim + %50 daha fazla
+        discountMultiplier = 1 + (roll - 3) * 0.5;
+      }
+      
+      get().setDiceResult(roll, discountMultiplier);
+    }, 2000); // 2 saniye animasyon
+    
+    return {
+      isDiceRolling: true,
+    };
+  }),
+  resetDice: () => set(() => ({
+    diceRoll: null,
+    diceUsed: false,
+    discountMultiplier: 1,
+    isDiceRolling: false,
+  })),
+  setDiceResult: (roll: number, multiplier: number) => set(() => ({
+    diceRoll: roll,
+    diceUsed: true,
+    discountMultiplier: multiplier,
+    isDiceRolling: false,
+  })),
+  upgradeMines: () => set((state) => {
+    const currentLevel = state.mineLevel;
+    if (currentLevel >= GAME_CONSTANTS.MINE_UPGRADES.length) return {};
+    const upgrade = GAME_CONSTANTS.MINE_UPGRADES[currentLevel];
+    if (state.gold < upgrade.cost) return {};
+
+    const isRegenUpgrade = currentLevel === GAME_CONSTANTS.MINE_UPGRADES.length - 2;
+
+    return {
+      gold: state.gold - upgrade.cost,
+      mineLevel: currentLevel + 1,
+      mineRegeneration: state.mineRegeneration || isRegenUpgrade,
+      totalGoldSpent: state.totalGoldSpent + upgrade.cost,
+      defenseUpgradesPurchased: state.defenseUpgradesPurchased + 1,
+    };
+  }),
+  deployMines: () => set((state) => {
+    if (state.mineLevel === 0) return { mines: [] };
+    const level = state.mineLevel - 1;
+    const upgrade = GAME_CONSTANTS.MINE_UPGRADES[level];
+    const newMines: Mine[] = [];
+    
+    // Simple random placement for now, avoiding tower slots
+    const towerSlotPositions = new Set(state.towerSlots.map(s => `${s.x},${s.y}`));
+
+    for (let i = 0; i < upgrade.count; i++) {
+      let position: Position;
+      let isOverlapping;
+      do {
+        position = {
+          x: Math.random() * (window.innerWidth - 100) + 50,
+          y: Math.random() * (window.innerHeight - 100) + 50,
+        };
+        isOverlapping = towerSlotPositions.has(`${position.x},${position.y}`);
+      } while (isOverlapping);
+
+      newMines.push({
+        id: `mine-${Date.now()}-${i}`,
+        position,
+        size: GAME_CONSTANTS.MINE_VISUALS.size,
+        damage: upgrade.damage,
+        radius: upgrade.radius,
+      });
+    }
+    return { mines: newMines };
+  }),
+  triggerMine: (mineId) => set((state) => {
+    const newMines = state.mines.filter(m => m.id !== mineId);
+
+    if (state.mineRegeneration) {
+      const level = state.mineLevel - 1;
+      const upgrade = GAME_CONSTANTS.MINE_UPGRADES[level];
+      const towerSlotPositions = new Set(state.towerSlots.map(s => `${s.x},${s.y}`));
+      
+      let position: Position;
+      let isOverlapping;
+      do {
+        position = {
+          x: Math.random() * (window.innerWidth - 100) + 50,
+          y: Math.random() * (window.innerHeight - 100) + 50,
+        };
+        isOverlapping = towerSlotPositions.has(`${position.x},${position.y}`);
+      } while (isOverlapping);
+
+      const newMine: Mine = {
+        id: `mine-${Date.now()}-${Math.random()}`,
+        position,
+        size: GAME_CONSTANTS.MINE_VISUALS.size,
+        damage: upgrade.damage,
+        radius: upgrade.radius,
+      };
+      newMines.push(newMine);
+    }
+    
+    return { mines: newMines };
   }),
 }));
