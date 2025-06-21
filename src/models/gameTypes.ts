@@ -11,7 +11,28 @@ export interface Tower {
   fireRate: number;
   lastFired: number;
   health: number;
+  maxHealth: number;
   wallStrength: number;
+  specialAbility: string;
+  healthRegenRate: number;
+  lastHealthRegen: number;
+  specialCooldown: number;
+  lastSpecialUse: number;
+  multiShotCount: number;
+  chainLightningJumps: number;
+  freezeDuration: number;
+  burnDuration: number;
+  acidStack: number;
+  quantumState: boolean;
+  nanoSwarmCount: number;
+  psiRange: number;
+  timeWarpSlow: number;
+  spaceGravity: number;
+  legendaryAura: boolean;
+  divineProtection: boolean;
+  cosmicEnergy: number;
+  infinityLoop: boolean;
+  godModeActive: boolean;
 }
 
 export interface TowerSlot {
@@ -95,4 +116,11 @@ export interface GameState {
   diceUsed: boolean;
   discountMultiplier: number;
   isDiceRolling: boolean;
+  wallLevel: number;
+  globalWallActive: boolean;
+  lastWallDestroyed: number;
+  wallRegenerationActive: boolean;
+  frostEffectActive: boolean;
+  frostEffectStartTime: number;
+  originalEnemySpeeds: Map<string, number>;
 }

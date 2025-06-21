@@ -30,6 +30,7 @@ export const GameBoard: React.FC = () => {
     shieldUpgradesPurchased,
     packagesPurchased,
     deployMines,
+    frostEffectActive,
   } = useGameStore();
 
   const [isRefreshing, setRefreshing] = React.useState(false);
@@ -121,14 +122,13 @@ export const GameBoard: React.FC = () => {
   useEffect(() => {
     if (!isStarted || isRefreshing) return;
 
-    // Wave is complete when the kill requirement is met AND no enemies are left on screen.
-    if (enemiesKilled >= enemiesRequired && enemies.length === 0) {
+    // Wave is complete when the kill requirement is met.
+    if (enemiesKilled >= enemiesRequired) {
       setRefreshing(true); // Show upgrade screen
       nextWave(); // Progress to the next wave state
       resetDice(); // Reset dice for the new upgrade round
     }
   }, [
-    enemies.length,
     enemiesKilled,
     enemiesRequired,
     isStarted,
@@ -158,6 +158,11 @@ export const GameBoard: React.FC = () => {
             50% { fill-opacity: 1; transform: scale(1); }
             100% { fill-opacity: 0.4; transform: scale(0.8); }
           }
+          @keyframes frost-overlay {
+            0% { opacity: 0; filter: blur(0px); }
+            50% { opacity: 0.7; filter: blur(2px); }
+            100% { opacity: 0.4; filter: blur(1px); }
+          }
           .game-over-card {
             animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
           }
@@ -168,8 +173,8 @@ export const GameBoard: React.FC = () => {
         `}
       </style>
       {/* UI */}
-      <div style={{ position: 'absolute', top: 24, left: 32, color: GAME_CONSTANTS.GOLD_COLOR, font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
-        Gold: {gold}
+      <div style={{ position: 'absolute', top: 24, left: 32, color: GAME_CONSTANTS.GOLD_COLOR, font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2, display: 'flex', alignItems: 'center' }}>
+        <span style={{ marginRight: '8px', fontSize: '24px' }}>💰</span> Gold: {gold}
       </div>
       <div style={{ position: 'absolute', top: 24, right: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
         Wave: {currentWave}/100
@@ -464,6 +469,34 @@ export const GameBoard: React.FC = () => {
             >
               {currentWave >= 100 ? 'Tekrar Oyna' : 'Tekrar Dene'}
             </button>
+          </div>
+        </div>
+      )}
+      {/* Buz Efekti Overlay */}
+      {frostEffectActive && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'linear-gradient(135deg, rgba(0, 150, 255, 0.3), rgba(0, 200, 255, 0.2))',
+          pointerEvents: 'none',
+          zIndex: 10,
+          animation: 'frost-overlay 2s ease-in-out infinite alternate',
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            fontSize: '48px',
+            color: '#00ccff',
+            textShadow: '0 0 20px #00ccff',
+            fontWeight: 'bold',
+            animation: 'pulse 1s ease-in-out infinite',
+          }}>
+            ❄️ ZAMAN DONDU ❄️
           </div>
         </div>
       )}
