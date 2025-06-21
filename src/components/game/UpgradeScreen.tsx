@@ -16,8 +16,7 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ setRefreshing }) =
   const nextWave = useGameStore((s) => s.nextWave);
   const resetDice = useGameStore((s) => s.resetDice);
   const bulletLevel = useGameStore((s) => s.bulletLevel);
-
-  const startEnemyWave = () => { /* Bu fonksiyonu daha sonra GameLoop'a taşıyabiliriz */ };
+  const startPreparation = useGameStore(s => s.startPreparation);
 
   return (
     <div
@@ -68,7 +67,7 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ setRefreshing }) =
           onClick={() => {
             setRefreshing(false);
             nextWave();
-            startEnemyWave();
+            startPreparation();
             resetDice();
           }}
           style={{

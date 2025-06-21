@@ -2,15 +2,17 @@ import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import type { Effect } from '../models/gameTypes';
 import type { Enemy, Position, Tower } from '../models/gameTypes';
+import { playSound } from '../utils/sound';
+import { energyManager } from './EnergyManager';
 
-function getDirection(from: Position, to: Position) {
+export function getDirection(from: Position, to: Position) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const len = Math.sqrt(dx * dx + dy * dy) || 1;
   return { x: dx / len, y: dy / len };
 }
 
-function getNearestEnemy(pos: Position, enemies: Enemy[]) {
+export function getNearestEnemy(pos: Position, enemies: Enemy[]) {
   let min = Infinity;
   let nearest: Enemy | null = null;
   enemies.forEach((e) => {
@@ -25,7 +27,7 @@ function getNearestEnemy(pos: Position, enemies: Enemy[]) {
   return { enemy: nearest, distance: min };
 }
 
-function getEnemiesInRange(pos: Position, range: number, enemies: Enemy[]) {
+export function getEnemiesInRange(pos: Position, range: number, enemies: Enemy[]) {
   return enemies.filter(e => {
     const dx = e.position.x - pos.x;
     const dy = e.position.y - pos.y;
@@ -34,12 +36,48 @@ function getEnemiesInRange(pos: Position, range: number, enemies: Enemy[]) {
   });
 }
 
+function fireTower(
+  tower: Tower,
+  enemy: Enemy,
+  bulletType: { speedMultiplier: number; damageMultiplier: number; color: string },
+) {
+  const bullet = {
+    id: `${Date.now()}-${Math.random()}`,
+    position: { x: tower.position.x, y: tower.position.y },
+    size: GAME_CONSTANTS.BULLET_SIZE,
+    isActive: true,
+    speed: GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier,
+    damage: tower.damage * bulletType.damageMultiplier,
+    direction: getDirection(tower.position, enemy.position),
+    color: bulletType.color,
+    typeIndex: useGameStore.getState().bulletLevel - 1,
+    targetId: enemy.id,
+    life: 3000,
+  };
+  useGameStore.getState().addBullet(bullet);
+  playSound(tower.attackSound);
+  tower.lastFired = performance.now();
+  if (GAME_CONSTANTS.DEBUG_MODE) {
+    console.log(`Tower ${tower.id} fired at ${enemy.id}`);
+  }
+}
+
 // Special ability functions
 function handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect: Effect) => void, damageEnemy: (id: string, damage: number) => void) {
   const now = performance.now();
   if (now - tower.lastSpecialUse < tower.specialCooldown) return;
 
-  const enemiesInRange = getEnemiesInRange(tower.position, tower.range, enemies);
+  if (!energyManager.consume(GAME_CONSTANTS.ENERGY_COSTS.specialAbility, `ability_${tower.specialAbility}`)) {
+    return;
+  }
+
+  const detectable = enemies.filter(e => {
+    if (e.behaviorTag === 'ghost') {
+      return tower.specialAbility === 'psi';
+    }
+    return true;
+  });
+  const enemiesInRange = getEnemiesInRange(tower.position, tower.range, detectable);
   if (enemiesInRange.length === 0) return;
 
   switch (tower.specialAbility) {
@@ -227,6 +265,7 @@ function handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect
 
 export function updateTowerFire() {
   const state = useGameStore.getState();
+  const modifier = state.currentWaveModifier;
   const now = performance.now();
   
   // Sur yenileme kontrolü
@@ -237,6 +276,13 @@ export function updateTowerFire() {
   state.towerSlots.forEach((slot) => {
     const tower = slot.tower;
     if (!tower) return;
+
+    if (modifier?.disableTowerType && tower.specialAbility === modifier.disableTowerType) return;
+    if (modifier?.disableArea) {
+      const dx = tower.position.x - modifier.disableArea.x;
+      const dy = tower.position.y - modifier.disableArea.y;
+      if (Math.sqrt(dx * dx + dy * dy) <= modifier.disableArea.radius) return;
+    }
 
     // Health regeneration
     if (tower.healthRegenRate > 0 && now - tower.lastHealthRegen > 1000) {
@@ -267,26 +313,28 @@ export function updateTowerFire() {
       }
     }
     
-    if (now - tower.lastFired < tower.fireRate * fireRateMultiplier) return;
-    
-    const { enemy, distance } = getNearestEnemy(tower.position, state.enemies);
-    if (!enemy || distance > tower.range) return;
-    
-    // Create bullet(s)
-    const bullet = {
-      id: `${Date.now()}-${Math.random()}`,
-      position: { x: tower.position.x, y: tower.position.y },
-      size: GAME_CONSTANTS.BULLET_SIZE,
-      isActive: true,
-      speed: GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier,
-      damage: tower.damage * damageMultiplier,
-      direction: getDirection(tower.position, enemy.position),
+    const visibleEnemies = state.enemies.filter(e => {
+      if (e.behaviorTag === 'ghost') {
+        return state.towerSlots.some(s => s.tower && s.tower.specialAbility === 'psi' && Math.hypot(s.x - e.position.x, s.y - e.position.y) <= s.tower.psiRange);
+      }
+      return true;
+    });
+    const { enemy, distance } = getNearestEnemy(tower.position, visibleEnemies);
+    const rangeMult = (modifier?.towerRangeReduced ? 0.5 : 1) * (tower.rangeMultiplier ?? 1);
+    if (!enemy || distance > tower.range * rangeMult) return;
+
+    if (now - tower.lastFired < tower.fireRate * fireRateMultiplier) {
+      if (GAME_CONSTANTS.DEBUG_MODE) {
+        console.log(`Tower ${tower.id} idle; enemy ${enemy.id} at ${distance.toFixed(1)}`);
+      }
+      return;
+    }
+
+    fireTower(tower, enemy, {
+      speedMultiplier: bulletType.speedMultiplier,
+      damageMultiplier,
       color: bulletType.color,
-      typeIndex: state.bulletLevel - 1,
-    };
-    
-    useGameStore.getState().addBullet(bullet);
-    tower.lastFired = now;
+    });
   });
 }
 
@@ -299,8 +347,19 @@ export function updateBullets() {
     addEffect,
   } = useGameStore.getState();
   bullets.forEach((b) => {
+    const target = b.targetId ? enemies.find((e) => e.id === b.targetId) : null;
+    if (target) {
+      b.direction = getDirection(b.position, target.position);
+    }
     b.position.x += b.direction.x * b.speed * 0.016;
     b.position.y += b.direction.y * b.speed * 0.016;
+    if (b.life !== undefined) {
+      b.life -= 16;
+      if (b.life <= 0) {
+        removeBullet(b.id);
+        return;
+      }
+    }
 
     if (
       b.position.x < 0 ||

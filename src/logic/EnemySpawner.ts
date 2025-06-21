@@ -1,8 +1,12 @@
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
-import type { Position } from '../models/gameTypes';
+import type { Position, Enemy } from '../models/gameTypes';
+import { waveCompositions } from '../config/waves';
+import { waveManager } from "./WaveManager";
 
 let spawnInterval: number | null = null;
+let spawnQueue: string[] = [];
+let spawnIndex = 0;
 
 export function stopEnemyWave() {
   if (spawnInterval) {
@@ -49,7 +53,8 @@ function getNearestSlot(pos: Position) {
   return nearest;
 }
 
-function createEnemy(wave: number) {
+function createEnemy(wave: number, type: string = 'Basic'): Enemy {
+  const { currentWaveModifier } = useGameStore.getState();
   const id = `${Date.now()}-${Math.random()}`;
   
   // Special enemy spawn logic for waves 10+
@@ -62,7 +67,7 @@ function createEnemy(wave: number) {
     isSpecial = Math.random() < totalChance;
   }
   
-  if (isSpecial) {
+  if (isSpecial && type === 'Basic') {
     // Create special microbe enemy
     const healthScaling = Math.min(200, 40 + (wave - 10) * 3); // Cap health at 200
     const speedScaling = Math.min(120, 60 + (wave - 10) * 1.5); // Cap speed at 120
@@ -75,17 +80,19 @@ function createEnemy(wave: number) {
       isActive: true,
       health: healthScaling,
       maxHealth: healthScaling,
-      speed: speedScaling,
+      speed: speedScaling * (currentWaveModifier?.speedMultiplier ?? 1),
       goldValue: goldScaling,
       color: GAME_CONSTANTS.MICROBE_ENEMY.color,
       frozenUntil: 0,
       isSpecial: true,
       lastGoldDrop: performance.now(),
-    };
+      damage: GAME_CONSTANTS.ENEMY_TYPES.Basic.damage,
+      behaviorTag: 'microbe',
+      type: 'Microbe',
+    } as Enemy;
   } else {
-    // Create normal enemy with scaling for 100 waves
-    const health = GAME_CONSTANTS.ENEMY_HEALTH + (wave - 1) * GAME_CONSTANTS.ENEMY_HEALTH_INCREASE;
-    const color = GAME_CONSTANTS.ENEMY_COLORS[(wave - 1) % GAME_CONSTANTS.ENEMY_COLORS.length];
+    const def = GAME_CONSTANTS.ENEMY_TYPES[type] || GAME_CONSTANTS.ENEMY_TYPES.Basic;
+    const health = def.hp + (type === 'Basic' ? (wave - 1) * GAME_CONSTANTS.ENEMY_HEALTH_INCREASE : 0);
     return {
       id,
       position: getRandomSpawnPosition(),
@@ -93,17 +100,20 @@ function createEnemy(wave: number) {
       isActive: true,
       health,
       maxHealth: health,
-      speed: GAME_CONSTANTS.ENEMY_SPEED + (wave - 1) * 5,
+      speed: def.speed * (currentWaveModifier?.speedMultiplier ?? 1),
       goldValue: GAME_CONSTANTS.ENEMY_GOLD_DROP,
-      color,
+      color: def.color,
       frozenUntil: 0,
       isSpecial: false,
-    };
+      damage: def.damage,
+      behaviorTag: def.behaviorTag,
+      type,
+    } as Enemy;
   }
 }
 
-export function startEnemyWave() {
-  const { currentWave, addEnemy, towers, towerSlots, buildTower } = useGameStore.getState();
+export function startEnemyWave(wave: number) {
+  const { addEnemy, towers, towerSlots, buildTower, currentWaveModifier } = useGameStore.getState();
 
   if (towers.length === 0) {
     const firstEmptySlotIndex = towerSlots.findIndex((s) => s.unlocked && !s.tower);
@@ -116,10 +126,32 @@ export function startEnemyWave() {
   // temporarily stops waves to ensure spawning resumes correctly.
   if (spawnInterval) clearInterval(spawnInterval);
 
-  // This interval will now run indefinitely until stopEnemyWave is explicitly called
+  spawnQueue = [];
+  spawnIndex = 0;
+  const composition = waveCompositions[wave];
+  if (composition) {
+    composition.forEach(cfg => {
+      for (let i = 0; i < cfg.count; i++) spawnQueue.push(cfg.type);
+    });
+  } else {
+    if (GAME_CONSTANTS.DEBUG_MODE) {
+      console.error(`[WaveManager] No spawn config found for wave ${wave}`);
+    }
+    const count = GAME_CONSTANTS.ENEMY_WAVE_INCREASE * wave;
+    for (let i = 0; i < count; i++) spawnQueue.push('Basic');
+  }
+
   spawnInterval = window.setInterval(() => {
-    const enemy = createEnemy(currentWave);
+    if (spawnIndex >= spawnQueue.length) {
+      stopEnemyWave();
+      return;
+    }
+    const type = spawnQueue[spawnIndex++];
+    const enemy = createEnemy(wave, type);
     addEnemy(enemy);
+    if (currentWaveModifier?.bonusEnemies) {
+      addEnemy(createEnemy(wave, type));
+    }
   }, GAME_CONSTANTS.ENEMY_SPAWN_RATE);
 }
 
@@ -143,9 +175,26 @@ export function updateEnemyMovement() {
 
     const targetSlot = getNearestSlot(enemy.position);
     if (!targetSlot) return;
+    if (targetSlot.modifier) {
+      const mod = targetSlot.modifier;
+      if (mod.expiresAt && mod.expiresAt < performance.now()) {
+        targetSlot.modifier = undefined;
+      } else if (mod.type === 'wall') {
+        return; // Block enemy
+      }
+    }
     const dx = targetSlot.x - enemy.position.x;
     const dy = targetSlot.y - enemy.position.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (enemy.behaviorTag === 'avoid') {
+      const nearby = towerSlots.filter(s => s.tower && Math.hypot(s.x - enemy.position.x, s.y - enemy.position.y) < 150).length;
+      if (nearby > 3) {
+        enemy.position.x += (Math.random() - 0.5) * enemy.speed * 0.016;
+        enemy.position.y += (Math.random() - 0.5) * enemy.speed * 0.016;
+        return;
+      }
+    }
     if (dist < (enemy.size + GAME_CONSTANTS.TOWER_SIZE) / 2) {
       if (targetSlot.tower) {
         const slotIdx = towerSlots.findIndex(
@@ -165,7 +214,7 @@ export function updateEnemyMovement() {
           return; // Skip the rest of the logic for this enemy
         } else {
           // No wall: Damage tower, and the enemy is destroyed
-          damageTower(slotIdx, 10);
+          damageTower(slotIdx, enemy.damage);
         }
       }
       // This part runs if there's no wall or no tower (fallback)
@@ -174,9 +223,16 @@ export function updateEnemyMovement() {
       return;
     }
     // Move toward slot
-    const moveX = (dx / dist) * enemy.speed * 0.016;
-    const moveY = (dy / dist) * enemy.speed * 0.016;
+    let speedMult = 1;
+    if (targetSlot.modifier && targetSlot.modifier.type === 'trench') {
+      speedMult = GAME_CONSTANTS.TRENCH_SLOW_MULTIPLIER;
+    }
+    const moveX = (dx / dist) * enemy.speed * speedMult * 0.016;
+    const moveY = (dy / dist) * enemy.speed * speedMult * 0.016;
     enemy.position.x += moveX;
     enemy.position.y += moveY;
   });
-} 
+  const { currentWave, enemiesKilled } = useGameStore.getState();
+  const pending = spawnInterval !== null && spawnIndex < spawnQueue.length;
+  waveManager.checkComplete(currentWave, enemies.length, pending, enemiesKilled);
+}

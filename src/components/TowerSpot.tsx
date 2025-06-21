@@ -2,6 +2,7 @@ import React from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import type { TowerSlot } from '../models/gameTypes';
+import { getNearestEnemy } from '../logic/TowerManager';
 
 interface TowerSpotProps {
   slot: TowerSlot;
@@ -13,15 +14,34 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   const buildTower = useGameStore((s) => s.buildTower);
   const upgradeTower = useGameStore((s) => s.upgradeTower);
   const wallLevel = useGameStore((s) => s.wallLevel);
-  const canBuild = !slot.tower && gold >= GAME_CONSTANTS.TOWER_COST;
+  const performTileAction = useGameStore(s => s.performTileAction);
+  const actionsRemaining = useGameStore(s => s.actionsRemaining);
+  const energy = useGameStore(s => s.energy);
+  const enemies = useGameStore(s => s.enemies);
+  const canBuild = !slot.tower &&
+    gold >= GAME_CONSTANTS.TOWER_COST &&
+    energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower;
+
+  const [menuPos, setMenuPos] = React.useState<{x:number;y:number}|null>(null);
   
   // Get upgrade info for current tower
   const canUpgrade = slot.tower && slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL;
   const upgradeInfo = canUpgrade && slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level] : null;
-  const canAffordUpgrade = upgradeInfo && gold >= upgradeInfo.cost;
+  const canAffordUpgrade = upgradeInfo &&
+    gold >= upgradeInfo.cost &&
+    energy >= GAME_CONSTANTS.ENERGY_COSTS.upgradeTower;
   const currentTowerInfo = slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level - 1] : null;
 
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
+  const debugInfo = React.useMemo(() => {
+    if (!slot.tower || !GAME_CONSTANTS.DEBUG_MODE) return null;
+    const { enemy } = getNearestEnemy(slot.tower.position, enemies);
+    const firing = performance.now() - slot.tower.lastFired < 100;
+    return enemy && {
+      enemy,
+      firing,
+    };
+  }, [slot.tower, enemies]);
 
   // Health bar for tower
   const healthBar = slot.tower && (
@@ -957,19 +977,86 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
     );
   };
 
+  const renderModifier = () => {
+    if (!slot.modifier) return null;
+    const { type, expiresAt } = slot.modifier;
+    if (expiresAt && expiresAt < performance.now()) return null;
+    if (type === 'wall') {
+      return (
+        <rect
+          x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2 - 10}
+          y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 10}
+          width={GAME_CONSTANTS.TOWER_SIZE + 20}
+          height={GAME_CONSTANTS.TOWER_SIZE + 20}
+          fill="rgba(100,100,100,0.5)"
+          stroke="#666"
+          strokeWidth={2}
+        />
+      );
+    }
+    if (type === 'trench') {
+      return (
+        <circle
+          cx={slot.x}
+          cy={slot.y}
+          r={GAME_CONSTANTS.TOWER_SIZE / 2 + 12}
+          fill="rgba(0,0,0,0.3)"
+          stroke="#222"
+          strokeDasharray="4 2"
+          strokeWidth={2}
+        />
+      );
+    }
+    if (type === 'buff') {
+      return (
+        <circle
+          cx={slot.x}
+          cy={slot.y}
+          r={GAME_CONSTANTS.TOWER_SIZE / 2 + 16}
+          fill="none"
+          stroke="#0ff"
+          strokeWidth={3}
+        />
+      );
+    }
+    return null;
+  };
+
+  const renderVisualExtras = () => {
+    if (!slot.tower) return null;
+    if (slot.tower.towerType === 'economy') {
+      return (
+        <text x={slot.x} y={slot.y + 4} textAnchor="middle" fontSize={20} pointerEvents="none">💰</text>
+      );
+    }
+    const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === slot.tower!.level);
+    if (!visual) return null;
+    return (
+      <>
+        {visual.glow && (
+          <circle cx={slot.x} cy={slot.y} r={GAME_CONSTANTS.TOWER_SIZE} fill="none" stroke="#aef" strokeWidth={3} opacity={0.6} />
+        )}
+        {visual.effect === 'electric_aura' && (
+          <circle cx={slot.x} cy={slot.y} r={GAME_CONSTANTS.TOWER_SIZE + 10} fill="none" stroke="#33f" strokeDasharray="4 2" />
+        )}
+      </>
+    );
+  };
+
   return (
-    <g>
+    <g onContextMenu={(e) => { e.preventDefault(); setMenuPos({ x: e.clientX, y: e.clientY }); }}>
       {/* Slot or Tower */}
       {!slot.tower ? (
         <g>
           {/* Empty slot with foundation */}
+          {renderModifier()}
           <rect
             x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
             y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
             width={GAME_CONSTANTS.TOWER_SIZE + 8}
             height={GAME_CONSTANTS.TOWER_SIZE + 8}
             fill={canBuild ? '#2d5016' : '#333333'}
-            stroke={canBuild ? '#4ade80' : '#666666'}
+            stroke={canBuild ? (slot.type === 'dynamic' ? '#3b82f6' : '#4ade80') : '#666666'}
             strokeWidth={3}
             rx={8}
             style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
@@ -980,8 +1067,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
             y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
             width={GAME_CONSTANTS.TOWER_SIZE}
             height={GAME_CONSTANTS.TOWER_SIZE}
-            fill={canBuild ? '#4ade80' : '#444444'}
-            stroke={canBuild ? '#166534' : '#555555'}
+            fill={canBuild ? (slot.type === 'dynamic' ? GAME_CONSTANTS.BUILD_TILE_COLORS.dynamic : GAME_CONSTANTS.BUILD_TILE_COLORS.fixed) : '#444444'}
+            stroke={canBuild ? (slot.type === 'dynamic' ? '#1e3a8a' : '#166534') : '#555555'}
             strokeWidth={2}
             rx={6}
             style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
@@ -1010,10 +1097,41 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
         </g>
       ) : (
         <g>
+          {renderModifier()}
           {/* Render Wall first so it's behind the tower */}
           {renderWall()}
           {/* Render detailed tower */}
           {renderTower(slot.tower.level)}
+          {renderVisualExtras()}
+          {debugInfo && (
+            <>
+              <circle
+                cx={slot.x}
+                cy={slot.y}
+                r={slot.tower.range * (slot.tower.rangeMultiplier ?? 1)}
+                fill="none"
+                stroke="#ff0000"
+                strokeDasharray="4 2"
+              />
+              <line
+                x1={slot.x}
+                y1={slot.y}
+                x2={debugInfo.enemy.position.x}
+                y2={debugInfo.enemy.position.y}
+                stroke="#ff0000"
+                strokeWidth={1}
+              />
+              <text
+                x={slot.x}
+                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
+                fill={debugInfo.firing ? '#00ff00' : '#ff0000'}
+                fontSize={10}
+                textAnchor="middle"
+              >
+                {debugInfo.firing ? 'FIRE' : 'IDLE'}
+              </text>
+            </>
+          )}
           
           {/* Info panel below tower */}
           {currentTowerInfo && (
@@ -1051,6 +1169,26 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           )}
         </g>
       )}
+      {menuPos && (
+        <foreignObject x={menuPos.x} y={menuPos.y} width="140" height="110" style={{ pointerEvents: 'auto' }}>
+          <div style={{ background: '#222', color: '#fff', border: '1px solid #555', fontSize: 12 }}>
+            {!slot.tower && (
+              <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { buildTower(slotIdx, false, 'economy'); setMenuPos(null); }}>
+                Build Extractor
+              </div>
+            )}
+            <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'wall'); setMenuPos(null); }}>
+              Build Wall
+            </div>
+            <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'trench'); setMenuPos(null); }}>
+              Dig Trench
+            </div>
+            <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'buff'); setMenuPos(null); }}>
+              Buff Tile
+            </div>
+          </div>
+        </foreignObject>
+      )}
     </g>
   );
-}; 
+};

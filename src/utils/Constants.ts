@@ -1,4 +1,7 @@
+import type { TowerVisual } from '../models/gameTypes';
+
 export const GAME_CONSTANTS = {
+  DEBUG_MODE: false,
   // Canvas
   CANVAS_BG: '#222831',
   CANVAS_WIDTH: 1920,
@@ -16,6 +19,39 @@ export const GAME_CONSTANTS = {
   TOWER_COST: 50,
   TOWER_UPGRADE_COST: 60,
   TOWER_MAX_LEVEL: 25,
+  RELOCATE_COOLDOWN: 5000,
+  BUILD_TILE_DISTANCE: 120,
+  DISMANTLE_REFUND: 0.5,
+  MAP_ACTIONS_PER_WAVE: 3,
+  MAP_ACTION_ENERGY: {
+    wall: 20,
+    trench: 15,
+    buff: 25,
+  },
+  BASE_ENERGY: 100,
+  ENERGY_REGEN_WAVE: 10,
+  ENERGY_COSTS: {
+    buildTower: 20,
+    upgradeTower: 30,
+    relocateTower: 15,
+    specialAbility: 40,
+  },
+  PREP_TIME: 15000,
+  PREP_WARNING_THRESHOLD: 5000,
+  WALL_BLOCK_DURATION: 5000,
+  TRENCH_SLOW_MULTIPLIER: 0.5,
+  BUFF_RANGE_MULTIPLIER: 1.2,
+  BUILD_TILE_COLORS: {
+    fixed: '#4ade80',
+    dynamic: '#60a5fa',
+  },
+  ROAD_PADDING: 80,
+  TOWER_ATTACK_SOUNDS: Array.from({ length: 25 }, (_, i) => `tower_attack_${i + 1}`),
+  TOWER_VISUALS: [
+    { level: 1, model: 'basic' },
+    { level: 2, model: 'spiked', glow: true },
+    { level: 3, model: 'cannon', effect: 'electric_aura' },
+  ] as TowerVisual[],
   TOWER_COLORS: [
     '#D2B48C', '#A9A9A9', '#FFD700', '#9370DB', '#FF69B4', // 1-5
     '#00CED1', '#32CD32', '#FF4500', '#8A2BE2', '#FF1493', // 6-10
@@ -182,6 +218,13 @@ export const GAME_CONSTANTS = {
   ENEMY_HEALTH_INCREASE: 25,
   ENEMY_COLORS: ['#ff3333', '#ff8800', '#ffcc00'],
   ENEMY_HEALTHBAR_HEIGHT: 6,
+  ENEMY_TYPES: {
+    Basic: { speed: 80, hp: 60, damage: 10, color: '#ff3333', behaviorTag: 'normal' },
+    Scout: { speed: 140, hp: 40, damage: 8, color: '#6ee7b7', behaviorTag: 'avoid' },
+    Tank: { speed: 60, hp: 200, damage: 20, color: '#94a3b8', behaviorTag: 'tank' },
+    Ghost: { speed: 100, hp: 70, damage: 12, color: '#a78bfa', behaviorTag: 'ghost' },
+  },
+  TANK_DEATH_RADIUS: 80,
 
   // Mines
   MINE_VISUALS: {
