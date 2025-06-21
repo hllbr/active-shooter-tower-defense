@@ -15,17 +15,129 @@ export const GAME_CONSTANTS = {
   TOWER_HEALTH: 100,
   TOWER_COST: 50,
   TOWER_UPGRADE_COST: 60,
-  TOWER_MAX_LEVEL: 3,
-  TOWER_COLORS: ['#00aaff', '#aa00ff', '#ffaa00'],
+  TOWER_MAX_LEVEL: 25,
+  TOWER_COLORS: [
+    '#D2B48C', '#A9A9A9', '#FFD700', '#9370DB', '#FF69B4', // 1-5
+    '#00CED1', '#32CD32', '#FF4500', '#8A2BE2', '#FF1493', // 6-10
+    '#00BFFF', '#7CFC00', '#FF6347', '#9932CC', '#FF69B4', // 11-15
+    '#00FFFF', '#00FF00', '#FF0000', '#800080', '#FF4500', // 16-20
+    '#FFD700', '#FF69B4', '#00CED1', '#32CD32', '#FF1493'  // 21-25
+  ],
   TOWER_HEALTHBAR_HEIGHT: 8,
   UPGRADE_ARROW_SIZE: 14,
   UPGRADE_ARROW_COLOR: '#4ade80',
 
-  // Tower Upgrades
+  // Tower Upgrades - 25 Levels with Special Mechanics
   TOWER_UPGRADES: [
-    { damage: 20, fireRate: 800, spread: 0, multi: 1 }, // Level 1
-    { damage: 30, fireRate: 600, spread: 10, multi: 2 }, // Level 2
-    { damage: 40, fireRate: 400, spread: 25, multi: 3 }, // Level 3
+    // Level 1-5: Defense Focus
+    { 
+      level: 1, damage: 20, fireRate: 800, health: 100, cost: 60,
+      name: 'Gözetleme Kulesi', special: 'none'
+    },
+    { 
+      level: 2, damage: 30, fireRate: 700, health: 150, cost: 120,
+      name: 'Ortaçağ Kalesi', special: 'none'
+    },
+    { 
+      level: 3, damage: 45, fireRate: 600, health: 200, cost: 200,
+      name: 'Saray Kulesi', special: 'none'
+    },
+    { 
+      level: 4, damage: 65, fireRate: 550, health: 300, cost: 350,
+      name: 'Kraliyet Kalesi', special: 'none'
+    },
+    { 
+      level: 5, damage: 90, fireRate: 500, health: 450, cost: 600,
+      name: 'İmparatorluk Kulesi', special: 'none'
+    },
+    
+    // Level 6-10: Fire Rate Focus
+    { 
+      level: 6, damage: 120, fireRate: 450, health: 600, cost: 1000,
+      name: 'Hızlı Atış Kulesi', special: 'rapid_fire'
+    },
+    { 
+      level: 7, damage: 160, fireRate: 400, health: 750, cost: 1500,
+      name: 'Çoklu Atış Kulesi', special: 'multi_shot'
+    },
+    { 
+      level: 8, damage: 210, fireRate: 350, health: 900, cost: 2200,
+      name: 'Otomatik Kule', special: 'auto_target'
+    },
+    { 
+      level: 9, damage: 270, fireRate: 300, health: 1100, cost: 3200,
+      name: 'Gatling Kulesi', special: 'gatling'
+    },
+    { 
+      level: 10, damage: 340, fireRate: 250, health: 1300, cost: 4500,
+      name: 'Lazer Kulesi', special: 'laser'
+    },
+    
+    // Level 11-15: Damage Focus
+    { 
+      level: 11, damage: 420, fireRate: 220, health: 1500, cost: 6500,
+      name: 'Plazma Kulesi', special: 'plasma'
+    },
+    { 
+      level: 12, damage: 510, fireRate: 200, health: 1700, cost: 9000,
+      name: 'Elektrik Kulesi', special: 'chain_lightning'
+    },
+    { 
+      level: 13, damage: 610, fireRate: 180, health: 1900, cost: 12000,
+      name: 'Buz Kulesi', special: 'freeze'
+    },
+    { 
+      level: 14, damage: 720, fireRate: 160, health: 2100, cost: 16000,
+      name: 'Ateş Kulesi', special: 'burn'
+    },
+    { 
+      level: 15, damage: 840, fireRate: 140, health: 2300, cost: 21000,
+      name: 'Asit Kulesi', special: 'acid'
+    },
+    
+    // Level 16-20: Hybrid Focus
+    { 
+      level: 16, damage: 970, fireRate: 120, health: 2600, cost: 27000,
+      name: 'Kuantum Kulesi', special: 'quantum'
+    },
+    { 
+      level: 17, damage: 1110, fireRate: 100, health: 2900, cost: 35000,
+      name: 'Nano Kulesi', special: 'nano'
+    },
+    { 
+      level: 18, damage: 1260, fireRate: 80, health: 3200, cost: 45000,
+      name: 'Psi Kulesi', special: 'psi'
+    },
+    { 
+      level: 19, damage: 1420, fireRate: 60, health: 3500, cost: 58000,
+      name: 'Zaman Kulesi', special: 'time_warp'
+    },
+    { 
+      level: 20, damage: 1590, fireRate: 40, health: 3800, cost: 75000,
+      name: 'Uzay Kulesi', special: 'space'
+    },
+    
+    // Level 21-25: Ultimate Focus
+    { 
+      level: 21, damage: 1770, fireRate: 30, health: 4200, cost: 95000,
+      name: 'Efsanevi Kule', special: 'legendary'
+    },
+    { 
+      level: 22, damage: 1960, fireRate: 25, health: 4600, cost: 120000,
+      name: 'Kutsal Kule', special: 'divine'
+    },
+    { 
+      level: 23, damage: 2160, fireRate: 20, health: 5000, cost: 150000,
+      name: 'Kozmik Kule', special: 'cosmic'
+    },
+    { 
+      level: 24, damage: 2370, fireRate: 15, health: 5500, cost: 200000,
+      name: 'Sonsuzluk Kulesi', special: 'infinity'
+    },
+    { 
+      level: 25, damage: 2600, fireRate: 10, health: 6000, cost: 300000,
+      name: 'Tanrı Kulesi', special: 'god_mode'
+    }
   ],
 
   // Tower Slots
@@ -65,7 +177,7 @@ export const GAME_CONSTANTS = {
   ENEMY_HEALTH: 60,
   ENEMY_SPEED: 80,
   ENEMY_GOLD_DROP: 50,
-  ENEMY_SPAWN_RATE: 1200,
+  ENEMY_SPAWN_RATE: 800,
   ENEMY_WAVE_INCREASE: 2,
   ENEMY_HEALTH_INCREASE: 25,
   ENEMY_COLORS: ['#ff3333', '#ff8800', '#ffcc00'],
@@ -195,6 +307,30 @@ export const GAME_CONSTANTS = {
     { name: 'Gölge Kalkanı', strength: 45, cost: 450 },
     { name: 'Işık Kalkanı', strength: 50, cost: 500 },
   ],
+
+  // Yeni Sur Sistemi
+  WALL_SYSTEM: {
+    // Sur seviyeleri
+    WALL_LEVELS: [
+      { name: 'Taş Sur', strength: 3, cost: 100, regenTime: 15000, fireRateBonus: 1.0 },
+      { name: 'Demir Sur', strength: 5, cost: 250, regenTime: 12000, fireRateBonus: 1.1 },
+      { name: 'Çelik Sur', strength: 8, cost: 500, regenTime: 10000, fireRateBonus: 1.2 },
+      { name: 'Kristal Sur', strength: 12, cost: 1000, regenTime: 8000, fireRateBonus: 1.3 },
+      { name: 'Enerji Suru', strength: 18, cost: 2000, regenTime: 6000, fireRateBonus: 1.4 },
+      { name: 'Kuantum Suru', strength: 25, cost: 4000, regenTime: 4000, fireRateBonus: 1.5 },
+      { name: 'Sonsuzluk Suru', strength: 35, cost: 8000, regenTime: 3000, fireRateBonus: 1.6 },
+      { name: 'Tanrı Suru', strength: 50, cost: 15000, regenTime: 2000, fireRateBonus: 1.8 },
+    ],
+    
+    // Global etkiler
+    GLOBAL_EFFECTS: {
+      NO_WALL_ENEMY_SPEED_MULTIPLIER: 0.3, // Sur yokken düşman hızı %30'a düşer
+      NO_WALL_FIRE_RATE_MULTIPLIER: 0.5, // Sur yokken ateş hızı yarıya düşer
+      NO_WALL_DAMAGE_MULTIPLIER: 0.7, // Sur yokken hasar %30 azalır
+      WALL_REGEN_DELAY: 5000, // Sur yok olduktan 5 saniye sonra yenilenmeye başlar
+      FROST_EFFECT_DURATION: 3000, // Buz efekti süresi
+    }
+  },
 
   // Avantajlı Paketler - Matematiksel hesaplama ile %15-25 indirim
   UPGRADE_PACKAGES: [

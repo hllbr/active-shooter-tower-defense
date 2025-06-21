@@ -18,7 +18,7 @@ const initialState: GameState = {
   enemies: [],
   bullets: [],
   effects: [],
-  gold: 200,
+  gold: 100,
   bulletLevel: 1,
   currentWave: 1,
   enemiesKilled: 0,
@@ -40,6 +40,10 @@ const initialState: GameState = {
   diceUsed: false,
   discountMultiplier: 1,
   isDiceRolling: false,
+  wallLevel: 0,
+  globalWallActive: true,
+  lastWallDestroyed: 0,
+  wallRegenerationActive: false,
 };
 
 type Store = GameState & {
@@ -71,6 +75,11 @@ type Store = GameState & {
   upgradeMines: () => void;
   deployMines: () => void;
   triggerMine: (mineId: string) => void;
+  upgradeWall: () => void;
+  damageWall: (slotIdx: number) => void;
+  regenerateWalls: () => void;
+  activateFrostEffect: () => void;
+  deactivateFrostEffect: () => void;
 };
 
 export const useGameStore = create<Store>((set, get) => ({
@@ -85,6 +94,8 @@ export const useGameStore = create<Store>((set, get) => ({
       state.towers.length >= state.maxTowers
     )
       return {};
+    
+    const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[0]; // Level 1
     const newTower: Tower = {
       id: `${Date.now()}-${Math.random()}`,
       position: { x: slot.x, y: slot.y },
@@ -92,11 +103,32 @@ export const useGameStore = create<Store>((set, get) => ({
       isActive: true,
       level: 1,
       range: GAME_CONSTANTS.TOWER_RANGE,
-      damage: GAME_CONSTANTS.TOWER_DAMAGE,
-      fireRate: GAME_CONSTANTS.TOWER_FIRE_RATE,
+      damage: upgrade.damage,
+      fireRate: upgrade.fireRate,
       lastFired: 0,
-      health: GAME_CONSTANTS.TOWER_HEALTH,
+      health: upgrade.health,
+      maxHealth: upgrade.health,
       wallStrength: state.globalWallStrength,
+      specialAbility: upgrade.special,
+      healthRegenRate: 0,
+      lastHealthRegen: 0,
+      specialCooldown: 5000,
+      lastSpecialUse: 0,
+      multiShotCount: 3,
+      chainLightningJumps: 5,
+      freezeDuration: 2000,
+      burnDuration: 3000,
+      acidStack: 0,
+      quantumState: false,
+      nanoSwarmCount: 5,
+      psiRange: 150,
+      timeWarpSlow: 0.3,
+      spaceGravity: 0.5,
+      legendaryAura: false,
+      divineProtection: false,
+      cosmicEnergy: 100,
+      infinityLoop: false,
+      godModeActive: false,
     };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
@@ -110,22 +142,41 @@ export const useGameStore = create<Store>((set, get) => ({
 
   upgradeTower: (slotIdx) => set((state) => {
     const slot = state.towerSlots[slotIdx];
-    if (!slot.tower || state.gold < GAME_CONSTANTS.TOWER_UPGRADE_COST || slot.tower.level >= GAME_CONSTANTS.TOWER_MAX_LEVEL) return {};
+    if (!slot.tower || slot.tower.level >= GAME_CONSTANTS.TOWER_MAX_LEVEL) return {};
+    
     const nextLevel = slot.tower.level + 1;
     const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[nextLevel - 1];
+    
+    if (state.gold < upgrade.cost) return {};
+    
     const upgradedTower = {
       ...slot.tower,
       level: nextLevel,
       damage: upgrade.damage,
       fireRate: upgrade.fireRate,
+      health: upgrade.health,
+      maxHealth: upgrade.health,
+      specialAbility: upgrade.special,
+      // Level-based special improvements
+      healthRegenRate: nextLevel >= 20 ? 5 : nextLevel >= 15 ? 3 : nextLevel >= 10 ? 2 : nextLevel >= 5 ? 1 : 0,
+      multiShotCount: nextLevel >= 7 ? 5 : nextLevel >= 6 ? 4 : 3,
+      chainLightningJumps: nextLevel >= 12 ? 8 : nextLevel >= 11 ? 6 : 5,
+      freezeDuration: nextLevel >= 13 ? 3000 : 2000,
+      burnDuration: nextLevel >= 14 ? 4000 : 3000,
+      nanoSwarmCount: nextLevel >= 17 ? 8 : nextLevel >= 16 ? 6 : 5,
+      psiRange: nextLevel >= 18 ? 200 : 150,
+      timeWarpSlow: nextLevel >= 19 ? 0.5 : 0.3,
+      spaceGravity: nextLevel >= 20 ? 0.8 : 0.5,
+      cosmicEnergy: nextLevel >= 23 ? 200 : nextLevel >= 21 ? 150 : 100,
     };
+    
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: upgradedTower };
     return {
       towers: state.towers.map(t => t.id === upgradedTower.id ? upgradedTower : t),
       towerSlots: newSlots,
-      gold: state.gold - GAME_CONSTANTS.TOWER_UPGRADE_COST,
-      totalGoldSpent: state.totalGoldSpent + GAME_CONSTANTS.TOWER_UPGRADE_COST,
+      gold: state.gold - upgrade.cost,
+      totalGoldSpent: state.totalGoldSpent + upgrade.cost,
     };
   }),
 
@@ -428,5 +479,118 @@ export const useGameStore = create<Store>((set, get) => ({
     }
     
     return { mines: newMines };
+  }),
+  upgradeWall: () => set((state) => {
+    const currentLevel = state.wallLevel;
+    if (currentLevel >= GAME_CONSTANTS.WALL_SYSTEM.WALL_LEVELS.length) return {};
+    const upgrade = GAME_CONSTANTS.WALL_SYSTEM.WALL_LEVELS[currentLevel];
+    if (state.gold < upgrade.cost) return {};
+
+    return {
+      gold: state.gold - upgrade.cost,
+      wallLevel: currentLevel + 1,
+      totalGoldSpent: state.totalGoldSpent + upgrade.cost,
+    };
+  }),
+  damageWall: (slotIdx) => set((state) => {
+    const slot = state.towerSlots[slotIdx];
+    if (!slot.tower || slot.tower.wallStrength <= 0) return {};
+    
+    const updatedTower = { ...slot.tower, wallStrength: slot.tower.wallStrength - 1 };
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, tower: updatedTower };
+    
+    // Global sur durumunu kontrol et
+    const anyWallDestroyed = newSlots.some(s => s.tower && s.tower.wallStrength === 0);
+    
+    // Buz efekti aktif et
+    if (anyWallDestroyed && !state.frostEffectActive) {
+      const originalSpeeds = new Map<string, number>();
+      state.enemies.forEach(enemy => {
+        originalSpeeds.set(enemy.id, enemy.speed);
+        enemy.speed *= GAME_CONSTANTS.WALL_SYSTEM.GLOBAL_EFFECTS.NO_WALL_ENEMY_SPEED_MULTIPLIER;
+      });
+      
+      return {
+        towers: state.towers.map(t => t.id === updatedTower.id ? updatedTower : t),
+        towerSlots: newSlots,
+        globalWallActive: false,
+        lastWallDestroyed: performance.now(),
+        frostEffectActive: true,
+        frostEffectStartTime: performance.now(),
+        originalEnemySpeeds: originalSpeeds,
+      };
+    }
+    
+    return {
+      towers: state.towers.map(t => t.id === updatedTower.id ? updatedTower : t),
+      towerSlots: newSlots,
+      globalWallActive: !anyWallDestroyed,
+      lastWallDestroyed: anyWallDestroyed ? performance.now() : state.lastWallDestroyed,
+    };
+  }),
+  regenerateWalls: () => set((state) => {
+    const now = performance.now();
+    const wallLevel = GAME_CONSTANTS.WALL_SYSTEM.WALL_LEVELS[state.wallLevel];
+    
+    if (!wallLevel || now - state.lastWallDestroyed < GAME_CONSTANTS.WALL_SYSTEM.GLOBAL_EFFECTS.WALL_REGEN_DELAY) {
+      return {};
+    }
+    
+    // Tüm kulelerin surlarını yenile
+    const newSlots = state.towerSlots.map(slot => {
+      if (slot.tower && slot.tower.wallStrength === 0) {
+        return { ...slot, tower: { ...slot.tower, wallStrength: wallLevel.strength } };
+      }
+      return slot;
+    });
+    
+    // Buz efektini deaktif et
+    state.enemies.forEach(enemy => {
+      const originalSpeed = state.originalEnemySpeeds.get(enemy.id);
+      if (originalSpeed !== undefined) {
+        enemy.speed = originalSpeed;
+      }
+    });
+    
+    return {
+      towerSlots: newSlots,
+      globalWallActive: true,
+      wallRegenerationActive: false,
+      frostEffectActive: false,
+      frostEffectStartTime: 0,
+      originalEnemySpeeds: new Map(),
+    };
+  }),
+  activateFrostEffect: () => set((state) => {
+    const now = performance.now();
+    const originalSpeeds = new Map<string, number>();
+    
+    // Tüm düşmanların orijinal hızlarını kaydet ve yavaşlat
+    state.enemies.forEach(enemy => {
+      originalSpeeds.set(enemy.id, enemy.speed);
+      enemy.speed *= GAME_CONSTANTS.WALL_SYSTEM.GLOBAL_EFFECTS.NO_WALL_ENEMY_SPEED_MULTIPLIER;
+    });
+    
+    return {
+      frostEffectActive: true,
+      frostEffectStartTime: now,
+      originalEnemySpeeds: originalSpeeds,
+    };
+  }),
+  deactivateFrostEffect: () => set((state) => {
+    // Tüm düşmanların hızlarını normale döndür
+    state.enemies.forEach(enemy => {
+      const originalSpeed = state.originalEnemySpeeds.get(enemy.id);
+      if (originalSpeed !== undefined) {
+        enemy.speed = originalSpeed;
+      }
+    });
+    
+    return {
+      frostEffectActive: false,
+      frostEffectStartTime: 0,
+      originalEnemySpeeds: new Map(),
+    };
   }),
 }));
