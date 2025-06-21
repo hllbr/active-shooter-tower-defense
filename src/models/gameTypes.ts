@@ -1,5 +1,12 @@
 export type Position = { x: number; y: number };
 
+export interface TowerVisual {
+  level: number;
+  model: string;
+  glow?: boolean;
+  effect?: string;
+}
+
 export interface Tower {
   id: string;
   position: Position;
@@ -33,15 +40,30 @@ export interface Tower {
   cosmicEnergy: number;
   infinityLoop: boolean;
   godModeActive: boolean;
+  /** Timestamp of last relocation for cooldown checks */
+  lastRelocated?: number;
+  attackSound?: string;
+  visual?: TowerVisual;
+  rangeMultiplier?: number;
+  /** 'attack' towers shoot enemies, 'economy' towers generate gold */
+  towerType?: 'attack' | 'economy';
 }
 
 export interface TowerSlot {
   x: number;
   y: number;
   unlocked: boolean;
+  /** build tile type */
+  type?: 'fixed' | 'dynamic';
   tower?: Tower;
+  modifier?: TileModifier;
   /** Indicates that a tower existed here and was destroyed */
   wasDestroyed?: boolean;
+}
+
+export interface TileModifier {
+  type: 'wall' | 'trench' | 'buff';
+  expiresAt?: number;
 }
 
 export interface Enemy {
@@ -57,6 +79,11 @@ export interface Enemy {
   frozenUntil?: number;
   isSpecial?: boolean; // For microbe/yadama enemies
   lastGoldDrop?: number; // For tracking continuous gold drops
+  damage: number;
+  /** Behavior tag used for special AI logic */
+  behaviorTag?: string;
+  /** Enemy type name */
+  type?: string;
 }
 
 export interface Bullet {
@@ -69,6 +96,8 @@ export interface Bullet {
   direction: Position;
   color: string;
   typeIndex: number;
+  targetId?: string;
+  life: number;
 }
 
 export interface Effect {
@@ -87,6 +116,34 @@ export interface Mine {
   damage: number;
   radius: number;
 }
+
+export interface WaveModifier {
+  speedMultiplier?: number;
+  disableTowerType?: string;
+  bonusEnemies?: boolean;
+  towerRangeReduced?: boolean;
+  noUpgrades?: boolean;
+  disableArea?: { x: number; y: number; radius: number };
+}
+
+export interface EnemyType {
+  speed: number;
+  hp: number;
+  damage: number;
+  color: string;
+  behaviorTag?: string;
+}
+
+export interface WaveEnemyConfig {
+  type: string;
+  count: number;
+}
+
+export type TowerUpgradeListener = (
+  tower: Tower,
+  oldLevel: number,
+  newLevel: number,
+) => void;
 
 export interface GameState {
   towers: Tower[];
@@ -112,6 +169,7 @@ export interface GameState {
   globalWallStrength: number;
   isGameOver: boolean;
   isStarted: boolean;
+  isRefreshing: boolean;
   diceRoll: number | null;
   diceUsed: boolean;
   discountMultiplier: number;
@@ -123,4 +181,18 @@ export interface GameState {
   frostEffectActive: boolean;
   frostEffectStartTime: number;
   originalEnemySpeeds: Map<string, number>;
+  currentWaveModifier?: WaveModifier;
+  towerUpgradeListeners: TowerUpgradeListener[];
+  energy: number;
+  energyWarning?: string | null;
+  actionsRemaining: number;
+  prepRemaining: number;
+  isPreparing: boolean;
+  isPaused: boolean;
+  /** Timestamp when the current wave began */
+  waveStartTime: number;
+  /** Whether a tower was destroyed this wave */
+  lostTowerThisWave: boolean;
+  /** Last game loop update timestamp for performance optimization */
+  lastUpdate?: number;
 }

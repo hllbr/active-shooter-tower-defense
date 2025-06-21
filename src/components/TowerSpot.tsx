@@ -2,26 +2,81 @@ import React from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import type { TowerSlot } from '../models/gameTypes';
+import { getNearestEnemy } from '../logic/TowerManager';
 
 interface TowerSpotProps {
   slot: TowerSlot;
   slotIdx: number;
+  onTowerDragStart?: (slotIdx: number, event: React.MouseEvent) => void;
+  isDragTarget?: boolean;
+  draggedTowerSlotIdx?: number | null;
 }
 
-export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
+export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDragStart, isDragTarget, draggedTowerSlotIdx }) => {
   const gold = useGameStore((s) => s.gold);
   const buildTower = useGameStore((s) => s.buildTower);
   const upgradeTower = useGameStore((s) => s.upgradeTower);
+  const unlockSlot = useGameStore((s) => s.unlockSlot);
+  const maxTowers = useGameStore((s) => s.maxTowers);
   const wallLevel = useGameStore((s) => s.wallLevel);
-  const canBuild = !slot.tower && gold >= GAME_CONSTANTS.TOWER_COST;
+  const performTileAction = useGameStore(s => s.performTileAction);
+  const energy = useGameStore(s => s.energy);
+  const enemies = useGameStore(s => s.enemies);
+  const towerSlots = useGameStore(s => s.towerSlots);
+  
+  const canBuild = slot.unlocked && !slot.tower &&
+    gold >= GAME_CONSTANTS.TOWER_COST &&
+    energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower &&
+    towerSlots.filter(s => s.tower).length < maxTowers;
+
+  // Slot unlock logic - ensure we get the right cost for each slot
+  const unlockCost = GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] ?? 2400;
+  const canUnlock = !slot.unlocked &&
+    gold >= unlockCost &&
+    energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower;
+  
+  // Debug info for slot unlock (only log once when slot is locked)
+  React.useEffect(() => {
+    if (!slot.unlocked && slotIdx >= 4) { // Only debug paid slots
+      console.log(`🔍 Slot ${slotIdx} unlock status:`, {
+        slotIdx,
+        unlocked: slot.unlocked,
+        unlockCost,
+        costArray: GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD,
+        gold,
+        energy,
+        energyNeeded: GAME_CONSTANTS.ENERGY_COSTS.buildTower,
+        canUnlock,
+        hasEnoughGold: gold >= unlockCost,
+        hasEnoughEnergy: energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower
+      });
+    }
+  }, [slot.unlocked, slotIdx]);
+
+  // Check if we should show build text - only show on empty slots when there are less than 2 towers total
+  const totalTowers = towerSlots.filter(s => s.tower).length;
+  const shouldShowBuildText = canBuild && totalTowers < 2;
+
+  const [menuPos, setMenuPos] = React.useState<{x:number;y:number}|null>(null);
   
   // Get upgrade info for current tower
   const canUpgrade = slot.tower && slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL;
   const upgradeInfo = canUpgrade && slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level] : null;
-  const canAffordUpgrade = upgradeInfo && gold >= upgradeInfo.cost;
+  const canAffordUpgrade = upgradeInfo &&
+    gold >= upgradeInfo.cost &&
+    energy >= GAME_CONSTANTS.ENERGY_COSTS.upgradeTower;
   const currentTowerInfo = slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level - 1] : null;
 
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
+  const debugInfo = React.useMemo(() => {
+    if (!slot.tower || !GAME_CONSTANTS.DEBUG_MODE) return null;
+    const { enemy } = getNearestEnemy(slot.tower.position, enemies);
+    const firing = performance.now() - slot.tower.lastFired < 100;
+    return enemy ? {
+      enemy,
+      firing,
+    } : null;
+  }, [slot.tower, enemies]);
 
   // Health bar for tower
   const healthBar = slot.tower && (
@@ -957,63 +1012,252 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
     );
   };
 
+  const renderModifier = () => {
+    if (!slot.modifier) return null;
+    const { type, expiresAt } = slot.modifier;
+    if (expiresAt && expiresAt < performance.now()) return null;
+    if (type === 'wall') {
+      return (
+        <rect
+          x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2 - 10}
+          y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 10}
+          width={GAME_CONSTANTS.TOWER_SIZE + 20}
+          height={GAME_CONSTANTS.TOWER_SIZE + 20}
+          fill="rgba(100,100,100,0.5)"
+          stroke="#666"
+          strokeWidth={2}
+        />
+      );
+    }
+    if (type === 'trench') {
+      return (
+        <circle
+          cx={slot.x}
+          cy={slot.y}
+          r={GAME_CONSTANTS.TOWER_SIZE / 2 + 12}
+          fill="rgba(0,0,0,0.3)"
+          stroke="#222"
+          strokeDasharray="4 2"
+          strokeWidth={2}
+        />
+      );
+    }
+    if (type === 'buff') {
+      return (
+        <circle
+          cx={slot.x}
+          cy={slot.y}
+          r={GAME_CONSTANTS.TOWER_SIZE / 2 + 16}
+          fill="none"
+          stroke="#0ff"
+          strokeWidth={3}
+        />
+      );
+    }
+    return null;
+  };
+
+  const renderVisualExtras = () => {
+    if (!slot.tower) return null;
+    if (slot.tower.towerType === 'economy') {
+      return (
+        <text x={slot.x} y={slot.y + 4} textAnchor="middle" fontSize={20} pointerEvents="none">💰</text>
+      );
+    }
+    const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === slot.tower!.level);
+    if (!visual) return null;
+    return (
+      <>
+        {visual.glow && (
+          <circle cx={slot.x} cy={slot.y} r={GAME_CONSTANTS.TOWER_SIZE} fill="none" stroke="#aef" strokeWidth={3} opacity={0.6} />
+        )}
+        {visual.effect === 'electric_aura' && (
+          <circle cx={slot.x} cy={slot.y} r={GAME_CONSTANTS.TOWER_SIZE + 10} fill="none" stroke="#33f" strokeDasharray="4 2" />
+        )}
+      </>
+    );
+  };
+
   return (
-    <g>
+    <g onContextMenu={(e) => { e.preventDefault(); setMenuPos({ x: e.clientX, y: e.clientY }); }}>
       {/* Slot or Tower */}
       {!slot.tower ? (
         <g>
           {/* Empty slot with foundation */}
-          <rect
-            x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
-            y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
-            width={GAME_CONSTANTS.TOWER_SIZE + 8}
-            height={GAME_CONSTANTS.TOWER_SIZE + 8}
-            fill={canBuild ? '#2d5016' : '#333333'}
-            stroke={canBuild ? '#4ade80' : '#666666'}
-            strokeWidth={3}
-            rx={8}
-            style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
-            onClick={() => canBuild && buildTower(slotIdx)}
-          />
-          <rect
-            x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2}
-            y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
-            width={GAME_CONSTANTS.TOWER_SIZE}
-            height={GAME_CONSTANTS.TOWER_SIZE}
-            fill={canBuild ? '#4ade80' : '#444444'}
-            stroke={canBuild ? '#166534' : '#555555'}
-            strokeWidth={2}
-            rx={6}
-            style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
-            onClick={() => canBuild && buildTower(slotIdx)}
-          />
-          <text
-            x={slot.x}
-            y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 35}
-            fill="#ffffff"
-            fontSize={14}
-            fontWeight="bold"
-            textAnchor="middle"
-            pointerEvents="none"
-          >
-            Kule inşa et
-          </text>
-          <polygon
-            points={`${slot.x},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 28} ${
-              slot.x - 6
-            },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 18} ${
-              slot.x + 6
-            },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 18}`}
-            fill="#ffffff"
-            pointerEvents="none"
-          />
+          {renderModifier()}
+          {slot.unlocked ? (
+            // Unlocked slot - can build tower
+            <rect
+              x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
+              y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
+              width={GAME_CONSTANTS.TOWER_SIZE + 8}
+              height={GAME_CONSTANTS.TOWER_SIZE + 8}
+              fill={isDragTarget ? '#4ade80' : (canBuild ? '#2d5016' : '#333333')}
+              stroke={isDragTarget ? '#22c55e' : (canBuild ? (slot.type === 'dynamic' ? '#3b82f6' : '#4ade80') : '#666666')}
+              strokeWidth={isDragTarget ? 4 : 3}
+              rx={8}
+              style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
+              onClick={() => canBuild && buildTower(slotIdx)}
+            />
+          ) : (
+            // Locked slot - can unlock
+            <rect
+              x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
+              y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
+              width={GAME_CONSTANTS.TOWER_SIZE + 8}
+              height={GAME_CONSTANTS.TOWER_SIZE + 8}
+              fill={canUnlock ? '#8B4513' : '#444444'}
+              stroke={canUnlock ? '#CD853F' : '#666666'}
+              strokeWidth={3}
+              rx={8}
+              style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
+              onClick={() => canUnlock && unlockSlot(slotIdx)}
+            />
+          )}
+          {/* Enlarged drop zone for better targeting */}
+          {isDragTarget && (
+            <circle
+              cx={slot.x}
+              cy={slot.y}
+              r={GAME_CONSTANTS.TOWER_SIZE * 2}
+              fill="rgba(68, 222, 128, 0.2)"
+              stroke="#22c55e"
+              strokeWidth={2}
+              strokeDasharray="8 4"
+              style={{ animation: 'pulse 1s ease-in-out infinite' }}
+            />
+          )}
+          {slot.unlocked ? (
+            // Unlocked slot content
+            <>
+              <rect
+                x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2}
+                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
+                width={GAME_CONSTANTS.TOWER_SIZE}
+                height={GAME_CONSTANTS.TOWER_SIZE}
+                fill={canBuild ? (slot.type === 'dynamic' ? GAME_CONSTANTS.BUILD_TILE_COLORS.dynamic : GAME_CONSTANTS.BUILD_TILE_COLORS.fixed) : '#444444'}
+                stroke={canBuild ? (slot.type === 'dynamic' ? '#1e3a8a' : '#166534') : '#555555'}
+                strokeWidth={2}
+                rx={6}
+                style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
+                onClick={() => canBuild && buildTower(slotIdx)}
+              />
+              {shouldShowBuildText && (
+                <text
+                  x={slot.x}
+                  y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 35}
+                  fill="#ffffff"
+                  fontSize={14}
+                  fontWeight="bold"
+                  textAnchor="middle"
+                  pointerEvents="none"
+                >
+                  Kule inşa et
+                </text>
+              )}
+              <polygon
+                points={`${slot.x},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 28} ${
+                  slot.x - 6
+                },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 18} ${
+                  slot.x + 6
+                },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 18}`}
+                fill="#ffffff"
+                pointerEvents="none"
+              />
+            </>
+          ) : (
+            // Locked slot content
+            <>
+              <rect
+                x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2}
+                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
+                width={GAME_CONSTANTS.TOWER_SIZE}
+                height={GAME_CONSTANTS.TOWER_SIZE}
+                fill="#333333"
+                stroke="#666666"
+                strokeWidth={2}
+                rx={6}
+                strokeDasharray="4 2"
+                style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
+                onClick={() => canUnlock && unlockSlot(slotIdx)}
+              />
+              <text
+                x={slot.x}
+                y={slot.y - 4}
+                fill="#888888"
+                fontSize={24}
+                textAnchor="middle"
+                style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
+                onClick={() => canUnlock && unlockSlot(slotIdx)}
+              >
+                🔒
+              </text>
+              <text
+                x={slot.x}
+                y={slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 25}
+                fill={canUnlock ? "#FFD700" : "#888888"}
+                fontSize={12}
+                fontWeight="bold"
+                textAnchor="middle"
+                style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
+                onClick={() => canUnlock && unlockSlot(slotIdx)}
+              >
+                {canUnlock ? `Aç (${unlockCost}💰)` : `Yetersiz Altın (${unlockCost}💰)`}
+              </text>
+            </>
+          )}
         </g>
       ) : (
         <g>
+          {renderModifier()}
           {/* Render Wall first so it's behind the tower */}
           {renderWall()}
           {/* Render detailed tower */}
-          {renderTower(slot.tower.level)}
+          <g 
+            style={{ 
+              cursor: 'grab',
+              opacity: draggedTowerSlotIdx === slotIdx ? 0.5 : 1,
+              filter: draggedTowerSlotIdx === slotIdx ? 'brightness(0.7)' : 'none'
+            }}
+            onMouseDown={(e) => {
+              if (onTowerDragStart) {
+                // Tower drag started
+                onTowerDragStart(slotIdx, e);
+              }
+            }}
+          >
+            {renderTower(slot.tower.level)}
+          </g>
+          {renderVisualExtras()}
+          {debugInfo && (
+            <>
+              <circle
+                cx={slot.x}
+                cy={slot.y}
+                r={slot.tower.range * (slot.tower.rangeMultiplier ?? 1)}
+                fill="none"
+                stroke="#ff0000"
+                strokeDasharray="4 2"
+              />
+              <line
+                x1={slot.x}
+                y1={slot.y}
+                x2={debugInfo.enemy ? debugInfo.enemy.position.x : slot.x}
+                y2={debugInfo.enemy ? debugInfo.enemy.position.y : slot.y}
+                stroke="#ff0000"
+                strokeWidth={1}
+              />
+              <text
+                x={slot.x}
+                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 4}
+                fill={debugInfo?.firing ? '#00ff00' : '#ff0000'}
+                fontSize={10}
+                textAnchor="middle"
+              >
+                {debugInfo?.firing ? 'FIRE' : 'IDLE'}
+              </text>
+            </>
+          )}
           
           {/* Info panel below tower */}
           {currentTowerInfo && (
@@ -1051,6 +1295,26 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
           )}
         </g>
       )}
+      {menuPos && (
+        <foreignObject x={menuPos.x} y={menuPos.y} width="140" height="110" style={{ pointerEvents: 'auto' }}>
+          <div style={{ background: '#222', color: '#fff', border: '1px solid #555', fontSize: 12 }}>
+            {!slot.tower && (
+              <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { buildTower(slotIdx, false, 'economy'); setMenuPos(null); }}>
+                Build Extractor
+              </div>
+            )}
+            <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'wall'); setMenuPos(null); }}>
+              Build Wall
+            </div>
+            <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'trench'); setMenuPos(null); }}>
+              Dig Trench
+            </div>
+            <div style={{ padding: 4, cursor: 'pointer' }} onClick={() => { performTileAction(slotIdx, 'buff'); setMenuPos(null); }}>
+              Buff Tile
+            </div>
+          </div>
+        </foreignObject>
+      )}
     </g>
   );
-}; 
+};

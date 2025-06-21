@@ -2,13 +2,26 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { TowerSpot } from './TowerSpot';
-import { startEnemyWave, stopEnemyWave } from '../logic/EnemySpawner';
+import { stopEnemyWave, startContinuousSpawning, stopContinuousSpawning } from '../logic/EnemySpawner';
 import { startGameLoop } from '../logic/GameLoop';
+import { waveManager } from '../logic/WaveManager';
+import { initUpgradeEffects } from '../logic/UpgradeEffects';
 import { UpgradeScreen } from './game/UpgradeScreen';
+import { playSound } from '../utils/sound';
+
+// Drag state for tower relocation
+interface DragState {
+  isDragging: boolean;
+  draggedTowerSlotIdx: number | null;
+  dragOffset: { x: number; y: number };
+  mousePosition: { x: number; y: number };
+}
 
 export const GameBoard: React.FC = () => {
   const {
     towerSlots,
+    towers,
+    maxTowers,
     enemies,
     bullets,
     effects,
@@ -19,9 +32,10 @@ export const GameBoard: React.FC = () => {
     enemiesRequired,
     isStarted,
     isGameOver,
+    isRefreshing,
     setStarted,
+    setRefreshing,
     resetGame,
-    refreshBattlefield,
     nextWave,
     resetDice,
     totalEnemiesKilled,
@@ -31,9 +45,52 @@ export const GameBoard: React.FC = () => {
     packagesPurchased,
     deployMines,
     frostEffectActive,
+    energy,
+    energyWarning,
+    actionsRemaining,
+    prepRemaining,
+    isPreparing,
+    isPaused,
+    tickPreparation,
+    pausePreparation,
+    resumePreparation,
+    speedUpPreparation,
+    startPreparation,
+    startWave,
+    moveTower,
   } = useGameStore();
 
-  const [isRefreshing, setRefreshing] = React.useState(false);
+  const clearEnergyWarning = useGameStore(s => s.clearEnergyWarning);
+  React.useEffect(() => {
+    if (!energyWarning) return;
+    const t = setTimeout(() => clearEnergyWarning(), 1500);
+    return () => clearTimeout(t);
+  }, [energyWarning, clearEnergyWarning]);
+
+  useEffect(() => {
+    initUpgradeEffects();
+  }, []);
+
+  useEffect(() => {
+    waveManager.setHandlers(
+      () => {
+        // Continuous spawning handles this
+      },
+      () => {
+        setRefreshing(true);
+        nextWave();
+        resetDice();
+      },
+    );
+  }, [currentWave, nextWave, resetDice, setRefreshing]);
+
+  useEffect(() => {
+    if (isPreparing) {
+      waveManager.scheduleAutoStart(currentWave, GAME_CONSTANTS.PREP_TIME);
+    } else {
+      waveManager.cancelAutoStart();
+    }
+  }, [isPreparing, currentWave]);
 
   // Deploy mines at the start of each wave
   useEffect(() => {
@@ -71,20 +128,6 @@ export const GameBoard: React.FC = () => {
   const animatedShield = useAnimatedCounter(shieldUpgradesPurchased);
   const animatedPackages = useAnimatedCounter(packagesPurchased);
 
-  useEffect(() => {
-    if (!isRefreshing) return;
-    if (currentWave % 5 === 0) {
-      const timeout = setTimeout(() => {
-        const slotCount = Math.min(
-          GAME_CONSTANTS.INITIAL_SLOT_COUNT + 2 * Math.floor(currentWave / 5),
-          12,
-        );
-        refreshBattlefield(slotCount);
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [isRefreshing, currentWave, refreshBattlefield]);
-
   // Start/reset logic
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -101,45 +144,184 @@ export const GameBoard: React.FC = () => {
 
   // Handle game loop start/stop based on game state and refresh screen
   useEffect(() => {
-    if (!isStarted || isRefreshing) {
+    if (!isStarted || isRefreshing || isPreparing) {
       stopEnemyWave();
+      stopContinuousSpawning();
       loopStopper.current?.();
       loopStopper.current = null;
       return;
     }
     if (!loopStopper.current) {
-      startEnemyWave();
       loopStopper.current = startGameLoop();
     }
+    // Sürekli düşman yaratma sistemini başlat
+    startContinuousSpawning();
+    waveManager.startWave(currentWave);
     return () => {
       stopEnemyWave();
+      stopContinuousSpawning();
       loopStopper.current?.();
       loopStopper.current = null;
     };
-  }, [isStarted, isRefreshing]);
+  }, [isStarted, isRefreshing, isPreparing, currentWave]);
 
-  // Auto next wave and refresh handling
+  const warningPlayed = useRef(false);
+
   useEffect(() => {
-    if (!isStarted || isRefreshing) return;
+    if (!isPreparing || isPaused) return;
+    const id = setInterval(() => tickPreparation(1000), 1000);
+    return () => clearInterval(id);
+  }, [isPreparing, isPaused, tickPreparation]);
 
-    // Wave is complete when the kill requirement is met.
-    if (enemiesKilled >= enemiesRequired) {
-      setRefreshing(true); // Show upgrade screen
-      nextWave(); // Progress to the next wave state
-      resetDice(); // Reset dice for the new upgrade round
+  useEffect(() => {
+    if (isPreparing && prepRemaining <= GAME_CONSTANTS.PREP_WARNING_THRESHOLD && !warningPlayed.current) {
+      playSound('warning');
+      warningPlayed.current = true;
     }
-  }, [
-    enemiesKilled,
-    enemiesRequired,
-    isStarted,
-    isRefreshing,
-    nextWave,
-    resetDice,
-  ]);
+    if (isPreparing && prepRemaining <= 0) {
+      startWave();
+    }
+    if (!isPreparing) warningPlayed.current = false;
+  }, [prepRemaining, isPreparing, startWave]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!isPreparing) return;
+      if (e.key === 'p' || e.key === 'P') {
+        isPaused ? resumePreparation() : pausePreparation();
+      }
+      if (e.key === 'f' || e.key === 'F') {
+        speedUpPreparation(GAME_CONSTANTS.PREP_TIME);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isPreparing, isPaused, pausePreparation, resumePreparation, speedUpPreparation]);
 
   // SVG size
   const width = window.innerWidth;
   const height = window.innerHeight;
+
+  // Drag state for tower relocation
+  const [dragState, setDragState] = useState<DragState>({
+    isDragging: false,
+    draggedTowerSlotIdx: null,
+    dragOffset: { x: 0, y: 0 },
+    mousePosition: { x: 0, y: 0 },
+  });
+
+  // Debug message state
+  const [debugMessage, setDebugMessage] = useState<string>('');
+
+  // Clear debug message after 3 seconds
+  useEffect(() => {
+    if (debugMessage) {
+      const timer = setTimeout(() => setDebugMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [debugMessage]);
+
+  // Drag handlers for tower relocation
+  const handleTowerDragStart = (slotIdx: number, event: React.MouseEvent) => {
+    const slot = towerSlots[slotIdx];
+    if (!slot.tower || !isStarted || isRefreshing || isPreparing) return;
+    
+    // Check if tower can be relocated (cooldown check)
+    const now = performance.now();
+    if (slot.tower.lastRelocated && now - slot.tower.lastRelocated < GAME_CONSTANTS.RELOCATE_COOLDOWN) {
+      // Show cooldown message
+      setDebugMessage(`Kule ${Math.ceil((GAME_CONSTANTS.RELOCATE_COOLDOWN - (now - slot.tower.lastRelocated)) / 1000)} saniye sonra taşınabilir`);
+      return;
+    }
+
+    // Check if player has enough energy
+    if (energy < GAME_CONSTANTS.ENERGY_COSTS.relocateTower) {
+      setDebugMessage("Yetersiz enerji! Kule taşımak için 15 enerji gerekli.");
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    const svgElement = (event.currentTarget as SVGElement).closest('svg');
+    if (!svgElement) return;
+    
+    const svgRect = svgElement.getBoundingClientRect();
+    const mouseX = event.clientX - svgRect.left;
+    const mouseY = event.clientY - svgRect.top;
+
+    setDebugMessage(`${slot.tower.towerType === 'economy' ? 'Ekonomi' : 'Saldırı'} kulesi taşınıyor...`);
+
+    setDragState({
+      isDragging: true,
+      draggedTowerSlotIdx: slotIdx,
+      dragOffset: {
+        x: mouseX - slot.x,
+        y: mouseY - slot.y,
+      },
+      mousePosition: { x: mouseX, y: mouseY },
+    });
+  };
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    if (!dragState.isDragging) return;
+    
+    event.preventDefault();
+    const svgElement = event.currentTarget as SVGElement;
+    const svgRect = svgElement.getBoundingClientRect();
+    const mouseX = event.clientX - svgRect.left;
+    const mouseY = event.clientY - svgRect.top;
+
+    setDragState(prev => ({
+      ...prev,
+      mousePosition: { x: mouseX, y: mouseY },
+    }));
+  };
+
+  const handleMouseUp = (event: React.MouseEvent) => {
+    if (!dragState.isDragging || dragState.draggedTowerSlotIdx === null) return;
+
+    event.preventDefault();
+    const svgElement = event.currentTarget as SVGElement;
+    const svgRect = svgElement.getBoundingClientRect();
+    const mouseX = event.clientX - svgRect.left;
+    const mouseY = event.clientY - svgRect.top;
+
+    // Find the target slot under the mouse with increased detection radius
+    let targetSlotIdx = -1;
+    let minDistance = Infinity;
+    const detectionRadius = GAME_CONSTANTS.TOWER_SIZE * 2; // Daha büyük detection area
+
+    towerSlots.forEach((slot, idx) => {
+      if (idx === dragState.draggedTowerSlotIdx) return; // Can't drop on itself
+      if (!slot.unlocked || slot.tower) return; // Must be unlocked and empty
+
+      const distance = Math.sqrt(
+        Math.pow(mouseX - slot.x, 2) + Math.pow(mouseY - slot.y, 2)
+      );
+
+      // Check if mouse is within the enlarged detection area
+      if (distance <= detectionRadius && distance < minDistance) {
+        minDistance = distance;
+        targetSlotIdx = idx;
+      }
+    });
+
+    // Perform the move if valid target found
+    if (targetSlotIdx !== -1) {
+      setDebugMessage("Kule başarıyla taşındı!");
+      moveTower(dragState.draggedTowerSlotIdx, targetSlotIdx);
+    } else {
+      setDebugMessage("Geçersiz hedef! Kule boş bir slota taşınmalı.");
+    }
+
+    // Reset drag state
+    setDragState({
+      isDragging: false,
+      draggedTowerSlotIdx: null,
+      dragOffset: { x: 0, y: 0 },
+      mousePosition: { x: 0, y: 0 },
+    });
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: GAME_CONSTANTS.CANVAS_BG, overflow: 'hidden' }}>
@@ -176,6 +358,36 @@ export const GameBoard: React.FC = () => {
       <div style={{ position: 'absolute', top: 24, left: 32, color: GAME_CONSTANTS.GOLD_COLOR, font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2, display: 'flex', alignItems: 'center' }}>
         <span style={{ marginRight: '8px', fontSize: '24px' }}>💰</span> Gold: {gold}
       </div>
+      <div style={{ position: 'absolute', top: 56, left: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
+        Energy: {energy} ({actionsRemaining} actions)
+      </div>
+      <div style={{ position: 'absolute', top: 88, left: 32, color: towers.length >= maxTowers ? '#ff5555' : '#ffffff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
+        🏰 Towers: {towers.length}/{maxTowers}
+      </div>
+      {energyWarning && (
+        <div style={{ position: 'absolute', top: 80, left: 32, color: '#ff5555', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
+          {energyWarning}
+        </div>
+      )}
+      {/* Debug message for tower relocation */}
+      {debugMessage && (
+        <div style={{ 
+          position: 'absolute', 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)', 
+          color: '#00cfff', 
+          font: 'bold 20px Arial', 
+          textShadow: GAME_CONSTANTS.UI_SHADOW, 
+          zIndex: 10,
+          background: 'rgba(0,0,0,0.8)',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: '2px solid #00cfff'
+        }}>
+          {debugMessage}
+        </div>
+      )}
       <div style={{ position: 'absolute', top: 24, right: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
         Wave: {currentWave}/100
       </div>
@@ -214,12 +426,39 @@ export const GameBoard: React.FC = () => {
         </div>
       </div>
 
-      {isRefreshing && <UpgradeScreen setRefreshing={setRefreshing} />}
+      {isPreparing && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 2,
+          textAlign: 'center',
+          color: '#fff',
+        }}>
+          <div style={{ marginBottom: 4 }}>
+            Next wave in {Math.ceil(prepRemaining / 1000)}s{isPaused ? ' (paused)' : ''}
+          </div>
+          <div style={{ width: 200, height: 8, background: '#333', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{
+              width: `${(prepRemaining / GAME_CONSTANTS.PREP_TIME) * 100}%`,
+              height: '100%',
+              background: prepRemaining < GAME_CONSTANTS.PREP_WARNING_THRESHOLD ? '#ff5555' : '#00cfff',
+              transition: 'width 0.25s linear',
+            }} />
+          </div>
+          <button onClick={() => speedUpPreparation(GAME_CONSTANTS.PREP_TIME)} style={{ marginTop: 8, padding: '4px 12px', cursor: 'pointer' }}>
+            Start Wave
+          </button>
+        </div>
+      )}
+
+      {isRefreshing && <UpgradeScreen />}
 
       {/* Start Overlay */}
       {!isStarted && (
         <div
-          onClick={() => setStarted(true)}
+          onClick={() => { setStarted(true); startPreparation(); }}
           style={{
             position: 'absolute',
             top: 0,
@@ -244,11 +483,94 @@ export const GameBoard: React.FC = () => {
         </div>
       )}
       {/* SVG Game Area */}
-      <svg width={width} height={height} style={{ display: 'block', position: 'absolute', top: 0, left: 0 }}>
+      <svg 
+        width={width} 
+        height={height} 
+        style={{ display: 'block', position: 'absolute', top: 0, left: 0 }}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
         {/* Tower Slots */}
         {towerSlots.map((slot, i) => (
-          <TowerSpot key={i} slot={slot} slotIdx={i} />
+          <TowerSpot 
+            key={i} 
+            slot={slot} 
+            slotIdx={i} 
+            onTowerDragStart={handleTowerDragStart}
+            isDragTarget={dragState.isDragging && i !== dragState.draggedTowerSlotIdx && slot.unlocked && !slot.tower}
+            draggedTowerSlotIdx={dragState.draggedTowerSlotIdx}
+          />
         ))}
+
+        {/* Dragged Tower Visualization */}
+        {dragState.isDragging && dragState.draggedTowerSlotIdx !== null && (
+          <g style={{ pointerEvents: 'none', opacity: 0.8 }}>
+            {/* Dragged tower preview */}
+            <circle
+              cx={dragState.mousePosition.x - dragState.dragOffset.x}
+              cy={dragState.mousePosition.y - dragState.dragOffset.y}
+              r={GAME_CONSTANTS.TOWER_SIZE / 2}
+              fill="rgba(255, 255, 255, 0.3)"
+              stroke="#00cfff"
+              strokeWidth={2}
+              strokeDasharray="4 2"
+            />
+            {/* Tower type indicator */}
+            <text
+              x={dragState.mousePosition.x - dragState.dragOffset.x}
+              y={dragState.mousePosition.y - dragState.dragOffset.y + 4}
+              fill="#00cfff"
+              fontSize={16}
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              {towerSlots[dragState.draggedTowerSlotIdx]?.tower?.towerType === 'economy' ? '💰' : '🏰'}
+            </text>
+            {/* Instructions */}
+            <text
+              x={dragState.mousePosition.x - dragState.dragOffset.x}
+              y={dragState.mousePosition.y - dragState.dragOffset.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 10}
+              fill="#00cfff"
+              fontSize={12}
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              Boş slota bırakın
+            </text>
+            {/* Connection line to nearest valid slot */}
+            {(() => {
+              let nearestSlot = null;
+              let minDist = Infinity;
+              const mouseX = dragState.mousePosition.x - dragState.dragOffset.x;
+              const mouseY = dragState.mousePosition.y - dragState.dragOffset.y;
+              
+              towerSlots.forEach((slot, idx) => {
+                if (idx === dragState.draggedTowerSlotIdx || !slot.unlocked || slot.tower) return;
+                const dist = Math.sqrt((slot.x - mouseX) ** 2 + (slot.y - mouseY) ** 2);
+                if (dist < minDist && dist <= GAME_CONSTANTS.TOWER_SIZE * 2) {
+                  minDist = dist;
+                  nearestSlot = slot;
+                }
+              });
+              
+              if (nearestSlot) {
+                return (
+                  <line
+                    x1={mouseX}
+                    y1={mouseY}
+                    x2={nearestSlot.x}
+                    y2={nearestSlot.y}
+                    stroke="#00cfff"
+                    strokeWidth={2}
+                    strokeDasharray="4 2"
+                    opacity={0.6}
+                  />
+                );
+              }
+              return null;
+            })()}
+          </g>
+        )}
         {/* Enemies */}
         {enemies.map((enemy) => (
           <g key={enemy.id}>
