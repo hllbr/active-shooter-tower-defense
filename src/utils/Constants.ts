@@ -1,4 +1,5 @@
 import type { TowerVisual } from '../models/gameTypes';
+import { waveCompositions } from '../config/waves';
 
 export const GAME_CONSTANTS = {
   DEBUG_MODE: false,
@@ -270,9 +271,14 @@ export const GAME_CONSTANTS = {
     spawnChance: 0.15, // 15% chance to spawn as microbe in eligible waves
   },
 
-  // Wave completion formula: wave * (wave + 1) + 8
-  // Wave 1: 10, Wave 2: 22, Wave 3: 36, Wave 4: 52, Wave 5: 70, ..., Wave 100: 10108
-  getWaveEnemiesRequired: (wave: number) => wave * (wave + 1) + 8,
+  // Calculate how many enemies need to be defeated in a wave. If a custom
+  // composition exists, sum the counts; otherwise use the basic formula based on
+  // ENEMY_WAVE_INCREASE to match spawn count.
+  getWaveEnemiesRequired: (wave: number) => {
+    const comp = waveCompositions[wave];
+    if (comp) return comp.reduce((sum, c) => sum + c.count, 0);
+    return GAME_CONSTANTS.ENEMY_WAVE_INCREASE * wave;
+  },
 
   // Bullet
   BULLET_SIZE: 10,

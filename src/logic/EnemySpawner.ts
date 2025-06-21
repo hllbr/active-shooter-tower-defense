@@ -137,7 +137,7 @@ export function startEnemyWave(wave: number) {
     if (GAME_CONSTANTS.DEBUG_MODE) {
       console.error(`[WaveManager] No spawn config found for wave ${wave}`);
     }
-    const count = GAME_CONSTANTS.ENEMY_WAVE_INCREASE * wave;
+    const count = GAME_CONSTANTS.getWaveEnemiesRequired(wave);
     for (let i = 0; i < count; i++) spawnQueue.push('Basic');
   }
 
@@ -232,7 +232,7 @@ export function updateEnemyMovement() {
     enemy.position.x += moveX;
     enemy.position.y += moveY;
   });
-  const { currentWave, enemiesKilled } = useGameStore.getState();
+  const { currentWave, enemiesKilled, enemiesRequired } = useGameStore.getState();
   const pending = spawnInterval !== null && spawnIndex < spawnQueue.length;
-  waveManager.checkComplete(currentWave, enemies.length, pending, enemiesKilled);
+  waveManager.checkComplete(currentWave, enemies.length, pending, enemiesKilled, enemiesRequired);
 }

@@ -56,9 +56,10 @@ export class WaveManager {
     remainingEnemies: number,
     pendingSpawns: boolean,
     kills: number,
+    required: number,
   ) {
     if (!this.waveActive) return;
-    if (!pendingSpawns && remainingEnemies === 0) {
+    if (!pendingSpawns && remainingEnemies === 0 && kills >= required) {
       if (GAME_CONSTANTS.DEBUG_MODE) {
         console.log(`[WaveManager] Wave ${wave} completed - ${kills} enemies defeated`);
       }
