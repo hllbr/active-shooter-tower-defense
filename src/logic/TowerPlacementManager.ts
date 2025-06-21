@@ -34,13 +34,18 @@ function createTiles(count: number, type: TileType, existing: TowerSlot[]): Towe
 }
 
 export function updateWaveTiles(wave: number, current: TowerSlot[]): TowerSlot[] {
-  // Persist towers and fixed tiles
-  const persisted = current.filter(s => s.tower || s.type === 'fixed');
-  persisted.forEach(s => {
-    if (s.tower) s.type = 'fixed';
-  });
+  // Persist existing towers and any fixed slots. Dynamic/temporary slots without
+  // towers are removed each wave so they can be regenerated.
+  const persisted: TowerSlot[] = [];
+  for (const slot of current) {
+    if (slot.tower) {
+      // Once a tower is built the slot effectively becomes fixed
+      persisted.push({ ...slot, type: 'fixed' });
+    } else if (slot.type === 'fixed') {
+      persisted.push(slot);
+    }
+  }
 
-  // Remove empty dynamic/temporary tiles
   const baseCount = wave >= 21 ? 3 : 5;
   let newTiles: TowerSlot[] = [];
 
