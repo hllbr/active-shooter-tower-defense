@@ -25,18 +25,19 @@ export const GameBoard: React.FC = () => {
   } = useGameStore();
 
   const [isRefreshing, setRefreshing] = React.useState(false);
-  const [upgradeBought, setUpgradeBought] = React.useState(false);
 
   useEffect(() => {
     if (!isRefreshing) return;
-    const timeout = setTimeout(() => {
-      const slotCount = Math.min(
-        GAME_CONSTANTS.INITIAL_SLOT_COUNT + 2 * Math.floor(currentWave / 5),
-        12,
-      );
-      refreshBattlefield(slotCount);
-    }, 1000);
-    return () => clearTimeout(timeout);
+    if (currentWave % 5 === 0) {
+      const timeout = setTimeout(() => {
+        const slotCount = Math.min(
+          GAME_CONSTANTS.INITIAL_SLOT_COUNT + 2 * Math.floor(currentWave / 5),
+          12,
+        );
+        refreshBattlefield(slotCount);
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
   }, [isRefreshing, currentWave, refreshBattlefield]);
 
   // Start/reset logic
@@ -59,7 +60,6 @@ export const GameBoard: React.FC = () => {
       stopEnemyWave();
       loopStopper.current?.();
       loopStopper.current = null;
-      if (isRefreshing) setUpgradeBought(false);
       return;
     }
     if (!loopStopper.current) {
@@ -74,20 +74,16 @@ export const GameBoard: React.FC = () => {
   }, [isStarted, isRefreshing]);
 
   // Auto next wave and refresh handling
+  const waveActive = useRef(false);
   useEffect(() => {
     if (!isStarted || isRefreshing) return;
-    if (enemies.length === 0) {
-      if (currentWave % 5 === 0) {
-        setRefreshing(true);
-      } else {
-        const timeout = setTimeout(() => {
-          nextWave();
-          startEnemyWave();
-        }, 1200);
-        return () => clearTimeout(timeout);
-      }
+    if (enemies.length > 0) {
+      waveActive.current = true;
+    } else if (waveActive.current) {
+      waveActive.current = false;
+      setRefreshing(true);
     }
-  }, [enemies, isStarted, nextWave, currentWave, isRefreshing]);
+  }, [enemies, isStarted, isRefreshing]);
 
   // SVG size
   const width = window.innerWidth;
@@ -110,30 +106,52 @@ export const GameBoard: React.FC = () => {
             left: 0,
             width: '100vw',
             height: '100vh',
-            background: 'rgba(0,0,0,0.8)',
+            background: 'rgba(0,0,0,0.6)',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 5,
           }}
         >
-          <span style={{ color: '#00cfff', font: GAME_CONSTANTS.UI_FONT_BIG, fontWeight: 'bold', marginBottom: 24 }}>
-            Savaş alanı yenileniyor...
-          </span>
-          <button
-            onClick={() => {
-              upgradeBullet();
-              setUpgradeBought(true);
+          <div
+            style={{
+              background: '#ffffff',
+              color: '#000',
+              padding: 32,
+              borderRadius: 16,
+              width: 340,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 12,
+              textAlign: 'center',
             }}
+          >
+            <span style={{ fontWeight: 'bold', fontSize: 28, marginBottom: 8 }}>
+              Yükseltmeler
+            </span>
+          <button
+            onClick={() => upgradeBullet()}
             disabled={
-              upgradeBought ||
               bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length ||
               gold < GAME_CONSTANTS.BULLET_UPGRADE_COST
             }
             style={{ marginBottom: 16, padding: '12px 24px', fontSize: 24, borderRadius: 12, background: '#0077ff', color: '#fff', border: 'none', cursor: 'pointer' }}
           >
             {`Yeni Ateş: ${GAME_CONSTANTS.BULLET_TYPES[bulletLevel]?.name || ''}`} ({GAME_CONSTANTS.BULLET_UPGRADE_COST})
+          </button>
+          <button
+            onClick={() => {
+              upgradeBullet();
+              purchaseShield(0);
+            }}
+            disabled={
+              bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length ||
+              gold < GAME_CONSTANTS.BULLET_UPGRADE_COST + GAME_CONSTANTS.WALL_SHIELDS[0].cost
+            }
+            style={{ marginBottom: 16, padding: '12px 24px', fontSize: 22, borderRadius: 12, background: '#ffce00', color: '#000', border: 'none', cursor: 'pointer' }}
+          >
+            {`Kalkan + Ateş (${GAME_CONSTANTS.BULLET_UPGRADE_COST + GAME_CONSTANTS.WALL_SHIELDS[0].cost})`}
           </button>
           {GAME_CONSTANTS.WALL_SHIELDS.map((s, i) => (
             <button
@@ -155,6 +173,7 @@ export const GameBoard: React.FC = () => {
           >
             Devam Et
           </button>
+          </div>
         </div>
       )}
       {/* Start Overlay */}
