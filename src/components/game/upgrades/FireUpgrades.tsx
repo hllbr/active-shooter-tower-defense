@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 
@@ -6,12 +6,84 @@ export const FireUpgrades: React.FC = () => {
   const gold = useGameStore((s) => s.gold);
   const bulletLevel = useGameStore((s) => s.bulletLevel);
   const upgradeBullet = useGameStore((s) => s.upgradeBullet);
+  
+  const [prevBulletLevel, setPrevBulletLevel] = useState(bulletLevel);
+  const [showUpgradeAnimation, setShowUpgradeAnimation] = useState(false);
+
+  // Calculate current fire power
+  const getCurrentFirePower = () => {
+    const baseDamage = GAME_CONSTANTS.TOWER_DAMAGE;
+    const bulletType = GAME_CONSTANTS.BULLET_TYPES[bulletLevel - 1];
+    return Math.round(baseDamage * bulletType.damageMultiplier);
+  };
+
+  // Calculate next fire power
+  const getNextFirePower = () => {
+    if (bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length) return getCurrentFirePower();
+    const baseDamage = GAME_CONSTANTS.TOWER_DAMAGE;
+    const nextBulletType = GAME_CONSTANTS.BULLET_TYPES[bulletLevel];
+    return Math.round(baseDamage * nextBulletType.damageMultiplier);
+  };
+
+  // Detect upgrade and trigger animation
+  useEffect(() => {
+    if (bulletLevel > prevBulletLevel) {
+      setShowUpgradeAnimation(true);
+      setTimeout(() => setShowUpgradeAnimation(false), 2000);
+    }
+    setPrevBulletLevel(bulletLevel);
+  }, [bulletLevel, prevBulletLevel]);
+
+  const currentFirePower = getCurrentFirePower();
+  const nextFirePower = getNextFirePower();
 
   return (
     <div style={{ width: '100%' }}>
       <span style={{ fontWeight: 'bold', fontSize: 18, color: GAME_CONSTANTS.GOLD_COLOR, marginBottom: 12, display: 'block' }}>
         🔥 Ateş Güçleri
       </span>
+      
+      {/* Current Stats Display */}
+      <div style={{
+        background: 'rgba(255, 100, 100, 0.1)',
+        padding: '12px',
+        borderRadius: '8px',
+        border: '2px solid #ff6666',
+        marginBottom: '16px',
+        textAlign: 'center',
+        transform: showUpgradeAnimation ? 'scale(1.05)' : 'scale(1)',
+        transition: 'transform 0.3s ease',
+      }}>
+        <div style={{ fontSize: '14px', color: '#ccc', marginBottom: '4px' }}>
+          Mevcut Ateş Gücü
+        </div>
+        <div style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#ff6666',
+          textShadow: showUpgradeAnimation ? '0 0 10px #ff6666' : 'none',
+          transition: 'text-shadow 0.3s ease',
+        }}>
+          {currentFirePower} Hasar
+        </div>
+        {bulletLevel < GAME_CONSTANTS.BULLET_TYPES.length && (
+          <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
+            Sonraki Seviye: {nextFirePower} Hasar (+{nextFirePower - currentFirePower})
+          </div>
+        )}
+        {showUpgradeAnimation && (
+          <div style={{
+            color: '#4ade80',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            marginTop: '8px',
+            animation: 'fadeUp 2s ease-out',
+          }}>
+            ⬆️ Yükseltildi!
+          </div>
+        )}
+      </div>
+
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -95,7 +167,7 @@ export const FireUpgrades: React.FC = () => {
                 textAlign: 'left'
               }}>
                 {'freezeDuration' in bullet
-                  ? `Düşmanları ${(bullet as any).freezeDuration / 1000}sn yavaşlatır`
+                  ? `Düşmanları ${(bullet as { freezeDuration: number }).freezeDuration / 1000}sn yavaşlatır`
                   : `Hasar: x${bullet.damageMultiplier}, Hız: x${bullet.speedMultiplier}`
                 }
               </div>
@@ -103,6 +175,21 @@ export const FireUpgrades: React.FC = () => {
           );
         })}
       </div>
+
+      <style>
+        {`
+          @keyframes fadeUp {
+            0% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(-20px);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }; 

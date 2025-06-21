@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { TowerSpot } from './TowerSpot';
@@ -12,16 +12,63 @@ export const GameBoard: React.FC = () => {
     enemies,
     bullets,
     effects,
+    mines,
     gold,
     currentWave,
+    enemiesKilled,
+    enemiesRequired,
     isStarted,
     isGameOver,
     setStarted,
     resetGame,
     refreshBattlefield,
+    nextWave,
+    resetDice,
+    totalEnemiesKilled,
+    totalGoldSpent,
+    fireUpgradesPurchased,
+    shieldUpgradesPurchased,
+    packagesPurchased,
+    deployMines,
   } = useGameStore();
 
   const [isRefreshing, setRefreshing] = React.useState(false);
+
+  // Deploy mines at the start of each wave
+  useEffect(() => {
+    if (isStarted) {
+      deployMines();
+    }
+  }, [currentWave, isStarted, deployMines]);
+
+  // Counter-up animation hook
+  const useAnimatedCounter = (endValue: number) => {
+    const [count, setCount] = useState(0);
+    const duration = 1000; // 1 second animation
+
+    useEffect(() => {
+      if (!isGameOver) return;
+      let startTime: number | null = null;
+      const animateCount = (timestamp: number) => {
+        if (!startTime) startTime = timestamp;
+        const progress = timestamp - startTime;
+        const current = Math.min(Math.floor(progress / duration * endValue), endValue);
+        setCount(current);
+        if (progress < duration) {
+          requestAnimationFrame(animateCount);
+        }
+      };
+      requestAnimationFrame(animateCount);
+    }, [endValue, isGameOver]);
+    return count;
+  };
+
+  // Animated stats for the game over screen
+  const animatedKills = useAnimatedCounter(totalEnemiesKilled);
+  const animatedGold = useAnimatedCounter(totalGoldSpent);
+  const animatedFire = useAnimatedCounter(fireUpgradesPurchased);
+  const animatedShield = useAnimatedCounter(shieldUpgradesPurchased);
+  const animatedPackages = useAnimatedCounter(packagesPurchased);
 
   useEffect(() => {
     if (!isRefreshing) return;
@@ -71,16 +118,24 @@ export const GameBoard: React.FC = () => {
   }, [isStarted, isRefreshing]);
 
   // Auto next wave and refresh handling
-  const waveActive = useRef(false);
   useEffect(() => {
     if (!isStarted || isRefreshing) return;
-    if (enemies.length > 0) {
-      waveActive.current = true;
-    } else if (waveActive.current) {
-      waveActive.current = false;
-      setRefreshing(true);
+
+    // Wave is complete when the kill requirement is met AND no enemies are left on screen.
+    if (enemiesKilled >= enemiesRequired && enemies.length === 0) {
+      setRefreshing(true); // Show upgrade screen
+      nextWave(); // Progress to the next wave state
+      resetDice(); // Reset dice for the new upgrade round
     }
-  }, [enemies, isStarted, isRefreshing]);
+  }, [
+    enemies.length,
+    enemiesKilled,
+    enemiesRequired,
+    isStarted,
+    isRefreshing,
+    nextWave,
+    resetDice,
+  ]);
 
   // SVG size
   const width = window.innerWidth;
@@ -94,6 +149,22 @@ export const GameBoard: React.FC = () => {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          @keyframes pulse {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 0.8; transform: scale(1.1); }
+          }
+          @keyframes mine-light-pulse {
+            0% { fill-opacity: 0.4; transform: scale(0.8); }
+            50% { fill-opacity: 1; transform: scale(1); }
+            100% { fill-opacity: 0.4; transform: scale(0.8); }
+          }
+          .game-over-card {
+            animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+          }
+          @keyframes scale-up-center {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+          }
         `}
       </style>
       {/* UI */}
@@ -101,7 +172,41 @@ export const GameBoard: React.FC = () => {
         Gold: {gold}
       </div>
       <div style={{ position: 'absolute', top: 24, right: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
-        Wave: {currentWave}
+        Wave: {currentWave}/100
+      </div>
+      
+      {/* Wave Progress */}
+      <div style={{ 
+        position: 'absolute', 
+        top: 80, 
+        right: 32, 
+        color: '#00cfff', 
+        font: 'bold 16px Arial', 
+        textShadow: GAME_CONSTANTS.UI_SHADOW, 
+        zIndex: 2,
+        background: 'rgba(0,0,0,0.5)',
+        padding: '8px 12px',
+        borderRadius: '8px',
+        minWidth: '140px',
+        textAlign: 'center'
+      }}>
+        <div style={{ marginBottom: '4px' }}>
+          {enemiesKilled.toLocaleString()} / {enemiesRequired.toLocaleString()}
+        </div>
+        <div style={{
+          width: '100%',
+          height: '6px',
+          background: '#333',
+          borderRadius: '3px',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            width: `${Math.min(100, (enemiesKilled / enemiesRequired) * 100)}%`,
+            height: '100%',
+            background: '#00cfff',
+            transition: 'width 0.3s ease'
+          }} />
+        </div>
       </div>
 
       {isRefreshing && <UpgradeScreen setRefreshing={setRefreshing} />}
@@ -158,14 +263,52 @@ export const GameBoard: React.FC = () => {
               fill={enemy.health > enemy.maxHealth * 0.3 ? GAME_CONSTANTS.HEALTHBAR_GOOD : GAME_CONSTANTS.HEALTHBAR_BAD}
               rx={3}
             />
-            <circle
-              cx={enemy.position.x}
-              cy={enemy.position.y}
-              r={enemy.size / 2}
-              fill={enemy.color}
-              stroke="#b30000"
-              strokeWidth={4}
-            />
+            {enemy.isSpecial ? (
+              // Special microbe enemy with pulsing effect
+              <>
+                <circle
+                  cx={enemy.position.x}
+                  cy={enemy.position.y}
+                  r={enemy.size / 2 + 4}
+                  fill="none"
+                  stroke={GAME_CONSTANTS.MICROBE_ENEMY.pulseColor}
+                  strokeWidth={2}
+                  opacity={0.6}
+                  style={{
+                    animation: 'pulse 1.5s ease-in-out infinite alternate'
+                  }}
+                />
+                <circle
+                  cx={enemy.position.x}
+                  cy={enemy.position.y}
+                  r={enemy.size / 2}
+                  fill={enemy.color}
+                  stroke={GAME_CONSTANTS.MICROBE_ENEMY.borderColor}
+                  strokeWidth={3}
+                />
+                {/* Microbe indicator */}
+                <text
+                  x={enemy.position.x}
+                  y={enemy.position.y + enemy.size / 2 + 15}
+                  textAnchor="middle"
+                  fill={GAME_CONSTANTS.MICROBE_ENEMY.color}
+                  fontSize="12"
+                  fontWeight="bold"
+                >
+                  💰
+                </text>
+              </>
+            ) : (
+              // Normal enemy
+              <circle
+                cx={enemy.position.x}
+                cy={enemy.position.y}
+                r={enemy.size / 2}
+                fill={enemy.color}
+                stroke="#b30000"
+                strokeWidth={4}
+              />
+            )}
           </g>
         ))}
         {/* Bullets */}
@@ -192,11 +335,42 @@ export const GameBoard: React.FC = () => {
             stroke="none"
           />
         ))}
+        {/* Mines */}
+        {mines.map((mine) => (
+          <g key={mine.id} transform={`translate(${mine.position.x}, ${mine.position.y})`} style={{ pointerEvents: 'none' }}>
+            {/* The horns of the mine */}
+            {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+              <circle
+                key={angle}
+                cx={mine.size * 0.8 * Math.cos(angle * Math.PI / 180)}
+                cy={mine.size * 0.8 * Math.sin(angle * Math.PI / 180)}
+                r={mine.size * 0.25}
+                fill={GAME_CONSTANTS.MINE_VISUALS.bodyColor}
+              />
+            ))}
+            {/* The main body of the mine */}
+            <circle
+              cx="0"
+              cy="0"
+              r={mine.size * 0.75}
+              fill={GAME_CONSTANTS.MINE_VISUALS.bodyColor}
+              stroke={GAME_CONSTANTS.MINE_VISUALS.borderColor}
+              strokeWidth={3}
+            />
+            {/* The pulsing light */}
+            <circle
+              cx="0"
+              cy="0"
+              r={mine.size * 0.3}
+              fill={GAME_CONSTANTS.MINE_VISUALS.lightColor}
+              style={{ animation: 'mine-light-pulse 2s ease-in-out infinite' }}
+            />
+          </g>
+        ))}
       </svg>
       {/* Game Over Overlay */}
       {isGameOver && (
         <div
-          className="fade-in"
           style={{
             position: 'absolute',
             top: 0,
@@ -204,6 +378,7 @@ export const GameBoard: React.FC = () => {
             width: '100vw',
             height: '100vh',
             background: 'rgba(0,0,0,0.8)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -211,17 +386,99 @@ export const GameBoard: React.FC = () => {
             flexDirection: 'column',
           }}
         >
-          <span style={{ color: '#ff3333', font: GAME_CONSTANTS.UI_FONT_BIG, fontWeight: 'bold', marginBottom: 32, textAlign: 'center' }}>
-            Seni savunacak hiç kulen kalmadı. Yarın yine deneriz.
-          </span>
-          <button
-            onClick={() => { resetGame(); setStarted(false); }}
-            style={{ fontSize: 32, padding: '16px 32px', borderRadius: 12, background: '#00cfff', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+          <div
+            className="game-over-card"
+            style={{
+              background: 'linear-gradient(145deg, #2a2a3a, #1a1a2a)',
+              color: '#fff',
+              padding: '40px',
+              borderRadius: '20px',
+              border: `2px solid ${currentWave >= 100 ? '#4ade80' : '#ff3333'}`,
+              boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+              width: '90%',
+              maxWidth: '500px',
+              textAlign: 'center',
+            }}
           >
-            Tekrar Dene
-          </button>
+            {currentWave >= 100 ? (
+              // Victory Screen
+              <>
+                <h1 style={{ color: '#4ade80', fontSize: 48, margin: 0, padding: 0 }}>🏆 TEBRİKLER! 🏆</h1>
+                <p style={{ fontSize: 20, color: '#ccc', marginTop: 16 }}>
+                  Tüm 100 dalgayı başarıyla tamamladınız!
+                </p>
+                <p style={{ fontSize: 18, color: GAME_CONSTANTS.GOLD_COLOR, marginBottom: 32 }}>
+                  Gerçek bir savunma ustası oldunuz! 👑
+                </p>
+              </>
+            ) : (
+              // Defeat Screen
+              <>
+                <h1 style={{ color: '#ff3333', fontSize: 48, margin: 0, padding: 0 }}>💀 Oyun Bitti 💀</h1>
+                <p style={{ fontSize: 20, color: '#ccc', marginTop: 16, marginBottom: 32 }}>
+                  Savunman aşıldı. Ama her son yeni bir başlangıçtır.
+                </p>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '16px',
+                  background: 'rgba(0,0,0,0.3)',
+                  padding: '24px',
+                  borderRadius: '12px',
+                  marginBottom: '32px'
+                }}>
+                  {/* Stats Dashboard */}
+                  <div style={statCardStyle}><span>🌊</span><span>Ulaşılan Dalga</span><strong style={{ color: '#00cfff' }}>{currentWave}</strong></div>
+                  <div style={statCardStyle}><span>☠️</span><span>Yok Edilen</span><strong style={{ color: '#ffcc00' }}>{animatedKills.toLocaleString()}</strong></div>
+                  <div style={statCardStyle}><span>💰</span><span>Harcanan Altın</span><strong style={{ color: GAME_CONSTANTS.GOLD_COLOR }}>{animatedGold.toLocaleString()}</strong></div>
+                  <div style={statCardStyle}><span>🔥</span><span>Ateş Yükseltme</span><strong style={{ color: '#ff4400' }}>{animatedFire}</strong></div>
+                  <div style={statCardStyle}><span>🛡️</span><span>Kalkan Yükseltme</span><strong style={{ color: '#aa00ff' }}>{animatedShield}</strong></div>
+                  <div style={statCardStyle}><span>🎁</span><span>Alınan Paket</span><strong style={{ color: '#4ade80' }}>{animatedPackages}</strong></div>
+                </div>
+              </>
+            )}
+            <button
+              onClick={() => {
+                resetGame();
+                setStarted(false);
+              }}
+              style={{
+                fontSize: 24,
+                padding: '16px 48px',
+                borderRadius: 12,
+                background: currentWave >= 100 ? '#4ade80' : '#00cfff',
+                color: '#fff',
+                border: 'none',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = `0 0 20px ${currentWave >= 100 ? '#4ade80' : '#00cfff'}`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              {currentWave >= 100 ? 'Tekrar Oyna' : 'Tekrar Dene'}
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
 }; 
+
+const statCardStyle: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.05)',
+  padding: '12px',
+  borderRadius: '8px',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '8px',
+  fontSize: '14px',
+  color: '#aaa',
+};

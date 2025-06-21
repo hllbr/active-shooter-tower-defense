@@ -5,6 +5,8 @@ import { DiceRoller } from './upgrades/DiceRoller';
 import { FireUpgrades } from './upgrades/FireUpgrades';
 import { UpgradePackages } from './upgrades/UpgradePackages';
 import { ShieldUpgrades } from './upgrades/ShieldUpgrades';
+import { CurrentPowers } from './upgrades/CurrentPowers';
+import { DefenseUpgrades } from './upgrades/DefenseUpgrades';
 
 interface UpgradeScreenProps {
   setRefreshing: (isRefreshing: boolean) => void;
@@ -13,6 +15,7 @@ interface UpgradeScreenProps {
 export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ setRefreshing }) => {
   const nextWave = useGameStore((s) => s.nextWave);
   const resetDice = useGameStore((s) => s.resetDice);
+  const bulletLevel = useGameStore((s) => s.bulletLevel);
 
   const startEnemyWave = () => { /* Bu fonksiyonu daha sonra GameLoop'a taşıyabiliriz */ };
 
@@ -54,10 +57,12 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ setRefreshing }) =
           Yükseltmeler
         </span>
 
+        <CurrentPowers />
         <DiceRoller />
         <FireUpgrades />
         <UpgradePackages />
         <ShieldUpgrades />
+        {bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length && <DefenseUpgrades />}
 
         <button
           onClick={() => {

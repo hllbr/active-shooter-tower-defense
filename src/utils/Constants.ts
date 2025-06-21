@@ -71,6 +71,47 @@ export const GAME_CONSTANTS = {
   ENEMY_COLORS: ['#ff3333', '#ff8800', '#ffcc00'],
   ENEMY_HEALTHBAR_HEIGHT: 6,
 
+  // Mines
+  MINE_VISUALS: {
+    size: 22,
+    bodyColor: '#4a4a4a',
+    borderColor: '#212121',
+    lightColor: '#ff1111',
+  },
+  MINE_UPGRADES: [
+    { cost: 500, count: 3, damage: 100, radius: 80 },
+    { cost: 750, count: 4, damage: 120, radius: 90 },
+    { cost: 1100, count: 5, damage: 150, radius: 100 },
+    { cost: 1500, count: 6, damage: 180, radius: 110 },
+    { cost: 2000, count: 7, damage: 220, radius: 120 },
+    { cost: 2600, count: 8, damage: 260, radius: 130 },
+    { cost: 3300, count: 9, damage: 300, radius: 140 },
+    { cost: 4100, count: 10, damage: 350, radius: 150 },
+    { cost: 5000, count: 12, damage: 400, radius: 160 },
+    { cost: 6000, count: 15, damage: 500, radius: 180 },
+  ],
+
+  // Knockback effect
+  KNOCKBACK_DISTANCE: 40, // pixels
+  KNOCKBACK_STUN_DURATION: 300, // ms
+
+  // Special Microbe Enemy (Yadama)
+  MICROBE_ENEMY: {
+    size: 28,
+    health: 40,
+    speed: 60,
+    baseGoldDrop: 5,
+    goldDropInterval: 2000, // Drop gold every 2 seconds
+    color: '#00ff88',
+    borderColor: '#00cc66',
+    pulseColor: '#00ffaa',
+    spawnChance: 0.15, // 15% chance to spawn as microbe in eligible waves
+  },
+
+  // Wave completion formula: wave * (wave + 1) + 8
+  // Wave 1: 10, Wave 2: 22, Wave 3: 36, Wave 4: 52, Wave 5: 70, ..., Wave 100: 10108
+  getWaveEnemiesRequired: (wave: number) => wave * (wave + 1) + 8,
+
   // Bullet
   BULLET_SIZE: 10,
   BULLET_SPEED: 420,

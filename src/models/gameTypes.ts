@@ -34,6 +34,8 @@ export interface Enemy {
   goldValue: number;
   color: string;
   frozenUntil?: number;
+  isSpecial?: boolean; // For microbe/yadama enemies
+  lastGoldDrop?: number; // For tracking continuous gold drops
 }
 
 export interface Bullet {
@@ -57,6 +59,14 @@ export interface Effect {
   maxLife: number;
 }
 
+export interface Mine {
+  id: string;
+  position: Position;
+  size: number;
+  damage: number;
+  radius: number;
+}
+
 export interface GameState {
   towers: Tower[];
   towerSlots: TowerSlot[];
@@ -66,6 +76,16 @@ export interface GameState {
   gold: number;
   bulletLevel: number;
   currentWave: number;
+  enemiesKilled: number;
+  enemiesRequired: number;
+  totalEnemiesKilled: number;
+  totalGoldSpent: number;
+  fireUpgradesPurchased: number;
+  shieldUpgradesPurchased: number;
+  packagesPurchased: number;
+  defenseUpgradesPurchased: number;
+  mineLevel: number;
+  mines: Mine[];
   maxTowers: number;
   globalWallStrength: number;
   isGameOver: boolean;
