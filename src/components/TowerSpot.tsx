@@ -18,14 +18,18 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx }) => {
   const actionsRemaining = useGameStore(s => s.actionsRemaining);
   const energy = useGameStore(s => s.energy);
   const enemies = useGameStore(s => s.enemies);
-  const canBuild = !slot.tower && gold >= GAME_CONSTANTS.TOWER_COST;
+  const canBuild = !slot.tower &&
+    gold >= GAME_CONSTANTS.TOWER_COST &&
+    energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower;
 
   const [menuPos, setMenuPos] = React.useState<{x:number;y:number}|null>(null);
   
   // Get upgrade info for current tower
   const canUpgrade = slot.tower && slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL;
   const upgradeInfo = canUpgrade && slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level] : null;
-  const canAffordUpgrade = upgradeInfo && gold >= upgradeInfo.cost;
+  const canAffordUpgrade = upgradeInfo &&
+    gold >= upgradeInfo.cost &&
+    energy >= GAME_CONSTANTS.ENERGY_COSTS.upgradeTower;
   const currentTowerInfo = slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level - 1] : null;
 
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;

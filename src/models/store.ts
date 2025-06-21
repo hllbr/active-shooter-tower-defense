@@ -4,6 +4,7 @@ import { GAME_CONSTANTS } from '../utils/Constants';
 import { updateWaveTiles } from '../logic/TowerPlacementManager';
 import { waveRules } from '../config/waveRules';
 import { economyConfig } from '../config/economy';
+import { energyManager } from '../logic/EnergyManager';
 
 const initialSlots: TowerSlot[] = updateWaveTiles(1, []);
 
@@ -41,7 +42,8 @@ const initialState: GameState = {
   wallRegenerationActive: false,
   currentWaveModifier: waveRules[1],
   towerUpgradeListeners: [],
-  energy: 100,
+  energy: GAME_CONSTANTS.BASE_ENERGY,
+  energyWarning: null,
   actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
   prepRemaining: GAME_CONSTANTS.PREP_TIME,
   isPreparing: false,
@@ -94,6 +96,9 @@ type Store = GameState & {
   resumePreparation: () => void;
   speedUpPreparation: (amount: number) => void;
   startWave: () => void;
+  consumeEnergy: (amount: number, action: string) => boolean;
+  addEnergy: (amount: number, action?: string) => void;
+  clearEnergyWarning: () => void;
 };
 
 export const useGameStore = create<Store>((set, get) => ({
@@ -108,6 +113,8 @@ export const useGameStore = create<Store>((set, get) => ({
       state.towers.length >= state.maxTowers
     )
       return {};
+    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower;
+    if (!energyManager.consume(energyCost, 'buildTower')) return {};
     
     const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[0]; // Level 1
     const newTower: Tower = {
@@ -170,6 +177,8 @@ export const useGameStore = create<Store>((set, get) => ({
     const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[nextLevel - 1];
     
     if (state.gold < upgrade.cost) return {};
+    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.upgradeTower;
+    if (!energyManager.consume(energyCost, 'upgradeTower')) return {};
     
     const upgradedTower = {
       ...slot.tower,
@@ -279,6 +288,8 @@ export const useGameStore = create<Store>((set, get) => ({
     if (!from.tower || to.tower) return {};
     const now = performance.now();
     if (from.tower.lastRelocated && now - from.tower.lastRelocated < GAME_CONSTANTS.RELOCATE_COOLDOWN) return {};
+    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.relocateTower;
+    if (!energyManager.consume(energyCost, 'relocateTower')) return {};
     const moved = {
       ...from.tower,
       position: { x: to.x, y: to.y },
@@ -300,7 +311,7 @@ export const useGameStore = create<Store>((set, get) => ({
     const slot = state.towerSlots[slotIdx];
     if (state.actionsRemaining <= 0) return {};
     const cost = GAME_CONSTANTS.MAP_ACTION_ENERGY[action];
-    if (state.energy < cost) return {};
+    if (!energyManager.consume(cost, `tile_${action}`)) return {};
     const now = performance.now();
     let modifier: TileModifier | undefined;
     if (action === 'wall') {
@@ -319,7 +330,6 @@ export const useGameStore = create<Store>((set, get) => ({
     }
     return {
       towerSlots: newSlots,
-      energy: state.energy - cost,
       actionsRemaining: state.actionsRemaining - 1,
       towers: slot.tower && modifier.type === 'buff'
         ? state.towers.map(t => t.id === slot.tower!.id ? { ...t, rangeMultiplier: GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER } : t)
@@ -419,8 +429,10 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  nextWave: () => set((state) => {
-    const newWave = state.currentWave + 1;
+  nextWave: () => {
+    const { lostTowerThisWave, waveStartTime } = get();
+    set((state) => {
+      const newWave = state.currentWave + 1;
 
     const extractorCount = state.towers.filter(t => t.towerType === 'economy').length;
     let income = economyConfig.baseIncome + extractorCount * economyConfig.extractorIncome;
@@ -454,31 +466,38 @@ export const useGameStore = create<Store>((set, get) => ({
       towerSlots: updateWaveTiles(newWave, state.towerSlots),
       currentWaveModifier: waveRules[newWave],
       actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
-      energy: state.energy,
       gold: state.gold + income,
       isPreparing: true,
       prepRemaining: GAME_CONSTANTS.PREP_TIME,
       isPaused: false,
       lostTowerThisWave: false,
       waveStartTime: 0,
-    };
-  }),
-  resetGame: () => set(() => ({
-    ...initialState,
-    towerSlots: updateWaveTiles(1, []),
-    currentWaveModifier: waveRules[1],
-    energy: 100,
-    actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
-    enemiesKilled: 0,
-    enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(1),
-    totalEnemiesKilled: 0,
-    totalGoldSpent: 0,
-    fireUpgradesPurchased: 0,
-    shieldUpgradesPurchased: 0,
-    packagesPurchased: 0,
-    waveStartTime: 0,
-    lostTowerThisWave: false,
-  })),
+    });
+
+    let bonus = GAME_CONSTANTS.ENERGY_REGEN_WAVE;
+    if (!lostTowerThisWave) bonus += 5;
+    if (performance.now() - waveStartTime < 60000) bonus += 5;
+    energyManager.add(bonus, 'waveComplete');
+  },
+  resetGame: () => {
+    set(() => ({
+      ...initialState,
+      towerSlots: updateWaveTiles(1, []),
+      currentWaveModifier: waveRules[1],
+      energy: GAME_CONSTANTS.BASE_ENERGY,
+      actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
+      enemiesKilled: 0,
+      enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(1),
+      totalEnemiesKilled: 0,
+      totalGoldSpent: 0,
+      fireUpgradesPurchased: 0,
+      shieldUpgradesPurchased: 0,
+      packagesPurchased: 0,
+      waveStartTime: 0,
+      lostTowerThisWave: false,
+    }));
+    energyManager.init(GAME_CONSTANTS.BASE_ENERGY, (e, w) => set({ energy: e, energyWarning: w ?? null }));
+  },
   setStarted: (started) => set(() => ({ isStarted: started })),
   upgradeBullet: (free = false) => set((state) => {
     if (state.bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length) return {};
@@ -750,7 +769,12 @@ export const useGameStore = create<Store>((set, get) => ({
     waveStartTime: performance.now(),
     lostTowerThisWave: false,
   })),
+  consumeEnergy: (amount, action) => energyManager.consume(amount, action),
+  addEnergy: (amount, action) => energyManager.add(amount, action),
+  clearEnergyWarning: () => set(() => ({ energyWarning: null })),
   addTowerUpgradeListener: (fn) => set((state) => ({
     towerUpgradeListeners: [...state.towerUpgradeListeners, fn],
   })),
 }));
+
+energyManager.init(initialState.energy, (e, w) => useGameStore.setState({ energy: e, energyWarning: w ?? null }));

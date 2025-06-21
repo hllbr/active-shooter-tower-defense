@@ -34,6 +34,7 @@ export const GameBoard: React.FC = () => {
     deployMines,
     frostEffectActive,
     energy,
+    energyWarning,
     actionsRemaining,
     prepRemaining,
     isPreparing,
@@ -47,6 +48,13 @@ export const GameBoard: React.FC = () => {
   } = useGameStore();
 
   const [isRefreshing, setRefreshing] = React.useState(false);
+
+  const clearEnergyWarning = useGameStore(s => s.clearEnergyWarning);
+  React.useEffect(() => {
+    if (!energyWarning) return;
+    const t = setTimeout(() => clearEnergyWarning(), 1500);
+    return () => clearTimeout(t);
+  }, [energyWarning, clearEnergyWarning]);
 
   useEffect(() => {
     initUpgradeEffects();
@@ -230,6 +238,11 @@ export const GameBoard: React.FC = () => {
       <div style={{ position: 'absolute', top: 56, left: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
         Energy: {energy} ({actionsRemaining} actions)
       </div>
+      {energyWarning && (
+        <div style={{ position: 'absolute', top: 80, left: 32, color: '#ff5555', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
+          {energyWarning}
+        </div>
+      )}
       <div style={{ position: 'absolute', top: 24, right: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
         Wave: {currentWave}/100
       </div>

@@ -183,6 +183,7 @@ export interface GameState {
   currentWaveModifier?: WaveModifier;
   towerUpgradeListeners: TowerUpgradeListener[];
   energy: number;
+  energyWarning?: string | null;
   actionsRemaining: number;
   prepRemaining: number;
   isPreparing: boolean;
