@@ -10,12 +10,17 @@ import { waveManager } from '../logic/WaveManager';
 const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   let position: Position;
   let isTooClose;
-  const { CANVAS_WIDTH, CANVAS_HEIGHT, MINE_MIN_DISTANCE_FROM_TOWER } = GAME_CONSTANTS;
+  const { MINE_MIN_DISTANCE_FROM_TOWER } = GAME_CONSTANTS;
+  
+  // Kullanıcının gerçek ekran boyutlarını kullan (görünür alan)
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const margin = 80; // Kenar boşluğu (mayın boyutu + güvenlik)
 
   do {
     position = {
-      x: Math.random() * (CANVAS_WIDTH - 100) + 50,
-      y: Math.random() * (CANVAS_HEIGHT - 100) + 50,
+      x: Math.random() * (viewportWidth - margin * 2) + margin,
+      y: Math.random() * (viewportHeight - margin * 2) + margin,
     };
     isTooClose = towerSlots.some(
       (slot) => Math.hypot(position.x - slot.x, position.y - slot.y) < MINE_MIN_DISTANCE_FROM_TOWER,
@@ -74,6 +79,25 @@ const initialState: GameState = {
   waveStartTime: 0,
   lostTowerThisWave: false,
   lastUpdate: 0,
+  
+  // Yeni Enerji Sistemi  
+  energyUpgrades: {},
+  maxEnergy: GAME_CONSTANTS.ENERGY_SYSTEM.MAX_ENERGY_BASE, // Dynamic olarak güncellenecek
+  killCombo: 0,
+  lastKillTime: 0,
+  totalKills: 0,
+  energyEfficiency: 0,
+  
+  // Gelişmiş Action Sistemi
+  maxActions: GAME_CONSTANTS.ACTION_SYSTEM.BASE_ACTIONS,
+  actionRegenTime: GAME_CONSTANTS.ACTION_SYSTEM.ACTION_REGEN_TIME,
+  lastActionRegen: 0,
+
+  // PowerMarket upgrade levels
+  energyBoostLevel: 0,
+  maxActionsLevel: 0,
+  eliteModuleLevel: 0,
+  diceResult: null,
 };
 
 type Store = GameState & {
@@ -124,6 +148,32 @@ type Store = GameState & {
   consumeEnergy: (amount: number, action: string) => boolean;
   addEnergy: (amount: number, action?: string) => void;
   clearEnergyWarning: () => void;
+  
+  // Yeni Enerji Sistemi
+  upgradeEnergySystem: (upgradeId: string) => void;
+  onEnemyKilled: (isSpecial?: boolean) => void;
+  tickEnergyRegen: (deltaTime: number) => void;
+  calculateEnergyStats: () => {
+    passiveRegen: number;
+    maxEnergy: number;
+    killBonus: number;
+    activityBonus: number;
+    efficiency: number;
+  };
+  
+  // Dynamic Calculation Methods
+  getMaxEnergy: () => number;
+  getMaxActions: () => number;
+  
+  // Gelişmiş Action Sistemi
+  tickActionRegen: (deltaTime: number) => void;
+  addAction: (amount: number) => void;
+
+  // PowerMarket upgrade functions
+  setGold: (amount: number) => void;
+  setEnergyBoostLevel: (level: number) => void;
+  setMaxActionsLevel: (level: number) => void;
+  setEliteModuleLevel: (level: number) => void;
 };
 
 export const useGameStore = create<Store>((set, get) => ({
@@ -436,6 +486,10 @@ export const useGameStore = create<Store>((set, get) => ({
       const newHealth = enemy.health - dmg;
       if (newHealth <= 0) {
         const shouldCountKill = !enemy.isSpecial;
+        
+        // Enerji sistemi: Düşman öldürme bonusu
+        setTimeout(() => get().onEnemyKilled(enemy.isSpecial), 0);
+        
         return {
           enemies: state.enemies.filter(e => e.id !== enemyId),
           gold: state.gold + enemy.goldValue,
@@ -555,7 +609,10 @@ export const useGameStore = create<Store>((set, get) => ({
       packagesPurchased: 0,
       towerSlots: updateWaveTiles(newWave, state.towerSlots),
       currentWaveModifier: waveRules[newWave],
-      actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
+      // Dinamik action sistemi
+      maxActions: get().getMaxActions(),
+      actionsRemaining: get().getMaxActions(),
+      actionRegenTime: GAME_CONSTANTS.ACTION_SYSTEM.ACTION_REGEN_TIME,
       gold: state.gold + income,
       isPreparing: true,
       prepRemaining: GAME_CONSTANTS.PREP_TIME,
@@ -583,6 +640,17 @@ export const useGameStore = create<Store>((set, get) => ({
       waveStartTime: 0,
       lostTowerThisWave: false,
       maxTowers: GAME_CONSTANTS.INITIAL_TOWER_LIMIT, // ← CRITICAL: Reset tower limit
+      // Yeni enerji sistemini reset et
+      energyUpgrades: {},
+      maxEnergy: GAME_CONSTANTS.ENERGY_SYSTEM.MAX_ENERGY_BASE,
+      killCombo: 0,
+      lastKillTime: 0,
+      totalKills: 0,
+      energyEfficiency: 0,
+      // Action sistemini reset et
+      maxActions: GAME_CONSTANTS.ACTION_SYSTEM.BASE_ACTIONS,
+      actionRegenTime: GAME_CONSTANTS.ACTION_SYSTEM.ACTION_REGEN_TIME,
+      lastActionRegen: 0,
     }));
     energyManager.init(GAME_CONSTANTS.BASE_ENERGY, (e, w) => set({ energy: e, energyWarning: w ?? null }));
     console.log(`🔄 Game reset. Tower limit: ${GAME_CONSTANTS.INITIAL_TOWER_LIMIT}`);
@@ -845,12 +913,299 @@ export const useGameStore = create<Store>((set, get) => ({
       towerSlots: slots,
     };
   }),
-  consumeEnergy: (amount, action) => energyManager.consume(amount, action),
+  consumeEnergy: (amount, action) => {
+    const state = get();
+    // Efficiency upgradesi varsa enerji harcamalarını azalt
+    const adjustedAmount = Math.max(1, Math.round(amount * (1 - state.energyEfficiency)));
+    const success = energyManager.consume(adjustedAmount, action);
+    
+    // Aktivite bonusu: Harcanan enerjinin bir kısmını geri ver
+    if (success) {
+      const stats = get().calculateEnergyStats();
+      const bonusAmount = adjustedAmount * stats.activityBonus;
+      if (bonusAmount > 0) {
+        setTimeout(() => energyManager.add(bonusAmount, 'activity_bonus'), 100);
+      }
+    }
+    
+    return success;
+  },
   addEnergy: (amount, action) => energyManager.add(amount, action),
   clearEnergyWarning: () => set(() => ({ energyWarning: null })),
+  
+  // Yeni Enerji Sistemi Implementasyonu
+  upgradeEnergySystem: (upgradeId) => set((state) => {
+    // Tüm kategorilerden upgrade'i ara
+    const allUpgrades = [
+      ...GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES,
+      ...GAME_CONSTANTS.POWER_MARKET.ACTION_UPGRADES,
+      ...GAME_CONSTANTS.POWER_MARKET.COMBO_UPGRADES,
+      ...GAME_CONSTANTS.POWER_MARKET.ELITE_UPGRADES,
+    ];
+    const upgrade = allUpgrades.find(u => u.id === upgradeId);
+    if (!upgrade) return {};
+    
+    const currentLevel = state.energyUpgrades[upgradeId] || 0;
+    if (currentLevel >= upgrade.maxLevel) return {};
+    
+    const baseCost = upgrade.cost * Math.pow(1.5, currentLevel); // Üstel fiyat artışı
+    
+    // Zar sistemine göre dinamik fiyat hesaplama
+    let finalCost = baseCost;
+    if (state.discountMultiplier === 0) {
+      // İndirimler iptal edildi - normal fiyat
+      finalCost = baseCost;
+    } else if (state.discountMultiplier > 1) {
+      // Ek indirim uygulandı
+      finalCost = Math.max(100, Math.round(baseCost * (2 - state.discountMultiplier)));
+    }
+    
+    if (state.gold < finalCost) return {};
+    
+    const newUpgrades = { ...state.energyUpgrades };
+    newUpgrades[upgradeId] = currentLevel + 1;
+    
+    // Upgrade etkilerini uygula
+    let newEfficiency = state.energyEfficiency;
+    
+    if (upgrade.effect.type === 'efficiency') {
+      newEfficiency += upgrade.effect.value as number;
+    }
+    
+    return {
+      energyUpgrades: newUpgrades,
+      gold: state.gold - finalCost,
+      totalGoldSpent: state.totalGoldSpent + finalCost,
+      maxEnergy: get().getMaxEnergy(), // Dynamic sync
+      maxActions: get().getMaxActions(), // Dynamic sync  
+      energyEfficiency: Math.min(0.8, newEfficiency), // Max %80 indirim
+    };
+  }),
+  
+  onEnemyKilled: (isSpecial = false) => set((state) => {
+    const now = performance.now();
+    const stats = get().calculateEnergyStats();
+    
+    // Temel kill bonusu
+    let energyGain = GAME_CONSTANTS.ENERGY_SYSTEM.ENERGY_PER_KILL;
+    if (isSpecial) {
+      energyGain += GAME_CONSTANTS.ENERGY_SYSTEM.ENERGY_PER_SPECIAL_KILL;
+    }
+    
+    // Upgrade bonusları
+    energyGain += stats.killBonus;
+    
+    // Combo sistemi
+    let newCombo = state.killCombo;
+    const timeSinceLastKill = now - state.lastKillTime;
+    const comboTimeout = GAME_CONSTANTS.ENERGY_SYSTEM.COMBO_RESET_TIME;
+    
+    if (timeSinceLastKill < comboTimeout) {
+      newCombo += 1;
+    } else {
+      newCombo = 1;
+    }
+    
+    // Combo bonusu
+    if (newCombo >= GAME_CONSTANTS.ENERGY_SYSTEM.KILL_COMBO_THRESHOLD) {
+      energyGain += GAME_CONSTANTS.ENERGY_SYSTEM.KILL_COMBO_BONUS;
+      newCombo = 0; // Reset combo
+    }
+    
+    // Enerji ekle
+    energyManager.add(energyGain, isSpecial ? 'special_kill' : 'enemy_kill');
+    
+    return {
+      totalKills: state.totalKills + 1,
+      killCombo: newCombo,
+      lastKillTime: now,
+    };
+  }),
+  
+  tickEnergyRegen: (deltaTime) => {
+    const stats = get().calculateEnergyStats();
+    
+    // Pasif rejenerasyon (milisaniye başına) - sadece tam sayılarla çalış
+    const regenAmount = Number(((stats.passiveRegen * deltaTime) / 1000).toFixed(2));
+    if (regenAmount >= 0.1) { // Minimum threshold artırıldı
+      energyManager.add(regenAmount, 'passive_regen');
+    }
+  },
+  
+  calculateEnergyStats: () => {
+    const state = get();
+    let passiveRegen = GAME_CONSTANTS.ENERGY_SYSTEM.PASSIVE_REGEN_BASE;
+    const maxEnergy = state.maxEnergy;
+    let killBonus = 0;
+    let activityBonus = GAME_CONSTANTS.ENERGY_SYSTEM.ACTIVITY_BONUS_MULTIPLIER;
+    const efficiency = state.energyEfficiency;
+    
+    // Upgrade etkilerini hesapla
+    Object.entries(state.energyUpgrades).forEach(([upgradeId, level]) => {
+      const allUpgrades = [
+        ...GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES,
+        ...GAME_CONSTANTS.POWER_MARKET.ACTION_UPGRADES,
+        ...GAME_CONSTANTS.POWER_MARKET.COMBO_UPGRADES,
+        ...GAME_CONSTANTS.POWER_MARKET.ELITE_UPGRADES,
+      ];
+      const upgrade = allUpgrades.find((u) => u.id === upgradeId);
+      if (!upgrade || level === 0) return;
+      
+      switch (upgrade.effect.type) {
+        case 'passive_regen':
+          passiveRegen += (upgrade.effect.value as number) * level;
+          break;
+        case 'kill_bonus':
+          killBonus += (upgrade.effect.value as number) * level;
+          break;
+        case 'activity_bonus':
+          activityBonus += (upgrade.effect.value as number) * level;
+          break;
+        case 'efficiency':
+          // Handled in the efficiency calculation
+          break;
+        case 'action_regen':
+          // Action regen upgrades handled in tickActionRegen
+          break;
+        case 'action_capacity':
+          // Action capacity handled in calculateMaxActions
+          break;
+        case 'special_kill_action':
+          // Special action bonus handled in onEnemyKilled
+          break;
+        case 'action_save_chance':
+          // Chance based system handled during consumption
+          break;
+        case 'combo_master':
+          // Combo bonus enhancement handled in onEnemyKilled
+          break;
+        case 'combo_duration':
+          // Combo duration enhancement handled in onEnemyKilled
+          break;
+        case 'rampage_efficiency':
+          // Rampage mode efficiency handled during energy consumption
+          break;
+        case 'power_core':
+          // Power core effects handled in getters
+          break;
+        case 'infinite_loop':
+          // Infinite loop handled during consumption
+          break;
+        case 'quantum_regen': {
+          // Quantum regeneration handled here
+          const quantumMultiplier = (upgrade.effect.value as number) * level;
+          passiveRegen *= (1 + quantumMultiplier);
+          break;
+        }
+      }
+    });
+    
+    return {
+      passiveRegen,
+      maxEnergy,
+      killBonus,
+      activityBonus: Math.min(0.5, activityBonus), // Max %50
+      efficiency: Math.min(0.8, efficiency), // Max %80
+    };
+  },
+  
   addTowerUpgradeListener: (fn) => set((state) => ({
     towerUpgradeListeners: [...state.towerUpgradeListeners, fn],
   })),
+  
+  // Gelişmiş Action Sistemi Implementasyonu
+  tickActionRegen: (deltaTime) => {
+    const state = get();
+    if (!GAME_CONSTANTS.ACTION_SYSTEM.ACTION_REGEN_ENABLED) return;
+    if (state.actionsRemaining >= state.maxActions) return;
+    
+    const newRegenTime = state.actionRegenTime - deltaTime;
+    if (newRegenTime <= 0) {
+      // Aksiyon kazanıldı - süreyi doğru şekilde sıfırla
+      set((state) => ({
+        actionsRemaining: Math.min(state.actionsRemaining + 1, state.maxActions),
+        actionRegenTime: GAME_CONSTANTS.ACTION_SYSTEM.ACTION_REGEN_TIME, // DÜZELTME: Süreyi sıfırla
+        lastActionRegen: performance.now(),
+      }));
+    } else {
+      set({ actionRegenTime: newRegenTime });
+    }
+  },
+  
+  addAction: (amount) => set((state) => ({
+    actionsRemaining: Math.min(state.actionsRemaining + amount, state.maxActions),
+  })),
+  
+  getMaxEnergy: () => {
+    const state = get();
+    let maxEnergy: number = GAME_CONSTANTS.ENERGY_SYSTEM.MAX_ENERGY_BASE;
+    
+    // Upgrade bonusları (power_core ayrı hesaplanır)
+    let powerCoreMultiplier = 0;
+    Object.entries(state.energyUpgrades).forEach(([upgradeId, level]) => {
+      const allUpgrades = [
+        ...GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES,
+        ...GAME_CONSTANTS.POWER_MARKET.ACTION_UPGRADES,
+        ...GAME_CONSTANTS.POWER_MARKET.COMBO_UPGRADES,
+        ...GAME_CONSTANTS.POWER_MARKET.ELITE_UPGRADES,
+      ];
+      const upgrade = allUpgrades.find((u) => u.id === upgradeId);
+      
+      if (upgrade?.effect.type === 'max_energy') {
+        maxEnergy += (upgrade.effect.value as number) * level;
+      } else if (upgrade?.effect.type === 'power_core') {
+        powerCoreMultiplier += (upgrade.effect.value as number) * level;
+      }
+    });
+    
+    // Power core modifier (tek seferde uygulanır)
+    if (powerCoreMultiplier > 0) {
+      maxEnergy = Math.floor(maxEnergy * (1 + powerCoreMultiplier));
+    }
+    
+    // Reasonable maximum limit (prevent extreme values)
+    return Math.min(maxEnergy, 9999);
+  },
+
+  getMaxActions: () => {
+    const state = get();
+    let maxActions = GAME_CONSTANTS.ACTION_SYSTEM.BASE_ACTIONS;
+    
+    // Wave bazlı artış (her 10 wave'de +1, max 7 bonus = Wave 70'e kadar)
+    const waveBonus = Math.min(7, Math.floor(state.currentWave / 10)) * GAME_CONSTANTS.ACTION_SYSTEM.ACTIONS_PER_10_WAVES;
+    maxActions += waveBonus;
+    
+    // Upgrade bonusları (power_core ayrı hesaplanır)
+    let powerCoreMultiplier = 0;
+    Object.entries(state.energyUpgrades).forEach(([upgradeId, level]) => {
+      const allUpgrades = [
+        ...GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES,
+        ...GAME_CONSTANTS.POWER_MARKET.ACTION_UPGRADES,
+        ...GAME_CONSTANTS.POWER_MARKET.COMBO_UPGRADES,
+        ...GAME_CONSTANTS.POWER_MARKET.ELITE_UPGRADES,
+      ];
+      const upgrade = allUpgrades.find((u) => u.id === upgradeId);
+      
+      if (upgrade?.effect.type === 'action_capacity') {
+        maxActions += (upgrade.effect.value as number) * level;
+      } else if (upgrade?.effect.type === 'power_core') {
+        powerCoreMultiplier += (upgrade.effect.value as number) * level;
+      }
+    });
+    
+    // Power core modifier (tek seferde uygulanır)
+    if (powerCoreMultiplier > 0) {
+      maxActions = Math.floor(maxActions * (1 + powerCoreMultiplier));
+    }
+    
+    return Math.min(maxActions, GAME_CONSTANTS.ACTION_SYSTEM.MAX_ACTIONS);
+  },
+
+  // PowerMarket upgrade functions
+  setGold: (amount) => set(() => ({ gold: amount })),
+  setEnergyBoostLevel: (level) => set(() => ({ energyBoostLevel: level })),
+  setMaxActionsLevel: (level) => set(() => ({ maxActionsLevel: level })),
+  setEliteModuleLevel: (level) => set(() => ({ eliteModuleLevel: level })),
 }));
 
 energyManager.init(initialState.energy, (e, w) => useGameStore.setState({ energy: e, energyWarning: w ?? null }));

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
-import type { TowerSlot } from '../models/gameTypes';
+import type { TowerSlot, Enemy } from '../models/gameTypes';
 import { getNearestEnemy } from '../logic/TowerManager';
 
 interface TowerSpotProps {
@@ -51,7 +51,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
         hasEnoughEnergy: energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower
       });
     }
-  }, [slot.unlocked, slotIdx]);
+  }, [slot.unlocked, slotIdx, canUnlock, energy, gold, unlockCost]);
 
   // Check if we should show build text - only show on empty slots when there are less than 2 towers total
   const totalTowers = towerSlots.filter(s => s.tower).length;
@@ -81,7 +81,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
     const { enemy } = getNearestEnemy(slot.tower.position, enemies);
     const firing = performance.now() - slot.tower.lastFired < 100;
     return enemy ? {
-      enemy,
+      enemy: enemy as Enemy,
       firing,
     } : null;
   }, [slot.tower, enemies]);
@@ -1250,8 +1250,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
               <line
                 x1={slot.x}
                 y1={slot.y}
-                x2={debugInfo.enemy ? debugInfo.enemy.position.x : slot.x}
-                y2={debugInfo.enemy ? debugInfo.enemy.position.y : slot.y}
+                x2={debugInfo.enemy?.position ? debugInfo.enemy.position.x : slot.x}
+                y2={debugInfo.enemy?.position ? debugInfo.enemy.position.y : slot.y}
                 stroke="#ff0000"
                 strokeWidth={1}
               />
