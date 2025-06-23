@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../models/store';
+import type { TowerSlot } from '../models/gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { TowerSpot } from './TowerSpot';
 import { stopEnemyWave, startContinuousSpawning, stopContinuousSpawning } from '../logic/EnemySpawner';
@@ -58,6 +59,11 @@ export const GameBoard: React.FC = () => {
     startPreparation,
     startWave,
     moveTower,
+    tickEnergyRegen,
+    maxEnergy,
+    tickActionRegen,
+    actionRegenTime,
+    maxActions,
   } = useGameStore();
 
   const clearEnergyWarning = useGameStore(s => s.clearEnergyWarning);
@@ -99,6 +105,43 @@ export const GameBoard: React.FC = () => {
     }
   }, [currentWave, isStarted, deployMines]);
 
+  // Redeploy mines when window size changes to keep them visible
+  useEffect(() => {
+    if (!isStarted) return;
+    
+    const handleResize = () => {
+      // Mayınları yeniden konumlandır (ekran boyutu değişirse)
+      if (mines.length > 0) {
+        deployMines();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isStarted, mines.length, deployMines]);
+
+  // Enerji rejenerasyonu timer'ı - 5 saniye intervals
+  useEffect(() => {
+    if (!isStarted || isPaused) return;
+    
+    const energyTimer = setInterval(() => {
+      tickEnergyRegen(5000); // Her 5 saniye, precision hatalarını azaltmak için
+    }, 5000);
+    
+    return () => clearInterval(energyTimer);
+  }, [isStarted, isPaused, tickEnergyRegen]);
+
+  // Action rejenerasyonu timer'ı
+  useEffect(() => {
+    if (!isStarted || isPaused) return;
+    
+    const actionTimer = setInterval(() => {
+      tickActionRegen(1000); // Her saniye
+    }, 1000);
+    
+    return () => clearInterval(actionTimer);
+  }, [isStarted, isPaused, tickActionRegen]);
+
   // Counter-up animation hook
   const useAnimatedCounter = (endValue: number) => {
     const [count, setCount] = useState(0);
@@ -117,7 +160,7 @@ export const GameBoard: React.FC = () => {
         }
       };
       requestAnimationFrame(animateCount);
-    }, [endValue, isGameOver]);
+    }, [endValue]);
     return count;
   };
 
@@ -323,6 +366,8 @@ export const GameBoard: React.FC = () => {
     });
   };
 
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
     <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: GAME_CONSTANTS.CANVAS_BG, overflow: 'hidden' }}>
       <style>
@@ -352,18 +397,179 @@ export const GameBoard: React.FC = () => {
             0% { transform: scale(0.5); }
             100% { transform: scale(1); }
           }
+          @keyframes shine {
+            0% { left: -50%; }
+            100% { left: 100%; }
+          }
+
         `}
       </style>
       {/* UI */}
-      <div style={{ position: 'absolute', top: 24, left: 32, color: GAME_CONSTANTS.GOLD_COLOR, font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2, display: 'flex', alignItems: 'center' }}>
-        <span style={{ marginRight: '8px', fontSize: '24px' }}>💰</span> Gold: {gold}
+      <div style={{ position: 'absolute', top: 24, right: 280, zIndex: 2, display: 'flex', alignItems: 'center' }}>
+        {/* Enhanced Info Icon - Standalone */}
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: 'white',
+            border: '2px solid rgba(59, 130, 246, 0.5)',
+            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+            transition: 'all 0.3s ease',
+            position: 'relative'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.5)';
+            setShowTooltip(true);
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+            setShowTooltip(false);
+          }}
+        >
+          📊
+        </div>
+
+        {/* Enhanced Tooltip - Right Aligned */}
+        {showTooltip && (
+          <div style={{
+            position: 'absolute',
+            top: '120%',
+            right: 0,
+            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.95))',
+            color: 'white',
+            padding: 16,
+            borderRadius: 12,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            fontSize: 13,
+            lineHeight: 1.4,
+            minWidth: 280,
+            maxWidth: 350,
+            zIndex: 1000,
+            opacity: 1
+          }}>
+            {/* Header */}
+            <div style={{ 
+              fontSize: 16, 
+              fontWeight: 'bold', 
+              color: '#3b82f6',
+              marginBottom: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}>
+              📊 Oyun İstatistikleri
+            </div>
+
+            {/* Stats Grid */}
+            <div style={{ display: 'grid', gap: 10 }}>
+              {/* Gold Info */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                background: 'rgba(255, 215, 0, 0.1)',
+                borderRadius: 8,
+                border: '1px solid rgba(255, 215, 0, 0.2)'
+              }}>
+                <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>💰 Altın</span>
+                <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>{gold.toLocaleString()}</span>
+              </div>
+
+              {/* Tower Info */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                background: 'rgba(74, 222, 128, 0.1)',
+                borderRadius: 8,
+                border: '1px solid rgba(74, 222, 128, 0.2)'
+              }}>
+                <span style={{ color: '#4ade80' }}>🏰 Kuleler</span>
+                <span style={{ color: '#4ade80' }}>{towers.length}/{maxTowers}</span>
+              </div>
+
+              {/* Actions Info */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                background: 'rgba(251, 191, 36, 0.1)',
+                borderRadius: 8,
+                border: '1px solid rgba(251, 191, 36, 0.2)'
+              }}>
+                <span style={{ color: '#fbbf24' }}>⚡ Aksiyonlar</span>
+                <span style={{ color: '#fbbf24' }}>
+                  {actionsRemaining}/{maxActions}
+                  {actionRegenTime < 30000 && (
+                    <span style={{ fontSize: 11, opacity: 0.8 }}>
+                      {' '}(+1 {Math.ceil(actionRegenTime / 1000)}s)
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              {/* Energy Info */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                background: 'rgba(139, 92, 246, 0.1)',
+                borderRadius: 8,
+                border: '1px solid rgba(139, 92, 246, 0.2)'
+              }}>
+                <span style={{ color: '#8b5cf6' }}>🔋 Enerji</span>
+                <span style={{ color: '#8b5cf6' }}>{Math.round(energy)}/{maxEnergy}</span>
+              </div>
+
+              {/* Wave Info */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                borderRadius: 8,
+                border: '1px solid rgba(59, 130, 246, 0.2)'
+              }}>
+                <span style={{ color: '#3b82f6' }}>🌊 Wave</span>
+                <span style={{ color: '#3b82f6' }}>{currentWave}/100</span>
+              </div>
+            </div>
+
+            {/* Action Guide */}
+            <div style={{ 
+              marginTop: 12, 
+              padding: '8px 12px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 8,
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 'bold', color: '#e2e8f0', marginBottom: 6 }}>
+                💡 Hızlı Kılavuz:
+              </div>
+              <div style={{ fontSize: 11, color: '#cbd5e1', lineHeight: 1.3 }}>
+                • <strong>Sol tık:</strong> Kule inşa et<br/>
+                • <strong>Sağ tık:</strong> Kule yükselt<br/>
+                • <strong>ESC:</strong> Yükseltme menüsü<br/>
+                • <strong>Enerji:</strong> Her aksiyon enerji harcar
+              </div>
+            </div>
+          </div>
+                  )}
+        </div>
       </div>
-      <div style={{ position: 'absolute', top: 56, left: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
-        Energy: {energy} ({actionsRemaining} actions)
-      </div>
-      <div style={{ position: 'absolute', top: 88, left: 32, color: towers.length >= maxTowers ? '#ff5555' : '#ffffff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
-        🏰 Towers: {towers.length}/{maxTowers}
-      </div>
+
       {energyWarning && (
         <div style={{ position: 'absolute', top: 80, left: 32, color: '#ff5555', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
           {energyWarning}
@@ -388,41 +594,101 @@ export const GameBoard: React.FC = () => {
           {debugMessage}
         </div>
       )}
-      <div style={{ position: 'absolute', top: 24, right: 32, color: '#00cfff', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
-        Wave: {currentWave}/100
-      </div>
-      
-      {/* Wave Progress */}
+      {/* Enhanced Wave Progress Panel - Right Side */}
       <div style={{ 
         position: 'absolute', 
-        top: 80, 
+        top: 24, 
         right: 32, 
-        color: '#00cfff', 
-        font: 'bold 16px Arial', 
-        textShadow: GAME_CONSTANTS.UI_SHADOW, 
         zIndex: 2,
-        background: 'rgba(0,0,0,0.5)',
-        padding: '8px 12px',
-        borderRadius: '8px',
-        minWidth: '140px',
+        background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(20, 20, 30, 0.9))',
+        padding: '20px',
+        borderRadius: '16px',
+        border: '2px solid rgba(0, 207, 255, 0.6)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(10px)',
+        minWidth: '220px',
         textAlign: 'center'
       }}>
-        <div style={{ marginBottom: '4px' }}>
-          {enemiesKilled.toLocaleString()} / {enemiesRequired.toLocaleString()}
+        {/* Wave Title */}
+        <div style={{
+          color: '#00cfff',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          marginBottom: '12px',
+          textShadow: '0 0 10px rgba(0, 207, 255, 0.5)'
+        }}>
+          Wave {currentWave}/100
         </div>
+        
+        {/* Progress Text */}
+        <div style={{
+          color: '#ffffff',
+          fontSize: '14px',
+          marginBottom: '8px',
+          opacity: 0.9
+        }}>
+          Kalan Düşman: {Math.max(0, enemiesRequired - enemiesKilled).toLocaleString()}
+        </div>
+        
+        {/* Enhanced Progress Bar */}
         <div style={{
           width: '100%',
-          height: '6px',
-          background: '#333',
-          borderRadius: '3px',
-          overflow: 'hidden'
+          height: '12px',
+          background: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '6px',
+          overflow: 'hidden',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          position: 'relative'
         }}>
+          {/* Main Progress Bar */}
           <div style={{
             width: `${Math.min(100, (enemiesKilled / enemiesRequired) * 100)}%`,
             height: '100%',
-            background: '#00cfff',
-            transition: 'width 0.3s ease'
-          }} />
+            background: (() => {
+              const progress = (enemiesKilled / enemiesRequired) * 100;
+              if (progress < 25) return 'linear-gradient(90deg, #ef4444, #f87171)'; // Kırmızı - Az ilerleme
+              if (progress < 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24)'; // Turuncu - Orta ilerleme
+              if (progress < 75) return 'linear-gradient(90deg, #eab308, #facc15)'; // Sarı - İyi ilerleme
+              if (progress < 95) return 'linear-gradient(90deg, #22c55e, #4ade80)'; // Yeşil - Çok iyi
+              return 'linear-gradient(90deg, #06b6d4, #0891b2)'; // Mavi - Neredeyse tamamlandı
+            })(),
+            transition: 'all 0.4s ease',
+            position: 'relative',
+            boxShadow: (() => {
+              const progress = (enemiesKilled / enemiesRequired) * 100;
+              if (progress < 25) return '0 0 8px rgba(239, 68, 68, 0.6)';
+              if (progress < 50) return '0 0 8px rgba(245, 158, 11, 0.6)';
+              if (progress < 75) return '0 0 8px rgba(234, 179, 8, 0.6)';
+              if (progress < 95) return '0 0 8px rgba(34, 197, 94, 0.6)';
+              return '0 0 8px rgba(6, 182, 212, 0.6)';
+            })()
+          }}>
+          </div>
+          
+          {/* Progress Percentage Text */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            color: '#ffffff',
+            textShadow: '0 0 4px rgba(0, 0, 0, 0.8)',
+            pointerEvents: 'none'
+          }}>
+            {Math.round((enemiesKilled / enemiesRequired) * 100)}%
+          </div>
+        </div>
+        
+        {/* Kill Count */}
+        <div style={{
+          color: '#94a3b8',
+          fontSize: '12px',
+          marginTop: '8px',
+          opacity: 0.8
+        }}>
+          {enemiesKilled.toLocaleString()} / {enemiesRequired.toLocaleString()}
         </div>
       </div>
 
@@ -524,7 +790,7 @@ export const GameBoard: React.FC = () => {
               textAnchor="middle"
               fontWeight="bold"
             >
-              {towerSlots[dragState.draggedTowerSlotIdx]?.tower?.towerType === 'economy' ? '💰' : '🏰'}
+              {towerSlots[dragState.draggedTowerSlotIdx!]?.tower?.towerType === 'economy' ? '💰' : '🏰'}
             </text>
             {/* Instructions */}
             <text
@@ -539,7 +805,7 @@ export const GameBoard: React.FC = () => {
             </text>
             {/* Connection line to nearest valid slot */}
             {(() => {
-              let nearestSlot = null;
+              let nearestSlot: TowerSlot | null = null;
               let minDist = Infinity;
               const mouseX = dragState.mousePosition.x - dragState.dragOffset.x;
               const mouseY = dragState.mousePosition.y - dragState.dragOffset.y;
@@ -558,8 +824,8 @@ export const GameBoard: React.FC = () => {
                   <line
                     x1={mouseX}
                     y1={mouseY}
-                    x2={nearestSlot.x}
-                    y2={nearestSlot.y}
+                    x2={nearestSlot!.x}
+                    y2={nearestSlot!.y}
                     stroke="#00cfff"
                     strokeWidth={2}
                     strokeDasharray="4 2"

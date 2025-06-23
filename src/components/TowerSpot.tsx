@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
-import type { TowerSlot } from '../models/gameTypes';
+import type { TowerSlot, Enemy } from '../models/gameTypes';
 import { getNearestEnemy } from '../logic/TowerManager';
 
 interface TowerSpotProps {
@@ -51,7 +51,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
         hasEnoughEnergy: energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower
       });
     }
-  }, [slot.unlocked, slotIdx]);
+  }, [slot.unlocked, slotIdx, canUnlock, energy, gold, unlockCost]);
 
   // Check if we should show build text - only show on empty slots when there are less than 2 towers total
   const totalTowers = towerSlots.filter(s => s.tower).length;
@@ -62,9 +62,17 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
   // Get upgrade info for current tower
   const canUpgrade = slot.tower && slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL;
   const upgradeInfo = canUpgrade && slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level] : null;
-  const canAffordUpgrade = upgradeInfo &&
-    gold >= upgradeInfo.cost &&
-    energy >= GAME_CONSTANTS.ENERGY_COSTS.upgradeTower;
+  const energyCost = GAME_CONSTANTS.ENERGY_COSTS.upgradeTower;
+  const hasEnoughGold = upgradeInfo ? gold >= upgradeInfo.cost : false;
+  const hasEnoughEnergy = energy >= energyCost;
+  const canAffordUpgrade = upgradeInfo && hasEnoughGold && hasEnoughEnergy;
+  const upgradeMessage = upgradeInfo
+    ? canAffordUpgrade
+      ? `Yükselt (${upgradeInfo.cost}💰)`
+      : !hasEnoughGold
+        ? `Yetersiz Altın (${upgradeInfo.cost}💰)`
+        : `Yetersiz Enerji (${energyCost})`
+    : '';
   const currentTowerInfo = slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level - 1] : null;
 
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
@@ -73,7 +81,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
     const { enemy } = getNearestEnemy(slot.tower.position, enemies);
     const firing = performance.now() - slot.tower.lastFired < 100;
     return enemy ? {
-      enemy,
+      enemy: enemy as Enemy,
       firing,
     } : null;
   }, [slot.tower, enemies]);
@@ -1242,8 +1250,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
               <line
                 x1={slot.x}
                 y1={slot.y}
-                x2={debugInfo.enemy ? debugInfo.enemy.position.x : slot.x}
-                y2={debugInfo.enemy ? debugInfo.enemy.position.y : slot.y}
+                x2={debugInfo.enemy?.position ? debugInfo.enemy.position.x : slot.x}
+                y2={debugInfo.enemy?.position ? debugInfo.enemy.position.y : slot.y}
                 stroke="#ff0000"
                 strokeWidth={1}
               />
@@ -1287,10 +1295,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
               style={{ cursor: canAffordUpgrade ? 'pointer' : 'not-allowed' }}
               onClick={() => canAffordUpgrade && upgradeTower(slotIdx)}
             >
-              {canAffordUpgrade 
-                ? `Yükselt (${upgradeInfo.cost}💰)`
-                : `Yetersiz Altın (${upgradeInfo.cost}💰)`
-              }
+              {upgradeMessage}
             </text>
           )}
         </g>

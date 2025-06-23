@@ -2,7 +2,7 @@ export const economyConfig = {
   baseIncome: 50,
   extractorIncome: 25,
   extractorLevelMultiplier: 1.5,
-  waveIncomeBonus: (wave: number) => Math.floor(wave / 5) * 10,
+  waveIncomeBonus: (wave: number) => Math.min(100, Math.floor(wave / 5) * 10), // Max 100 bonus
   missionBonuses: [
     {
       wave: 5,

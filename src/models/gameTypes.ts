@@ -195,4 +195,45 @@ export interface GameState {
   lostTowerThisWave: boolean;
   /** Last game loop update timestamp for performance optimization */
   lastUpdate?: number;
+  
+  // Yeni Enerji Sistemi
+  energyUpgrades: Record<string, number>; // upgrade_id -> level
+  maxEnergy: number;
+  killCombo: number;
+  lastKillTime: number;
+  totalKills: number;
+  energyEfficiency: number; // Enerji harcama indirimi (0.0-1.0)
+  
+  // Gelişmiş Action Sistemi
+  maxActions: number;
+  actionRegenTime: number;
+  lastActionRegen: number;
+
+  // PowerMarket upgrade levels
+  energyBoostLevel: number;
+  maxActionsLevel: number;
+  eliteModuleLevel: number;
+  diceResult: number | null;
 }
+
+export interface PowerUpgrade {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  cost: number;
+  maxLevel: number;
+  effect: PowerUpgradeEffect;
+  icon: string;
+}
+
+export interface PowerUpgradeEffect {
+  type: 'passive_regen' | 'max_energy' | 'kill_bonus' | 'activity_bonus' | 'combo_master' | 'efficiency' | 
+        'action_capacity' | 'action_regen' | 'special_kill_action' | 'action_save_chance' | 
+        'combo_duration' | 'rampage_efficiency' | 'power_core' | 'infinite_loop' | 'quantum_regen';
+  value: number | { bonus: number; time: number };
+}
+
+// Backward compatibility
+export type EnergyUpgrade = PowerUpgrade;
+export type EnergyUpgradeEffect = PowerUpgradeEffect;

@@ -38,6 +38,18 @@ export const GAME_CONSTANTS = {
   BUILD_TILE_DISTANCE: 120,
   DISMANTLE_REFUND: 0.5,
   MAP_ACTIONS_PER_WAVE: 3,
+  
+  // Gelişmiş Action Sistemi
+  ACTION_SYSTEM: {
+    BASE_ACTIONS: 3,
+    // Her 10 wave'de +1 action (doğal ilerleme)
+    ACTIONS_PER_10_WAVES: 1,
+    // Maksimum action sayısı
+    MAX_ACTIONS: 15,
+    // Action regenerasyon sistemi
+    ACTION_REGEN_ENABLED: true,
+    ACTION_REGEN_TIME: 30000 as number, // 30 saniye başına 1 action
+  },
   MAP_ACTION_ENERGY: {
     wall: 20,
     trench: 15,
@@ -50,6 +62,192 @@ export const GAME_CONSTANTS = {
     upgradeTower: 30,
     relocateTower: 15,
     specialAbility: 40,
+  },
+  
+  // Yeni Enerji Sistemi
+  ENERGY_SYSTEM: {
+    // Pasif rejenerasyon (saniye başına)
+    PASSIVE_REGEN_BASE: 0.5,
+    // Düşman öldürme bazlı enerji
+    ENERGY_PER_KILL: 2,
+    ENERGY_PER_SPECIAL_KILL: 5, // Microbe gibi özel düşmanlar
+    // Aktivite bazlı bonuslar
+    ACTIVITY_BONUS_MULTIPLIER: 0.15, // Harcanan enerjinin %15'i geri kazanılır
+    // Maksimum enerji
+    MAX_ENERGY_BASE: 100,
+    // Combo sistemi
+    KILL_COMBO_THRESHOLD: 5, // 5 düşman öldürünce
+    KILL_COMBO_BONUS: 3, // +3 enerji bonus
+    COMBO_RESET_TIME: 10000, // 10 saniye combo süresi
+  },
+
+  // Kapsamlı Güç Sistemi Market
+  POWER_MARKET: {
+    // Enerji Kategorisi
+    ENERGY_UPGRADES: [
+      {
+        id: 'energy_tank_basic',
+        name: 'Temel Enerji Tankı',
+        description: 'Maksimum enerji +20',
+        category: 'energy_capacity',
+        cost: 200,
+        maxLevel: 15,
+        effect: { type: 'max_energy', value: 20 },
+        icon: '🔋',
+      },
+      {
+        id: 'energy_generator',
+        name: 'Enerji Jeneratörü',
+        description: 'Pasif enerji üretimi +0.3/sn',
+        category: 'energy_regen',
+        cost: 350,
+        maxLevel: 10,
+        effect: { type: 'passive_regen', value: 0.3 },
+        icon: '⚡',
+      },
+      {
+        id: 'energy_turbine',
+        name: 'Enerji Türbini',
+        description: 'Düşman öldürme bonusu +1.5',
+        category: 'energy_combat',
+        cost: 450,
+        maxLevel: 8,
+        effect: { type: 'kill_bonus', value: 1.5 },
+        icon: '🌪️',
+      },
+      {
+        id: 'energy_recycler',
+        name: 'Enerji Geri Dönüştürücü',
+        description: 'Harcanan enerjinin %8\'i geri kazanılır',
+        category: 'energy_efficiency',
+        cost: 600,
+        maxLevel: 5,
+        effect: { type: 'activity_bonus', value: 0.08 },
+        icon: '♻️',
+      },
+      {
+        id: 'energy_optimizer',
+        name: 'Enerji Optimize Edici',
+        description: 'Tüm enerji harcamaları %12 azalır',
+        category: 'energy_efficiency',
+        cost: 800,
+        maxLevel: 6,
+        effect: { type: 'efficiency', value: 0.12 },
+        icon: '🔧',
+      },
+    ],
+
+    // Aksiyon Kategorisi
+    ACTION_UPGRADES: [
+      {
+        id: 'action_core',
+        name: 'Aksiyon Çekirdeği',
+        description: 'Maksimum aksiyon +1',
+        category: 'action_capacity',
+        cost: 500,
+        maxLevel: 7,
+        effect: { type: 'action_capacity', value: 1 },
+        icon: '⚡',
+      },
+      {
+        id: 'action_accelerator',
+        name: 'Aksiyon Hızlandırıcı',
+        description: 'Aksiyon rejenerasyon süresini 4sn azaltır',
+        category: 'action_regen',
+        cost: 750,
+        maxLevel: 5,
+        effect: { type: 'action_regen', value: 4000 },
+        icon: '🚀',
+      },
+      {
+        id: 'action_amplifier',
+        name: 'Aksiyon Yükselticisi',
+        description: 'Özel düşman öldürünce +1 aksiyon kazanılır',
+        category: 'action_combat',
+        cost: 900,
+        maxLevel: 3,
+        effect: { type: 'special_kill_action', value: 1 },
+        icon: '📡',
+      },
+      {
+        id: 'action_multiplier',
+        name: 'Aksiyon Çoğaltıcı',
+        description: '%20 şansla aksiyon harcanmaz',
+        category: 'action_efficiency',
+        cost: 1200,
+        maxLevel: 4,
+        effect: { type: 'action_save_chance', value: 0.2 },
+        icon: '🎲',
+      },
+    ],
+
+    // Kombo Sistemleri
+    COMBO_UPGRADES: [
+      {
+        id: 'combo_master',
+        name: 'Kombo Ustası',
+        description: 'Kombo bonusu +2 enerji, süre +3sn',
+        category: 'combo_system',
+        cost: 700,
+        maxLevel: 4,
+        effect: { type: 'combo_master', value: { bonus: 2, time: 3000 } },
+        icon: '🔥',
+      },
+      {
+        id: 'streak_keeper',
+        name: 'Seri Koruyucusu',
+        description: 'Kombo süresini %25 uzatır',
+        category: 'combo_system',
+        cost: 850,
+        maxLevel: 3,
+        effect: { type: 'combo_duration', value: 0.25 },
+        icon: '⏰',
+      },
+      {
+        id: 'rampage_mode',
+        name: 'Saldırı Modu',
+        description: '10+ kombo ile enerji maliyetleri %30 azalır',
+        category: 'combo_system',
+        cost: 1100,
+        maxLevel: 2,
+        effect: { type: 'rampage_efficiency', value: 0.3 },
+        icon: '💀',
+      },
+    ],
+
+    // Elite Sistemler
+    ELITE_UPGRADES: [
+      {
+        id: 'power_core',
+        name: 'Güç Çekirdeği',
+        description: 'Enerji ve aksiyon kapasitesi +50%',
+        category: 'elite_power',
+        cost: 2500,
+        maxLevel: 2,
+        effect: { type: 'power_core', value: 0.5 },
+        icon: '💎',
+      },
+      {
+        id: 'infinite_loop',
+        name: 'Sonsuz Döngü',
+        description: '%5 şansla enerji ve aksiyon harcamaları geri gelir',
+        category: 'elite_efficiency',
+        cost: 3000,
+        maxLevel: 1,
+        effect: { type: 'infinite_loop', value: 0.05 },
+        icon: '∞',
+      },
+      {
+        id: 'quantum_processor',
+        name: 'Kuantum İşlemci',
+        description: 'Tüm rejenerasyon %100 hızlanır',
+        category: 'elite_regen',
+        cost: 3500,
+        maxLevel: 1,
+        effect: { type: 'quantum_regen', value: 1.0 },
+        icon: '🌌',
+      },
+    ],
   },
   PREP_TIME: 15000,
   PREP_WARNING_THRESHOLD: 5000,
@@ -383,70 +581,106 @@ export const GAME_CONSTANTS = {
     WALL_COLLISION_DAMAGE: [5, 10, 20, 35, 50, 75, 100, 150], // Her duvar seviyesi için
   },
 
-  // Avantajlı Paketler - Matematiksel hesaplama ile %15-25 indirim
+  // Avantajlı Paketler - Wave progression'a göre daha anlamlı paketler
   UPGRADE_PACKAGES: [
+    // Erken Wave Paketleri (Wave 1-20)
     {
       name: 'Başlangıç Paketi',
       bulletLevel: 1, // Ejderha Nefesi
       shieldIndex: 0, // Taş Kalkanı
       originalCost: 300 + 50, // 350
-      discountedCost: 300, // %14 indirim
+      discountedCost: 280, // %20 indirim
       description: 'Ejderha Nefesi + Taş Kalkanı',
       color: '#ff4400',
+      requiredWave: 1,
+      maxWave: 15,
     },
     {
       name: 'Güç Paketi',
       bulletLevel: 2, // Mamut Öfkesi
       shieldIndex: 2, // Demir Kalkanı
-      originalCost: 300 + 150, // 450
-      discountedCost: 380, // %16 indirim
+      originalCost: 600 + 150, // 750
+      discountedCost: 580, // %23 indirim
       description: 'Mamut Öfkesi + Demir Kalkanı',
       color: '#ffcc00',
+      requiredWave: 8,
+      maxWave: 25,
     },
+    
+    // Orta Wave Paketleri (Wave 15-50)
     {
       name: 'Savaş Paketi',
-      bulletLevel: 3, // Alevor
-      shieldIndex: 4, // Mithril Kalkanı
-      originalCost: 300 + 250, // 550
-      discountedCost: 450, // %18 indirim
-      description: 'Alevor + Mithril Kalkanı',
-      color: '#ff5500',
-    },
-    {
-      name: 'Efsanevi Paket',
       bulletLevel: 4, // Yakhar
-      shieldIndex: 6, // Kristal Kalkanı
-      originalCost: 300 + 350, // 650
-      discountedCost: 520, // %20 indirim
-      description: 'Yakhar + Kristal Kalkanı',
+      shieldIndex: 4, // Mithril Kalkanı
+      originalCost: 1200 + 250, // 1450
+      discountedCost: 1100, // %24 indirim
+      description: 'Yakhar + Mithril Kalkanı + Bonus Enerji',
       color: '#cc3300',
+      requiredWave: 15,
+      maxWave: 40,
+      bonusEnergy: 50,
     },
     {
-      name: 'Gölge Paketi',
+      name: 'Elite Savaşçı Paketi',
       bulletLevel: 5, // Ignorak
-      shieldIndex: 8, // Gölge Kalkanı
-      originalCost: 300 + 450, // 750
-      discountedCost: 580, // %23 indirim
-      description: 'Ignorak + Gölge Kalkanı',
+      shieldIndex: 6, // Kristal Kalkanı
+      originalCost: 1800 + 350, // 2150
+      discountedCost: 1600, // %26 indirim
+      description: 'Ignorak + Kristal Kalkanı + Enerji + Aksiyon',
       color: '#ff0066',
+      requiredWave: 25,
+      maxWave: 55,
+      bonusEnergy: 80,
+      bonusActions: 2,
     },
+    
+    // Geç Wave Paketleri (Wave 40-80)
     {
-      name: 'Volkan Paketi',
+      name: 'Usta Komutanı Paketi',
       bulletLevel: 6, // Volkanor
-      shieldIndex: 9, // Işık Kalkanı
-      originalCost: 300 + 500, // 800
-      discountedCost: 600, // %25 indirim
-      description: 'Volkanor + Işık Kalkanı',
+      shieldIndex: 8, // Gölge Kalkanı
+      originalCost: 2400 + 450, // 2850
+      discountedCost: 2050, // %28 indirim
+      description: 'Volkanor + Gölge Kalkanı + Tüm Bonuslar',
       color: '#ff6600',
+      requiredWave: 40,
+      maxWave: 75,
+      bonusEnergy: 120,
+      bonusActions: 3,
+      bonusGold: 500,
     },
     {
-      name: 'Ultimate Paket',
+      name: 'Efsane Komandan Paketi',
       bulletLevel: 7, // Pyrax
       shieldIndex: 9, // Işık Kalkanı
-      originalCost: 300 + 500, // 800
-      discountedCost: 650, // %19 indirim (en güçlü paket)
-      description: 'Pyrax + Işık Kalkanı',
+      originalCost: 3000 + 500, // 3500
+      discountedCost: 2450, // %30 indirim
+      description: 'Pyrax + Işık Kalkanı + Tüm Maksimum Bonuslar',
       color: '#ff3300',
+      requiredWave: 50,
+      maxWave: 85,
+      bonusEnergy: 180,
+      bonusActions: 5,
+      bonusGold: 800,
+      bonusTowers: 1,
+    },
+    
+    // End Game Paketleri (Wave 70+)
+    {
+      name: 'Tanrı Savaşçısı Paketi',
+      bulletLevel: 8, // Ultimate (Yeni)
+      shieldIndex: 9, // Işık Kalkanı
+      originalCost: 4500, // Yalnızca şekilsel 
+      discountedCost: 3000, // %33 indirim
+      description: 'Ultimate Power + Tüm Sistemler + Mega Bonuslar',
+      color: '#9933ff',
+      requiredWave: 70,
+      maxWave: 100,
+      bonusEnergy: 300,
+      bonusActions: 8,
+      bonusGold: 1500,
+      bonusTowers: 2,
+      specialEffect: 'quantum_boost', // Özel efekt
     },
   ],
 
@@ -464,4 +698,23 @@ export const GAME_CONSTANTS = {
   WAVE_DURATION: 30000,
   WAVE_ENEMY_INCREASE: 2,
   WAVE_ENEMY_HEALTH_INCREASE: 20,
+
+  // Economy constants
+  WAVE_GOLD_BONUS_CAP: 7,
+
+  // Energy Management - NEW ADDITION
+  ENERGY_BOOST_COST: 150,
+  MAX_ENERGY_BOOST_LEVEL: 10,
+  MAX_ACTIONS_COST: 200,
+  MAX_MAX_ACTIONS_LEVEL: 8,
+  ELITE_MODULE_COST: 500,
+  MAX_ELITE_MODULE_LEVEL: 5,
+  ELITE_COST_MULTIPLIER: 2.5,
+  COST_MULTIPLIER: 1.75,
+
+  // Bullet upgrade costs
+  BULLET_COST: 120,
+  BULLET_COST_MULTIPLIER: 1.8,
+
+  // Package System Weights (Wave-based availability)
 } as const; 

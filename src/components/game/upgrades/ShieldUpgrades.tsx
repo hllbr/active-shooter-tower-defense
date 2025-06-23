@@ -6,6 +6,7 @@ export const ShieldUpgrades: React.FC = () => {
   const gold = useGameStore((s) => s.gold);
   const globalWallStrength = useGameStore((s) => s.globalWallStrength);
   const purchaseShield = useGameStore((s) => s.purchaseShield);
+  const discountMultiplier = useGameStore((s) => s.discountMultiplier);
   
   const [prevWallStrength, setPrevWallStrength] = useState(globalWallStrength);
   const [showUpgradeAnimation, setShowUpgradeAnimation] = useState(false);
@@ -89,7 +90,17 @@ export const ShieldUpgrades: React.FC = () => {
         gap: 12
       }}>
         {GAME_CONSTANTS.WALL_SHIELDS.map((shield, i) => {
-          const isDisabled = gold < shield.cost;
+          // Zar sistemine göre dinamik fiyat hesaplama
+          let finalCost = shield.cost;
+          if (discountMultiplier === 0) {
+            // İndirimler iptal edildi - normal fiyat
+            finalCost = shield.cost;
+          } else if (discountMultiplier > 1) {
+            // Ek indirim uygulandı
+            finalCost = Math.max(25, Math.round(shield.cost * (2 - discountMultiplier)));
+          }
+          
+          const isDisabled = gold < finalCost;
           const shieldColor = isDisabled ? '#444' : '#aa00ff';
           const newShieldStrength = (globalWallStrength + shield.strength) * 10;
           
@@ -108,7 +119,11 @@ export const ShieldUpgrades: React.FC = () => {
               }}
               onClick={() => {
                 if (!isDisabled) {
-                  purchaseShield(i);
+                  // Önce özel fiyatla gold'u harca
+                  const state = useGameStore.getState();
+                  state.spendGold(finalCost);
+                  // Sonra upgrade'i ücretsiz gerçekleştir
+                  purchaseShield(i, true);
                 }
               }}
             >
@@ -125,7 +140,12 @@ export const ShieldUpgrades: React.FC = () => {
                   fontSize: 14,
                   color: isDisabled ? '#888' : GAME_CONSTANTS.GOLD_COLOR
                 }}>
-                  {shield.cost} 💰
+                  {finalCost} 💰
+                  {discountMultiplier !== 1 && (
+                    <div style={{ fontSize: 10, color: '#888', textDecoration: 'line-through' }}>
+                      {shield.cost}
+                    </div>
+                  )}
                 </span>
               </div>
               <div style={{

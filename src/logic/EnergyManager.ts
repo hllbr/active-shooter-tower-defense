@@ -42,6 +42,8 @@ class EnergyManager {
       return false;
     }
     this.energy -= amount;
+    // Float precision düzeltmesi
+    this.energy = Number((this.energy).toFixed(2));
     const log = { time: performance.now(), action, delta: -amount, remaining: this.energy };
     this.history.push(log);
     if (this.setState) this.setState(this.energy, null);
@@ -54,6 +56,8 @@ class EnergyManager {
 
   add(amount: number, action = 'regen') {
     this.energy += amount;
+    // Float precision düzeltmesi
+    this.energy = Number((this.energy).toFixed(2));
     const log = { time: performance.now(), action, delta: amount, remaining: this.energy };
     this.history.push(log);
     if (this.setState) this.setState(this.energy, null);

@@ -2,37 +2,42 @@ import React from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 
-export const FireUpgrades: React.FC = () => {
+export const PowerMarket: React.FC = () => {
   const { 
     gold, 
-    spendGold, 
-    bulletLevel, 
-    upgradeBullet, 
-    discountMultiplier, 
+    setGold, 
+    energyBoostLevel, 
+    setEnergyBoostLevel, 
+    maxActionsLevel, 
+    setMaxActionsLevel,
+    eliteModuleLevel,
+    setEliteModuleLevel,
+    discountMultiplier,
     diceResult 
   } = useGameStore();
 
   const createUpgrade = (
     name: string,
     description: string,
-    cost: number,
     currentLevel: number,
+    baseCost: number,
     maxLevel: number,
     onUpgrade: () => void,
     icon: string,
     color: string,
+    isElite = false,
     additionalInfo?: string
   ) => {
     const isMaxed = currentLevel >= maxLevel;
     
-    // Zar indirim sistemi
-    let finalCost = cost;
+    // Zar indirim sistemi - tüm yükseltmeler için geçerli
+    let finalCost = baseCost;
     if (diceResult && diceResult === 6) {
-      finalCost = Math.floor(cost * 0.5); // %50 indirim
+      finalCost = Math.floor(baseCost * 0.5); // %50 indirim
     } else if (diceResult && diceResult === 5) {
-      finalCost = Math.floor(cost * 0.7); // %30 indirim
+      finalCost = Math.floor(baseCost * 0.7); // %30 indirim
     } else if (diceResult && diceResult === 4) {
-      finalCost = Math.floor(cost * 0.85); // %15 indirim
+      finalCost = Math.floor(baseCost * 0.85); // %15 indirim
     }
     
     // Evrensel indirim çarpanı uygula
@@ -62,6 +67,25 @@ export const FireUpgrades: React.FC = () => {
         }}
         onClick={canAfford ? onUpgrade : undefined}
       >
+        {/* Elite Badge */}
+        {isElite && (
+          <div style={{
+            position: 'absolute',
+            top: -8,
+            right: -8,
+            background: 'linear-gradient(45deg, #ffd700, #ffed4a)',
+            color: '#000',
+            fontSize: 10,
+            fontWeight: 'bold',
+            padding: '4px 8px',
+            borderRadius: 12,
+            border: '2px solid #fff',
+            boxShadow: '0 4px 12px rgba(255, 215, 0, 0.5)',
+          }}>
+            ⭐ ELİTE
+          </div>
+        )}
+
         {/* Discount Badge */}
         {((diceResult && diceResult >= 4) || discountMultiplier > 1) && (
           <div style={{
@@ -145,13 +169,13 @@ export const FireUpgrades: React.FC = () => {
             flexDirection: 'column',
             gap: 4
           }}>
-            {cost !== finalCost && (
+            {baseCost !== finalCost && (
               <div style={{ 
                 fontSize: 12, 
                 color: '#999', 
                 textDecoration: 'line-through'
               }}>
-                {cost} 💰
+                {baseCost} 💰
               </div>
             )}
             <div style={{ 
@@ -176,7 +200,7 @@ export const FireUpgrades: React.FC = () => {
               border: `2px solid ${canAfford ? color : '#666'}`,
               textShadow: canAfford ? '0 1px 2px rgba(0,0,0,0.5)' : 'none',
             }}>
-              {canAfford ? '✅ Yükselt' : '❌ Yetersiz'}
+              {canAfford ? '✅ Satın Al' : '❌ Yetersiz'}
             </div>
           )}
         </div>
@@ -191,40 +215,86 @@ export const FireUpgrades: React.FC = () => {
       gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
       gap: 20
     }}>
-      {GAME_CONSTANTS.BULLET_TYPES.map((bulletType, index) => {
-        const level = index + 1;
-        const isUnlocked = bulletLevel >= level;
-        const isNext = bulletLevel === level - 1;
-        const cost = GAME_CONSTANTS.BULLET_COST * Math.pow(GAME_CONSTANTS.BULLET_COST_MULTIPLIER, index);
-        
-        return createUpgrade(
-          bulletType.name,
-          `${bulletType.name} mermi sistemi. Daha güçlü ve etkili saldırılar.`,
-          cost,
-          isUnlocked ? level : 0,
-          level,
-          () => {
-            if (isNext) {
-              const finalCost = cost;
-              let discountedCost = finalCost;
-              
-              if (diceResult && diceResult === 6) discountedCost = Math.floor(finalCost * 0.5);
-              else if (diceResult && diceResult === 5) discountedCost = Math.floor(finalCost * 0.7);
-              else if (diceResult && diceResult === 4) discountedCost = Math.floor(finalCost * 0.85);
-              
-              if (discountMultiplier !== 1) {
-                discountedCost = Math.floor(discountedCost / discountMultiplier);
-              }
-              
-              spendGold(discountedCost);
-              upgradeBullet(false);
-            }
-          },
-          '🔥',
-          isUnlocked ? '#4ade80' : isNext ? '#ef4444' : '#666',
-          `Hasar Çarpanı: x${bulletType.damageMultiplier} | Hız: x${bulletType.speedMultiplier || 1}`
-        );
-      })}
+      {createUpgrade(
+        'Enerji Kapasitesi',
+        'Maksimum enerji kapasitesini artırır. Daha fazla enerji = daha fazla tower yerleştirme imkanı.',
+        energyBoostLevel,
+        GAME_CONSTANTS.ENERGY_BOOST_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, energyBoostLevel),
+        GAME_CONSTANTS.MAX_ENERGY_BOOST_LEVEL,
+        () => {
+          const cost = GAME_CONSTANTS.ENERGY_BOOST_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, energyBoostLevel);
+          let finalCost = cost;
+          
+          if (diceResult && diceResult === 6) finalCost = Math.floor(cost * 0.5);
+          else if (diceResult && diceResult === 5) finalCost = Math.floor(cost * 0.7);
+          else if (diceResult && diceResult === 4) finalCost = Math.floor(cost * 0.85);
+          
+          if (discountMultiplier !== 1) {
+            finalCost = Math.floor(finalCost / discountMultiplier);
+          }
+          
+          setGold(gold - finalCost);
+          setEnergyBoostLevel(energyBoostLevel + 1);
+        },
+        '🔋',
+        '#3b82f6',
+        false,
+        'Her seviye +20 enerji kapasitesi sağlar'
+      )}
+
+      {createUpgrade(
+        'Aksiyon Kapasitesi',
+        'Maksimum aksiyon sayısını artırır. Daha fazla aksiyon = wave başında daha fazla hareket.',
+        maxActionsLevel,
+        GAME_CONSTANTS.MAX_ACTIONS_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, maxActionsLevel),
+        GAME_CONSTANTS.MAX_MAX_ACTIONS_LEVEL,
+        () => {
+          const cost = GAME_CONSTANTS.MAX_ACTIONS_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, maxActionsLevel);
+          let finalCost = cost;
+          
+          if (diceResult && diceResult === 6) finalCost = Math.floor(cost * 0.5);
+          else if (diceResult && diceResult === 5) finalCost = Math.floor(cost * 0.7);
+          else if (diceResult && diceResult === 4) finalCost = Math.floor(cost * 0.85);
+          
+          if (discountMultiplier !== 1) {
+            finalCost = Math.floor(finalCost / discountMultiplier);
+          }
+          
+          setGold(gold - finalCost);
+          setMaxActionsLevel(maxActionsLevel + 1);
+        },
+        '⚡',
+        '#eab308',
+        false,
+        'Her seviye +1 aksiyon kapasitesi sağlar'
+      )}
+
+      {createUpgrade(
+        'Elite Savaş Modülü',
+        'Gelişmiş savaş sistemleri ve bonus efektler açar. Elite seviye modülleri maksimum performans sağlar.',
+        eliteModuleLevel,
+        GAME_CONSTANTS.ELITE_MODULE_COST * Math.pow(GAME_CONSTANTS.ELITE_COST_MULTIPLIER, eliteModuleLevel),
+        GAME_CONSTANTS.MAX_ELITE_MODULE_LEVEL,
+        () => {
+          const cost = GAME_CONSTANTS.ELITE_MODULE_COST * Math.pow(GAME_CONSTANTS.ELITE_COST_MULTIPLIER, eliteModuleLevel);
+          let finalCost = cost;
+          
+          if (diceResult && diceResult === 6) finalCost = Math.floor(cost * 0.5);
+          else if (diceResult && diceResult === 5) finalCost = Math.floor(cost * 0.7);
+          else if (diceResult && diceResult === 4) finalCost = Math.floor(cost * 0.85);
+          
+          if (discountMultiplier !== 1) {
+            finalCost = Math.floor(finalCost / discountMultiplier);
+          }
+          
+          setGold(gold - finalCost);
+          setEliteModuleLevel(eliteModuleLevel + 1);
+        },
+        '🛡️',
+        '#dc2626',
+        true,
+        'Özel bonus efektler ve gelişmiş yetenekler açar'
+      )}
 
       <style>
         {`
