@@ -570,11 +570,21 @@ export const GameBoard: React.FC = () => {
         </div>
       </div>
 
-      {energyWarning && (
-        <div style={{ position: 'absolute', top: 80, left: 32, color: '#ff5555', font: GAME_CONSTANTS.UI_FONT, textShadow: GAME_CONSTANTS.UI_SHADOW, zIndex: 2 }}>
+      {energyWarning ? (
+        <div
+          style={{
+            position: 'absolute',
+            top: 80,
+            left: 32,
+            color: '#ff5555',
+            font: GAME_CONSTANTS.UI_FONT,
+            textShadow: GAME_CONSTANTS.UI_SHADOW,
+            zIndex: 2,
+          }}
+        >
           {energyWarning}
         </div>
-      )}
+      ) : null}
       {/* Debug message for tower relocation */}
       {debugMessage && (
         <div style={{ 
@@ -589,7 +599,7 @@ export const GameBoard: React.FC = () => {
           background: 'rgba(0,0,0,0.8)',
           padding: '12px 24px',
           borderRadius: '8px',
-          border: '2px solid #00cfff'
+          border: '2px solid #00cfff',
         }}>
           {debugMessage}
         </div>
