@@ -62,9 +62,17 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
   // Get upgrade info for current tower
   const canUpgrade = slot.tower && slot.tower.level < GAME_CONSTANTS.TOWER_MAX_LEVEL;
   const upgradeInfo = canUpgrade && slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level] : null;
-  const canAffordUpgrade = upgradeInfo &&
-    gold >= upgradeInfo.cost &&
-    energy >= GAME_CONSTANTS.ENERGY_COSTS.upgradeTower;
+  const energyCost = GAME_CONSTANTS.ENERGY_COSTS.upgradeTower;
+  const hasEnoughGold = upgradeInfo ? gold >= upgradeInfo.cost : false;
+  const hasEnoughEnergy = energy >= energyCost;
+  const canAffordUpgrade = upgradeInfo && hasEnoughGold && hasEnoughEnergy;
+  const upgradeMessage = upgradeInfo
+    ? canAffordUpgrade
+      ? `Yükselt (${upgradeInfo.cost}💰)`
+      : !hasEnoughGold
+        ? `Yetersiz Altın (${upgradeInfo.cost}💰)`
+        : `Yetersiz Enerji (${energyCost})`
+    : '';
   const currentTowerInfo = slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level - 1] : null;
 
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
@@ -1287,10 +1295,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({ slot, slotIdx, onTowerDrag
               style={{ cursor: canAffordUpgrade ? 'pointer' : 'not-allowed' }}
               onClick={() => canAffordUpgrade && upgradeTower(slotIdx)}
             >
-              {canAffordUpgrade 
-                ? `Yükselt (${upgradeInfo.cost}💰)`
-                : `Yetersiz Altın (${upgradeInfo.cost}💰)`
-              }
+              {upgradeMessage}
             </text>
           )}
         </g>
