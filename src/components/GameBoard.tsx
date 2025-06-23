@@ -566,8 +566,7 @@ export const GameBoard: React.FC = () => {
               </div>
             </div>
           </div>
-                  )}
-        </div>
+        )}
       </div>
 
       {energyWarning && (
