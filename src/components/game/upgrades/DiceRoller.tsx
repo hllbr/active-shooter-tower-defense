@@ -30,8 +30,9 @@ export const DiceRoller: React.FC = () => {
 
   return (
     <div style={{
-      width: '100%',
-      padding: 16,
+      maxWidth: 'calc(100% - 40px)',
+      margin: '0 auto',
+      padding: 14,
       borderRadius: 12,
       border: `2px solid ${diceUsed ? '#444' : GAME_CONSTANTS.GOLD_COLOR}`,
       background: diceUsed ? '#1a1a1a' : 'rgba(255, 215, 0, 0.1)',

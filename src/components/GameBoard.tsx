@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../models/store';
-import type { TowerSlot } from '../models/gameTypes';
+
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { TowerSpot } from './TowerSpot';
 import { stopEnemyWave, startContinuousSpawning, stopContinuousSpawning } from '../logic/EnemySpawner';
@@ -8,7 +8,7 @@ import { startGameLoop } from '../logic/GameLoop';
 import { waveManager } from '../logic/WaveManager';
 import { initUpgradeEffects } from '../logic/UpgradeEffects';
 import { UpgradeScreen } from './game/UpgradeScreen';
-import { playSound } from '../utils/sound';
+import { playSound, startBackgroundMusic, stopBackgroundMusic } from '../utils/sound';
 
 // Drag state for tower relocation
 interface DragState {
@@ -196,6 +196,8 @@ export const GameBoard: React.FC = () => {
     }
     if (!loopStopper.current) {
       loopStopper.current = startGameLoop();
+      // 🎵 Background müzik başlat
+      startBackgroundMusic();
     }
     // Sürekli düşman yaratma sistemini başlat
     startContinuousSpawning();
@@ -231,7 +233,11 @@ export const GameBoard: React.FC = () => {
     const onKey = (e: KeyboardEvent) => {
       if (!isPreparing) return;
       if (e.key === 'p' || e.key === 'P') {
-        isPaused ? resumePreparation() : pausePreparation();
+        if (isPaused) {
+          resumePreparation();
+        } else {
+          pausePreparation();
+        }
       }
       if (e.key === 'f' || e.key === 'F') {
         speedUpPreparation(GAME_CONSTANTS.PREP_TIME);
@@ -367,9 +373,54 @@ export const GameBoard: React.FC = () => {
   };
 
   const [showTooltip, setShowTooltip] = useState(false);
+  const [screenShake, setScreenShake] = useState(false);
+  
+  // Animation States
+  const unlockingSlots = useGameStore(s => s.unlockingSlots);
+  
+  // Screen shake effect when slot unlocks
+  useEffect(() => {
+    if (unlockingSlots.size > 0) {
+      setScreenShake(true);
+      const timer = setTimeout(() => setScreenShake(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [unlockingSlots]);
+
+  // Tab tuşu ile tooltip açma/kapama
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        e.preventDefault(); // Tab'ın normal davranışını engelle
+        setShowTooltip(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        setShowTooltip(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: GAME_CONSTANTS.CANVAS_BG, overflow: 'hidden' }}>
+    <div style={{ 
+      position: 'fixed', 
+      inset: 0, 
+      width: '100vw', 
+      height: '100vh', 
+      background: GAME_CONSTANTS.CANVAS_BG, 
+      overflow: 'hidden',
+      animation: screenShake ? 'screen-shake 0.6s ease-in-out' : 'none'
+    }}>
       <style>
         {`
           @keyframes spin {
@@ -401,11 +452,255 @@ export const GameBoard: React.FC = () => {
             0% { left: -50%; }
             100% { left: 100%; }
           }
+          
+          /* 🎬 SLOT UNLOCK ANIMATIONS */
+          @keyframes lock-shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
+          }
+          @keyframes lock-break {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+            100% { opacity: 0; transform: scale(1.3); }
+          }
+          @keyframes slot-crack {
+            0% { stroke-dasharray: 0, 100; opacity: 0; }
+            50% { stroke-dasharray: 50, 100; opacity: 1; }
+            100% { stroke-dasharray: 100, 100; opacity: 0.7; }
+          }
+          @keyframes golden-burst {
+            0% { 
+              opacity: 0; 
+              transform: scale(0.1); 
+              fill: #FFD700;
+            }
+            50% { 
+              opacity: 1; 
+              transform: scale(1.5); 
+              fill: #FFA500;
+            }
+            100% { 
+              opacity: 0; 
+              transform: scale(2); 
+              fill: #FF6B35;
+            }
+          }
+          @keyframes slot-reveal {
+            0% { 
+              transform: translateY(10px) scale(0.8);
+              opacity: 0;
+            }
+            100% { 
+              transform: translateY(0) scale(1);
+              opacity: 1;
+            }
+          }
+          
+          /* 🎆 AŞAMA 2: Parçacık & Dalga Efektleri */
+          @keyframes particle-burst-1 {
+            0% { 
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(-30px, -30px) scale(0.1);
+              opacity: 0;
+            }
+          }
+          @keyframes particle-burst-2 {
+            0% { 
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(30px, -30px) scale(0.1);
+              opacity: 0;
+            }
+          }
+          @keyframes particle-burst-3 {
+            0% { 
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(-30px, 30px) scale(0.1);
+              opacity: 0;
+            }
+          }
+          @keyframes particle-burst-4 {
+            0% { 
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(30px, 30px) scale(0.1);
+              opacity: 0;
+            }
+          }
+          @keyframes particle-burst-5 {
+            0% { 
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(0, -40px) scale(0.1);
+              opacity: 0;
+            }
+          }
+          @keyframes particle-burst-6 {
+            0% { 
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(40px, 0) scale(0.1);
+              opacity: 0;
+            }
+          }
+          @keyframes particle-burst-7 {
+            0% { 
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(0, 40px) scale(0.1);
+              opacity: 0;
+            }
+          }
+          @keyframes particle-burst-8 {
+            0% { 
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(-40px, 0) scale(0.1);
+              opacity: 0;
+            }
+          }
+          @keyframes radial-wave {
+            0% { 
+              r: 10;
+              stroke-width: 4;
+              opacity: 1;
+            }
+            50% { 
+              r: 50;
+              stroke-width: 2;
+              opacity: 0.6;
+            }
+            100% { 
+              r: 80;
+              stroke-width: 0;
+              opacity: 0;
+            }
+          }
+          @keyframes screen-shake {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-1px, -1px); }
+            20% { transform: translate(1px, -1px); }
+            30% { transform: translate(-1px, 1px); }
+            40% { transform: translate(1px, 1px); }
+            50% { transform: translate(-1px, -1px); }
+            60% { transform: translate(1px, -1px); }
+            70% { transform: translate(-1px, 1px); }
+            80% { transform: translate(1px, 1px); }
+            90% { transform: translate(-1px, -1px); }
+          }
+          
+          /* 🎊 AŞAMA 3: Slot Reveal & Celebration */
+          @keyframes slot-emerge {
+            0% { 
+              transform: translateY(15px) scale(0.7);
+              opacity: 0;
+              filter: blur(2px);
+            }
+            30% { 
+              transform: translateY(5px) scale(0.9);
+              opacity: 0.6;
+              filter: blur(1px);
+            }
+            100% { 
+              transform: translateY(0) scale(1);
+              opacity: 1;
+              filter: blur(0px);
+            }
+          }
+          @keyframes ground-crack {
+            0% { 
+              stroke-dasharray: 0, 200;
+              opacity: 0;
+            }
+            50% { 
+              stroke-dasharray: 100, 200;
+              opacity: 1;
+            }
+            100% { 
+              stroke-dasharray: 200, 200;
+              opacity: 0;
+            }
+          }
+          @keyframes slot-ready-glow {
+            0%, 100% { 
+              stroke-opacity: 0.3;
+              stroke-width: 2;
+            }
+            50% { 
+              stroke-opacity: 0.8;
+              stroke-width: 4;
+            }
+          }
+          @keyframes celebration-text {
+            0% { 
+              transform: translateY(0) scale(0.5);
+              opacity: 0;
+            }
+            20% { 
+              transform: translateY(-20px) scale(1.2);
+              opacity: 1;
+            }
+            80% { 
+              transform: translateY(-40px) scale(1);
+              opacity: 1;
+            }
+            100% { 
+              transform: translateY(-60px) scale(0.8);
+              opacity: 0;
+            }
+          }
+          @keyframes coin-animation {
+            0% { 
+              transform: rotate(0deg) translateY(0);
+              opacity: 1;
+            }
+            50% { 
+              transform: rotate(180deg) translateY(-30px);
+              opacity: 0.8;
+            }
+            100% { 
+              transform: rotate(360deg) translateY(-60px);
+              opacity: 0;
+            }
+          }
+          @keyframes achievement-badge {
+            0% { 
+              transform: scale(0) rotate(-45deg);
+              opacity: 0;
+            }
+            50% { 
+              transform: scale(1.3) rotate(0deg);
+              opacity: 1;
+            }
+            100% { 
+              transform: scale(1) rotate(0deg);
+              opacity: 0;
+            }
+          }
 
         `}
       </style>
       {/* UI */}
-      <div style={{ position: 'absolute', top: 24, right: 280, zIndex: 2, display: 'flex', alignItems: 'center' }}>
+      <div style={{ position: 'absolute', top: 24, left: 32, zIndex: 2, display: 'flex', alignItems: 'center' }}>
         {/* Enhanced Info Icon - Standalone */}
         <div
           style={{
@@ -439,12 +734,12 @@ export const GameBoard: React.FC = () => {
           📊
         </div>
 
-        {/* Enhanced Tooltip - Right Aligned */}
+        {/* Enhanced Tooltip - Left Aligned */}
         {showTooltip && (
           <div style={{
             position: 'absolute',
             top: '120%',
-            right: 0,
+            left: 0,
             background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.95))',
             color: 'white',
             padding: 16,
@@ -454,8 +749,8 @@ export const GameBoard: React.FC = () => {
             border: '1px solid rgba(255, 255, 255, 0.1)',
             fontSize: 13,
             lineHeight: 1.4,
-            minWidth: 280,
-            maxWidth: 350,
+            minWidth: 320,
+            maxWidth: 400,
             zIndex: 1000,
             opacity: 1
           }}>
@@ -472,48 +767,125 @@ export const GameBoard: React.FC = () => {
               📊 Oyun İstatistikleri
             </div>
 
+            {/* Wave Progress Section */}
+            <div style={{
+              background: 'rgba(0, 207, 255, 0.1)',
+              border: '1px solid rgba(0, 207, 255, 0.3)',
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 16
+            }}>
+              <div style={{
+                color: '#00cfff',
+                fontSize: 16,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                marginBottom: 8,
+                textShadow: '0 0 10px rgba(0, 207, 255, 0.5)'
+              }}>
+                🌊 Wave {currentWave}/100
+              </div>
+              
+              <div style={{
+                color: '#ffffff',
+                fontSize: 12,
+                textAlign: 'center',
+                marginBottom: 8,
+                opacity: 0.9
+              }}>
+                Kalan Düşman: {Math.max(0, enemiesRequired - enemiesKilled).toLocaleString()}
+              </div>
+              
+              {/* Progress Bar */}
+              <div style={{
+                width: '100%',
+                height: 10,
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 5,
+                overflow: 'hidden',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                position: 'relative',
+                marginBottom: 6
+              }}>
+                <div style={{
+                  width: `${Math.min(100, (enemiesKilled / enemiesRequired) * 100)}%`,
+                  height: '100%',
+                  background: (() => {
+                    const progress = (enemiesKilled / enemiesRequired) * 100;
+                    if (progress < 25) return 'linear-gradient(90deg, #ef4444, #f87171)';
+                    if (progress < 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+                    if (progress < 75) return 'linear-gradient(90deg, #eab308, #facc15)';
+                    if (progress < 95) return 'linear-gradient(90deg, #22c55e, #4ade80)';
+                    return 'linear-gradient(90deg, #06b6d4, #0891b2)';
+                  })(),
+                  transition: 'all 0.4s ease'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  fontSize: 9,
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  textShadow: '0 0 4px rgba(0, 0, 0, 0.8)'
+                }}>
+                  {Math.round((enemiesKilled / enemiesRequired) * 100)}%
+                </div>
+              </div>
+              
+              <div style={{
+                color: '#94a3b8',
+                fontSize: 11,
+                textAlign: 'center',
+                opacity: 0.8
+              }}>
+                {enemiesKilled.toLocaleString()} / {enemiesRequired.toLocaleString()}
+              </div>
+            </div>
+
             {/* Stats Grid */}
-            <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ display: 'grid', gap: 8 }}>
               {/* Gold Info */}
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'space-between',
-                padding: '8px 12px',
+                padding: '6px 10px',
                 background: 'rgba(255, 215, 0, 0.1)',
-                borderRadius: 8,
+                borderRadius: 6,
                 border: '1px solid rgba(255, 215, 0, 0.2)'
               }}>
-                <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>💰 Altın</span>
-                <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>{gold.toLocaleString()}</span>
+                <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>💰 Altın</span>
+                <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>{gold.toLocaleString()}</span>
               </div>
 
               {/* Tower Info */}
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'space-between',
-                padding: '8px 12px',
+                padding: '6px 10px',
                 background: 'rgba(74, 222, 128, 0.1)',
-                borderRadius: 8,
+                borderRadius: 6,
                 border: '1px solid rgba(74, 222, 128, 0.2)'
               }}>
-                <span style={{ color: '#4ade80' }}>🏰 Kuleler</span>
-                <span style={{ color: '#4ade80' }}>{towers.length}/{maxTowers}</span>
+                <span style={{ color: '#4ade80', fontSize: 12 }}>🏰 Kuleler</span>
+                <span style={{ color: '#4ade80', fontSize: 12 }}>{towers.length}/{maxTowers}</span>
               </div>
 
               {/* Actions Info */}
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'space-between',
-                padding: '8px 12px',
+                padding: '6px 10px',
                 background: 'rgba(251, 191, 36, 0.1)',
-                borderRadius: 8,
+                borderRadius: 6,
                 border: '1px solid rgba(251, 191, 36, 0.2)'
               }}>
-                <span style={{ color: '#fbbf24' }}>⚡ Aksiyonlar</span>
-                <span style={{ color: '#fbbf24' }}>
+                <span style={{ color: '#fbbf24', fontSize: 12 }}>⚡ Aksiyonlar</span>
+                <span style={{ color: '#fbbf24', fontSize: 12 }}>
                   {actionsRemaining}/{maxActions}
                   {actionRegenTime < 30000 && (
-                    <span style={{ fontSize: 11, opacity: 0.8 }}>
+                    <span style={{ fontSize: 10, opacity: 0.8 }}>
                       {' '}(+1 {Math.ceil(actionRegenTime / 1000)}s)
                     </span>
                   )}
@@ -524,41 +896,28 @@ export const GameBoard: React.FC = () => {
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'space-between',
-                padding: '8px 12px',
+                padding: '6px 10px',
                 background: 'rgba(139, 92, 246, 0.1)',
-                borderRadius: 8,
+                borderRadius: 6,
                 border: '1px solid rgba(139, 92, 246, 0.2)'
               }}>
-                <span style={{ color: '#8b5cf6' }}>🔋 Enerji</span>
-                <span style={{ color: '#8b5cf6' }}>{Math.round(energy)}/{maxEnergy}</span>
-              </div>
-
-              {/* Wave Info */}
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between',
-                padding: '8px 12px',
-                background: 'rgba(59, 130, 246, 0.1)',
-                borderRadius: 8,
-                border: '1px solid rgba(59, 130, 246, 0.2)'
-              }}>
-                <span style={{ color: '#3b82f6' }}>🌊 Wave</span>
-                <span style={{ color: '#3b82f6' }}>{currentWave}/100</span>
+                <span style={{ color: '#8b5cf6', fontSize: 12 }}>🔋 Enerji</span>
+                <span style={{ color: '#8b5cf6', fontSize: 12 }}>{Math.round(energy)}/{maxEnergy}</span>
               </div>
             </div>
 
             {/* Action Guide */}
             <div style={{ 
               marginTop: 12, 
-              padding: '8px 12px',
+              padding: '8px 10px',
               background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: 8,
+              borderRadius: 6,
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
-              <div style={{ fontSize: 12, fontWeight: 'bold', color: '#e2e8f0', marginBottom: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 'bold', color: '#e2e8f0', marginBottom: 4 }}>
                 💡 Hızlı Kılavuz:
               </div>
-              <div style={{ fontSize: 11, color: '#cbd5e1', lineHeight: 1.3 }}>
+              <div style={{ fontSize: 10, color: '#cbd5e1', lineHeight: 1.3 }}>
                 • <strong>Sol tık:</strong> Kule inşa et<br/>
                 • <strong>Sağ tık:</strong> Kule yükselt<br/>
                 • <strong>ESC:</strong> Yükseltme menüsü<br/>
@@ -593,103 +952,7 @@ export const GameBoard: React.FC = () => {
           {debugMessage}
         </div>
       )}
-      {/* Enhanced Wave Progress Panel - Right Side */}
-      <div style={{ 
-        position: 'absolute', 
-        top: 24, 
-        right: 32, 
-        zIndex: 2,
-        background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(20, 20, 30, 0.9))',
-        padding: '20px',
-        borderRadius: '16px',
-        border: '2px solid rgba(0, 207, 255, 0.6)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(10px)',
-        minWidth: '220px',
-        textAlign: 'center'
-      }}>
-        {/* Wave Title */}
-        <div style={{
-          color: '#00cfff',
-          fontSize: '18px',
-          fontWeight: 'bold',
-          marginBottom: '12px',
-          textShadow: '0 0 10px rgba(0, 207, 255, 0.5)'
-        }}>
-          Wave {currentWave}/100
-        </div>
-        
-        {/* Progress Text */}
-        <div style={{
-          color: '#ffffff',
-          fontSize: '14px',
-          marginBottom: '8px',
-          opacity: 0.9
-        }}>
-          Kalan Düşman: {Math.max(0, enemiesRequired - enemiesKilled).toLocaleString()}
-        </div>
-        
-        {/* Enhanced Progress Bar */}
-        <div style={{
-          width: '100%',
-          height: '12px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '6px',
-          overflow: 'hidden',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          position: 'relative'
-        }}>
-          {/* Main Progress Bar */}
-          <div style={{
-            width: `${Math.min(100, (enemiesKilled / enemiesRequired) * 100)}%`,
-            height: '100%',
-            background: (() => {
-              const progress = (enemiesKilled / enemiesRequired) * 100;
-              if (progress < 25) return 'linear-gradient(90deg, #ef4444, #f87171)'; // Kırmızı - Az ilerleme
-              if (progress < 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24)'; // Turuncu - Orta ilerleme
-              if (progress < 75) return 'linear-gradient(90deg, #eab308, #facc15)'; // Sarı - İyi ilerleme
-              if (progress < 95) return 'linear-gradient(90deg, #22c55e, #4ade80)'; // Yeşil - Çok iyi
-              return 'linear-gradient(90deg, #06b6d4, #0891b2)'; // Mavi - Neredeyse tamamlandı
-            })(),
-            transition: 'all 0.4s ease',
-            position: 'relative',
-            boxShadow: (() => {
-              const progress = (enemiesKilled / enemiesRequired) * 100;
-              if (progress < 25) return '0 0 8px rgba(239, 68, 68, 0.6)';
-              if (progress < 50) return '0 0 8px rgba(245, 158, 11, 0.6)';
-              if (progress < 75) return '0 0 8px rgba(234, 179, 8, 0.6)';
-              if (progress < 95) return '0 0 8px rgba(34, 197, 94, 0.6)';
-              return '0 0 8px rgba(6, 182, 212, 0.6)';
-            })()
-          }}>
-          </div>
-          
-          {/* Progress Percentage Text */}
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            fontSize: '10px',
-            fontWeight: 'bold',
-            color: '#ffffff',
-            textShadow: '0 0 4px rgba(0, 0, 0, 0.8)',
-            pointerEvents: 'none'
-          }}>
-            {Math.round((enemiesKilled / enemiesRequired) * 100)}%
-          </div>
-        </div>
-        
-        {/* Kill Count */}
-        <div style={{
-          color: '#94a3b8',
-          fontSize: '12px',
-          marginTop: '8px',
-          opacity: 0.8
-        }}>
-          {enemiesKilled.toLocaleString()} / {enemiesRequired.toLocaleString()}
-        </div>
-      </div>
+
 
       {isPreparing && (
         <div style={{
@@ -804,7 +1067,9 @@ export const GameBoard: React.FC = () => {
             </text>
             {/* Connection line to nearest valid slot */}
             {(() => {
-              let nearestSlot: TowerSlot | null = null;
+              let nearestSlotX = 0;
+              let nearestSlotY = 0;
+              let hasNearestSlot = false;
               let minDist = Infinity;
               const mouseX = dragState.mousePosition.x - dragState.dragOffset.x;
               const mouseY = dragState.mousePosition.y - dragState.dragOffset.y;
@@ -814,25 +1079,24 @@ export const GameBoard: React.FC = () => {
                 const dist = Math.sqrt((slot.x - mouseX) ** 2 + (slot.y - mouseY) ** 2);
                 if (dist < minDist && dist <= GAME_CONSTANTS.TOWER_SIZE * 2) {
                   minDist = dist;
-                  nearestSlot = slot;
+                  nearestSlotX = slot.x;
+                  nearestSlotY = slot.y;
+                  hasNearestSlot = true;
                 }
               });
               
-              if (nearestSlot) {
-                return (
-                  <line
-                    x1={mouseX}
-                    y1={mouseY}
-                    x2={nearestSlot!.x}
-                    y2={nearestSlot!.y}
-                    stroke="#00cfff"
-                    strokeWidth={2}
-                    strokeDasharray="4 2"
-                    opacity={0.6}
-                  />
-                );
-              }
-              return null;
+              return hasNearestSlot ? (
+                <line
+                  x1={mouseX}
+                  y1={mouseY}
+                  x2={nearestSlotX}
+                  y2={nearestSlotY}
+                  stroke="#00cfff"
+                  strokeWidth={2}
+                  strokeDasharray="4 2"
+                  opacity={0.6}
+                />
+              ) : null;
             })()}
           </g>
         )}
@@ -961,7 +1225,12 @@ export const GameBoard: React.FC = () => {
         ))}
       </svg>
       {/* Game Over Overlay */}
-      {isGameOver && (
+      {isGameOver && (() => {
+        // 🎵 Game over müzik
+        stopBackgroundMusic();
+        setTimeout(() => playSound('gameover'), 500);
+        return true;
+      })() && (
         <div
           style={{
             position: 'absolute',
@@ -1031,6 +1300,8 @@ export const GameBoard: React.FC = () => {
             )}
             <button
               onClick={() => {
+                // 🎵 Oyun reset edildiğinde müzik durdur
+                stopBackgroundMusic();
                 resetGame();
                 setStarted(false);
               }}

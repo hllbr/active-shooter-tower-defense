@@ -214,6 +214,10 @@ export interface GameState {
   maxActionsLevel: number;
   eliteModuleLevel: number;
   diceResult: number | null;
+  
+  // Slot Unlock Animation System
+  unlockingSlots: Set<number>; // Şu anda animasyonda olan slot'lar
+  recentlyUnlockedSlots: Set<number>; // Son 3 saniyede açılan slot'lar
 }
 
 export interface PowerUpgrade {

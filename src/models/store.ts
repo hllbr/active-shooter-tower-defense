@@ -6,6 +6,7 @@ import { waveRules } from '../config/waveRules';
 import { economyConfig, getExtractorIncome } from '../config/economy';
 import { energyManager } from '../logic/EnergyManager';
 import { waveManager } from '../logic/WaveManager';
+import { playSound } from '../utils/sound';
 
 const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   let position: Position;
@@ -98,6 +99,10 @@ const initialState: GameState = {
   maxActionsLevel: 0,
   eliteModuleLevel: 0,
   diceResult: null,
+  
+  // Slot Unlock Animation System
+  unlockingSlots: new Set<number>(), // Şu anda animasyonda olan slot'lar
+  recentlyUnlockedSlots: new Set<number>(), // Son 3 saniyede açılan slot'lar
 };
 
 type Store = GameState & {
@@ -174,6 +179,11 @@ type Store = GameState & {
   setEnergyBoostLevel: (level: number) => void;
   setMaxActionsLevel: (level: number) => void;
   setEliteModuleLevel: (level: number) => void;
+  
+  // Slot Unlock Animation Functions
+  startSlotUnlockAnimation: (slotIdx: number) => void;
+  finishSlotUnlockAnimation: (slotIdx: number) => void;
+  clearRecentlyUnlockedSlots: () => void;
 };
 
 export const useGameStore = create<Store>((set, get) => ({
@@ -302,6 +312,10 @@ export const useGameStore = create<Store>((set, get) => ({
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: upgradedTower };
     state.towerUpgradeListeners.forEach(fn => fn(upgradedTower, nextLevel - 1, nextLevel));
+    
+    // 🎵 Kule yükseltme sesi
+    playSound('levelupwav');
+    
     return {
       towers: state.towers.map(t => t.id === upgradedTower.id ? upgradedTower : t),
       towerSlots: newSlots,
@@ -430,43 +444,64 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  unlockSlot: (slotIdx) => set((state) => {
-    const slot = state.towerSlots[slotIdx];
-    console.log(`🔓 Trying to unlock slot ${slotIdx}:`, { 
-      unlocked: slot.unlocked, 
-      gold: state.gold, 
-      maxTowers: state.maxTowers 
-    });
+  unlockSlot: (slotIdx) => {
+    const { startSlotUnlockAnimation, finishSlotUnlockAnimation } = get();
     
-    if (slot.unlocked) {
-      console.log(`❌ Slot ${slotIdx} already unlocked`);
-      return {}; // Already unlocked
-    }
+    // Start unlock animation
+    startSlotUnlockAnimation(slotIdx);
     
-    const cost = GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] ?? 2400;
-    if (state.gold < cost) {
-      console.log(`❌ Not enough gold: need ${cost}, have ${state.gold}`);
-      return {}; // Not enough gold
-    }
+    // 🎵 AŞAMA 2: Ses efektleri
+    playSound('lock-break'); // Kilit kırılma sesi
+    setTimeout(() => playSound('golden-burst'), 500); // Altın patlama sesi
+    setTimeout(() => playSound('success'), 800); // Başarı melodisi
     
-    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower; // Same as building
-    if (!energyManager.consume(energyCost, 'unlockSlot')) {
-      console.log(`❌ Not enough energy: need ${energyCost}`);
-      return {};
-    }
-    
-    const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = { ...slot, unlocked: true };
-    
-    console.log(`✅ Slot ${slotIdx} unlocked! Cost: ${cost}💰, New tower limit: ${state.maxTowers + 1}`);
-    
-    return {
-      towerSlots: newSlots,
-      gold: state.gold - cost,
-      maxTowers: state.maxTowers + 1, // ← CRITICAL FIX: Increase tower limit!
-      totalGoldSpent: state.totalGoldSpent + cost,
-    };
-  }),
+    // Actual unlock after animation delay
+    setTimeout(() => {
+      set((state) => {
+        const slot = state.towerSlots[slotIdx];
+        console.log(`🔓 Trying to unlock slot ${slotIdx}:`, { 
+          unlocked: slot.unlocked, 
+          gold: state.gold, 
+          maxTowers: state.maxTowers 
+        });
+        
+        if (slot.unlocked) {
+          console.log(`❌ Slot ${slotIdx} already unlocked`);
+          finishSlotUnlockAnimation(slotIdx);
+          return {}; // Already unlocked
+        }
+        
+        const cost = GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] ?? 2400;
+        if (state.gold < cost) {
+          console.log(`❌ Not enough gold: need ${cost}, have ${state.gold}`);
+          finishSlotUnlockAnimation(slotIdx);
+          return {}; // Not enough gold
+        }
+        
+        const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower; // Same as building
+        if (!energyManager.consume(energyCost, 'unlockSlot')) {
+          console.log(`❌ Not enough energy: need ${energyCost}`);
+          finishSlotUnlockAnimation(slotIdx);
+          return {};
+        }
+        
+        const newSlots = [...state.towerSlots];
+        newSlots[slotIdx] = { ...slot, unlocked: true };
+        
+        console.log(`✅ Slot ${slotIdx} unlocked! Cost: ${cost}💰, New tower limit: ${state.maxTowers + 1}`);
+        
+        // AŞAMA 3: Celebration efektlerini bekle
+        setTimeout(() => finishSlotUnlockAnimation(slotIdx), 3500); // Golden Burst + Slot Reveal + Celebration
+        
+        return {
+          towerSlots: newSlots,
+          gold: state.gold - cost,
+          maxTowers: state.maxTowers + 1, // ← CRITICAL FIX: Increase tower limit!
+          totalGoldSpent: state.totalGoldSpent + cost,
+        };
+      });
+    }, 300); // Kilit kırılma animasyonu süresi
+  },
 
   addGold: (amount) => set((state) => ({ gold: state.gold + amount })),
   spendGold: (amount) => set((state) => ({
@@ -1206,6 +1241,35 @@ export const useGameStore = create<Store>((set, get) => ({
   setEnergyBoostLevel: (level) => set(() => ({ energyBoostLevel: level })),
   setMaxActionsLevel: (level) => set(() => ({ maxActionsLevel: level })),
   setEliteModuleLevel: (level) => set(() => ({ eliteModuleLevel: level })),
+  
+  // Slot Unlock Animation Functions
+  startSlotUnlockAnimation: (slotIdx) => set((state) => {
+    const newUnlockingSlots = new Set(state.unlockingSlots);
+    newUnlockingSlots.add(slotIdx);
+    return { unlockingSlots: newUnlockingSlots };
+  }),
+  
+  finishSlotUnlockAnimation: (slotIdx) => set((state) => {
+    const newUnlockingSlots = new Set(state.unlockingSlots);
+    const newRecentlyUnlocked = new Set(state.recentlyUnlockedSlots);
+    
+    newUnlockingSlots.delete(slotIdx);
+    newRecentlyUnlocked.add(slotIdx);
+    
+    // 3 saniye sonra recently unlocked'dan çıkar
+    setTimeout(() => {
+      get().clearRecentlyUnlockedSlots();
+    }, 3000);
+    
+    return { 
+      unlockingSlots: newUnlockingSlots,
+      recentlyUnlockedSlots: newRecentlyUnlocked 
+    };
+  }),
+  
+  clearRecentlyUnlockedSlots: () => set(() => ({
+    recentlyUnlockedSlots: new Set()
+  })),
 }));
 
 energyManager.init(initialState.energy, (e, w) => useGameStore.setState({ energy: e, energyWarning: w ?? null }));

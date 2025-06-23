@@ -49,28 +49,28 @@ export const UpgradeScreen: React.FC = () => {
     switch (activeTab) {
       case 'dice':
         return (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 30 }}>
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Enhanced Dice System */}
             <div style={{
               background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.1))',
-              borderRadius: 20,
-              padding: 30,
-              border: '4px solid #ef4444',
+              borderRadius: 16,
+              padding: 20,
+              border: '3px solid #ef4444',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: 28, fontWeight: 'bold', color: '#ef4444', marginBottom: 20 }}>
+              <div style={{ fontSize: 22, fontWeight: 'bold', color: '#ef4444', marginBottom: 16 }}>
                 🎲 Evrensel İndirim Sistemi
               </div>
               
               <DiceRoller />
               
               <div style={{ 
-                fontSize: 16, 
+                fontSize: 14, 
                 color: '#ccc', 
-                marginTop: 20,
-                lineHeight: 1.6,
-                maxWidth: 600,
-                margin: '20px auto 0'
+                marginTop: 16,
+                lineHeight: 1.5,
+                maxWidth: 550,
+                margin: '16px auto 0'
               }}>
                 Zar at ve <strong style={{ color: '#fbbf24' }}>TÜM yükseltmelerde</strong> büyük indirimler kazan!<br/>
                 İndirimler geçerli kategoriler: <span style={{ color: '#4ade80' }}>Temel Güçler</span>, 
@@ -81,17 +81,17 @@ export const UpgradeScreen: React.FC = () => {
 
             {/* Current Discount Status */}
             <div style={{
-              padding: 25,
-              borderRadius: 16,
-              border: `3px solid ${discountMultiplier === 0 ? '#ff4444' : discountMultiplier > 1 ? '#4ade80' : '#fbbf24'}`,
+              padding: 18,
+              borderRadius: 12,
+              border: `2px solid ${discountMultiplier === 0 ? '#ff4444' : discountMultiplier > 1 ? '#4ade80' : '#fbbf24'}`,
               background: `linear-gradient(135deg, ${discountMultiplier === 0 ? 'rgba(255, 68, 68, 0.2)' : discountMultiplier > 1 ? 'rgba(74, 222, 128, 0.2)' : 'rgba(251, 191, 36, 0.2)'}, rgba(0,0,0,0.1))`,
               textAlign: 'center'
             }}>
               <div style={{ 
-                fontSize: 20, 
+                fontSize: 16, 
                 fontWeight: 'bold', 
                 color: discountMultiplier === 0 ? '#ff4444' : discountMultiplier > 1 ? '#4ade80' : '#fbbf24',
-                marginBottom: 16
+                marginBottom: 12
               }}>
                 {discountMultiplier === 0 ? '❌ Tüm İndirimler İptal!' : 
                  discountMultiplier > 1 ? `🎉 SÜPER İNDİRİM: +${Math.round((discountMultiplier - 1) * 100)}%` : 
@@ -99,24 +99,24 @@ export const UpgradeScreen: React.FC = () => {
               </div>
               
               <div style={{ 
-                fontSize: 14,
+                fontSize: 13,
                 color: '#ddd',
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: 15,
-                marginTop: 20
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 10,
+                marginTop: 14
               }}>
-                <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8 }}>
-                  <div style={{ color: '#4ade80', fontWeight: 'bold' }}>🏪 Temel Güçler</div>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>Ateş + Kalkan + Savunma</div>
+                <div style={{ padding: 10, background: 'rgba(0,0,0,0.3)', borderRadius: 6 }}>
+                  <div style={{ color: '#4ade80', fontWeight: 'bold', fontSize: 12 }}>🏪 Temel Güçler</div>
+                  <div style={{ fontSize: 10, opacity: 0.8 }}>Ateş + Kalkan + Savunma</div>
                 </div>
-                <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8 }}>
-                  <div style={{ color: '#fbbf24', fontWeight: 'bold' }}>🎁 Kombo Paketler</div>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>Wave-özel kombolar</div>
+                <div style={{ padding: 10, background: 'rgba(0,0,0,0.3)', borderRadius: 6 }}>
+                  <div style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>🎁 Kombo Paketler</div>
+                  <div style={{ fontSize: 10, opacity: 0.8 }}>Wave-özel kombolar</div>
                 </div>
-                <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8 }}>
-                  <div style={{ color: '#8b5cf6', fontWeight: 'bold' }}>⚡ Elite Sistemler</div>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>Enerji + Aksiyon + Elite</div>
+                <div style={{ padding: 10, background: 'rgba(0,0,0,0.3)', borderRadius: 6 }}>
+                  <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontSize: 12 }}>⚡ Elite Sistemler</div>
+                  <div style={{ fontSize: 10, opacity: 0.8 }}>Enerji + Aksiyon + Elite</div>
                 </div>
               </div>
             </div>
@@ -159,14 +159,14 @@ export const UpgradeScreen: React.FC = () => {
         style={{
           background: 'linear-gradient(145deg, #1a1a2e, #16213e)',
           color: '#ffffff',
-          padding: 24,
-          borderRadius: 20,
-          width: '96%',
-          maxWidth: 1200,
-          maxHeight: '95vh',
+          padding: 16,
+          borderRadius: 16,
+          width: '90%',
+          maxWidth: 1000,
+          maxHeight: '88vh',
           display: 'flex',
           flexDirection: 'column',
-          gap: 16,
+          gap: 12,
           border: `3px solid ${GAME_CONSTANTS.GOLD_COLOR}`,
           boxShadow: '0 20px 60px rgba(0,0,0,0.9)',
         }}
@@ -176,9 +176,9 @@ export const UpgradeScreen: React.FC = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: 16,
+          padding: 12,
           background: 'rgba(255,215,0,0.08)',
-          borderRadius: 12,
+          borderRadius: 10,
           border: '2px solid rgba(255,215,0,0.3)'
         }}>
           <div style={{ 
@@ -187,7 +187,7 @@ export const UpgradeScreen: React.FC = () => {
           }}>
             <span style={{ 
               fontWeight: 'bold', 
-              fontSize: 30, 
+              fontSize: 22, 
               color: GAME_CONSTANTS.GOLD_COLOR,
               textShadow: '0 0 20px rgba(255,215,0,0.5)'
             }}>
@@ -199,20 +199,20 @@ export const UpgradeScreen: React.FC = () => {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            gap: 6,
             background: 'linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.1))',
-            padding: '12px 20px',
-            borderRadius: 12,
+            padding: '8px 16px',
+            borderRadius: 10,
             border: '2px solid rgba(255,215,0,0.4)',
             boxShadow: '0 4px 12px rgba(255,215,0,0.3)'
           }}>
-            <div style={{ fontSize: 24 }}>💰</div>
+            <div style={{ fontSize: 18 }}>💰</div>
             <div style={{
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: 'bold',
               color: GAME_CONSTANTS.GOLD_COLOR,
               textShadow: '0 0 10px rgba(255,215,0,0.5)',
-              minWidth: 80,
+              minWidth: 60,
               textAlign: 'right'
             }}>
               {gold.toLocaleString()}
@@ -223,29 +223,29 @@ export const UpgradeScreen: React.FC = () => {
         {/* Tab Navigation */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-          gap: 12
+          gridTemplateColumns: 'repeat(4, 1fr)', 
+          gap: 8
         }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                padding: tab.id === 'dice' ? '20px 24px' : '16px 20px',
-                borderRadius: 12,
-                border: `3px solid ${activeTab === tab.id ? tab.color : 'rgba(255,255,255,0.1)'}`,
+                padding: tab.id === 'dice' ? '14px 16px' : '12px 14px',
+                borderRadius: 10,
+                border: `2px solid ${activeTab === tab.id ? tab.color : 'rgba(255,255,255,0.1)'}`,
                 background: activeTab === tab.id 
                   ? `linear-gradient(135deg, ${tab.color}40, ${tab.color}20)` 
                   : 'rgba(0,0,0,0.3)',
                 color: activeTab === tab.id ? tab.color : '#ccc',
                 cursor: 'pointer',
-                fontSize: tab.id === 'dice' ? 16 : 14,
+                fontSize: tab.id === 'dice' ? 14 : 13,
                 fontWeight: 'bold',
                 transition: 'all 0.3s ease',
                 textAlign: 'center',
                 position: 'relative',
-                transform: activeTab === tab.id ? 'translateY(-2px)' : 'none',
-                boxShadow: activeTab === tab.id ? `0 8px 24px ${tab.color}40` : 'none',
+                transform: activeTab === tab.id ? 'translateY(-1px)' : 'none',
+                boxShadow: activeTab === tab.id ? `0 4px 16px ${tab.color}40` : 'none',
               }}
             >
               {/* Priority Badge */}
@@ -276,9 +276,9 @@ export const UpgradeScreen: React.FC = () => {
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '20px 24px',
+            padding: '16px 20px',
             background: 'rgba(0,0,0,0.15)',
-            borderRadius: 16,
+            borderRadius: 12,
             border: '2px solid rgba(255,255,255,0.1)',
           }}
         >
@@ -289,11 +289,11 @@ export const UpgradeScreen: React.FC = () => {
         <div style={{ 
           display: 'flex', 
           justifyContent: 'center', 
-          paddingTop: 16, 
+          paddingTop: 12, 
           borderTop: '2px solid rgba(255,215,0,0.3)',
           background: 'rgba(255,215,0,0.05)',
-          borderRadius: 12,
-          padding: 16
+          borderRadius: 10,
+          padding: 12
         }}>
           <button
             onClick={() => {
@@ -303,26 +303,26 @@ export const UpgradeScreen: React.FC = () => {
               resetDice();
             }}
             style={{
-              padding: '18px 40px',
-              fontSize: 24,
-              borderRadius: 16,
+              padding: '14px 32px',
+              fontSize: 18,
+              borderRadius: 12,
               background: 'linear-gradient(135deg, #4ade80, #22c55e)',
               color: '#000',
               border: 'none',
               cursor: 'pointer',
               fontWeight: 'bold',
-              boxShadow: '0 8px 24px rgba(74, 222, 128, 0.4)',
+              boxShadow: '0 6px 18px rgba(74, 222, 128, 0.4)',
               transition: 'all 0.3s ease',
-              minWidth: 200,
+              minWidth: 180,
               textShadow: '0 1px 2px rgba(0,0,0,0.3)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-3px)';
-              e.currentTarget.style.boxShadow = '0 12px 32px rgba(74, 222, 128, 0.6)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(74, 222, 128, 0.6)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(74, 222, 128, 0.4)';
+              e.currentTarget.style.boxShadow = '0 6px 18px rgba(74, 222, 128, 0.4)';
             }}
           >
             🚀 Savaşa Devam
