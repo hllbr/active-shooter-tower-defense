@@ -3,31 +3,105 @@ import { updateEnemyMovement } from './EnemySpawner';
 import { updateEffects } from './Effects';
 import { updateMineCollisions } from './MineManager';
 import { useGameStore } from '../models/store';
+import { stateTracker, performanceMonitor, GameStateSelectors } from './StateOptimizer';
+
+// Performance metrics for monitoring
+interface GameLoopMetrics {
+  totalFrames: number;
+  skippedUpdates: number;
+  lastFPS: number;
+  avgDelta: number;
+}
+
+let gameLoopMetrics: GameLoopMetrics = {
+  totalFrames: 0,
+  skippedUpdates: 0,
+  lastFPS: 0,
+  avgDelta: 16
+};
 
 export function startGameLoop() {
   let frameId = 0;
   let lastUpdateTime = performance.now();
+  const lastStateSnapshot = {
+    enemyCount: 0,
+    bulletCount: 0,
+    effectCount: 0,
+    lastSignificantChange: 0
+  };
 
   const loop = (currentTime: number) => {
     const deltaTime = currentTime - lastUpdateTime;
+    gameLoopMetrics.totalFrames++;
     
-    // Only update if enough time has passed (60 FPS cap)
-    if (deltaTime >= 16) {
+    // Dynamic FPS cap based on activity level
+    const state = useGameStore.getState();
+    const isHighActivity = state.enemies.length > 20 || state.bullets.length > 30;
+    const targetFrameTime = isHighActivity ? 16 : 20; // 60fps vs 50fps
+    
+    // Only update if enough time has passed
+    if (deltaTime >= targetFrameTime) {
+             // Store previous counts for change detection
+       const prevEnemyCount = lastStateSnapshot.enemyCount;
+       const prevBulletCount = lastStateSnapshot.bulletCount;
+      
+      // Run game logic updates
       updateEnemyMovement();
       updateTowerFire();
-      updateBullets(deltaTime); // Pass actual deltaTime for frame-rate independence
+      updateBullets(deltaTime);
       updateEffects();
       updateMineCollisions();
 
-      // Only force re-render if there are active game objects
-      const state = useGameStore.getState();
-      if (state.enemies.length > 0 || state.bullets.length > 0 || state.effects.length > 0) {
-        // Selective state update - only trigger re-render when needed
-        useGameStore.setState({ 
-          // Force re-render by updating a timestamp
-          lastUpdate: currentTime 
-        });
+      // Get current state after updates
+      const updatedState = useGameStore.getState();
+      const currentEnemyCount = updatedState.enemies.length;
+      const currentBulletCount = updatedState.bullets.length;
+      const currentEffectCount = updatedState.effects.length;
+      
+      // Enhanced change detection using StateOptimizer
+      const hasSignificantChange = stateTracker.hasSignificantChanges(updatedState);
+      const needsVisualUpdate = GameStateSelectors.needsVisualUpdate(updatedState);
+        
+      if (hasSignificantChange || needsVisualUpdate) {
+        // Batch the visual update to reduce setState calls
+        const now = performance.now();
+        const timeSinceLastUpdate = now - lastStateSnapshot.lastSignificantChange;
+        
+        // Dynamic throttling based on activity level
+        const activityLevel = GameStateSelectors.getActivityLevel(updatedState);
+        const throttleThreshold = activityLevel === 'high' ? 16 : 
+                                activityLevel === 'medium' ? 25 : 40;
+        
+        // Smart update decision
+        const shouldUpdate = timeSinceLastUpdate >= throttleThreshold || 
+                           Math.abs(currentEnemyCount - prevEnemyCount) > 5 ||
+                           Math.abs(currentBulletCount - prevBulletCount) > 10 ||
+                           updatedState.isGameOver !== stateTracker['lastValues']?.isGameOver;
+        
+        if (shouldUpdate) {
+          useGameStore.setState({ 
+            lastUpdate: now
+          });
+          
+          lastStateSnapshot.lastSignificantChange = now;
+          stateTracker.updateSnapshot(updatedState);
+          performanceMonitor.recordUpdate(false);
+        } else {
+          performanceMonitor.recordUpdate(true); // Skipped
+        }
+      } else {
+        gameLoopMetrics.skippedUpdates++;
+        performanceMonitor.recordUpdate(true);
       }
+      
+      // Update state snapshot
+      lastStateSnapshot.enemyCount = currentEnemyCount;
+      lastStateSnapshot.bulletCount = currentBulletCount;
+      lastStateSnapshot.effectCount = currentEffectCount;
+      
+      // Calculate performance metrics
+      gameLoopMetrics.avgDelta = (gameLoopMetrics.avgDelta * 0.9) + (deltaTime * 0.1);
+      gameLoopMetrics.lastFPS = Math.round(1000 / gameLoopMetrics.avgDelta);
       
       lastUpdateTime = currentTime;
     }
@@ -39,3 +113,31 @@ export function startGameLoop() {
 
   return () => cancelAnimationFrame(frameId);
 }
+
+// Performance monitoring utilities
+export const GameLoopPerformance = {
+  getMetrics: (): GameLoopMetrics => ({ ...gameLoopMetrics }),
+  
+  logPerformance: () => {
+    const efficiency = gameLoopMetrics.totalFrames > 0 ? 
+      ((gameLoopMetrics.skippedUpdates / gameLoopMetrics.totalFrames) * 100).toFixed(1) : '0';
+    
+    console.log(`🎮 GameLoop Performance:
+      FPS: ${gameLoopMetrics.lastFPS}
+      Total Frames: ${gameLoopMetrics.totalFrames}
+      Skipped Updates: ${gameLoopMetrics.skippedUpdates} (${efficiency}% saved)
+      Avg Delta: ${gameLoopMetrics.avgDelta.toFixed(1)}ms`);
+      
+    // Also log StateOptimizer metrics
+    performanceMonitor.logPerformance();
+  },
+  
+  resetMetrics: () => {
+    gameLoopMetrics = {
+      totalFrames: 0,
+      skippedUpdates: 0,
+      lastFPS: 0,
+      avgDelta: 16
+    };
+  }
+};
