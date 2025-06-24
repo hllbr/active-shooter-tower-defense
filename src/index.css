@@ -54,6 +54,9 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Import TowerSpot animations */
+@import url('./components/TowerSpot/styles/animations.css');
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

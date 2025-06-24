@@ -1,7 +1,7 @@
 import React from 'react';
-import { GAME_CONSTANTS } from '../utils/Constants';
-import type { TowerSpotProps } from './TowerSpot/types';
-import { useTowerSpotLogic } from './TowerSpot/hooks/useTowerSpotLogic';
+import { GAME_CONSTANTS } from '../../utils/Constants';
+import type { TowerSpotProps } from './types';
+import { useTowerSpotLogic } from './hooks/useTowerSpotLogic';
 import {
   TowerRenderer,
   WallRenderer,
@@ -11,7 +11,7 @@ import {
   TowerInfoPanel,
   SlotUnlockDisplay,
   DebugInfo
-} from './TowerSpot/components';
+} from './components';
 
 export const TowerSpot: React.FC<TowerSpotProps> = ({ 
   slot, 
@@ -25,7 +25,6 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
     menuPos,
     isUnlocking,
     isRecentlyUnlocked,
-    canBuild,
     canUnlock,
     unlockCost,
     canUpgrade,
@@ -52,67 +51,56 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
       {/* Slot or Tower */}
       {!slot.tower ? (
         <g>
-          {/* Enlarged drop zone for better targeting */}
-          {isDragTarget && (
-            <circle
-              cx={slot.x}
-              cy={slot.y}
-              r={GAME_CONSTANTS.TOWER_SIZE * 2}
-              fill="rgba(68, 222, 128, 0.2)"
-              stroke="#22c55e"
-              strokeWidth={2}
-              strokeDasharray="8 4"
-              style={{ animation: 'pulse 1s ease-in-out infinite' }}
-            />
-          )}
+          {/* Empty slot visualization */}
           {slot.unlocked ? (
-            // Unlocked slot content
             <>
-              <rect
-                x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2}
-                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
-                width={GAME_CONSTANTS.TOWER_SIZE}
-                height={GAME_CONSTANTS.TOWER_SIZE}
-                                                   fill={canBuild ? (slot.type === 'dynamic' ? GAME_CONSTANTS.BUILD_TILE_COLORS.dynamic : GAME_CONSTANTS.BUILD_TILE_COLORS.fixed) : '#444444'}
-                  stroke={canBuild ? (slot.type === 'dynamic' ? '#1e3a8a' : '#166534') : '#555555'}
+              {/* Basic slot circle */}
+              <circle
+                cx={slot.x}
+                cy={slot.y}
+                r={GAME_CONSTANTS.TOWER_SIZE / 2}
+                fill="rgba(100, 100, 100, 0.2)"
+                stroke="#888888"
                 strokeWidth={2}
-                rx={6}
-                                                   style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
-                  onClick={() => canBuild && handleBuildTower(slotIdx, 'attack')}
+                strokeDasharray="4 2"
               />
+              
+              {/* Build indicator */}
               {shouldShowBuildText && (
                 <text
                   x={slot.x}
-                  y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 35}
-                  fill="#ffffff"
-                  fontSize={14}
-                  fontWeight="bold"
+                  y={slot.y + 4}
                   textAnchor="middle"
-                  pointerEvents="none"
+                  fontSize={12}
+                  fill="#4ade80"
+                  fontWeight="bold"
                 >
-                  Kule inşa et
+                  İnşa Et
                 </text>
               )}
-              <polygon
-                points={`${slot.x},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 28} ${
-                  slot.x - 6
-                },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 18} ${
-                  slot.x + 6
-                },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 18}`}
-                fill="#ffffff"
-                pointerEvents="none"
-              />
+              
+              {/* Drag target highlight */}
+              {isDragTarget && (
+                <circle
+                  cx={slot.x}
+                  cy={slot.y}
+                  r={GAME_CONSTANTS.TOWER_SIZE / 2 + 5}
+                  fill="rgba(0, 255, 0, 0.3)"
+                  stroke="#00FF00"
+                  strokeWidth={3}
+                />
+              )}
             </>
-                      ) : (
-             <SlotUnlockDisplay
+          ) : (
+            <SlotUnlockDisplay
               slot={slot}
               slotIdx={slotIdx}
               unlockCost={unlockCost}
               canUnlock={canUnlock}
               isUnlocking={isUnlocking}
               isRecentlyUnlocked={isRecentlyUnlocked}
-                             onUnlock={handleUnlock}
-             />
+              onUnlock={handleUnlock}
+            />
           )}
         </g>
       ) : (
@@ -146,17 +134,17 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           <DebugInfo slot={slot} debugInfo={debugInfo} />
           
           {/* Tower info panel */}
-          <TowerInfoPanel
-            slot={slot}
-            slotIdx={slotIdx}
-            currentTowerInfo={currentTowerInfo}
-            towerBottomY={towerBottomY}
-            canUpgrade={canUpgrade}
-            upgradeInfo={upgradeInfo}
-            upgradeMessage={upgradeMessage}
-            canAffordUpgrade={canAffordUpgrade}
-            onUpgrade={handleUpgrade}
-          />
+                     <TowerInfoPanel
+             slot={slot}
+             slotIdx={slotIdx}
+             currentTowerInfo={currentTowerInfo}
+             towerBottomY={towerBottomY}
+             canUpgrade={canUpgrade}
+             upgradeInfo={upgradeInfo}
+             upgradeMessage={upgradeMessage}
+             canAffordUpgrade={canAffordUpgrade}
+             onUpgrade={handleUpgrade}
+           />
         </g>
       )}
       
