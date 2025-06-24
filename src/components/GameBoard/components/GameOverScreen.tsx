@@ -25,12 +25,22 @@ export const GameOverScreen: React.FC = () => {
   const animatedShield = useAnimatedCounter(shieldUpgradesPurchased, isGameOver);
   const animatedPackages = useAnimatedCounter(packagesPurchased, isGameOver);
 
+  // 🔧 FIXED: Memory leak prevention - proper cleanup and single execution
   useEffect(() => {
-    if (isGameOver) {
-      // Game over müzik
-      stopBackgroundMusic();
-      setTimeout(() => playSound('gameover'), 500);
-    }
+    if (!isGameOver) return;
+    
+    // Stop background music immediately
+    stopBackgroundMusic();
+    
+    // Schedule game over sound with cleanup
+    const timeoutId = setTimeout(() => {
+      playSound('gameover');
+    }, 500);
+    
+    // Cleanup timeout on unmount or when isGameOver changes
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [isGameOver]);
 
   if (!isGameOver) return null;
