@@ -3,6 +3,7 @@ import { GAME_CONSTANTS } from '../utils/Constants';
 import type { Position, Enemy } from '../models/gameTypes';
 import { waveCompositions } from '../config/waves';
 import { waveManager } from "./WaveManager";
+import { spawnStrategy, performanceTracker, dynamicSpawnController } from './DynamicSpawnSystem';
 
 let spawnInterval: number | null = null;
 let spawnQueue: string[] = [];
@@ -14,6 +15,8 @@ export function stopEnemyWave() {
     clearInterval(spawnInterval);
     spawnInterval = null;
   }
+  // Also stop dynamic spawning
+  dynamicSpawnController.stopWaveSpawning();
 }
 
 export function startContinuousSpawning() {
@@ -88,9 +91,19 @@ function getNearestSlot(pos: Position) {
   return nearest;
 }
 
+/**
+ * Enhanced enemy creation with dynamic spawning integration
+ */
 function createEnemy(wave: number, type: keyof typeof GAME_CONSTANTS.ENEMY_TYPES = 'Basic'): Enemy {
-  const { currentWaveModifier } = useGameStore.getState();
+  const { currentWaveModifier, enemies } = useGameStore.getState();
   const id = `${Date.now()}-${Math.random()}`;
+  
+  // Use dynamic spawn system for intelligent enemy type selection
+  const dynamicType = spawnStrategy.selectEnemyType(wave, enemies);
+  const finalType = type === 'Basic' ? dynamicType : type;
+  
+  // Check for boss spawn
+  const shouldBeBoss = spawnStrategy.shouldSpawnBoss(wave, enemies.length);
   
   // Special enemy spawn logic for waves 10+
   let isSpecial = false;
@@ -102,13 +115,13 @@ function createEnemy(wave: number, type: keyof typeof GAME_CONSTANTS.ENEMY_TYPES
     isSpecial = Math.random() < totalChance;
   }
   
-  if (isSpecial && type === 'Basic') {
+  if (isSpecial && finalType === 'Basic') {
     // Create special microbe enemy
     const healthScaling = Math.min(200, 40 + (wave - 10) * 3); // Cap health at 200
     const speedScaling = Math.min(120, 60 + (wave - 10) * 1.5); // Cap speed at 120
     const goldScaling = Math.min(20, 5 + Math.floor((wave - 10) / 10)); // Increase gold every 10 waves
     
-    return {
+    let enemy: Enemy = {
       id,
       position: getRandomSpawnPosition(),
       size: GAME_CONSTANTS.MICROBE_ENEMY.size,
@@ -125,10 +138,16 @@ function createEnemy(wave: number, type: keyof typeof GAME_CONSTANTS.ENEMY_TYPES
       behaviorTag: 'microbe',
       type: 'Microbe',
     } as Enemy;
+    
+    // Apply dynamic difficulty scaling
+    enemy = spawnStrategy.applyDifficultyScaling(enemy, wave);
+    return enemy;
+    
   } else {
-    const def = GAME_CONSTANTS.ENEMY_TYPES[type];
-    const health = def.hp + (type === 'Basic' ? (wave - 1) * GAME_CONSTANTS.ENEMY_HEALTH_INCREASE : 0);
-    return {
+    const def = GAME_CONSTANTS.ENEMY_TYPES[finalType];
+    const health = def.hp + (finalType === 'Basic' ? (wave - 1) * GAME_CONSTANTS.ENEMY_HEALTH_INCREASE : 0);
+    
+    let enemy: Enemy = {
       id,
       position: getRandomSpawnPosition(),
       size: GAME_CONSTANTS.ENEMY_SIZE,
@@ -142,11 +161,29 @@ function createEnemy(wave: number, type: keyof typeof GAME_CONSTANTS.ENEMY_TYPES
       isSpecial: false,
       damage: def.damage,
       behaviorTag: def.behaviorTag,
-      type,
+      type: finalType,
     } as Enemy;
+    
+    // Apply boss modifications if needed
+    if (shouldBeBoss) {
+      enemy.health = Math.floor(enemy.health * 2.5); // Boss health multiplier
+      enemy.maxHealth = enemy.health;
+      enemy.goldValue = Math.floor(enemy.goldValue * 3.0); // Boss gold multiplier
+      enemy.isSpecial = true;
+      enemy.size = enemy.size * 1.3; // Slightly larger boss
+      // Add boss visual indicator (darker color)
+      enemy.color = enemy.color.replace('#', '#2d'); // Make darker
+    }
+    
+    // Apply dynamic difficulty scaling
+    enemy = spawnStrategy.applyDifficultyScaling(enemy, wave);
+    return enemy;
   }
 }
 
+/**
+ * Enhanced wave spawning with dynamic system integration
+ */
 export function startEnemyWave(wave: number) {
   const { addEnemy, towers, towerSlots, buildTower, currentWaveModifier } = useGameStore.getState();
 
@@ -156,6 +193,9 @@ export function startEnemyWave(wave: number) {
       buildTower(firstEmptySlotIndex, true);
     }
   }
+
+  // Start dynamic spawning system
+  dynamicSpawnController.startWaveSpawning(wave);
 
   // Clear any existing interval. This is important when the upgrade screen
   // temporarily stops waves to ensure spawning resumes correctly.
@@ -176,18 +216,31 @@ export function startEnemyWave(wave: number) {
     for (let i = 0; i < count; i++) spawnQueue.push('Basic');
   }
 
-  spawnInterval = window.setInterval(() => {
+  // Use dynamic spawn rates instead of fixed rate
+  let spawnCount = 0;
+  const spawnNext = () => {
     if (spawnIndex >= spawnQueue.length) {
       stopEnemyWave();
       return;
     }
+    
     const type = spawnQueue[spawnIndex++] as keyof typeof GAME_CONSTANTS.ENEMY_TYPES;
     const enemy = createEnemy(wave, type);
     addEnemy(enemy);
+    
     if (currentWaveModifier?.bonusEnemies) {
       addEnemy(createEnemy(wave, type));
     }
-  }, GAME_CONSTANTS.ENEMY_SPAWN_RATE);
+    
+    spawnCount++;
+    
+    // Calculate next spawn delay dynamically
+    const nextDelay = spawnStrategy.calculateNextSpawnDelay(wave, spawnCount);
+    spawnInterval = window.setTimeout(spawnNext, nextDelay);
+  };
+
+  // Start the first spawn
+  spawnNext();
 }
 
 export function updateEnemyMovement() {
@@ -273,7 +326,15 @@ export function updateEnemyMovement() {
     enemy.position.x += moveX;
     enemy.position.y += moveY;
   });
-  const { currentWave, enemiesKilled, enemiesRequired } = useGameStore.getState();
+  
+  const { currentWave, enemiesKilled, enemiesRequired, towers } = useGameStore.getState();
   const pending = spawnInterval !== null && spawnIndex < spawnQueue.length;
+  
+  // Track performance for dynamic difficulty adjustment
+  if (!pending && enemies.length === 0) {
+    performanceTracker.trackPlayerPerformance(currentWave, performance.now(), towers.length);
+    dynamicSpawnController.onWaveComplete(currentWave, towers.length);
+  }
+  
   waveManager.checkComplete(currentWave, enemies.length, pending, enemiesKilled, enemiesRequired);
 }
