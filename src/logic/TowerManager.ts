@@ -4,6 +4,7 @@ import type { Effect } from '../models/gameTypes';
 import type { Enemy, Position, Tower } from '../models/gameTypes';
 import { playSound } from '../utils/sound';
 import { energyManager } from './EnergyManager';
+import { collisionManager } from './CollisionDetection';
 
 export function getDirection(from: Position, to: Position) {
   const dx = to.x - from.x;
@@ -106,6 +107,7 @@ function handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect
           direction: dir,
           color: '#FFD700',
           typeIndex: 0,
+          life: 3000,
         };
         useGameStore.getState().addBullet(bullet);
       });
@@ -330,56 +332,57 @@ export function updateTowerFire() {
   });
 }
 
-export function updateBullets() {
+export function updateBullets(deltaTime: number = 16) {
   const state = useGameStore.getState();
   const now = performance.now();
   
+  // Update bullet positions using actual deltaTime (frame-rate independent)
   state.bullets.forEach((bullet) => {
-    // Store previous position for interpolated collision
-    const prevPos = { x: bullet.position.x, y: bullet.position.y };
-    
-    // Move bullet
-    const deltaX = bullet.direction.x * bullet.speed * 0.016;
-    const deltaY = bullet.direction.y * bullet.speed * 0.016;
+    // Move bullet using actual deltaTime
+    const deltaX = bullet.direction.x * bullet.speed * (deltaTime / 1000);
+    const deltaY = bullet.direction.y * bullet.speed * (deltaTime / 1000);
     bullet.position.x += deltaX;
     bullet.position.y += deltaY;
-    bullet.life -= 16;
+    bullet.life -= deltaTime;
     
     if (bullet.life <= 0) {
       state.removeBullet(bullet.id);
-      return;
     }
-
-    // Check for collision with interpolation
-    let collisionDetected = false;
-    state.enemies.forEach((enemy) => {
-      if (collisionDetected) return; // Already hit something
-      if (enemy.frozenUntil && enemy.frozenUntil > now) return; // Skip frozen
-      
-      // Check collision along the bullet's path (interpolated)
-      const steps = Math.max(1, Math.ceil(Math.sqrt(deltaX * deltaX + deltaY * deltaY) / (bullet.size + enemy.size)));
-      for (let step = 0; step <= steps; step++) {
-        const t = step / steps;
-        const checkX = prevPos.x + deltaX * t;
-        const checkY = prevPos.y + deltaY * t;
-        
-        const dx = enemy.position.x - checkX;
-        const dy = enemy.position.y - checkY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
-        if (dist < (enemy.size + bullet.size) / 2) {
-          state.damageEnemy(enemy.id, bullet.damage);
-          state.removeBullet(bullet.id);
-          collisionDetected = true;
-
-          // Apply bullet effects
-          const bulletType = GAME_CONSTANTS.BULLET_TYPES[bullet.typeIndex];
-          if ('freezeDuration' in bulletType && bulletType.freezeDuration) {
-            enemy.frozenUntil = now + bulletType.freezeDuration;
-          }
-          break;
-        }
-      }
-    });
   });
+
+  // Process collisions using the new frame-rate independent system
+  collisionManager.processBulletCollisions(
+    state.bullets,
+    state.enemies,
+    deltaTime,
+    (bullet, enemy, collisionResult) => {
+      // Apply damage
+      state.damageEnemy(enemy.id, bullet.damage);
+      
+      // Remove bullet
+      state.removeBullet(bullet.id);
+      
+      // Apply bullet effects
+      const bulletType = GAME_CONSTANTS.BULLET_TYPES[bullet.typeIndex];
+      if ('freezeDuration' in bulletType && bulletType.freezeDuration) {
+        enemy.frozenUntil = now + bulletType.freezeDuration;
+      }
+      
+      // Optional: Add collision effect at the collision point
+      if (collisionResult.collisionPoint) {
+        state.addEffect({
+          id: `collision-${Date.now()}-${Math.random()}`,
+          position: collisionResult.collisionPoint,
+          radius: 15,
+          color: bullet.color,
+          life: 200,
+          maxLife: 200,
+        });
+      }
+      
+      if (GAME_CONSTANTS.DEBUG_MODE) {
+        console.log(`Bullet ${bullet.id} hit enemy ${enemy.id} at collision time: ${collisionResult.collisionTime?.toFixed(3)}`);
+      }
+    }
+  );
 }

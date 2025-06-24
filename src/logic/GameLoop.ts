@@ -15,7 +15,7 @@ export function startGameLoop() {
     if (deltaTime >= 16) {
       updateEnemyMovement();
       updateTowerFire();
-      updateBullets();
+      updateBullets(deltaTime); // Pass actual deltaTime for frame-rate independence
       updateEffects();
       updateMineCollisions();
 
