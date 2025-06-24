@@ -3,7 +3,7 @@ import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position
 import { GAME_CONSTANTS } from '../utils/Constants';
 import { updateWaveTiles } from '../logic/TowerPlacementManager';
 import { waveRules } from '../config/waveRules';
-import { economyConfig, getExtractorIncome } from '../config/economy';
+import { economyConfig, calculateTotalWaveIncome } from '../config/economy';
 import { energyManager } from '../logic/EnergyManager';
 import { waveManager } from '../logic/WaveManager';
 import { playSound } from '../utils/sound';
@@ -601,26 +601,31 @@ export const useGameStore = create<Store>((set, get) => ({
     set((state) => {
       const newWave = state.currentWave + 1;
 
-    const extractors = state.towers.filter(t => t.towerType === 'economy');
-    let income = economyConfig.baseIncome;
+    // Enhanced economy calculation using new system
+    const extractors = state.towers
+      .filter(t => t.towerType === 'economy')
+      .map(t => ({ level: t.level, hasInsurance: false })); // TODO: Add insurance system later
     
-    // Calculate income from extractors with level-based bonuses
-    extractors.forEach(extractor => {
-      income += getExtractorIncome(extractor.level, state.currentWave);
-    });
+    const waveCompletionTime = performance.now() - state.waveStartTime;
+    const tookDamage = state.lostTowerThisWave;
+    const consecutiveWaves = 0; // TODO: Track consecutive successful waves
     
-    // Add wave-based bonus
-    income += economyConfig.waveIncomeBonus(state.currentWave);
+    // Use new enhanced economy calculation
+    const economyStats = calculateTotalWaveIncome(
+      extractors,
+      state.currentWave,
+      state.towerSlots,
+      waveCompletionTime,
+      tookDamage,
+      consecutiveWaves
+    );
     
-    economyConfig.missionBonuses.forEach(mission => {
-      if (mission.wave === state.currentWave) {
-        if (mission.condition === 'noLoss' && !state.lostTowerThisWave) {
-          income += mission.bonus;
-        } else if (mission.condition === 'under60' && performance.now() - state.waveStartTime < 60000) {
-          income += mission.bonus;
-        }
-      }
-    });
+    let income = economyStats.totalIncome;
+    
+    // Backward compatibility - ensure we still have base income
+    if (income < economyConfig.baseIncome) {
+      income = economyConfig.baseIncome;
+    }
     
     // Check if player completed all 100 waves
     if (newWave > 100) {
@@ -1257,7 +1262,7 @@ export const useGameStore = create<Store>((set, get) => ({
     newRecentlyUnlocked.add(slotIdx);
     
     // 3 saniye sonra recently unlocked'dan çıkar
-    setTimeout(() => {
+    window.setTimeout(() => {
       get().clearRecentlyUnlockedSlots();
     }, 3000);
     
