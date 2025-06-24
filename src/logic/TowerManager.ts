@@ -1,10 +1,130 @@
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/Constants';
-import type { Effect } from '../models/gameTypes';
+import type { Effect, Bullet } from '../models/gameTypes';
 import type { Enemy, Position, Tower } from '../models/gameTypes';
 import { playSound } from '../utils/sound';
 import { energyManager } from './EnergyManager';
 import { collisionManager } from './CollisionDetection';
+import { cleanupManager } from './Effects';
+
+// =================== BULLET POOL SYSTEM ===================
+
+class BulletPool {
+  private pool: Bullet[] = [];
+  private active: Set<Bullet> = new Set();
+  private maxPoolSize: number = 200;
+  private created: number = 0;
+  private reused: number = 0;
+  
+  /**
+   * Get a bullet from the pool or create a new one
+   */
+  acquire(): Bullet {
+    let bullet = this.pool.pop();
+    
+    if (!bullet) {
+      bullet = {
+        id: `bullet_${Date.now()}_${Math.random()}`,
+        position: { x: 0, y: 0 },
+        size: GAME_CONSTANTS.BULLET_SIZE,
+        isActive: true,
+        speed: GAME_CONSTANTS.BULLET_SPEED,
+        damage: 0,
+        direction: { x: 0, y: 0 },
+        color: '#ffffff',
+        typeIndex: 0,
+        life: 3000
+      };
+      this.created++;
+    } else {
+      this.reused++;
+    }
+    
+    this.active.add(bullet);
+    return bullet;
+  }
+  
+  /**
+   * Return a bullet to the pool
+   */
+  release(bullet: Bullet): void {
+    if (!this.active.has(bullet)) {
+      console.warn('🚨 Attempting to release bullet not in active set');
+      return;
+    }
+    
+    this.active.delete(bullet);
+    
+    // Reset bullet properties
+    bullet.position = { x: 0, y: 0 };
+    bullet.direction = { x: 0, y: 0 };
+    bullet.isActive = false;
+    bullet.damage = 0;
+    bullet.speed = GAME_CONSTANTS.BULLET_SPEED;
+    bullet.life = 3000;
+    bullet.targetId = undefined;
+    
+    if (this.pool.length < this.maxPoolSize) {
+      this.pool.push(bullet);
+    }
+  }
+  
+  /**
+   * Create a configured bullet
+   */
+  createBullet(
+    position: Position,
+    direction: Position,
+    damage: number,
+    speed: number,
+    color: string,
+    typeIndex: number,
+    targetId?: string
+  ): Bullet {
+    const bullet = this.acquire();
+    bullet.id = `bullet_${Date.now()}_${Math.random()}`;
+    bullet.position = { ...position };
+    bullet.direction = { ...direction };
+    bullet.damage = damage;
+    bullet.speed = speed;
+    bullet.color = color;
+    bullet.typeIndex = typeIndex;
+    bullet.isActive = true;
+    bullet.life = 3000;
+    bullet.targetId = targetId;
+    return bullet;
+  }
+  
+  /**
+   * Clear all pooled bullets
+   */
+  clear(): void {
+    this.pool.length = 0;
+    this.active.clear();
+  }
+  
+  /**
+   * Get pool statistics
+   */
+  getStats(): {
+    poolSize: number;
+    activeCount: number;
+    created: number;
+    reused: number;
+    reuseRate: number;
+  } {
+    return {
+      poolSize: this.pool.length,
+      activeCount: this.active.size,
+      created: this.created,
+      reused: this.reused,
+      reuseRate: this.created > 0 ? (this.reused / (this.created + this.reused)) * 100 : 0
+    };
+  }
+}
+
+// Global bullet pool instance
+export const bulletPool = new BulletPool();
 
 // =================== ELITE TARGETING SYSTEM v2.0 ===================
 
@@ -454,24 +574,23 @@ function fireTower(
   enemy: Enemy,
   bulletType: { speedMultiplier: number; damageMultiplier: number; color: string },
 ) {
-  const bullet = {
-    id: `${Date.now()}-${Math.random()}`,
-    position: { x: tower.position.x, y: tower.position.y },
-    size: GAME_CONSTANTS.BULLET_SIZE,
-    isActive: true,
-    speed: GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier,
-    damage: tower.damage * bulletType.damageMultiplier,
-    direction: getDirection(tower.position, enemy.position),
-    color: bulletType.color,
-    typeIndex: useGameStore.getState().bulletLevel - 1,
-    targetId: enemy.id,
-    life: 3000,
-  };
+  // Use bullet pool for memory efficiency
+  const bullet = bulletPool.createBullet(
+    { x: tower.position.x, y: tower.position.y },
+    getDirection(tower.position, enemy.position),
+    tower.damage * bulletType.damageMultiplier,
+    GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier,
+    bulletType.color,
+    useGameStore.getState().bulletLevel - 1,
+    enemy.id
+  );
+  
   useGameStore.getState().addBullet(bullet);
   playSound(tower.attackSound);
   tower.lastFired = performance.now();
+  
   if (GAME_CONSTANTS.DEBUG_MODE) {
-    console.log(`Tower ${tower.id} fired at ${enemy.id}`);
+    console.log(`🔫 Tower ${tower.id} fired pooled bullet at ${enemy.id}`);
   }
 }
 
@@ -505,22 +624,18 @@ function handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect
     }
 
     case 'multi_shot': {
-      // Multi-shot: Shoot at multiple enemies
+      // Multi-shot: Shoot at multiple enemies using bullet pool
       const targets = enemiesInRange.slice(0, tower.multiShotCount);
       targets.forEach(enemy => {
-        const dir = getDirection(tower.position, enemy.position);
-        const bullet = {
-          id: `${Date.now()}-${Math.random()}`,
-          position: { x: tower.position.x, y: tower.position.y },
-          size: GAME_CONSTANTS.BULLET_SIZE,
-          isActive: true,
-          speed: GAME_CONSTANTS.BULLET_SPEED,
-          damage: tower.damage,
-          direction: dir,
-          color: '#FFD700',
-          typeIndex: 0,
-          life: 3000,
-        };
+        const bullet = bulletPool.createBullet(
+          { x: tower.position.x, y: tower.position.y },
+          getDirection(tower.position, enemy.position),
+          tower.damage,
+          GAME_CONSTANTS.BULLET_SPEED,
+          '#FFD700',
+          0,
+          enemy.id
+        );
         useGameStore.getState().addBullet(bullet);
       });
       break;
@@ -793,6 +908,7 @@ export function updateTowerFire() {
 export function updateBullets(deltaTime: number = 16) {
   const state = useGameStore.getState();
   const now = performance.now();
+  const expiredBullets: string[] = [];
   
   // Update bullet positions using actual deltaTime (frame-rate independent)
   state.bullets.forEach((bullet) => {
@@ -804,7 +920,21 @@ export function updateBullets(deltaTime: number = 16) {
     bullet.life -= deltaTime;
     
     if (bullet.life <= 0) {
-      state.removeBullet(bullet.id);
+      expiredBullets.push(bullet.id);
+    }
+  });
+  
+  // Batch remove expired bullets and return them to pool
+  expiredBullets.forEach(bulletId => {
+    const bullet = state.bullets.find(b => b.id === bulletId);
+    if (bullet) {
+      state.removeBullet(bulletId);
+      // Return to pool for reuse
+      try {
+        bulletPool.release(bullet);
+      } catch (error) {
+        console.warn('🚨 Error releasing bullet to pool:', error);
+      }
     }
   });
 
@@ -817,8 +947,13 @@ export function updateBullets(deltaTime: number = 16) {
       // Apply damage
       state.damageEnemy(enemy.id, bullet.damage);
       
-      // Remove bullet
+      // Remove bullet and return to pool
       state.removeBullet(bullet.id);
+      try {
+        bulletPool.release(bullet);
+      } catch (error) {
+        console.warn('🚨 Error releasing bullet to pool after collision:', error);
+      }
       
       // Apply bullet effects
       const bulletType = GAME_CONSTANTS.BULLET_TYPES[bullet.typeIndex];

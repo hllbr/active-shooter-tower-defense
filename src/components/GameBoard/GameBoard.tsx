@@ -8,6 +8,8 @@ import { waveManager } from '../../logic/WaveManager';
 import { initUpgradeEffects } from '../../logic/UpgradeEffects';
 import { UpgradeScreen } from '../game/UpgradeScreen';
 import { playSound, startBackgroundMusic } from '../../utils/sound';
+import { performMemoryCleanup } from '../../logic/Effects';
+import { bulletPool } from '../../logic/TowerManager';
 
 // Import modular components
 import {
@@ -42,8 +44,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     tickPreparation,
     tickEnergyRegen,
     tickActionRegen,
-    unlockingSlots,
-    mines
+    unlockingSlots
   } = useGameStore();
 
   // Enhanced drag & drop system
@@ -126,7 +127,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     if (!isPreparing) warningPlayed.current = false;
   }, [isPreparing, startWave, prepRemaining]);
 
-  // Enerji rejenerasyonu timer'ı - 5 saniye intervals
+  // Enerji rejenerasyonu timer'ı - 5 saniye intervals (memory managed)
   React.useEffect(() => {
     if (!isStarted || isPaused) return;
     
@@ -137,7 +138,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     return () => clearInterval(energyTimer);
   }, [isStarted, isPaused, tickEnergyRegen]);
 
-  // Action rejenerasyonu timer'ı
+  // Action rejenerasyonu timer'ı (memory managed)
   React.useEffect(() => {
     if (!isStarted || isPaused) return;
     
@@ -158,6 +159,23 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
      window.addEventListener('screenShake', onScreenShake);
      return () => window.removeEventListener('screenShake', onScreenShake);
    }, []);
+
+  // Global memory cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      // Comprehensive cleanup when component unmounts
+      performMemoryCleanup();
+      bulletPool.clear();
+      
+      if (GAME_CONSTANTS.DEBUG_MODE) {
+        console.log('🧹 GameBoard: Global memory cleanup completed');
+        
+        // Log pool statistics
+        const bulletStats = bulletPool.getStats();
+        console.log(`📊 Bullet Pool Stats: Created: ${bulletStats.created}, Reused: ${bulletStats.reused}, Reuse Rate: ${bulletStats.reuseRate.toFixed(1)}%`);
+      }
+    };
+  }, []);
 
   // SVG viewport size
   const width = window.innerWidth;

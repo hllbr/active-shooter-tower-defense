@@ -107,6 +107,11 @@ export interface Effect {
   color: string;
   life: number;
   maxLife: number;
+  // Enhanced properties for memory management
+  type?: string;
+  opacity?: number;
+  scale?: number;
+  createdAt?: number;
 }
 
 export interface Mine {
