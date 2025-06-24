@@ -1,15 +1,113 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 
+// ⚠️ FIXED: SVG Animation Memory Leak Prevention
+// Enhanced effects renderer with proper animation lifecycle management
 export const SVGEffectsRenderer: React.FC = () => {
   const { enemies, bullets, effects, mines } = useGameStore();
+  const animationElementsRef = useRef<Set<Element>>(new Set());
+  const componentMountedRef = useRef(true);
+
+  // Track animation elements for cleanup
+  const trackAnimationElement = (element: Element) => {
+    if (componentMountedRef.current) {
+      animationElementsRef.current.add(element);
+    }
+  };
+
+  // Cleanup animations on unmount
+  useEffect(() => {
+    componentMountedRef.current = true;
+    
+    return () => {
+      componentMountedRef.current = false;
+      
+      // Stop all CSS animations on tracked elements
+      animationElementsRef.current.forEach(element => {
+        if (element && (element as HTMLElement).style) {
+          const htmlElement = element as HTMLElement;
+          htmlElement.style.animation = 'none';
+          htmlElement.style.animationPlayState = 'paused';
+        }
+      });
+      
+      // Clear the tracking set
+      animationElementsRef.current.clear();
+      
+      if (GAME_CONSTANTS.DEBUG_MODE) {
+        console.log('🎨 SVGEffectsRenderer: Animation cleanup completed');
+      }
+    };
+  }, []);
+
+  // Enhanced pulse animation component with cleanup
+  const AnimatedPulseCircle: React.FC<{
+    cx: number;
+    cy: number;
+    r: number;
+    fill: string;
+    stroke: string;
+    strokeWidth: number;
+    opacity?: number;
+  }> = ({ cx, cy, r, fill, stroke, strokeWidth, opacity = 0.6 }) => {
+    const elementRef = useRef<SVGCircleElement>(null);
+    
+    useEffect(() => {
+      if (elementRef.current && componentMountedRef.current) {
+        trackAnimationElement(elementRef.current);
+      }
+    }, []);
+    
+    return (
+      <circle
+        ref={elementRef}
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        opacity={opacity}
+        style={{
+          animation: componentMountedRef.current ? 'pulse 1.5s ease-in-out infinite alternate' : 'none'
+        }}
+      />
+    );
+  };
+
+  // Enhanced mine light with cleanup
+  const AnimatedMineLight: React.FC<{
+    size: number;
+  }> = ({ size }) => {
+    const elementRef = useRef<SVGCircleElement>(null);
+    
+    useEffect(() => {
+      if (elementRef.current && componentMountedRef.current) {
+        trackAnimationElement(elementRef.current);
+      }
+    }, []);
+    
+    return (
+      <circle
+        ref={elementRef}
+        cx="0"
+        cy="0"
+        r={size * 0.3}
+        fill={GAME_CONSTANTS.MINE_VISUALS.lightColor}
+        style={{
+          animation: componentMountedRef.current ? 'mine-light-pulse 2s ease-in-out infinite' : 'none'
+        }}
+      />
+    );
+  };
 
   return (
     <>
       {/* Enemies */}
       {enemies.map((enemy) => (
         <g key={enemy.id}>
+          {/* Health bar */}
           <rect
             x={enemy.position.x - enemy.size / 2}
             y={enemy.position.y - enemy.size / 2 - 10}
@@ -27,9 +125,9 @@ export const SVGEffectsRenderer: React.FC = () => {
             rx={3}
           />
           {enemy.isSpecial ? (
-            // Special microbe enemy with pulsing effect
+            // Special microbe enemy with managed pulsing effect
             <>
-              <circle
+              <AnimatedPulseCircle
                 cx={enemy.position.x}
                 cy={enemy.position.y}
                 r={enemy.size / 2 + 4}
@@ -37,9 +135,6 @@ export const SVGEffectsRenderer: React.FC = () => {
                 stroke={GAME_CONSTANTS.MICROBE_ENEMY.pulseColor}
                 strokeWidth={2}
                 opacity={0.6}
-                style={{
-                  animation: 'pulse 1.5s ease-in-out infinite alternate'
-                }}
               />
               <circle
                 cx={enemy.position.x}
@@ -101,7 +196,7 @@ export const SVGEffectsRenderer: React.FC = () => {
         />
       ))}
 
-      {/* Mines */}
+      {/* Mines with managed animations */}
       {mines.map((mine) => (
         <g key={mine.id} transform={`translate(${mine.position.x}, ${mine.position.y})`} style={{ pointerEvents: 'none' }}>
           {/* The horns of the mine */}
@@ -123,14 +218,8 @@ export const SVGEffectsRenderer: React.FC = () => {
             stroke={GAME_CONSTANTS.MINE_VISUALS.borderColor}
             strokeWidth={3}
           />
-          {/* The pulsing light */}
-          <circle
-            cx="0"
-            cy="0"
-            r={mine.size * 0.3}
-            fill={GAME_CONSTANTS.MINE_VISUALS.lightColor}
-            style={{ animation: 'mine-light-pulse 2s ease-in-out infinite' }}
-          />
+          {/* The managed pulsing light */}
+          <AnimatedMineLight size={mine.size} />
         </g>
       ))}
     </>

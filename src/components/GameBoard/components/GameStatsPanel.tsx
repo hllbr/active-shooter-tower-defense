@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useGameStore } from '../../../models/store';
 import { infoIconStyle, tooltipStyle } from '../styles';
 
@@ -19,29 +19,32 @@ export const GameStatsPanel: React.FC = () => {
     enemiesRequired
   } = useGameStore();
 
-  // Tab tuşu ile tooltip açma/kapama
+  // ⚠️ FIXED: Event Listener Memory Leak
+  // Use useCallback to prevent recreation and stable closure
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      setShowTooltip(true);
+    }
+  }, []); // Empty deps - this handler is stable
+
+  const handleKeyUp = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Tab') {
+      setShowTooltip(false);
+    }
+  }, []); // Empty deps - this handler is stable
+
+  // Tab tuşu ile tooltip açma/kapama - Enhanced with stable handlers
   React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        setShowTooltip(true);
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'Tab') {
-        setShowTooltip(false);
-      }
-    };
-
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
+    // Guaranteed cleanup - handlers are stable
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [handleKeyDown, handleKeyUp]); // Include handlers in deps
 
   return (
     <div style={{ position: 'absolute', top: 24, left: 32, zIndex: 2, display: 'flex', alignItems: 'center' }}>

@@ -329,8 +329,12 @@ export const tooltipStyle: React.CSSProperties = {
   border: '1px solid rgba(255, 255, 255, 0.1)',
   fontSize: 13,
   lineHeight: 1.4,
-  minWidth: 320,
-  maxWidth: 400,
+  minWidth: 'min(320px, calc(100vw - 64px))',
+  maxWidth: 'min(400px, calc(100vw - 32px))',
   zIndex: 1000,
-  opacity: 1
+  opacity: 1,
+  transform: 'translateX(clamp(-50%, 0px, calc(100vw - 100% - 32px)))',
+  transition: 'all 0.2s ease-out',
+  wordWrap: 'break-word',
+  overflowWrap: 'break-word'
 }; 

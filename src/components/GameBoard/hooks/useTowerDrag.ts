@@ -205,6 +205,8 @@ export const useTowerDrag = () => {
     if (!dragState.isDragging) return;
     
     event.preventDefault();
+    
+    // Cache SVG rect for performance - only get it once
     const svgElement = event.currentTarget as SVGElement;
     const svgRect = svgElement.getBoundingClientRect();
     const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
@@ -212,25 +214,27 @@ export const useTowerDrag = () => {
     const mouseX = clientX - svgRect.left;
     const mouseY = clientY - svgRect.top;
 
-    // Find nearest slot for hover detection
+    // Find nearest slot for hover detection - OPTIMIZED
     let hoveredSlot: number | null = null;
-    let minDistance = Infinity;
+    let minDistanceSquared = Infinity; // Use squared distance to avoid Math.sqrt
     const hoverRadius = GAME_CONSTANTS.TOWER_SIZE * 1.5;
+    const hoverRadiusSquared = hoverRadius * hoverRadius; // Pre-calculate squared radius
 
     towerSlots.forEach((slot, idx) => {
       if (idx === dragState.draggedTowerSlotIdx) return;
       
-      const distance = Math.sqrt(
-        Math.pow(mouseX - slot.x, 2) + Math.pow(mouseY - slot.y, 2)
-      );
+      // Use squared distance calculation (no Math.sqrt needed)
+      const dx = mouseX - slot.x;
+      const dy = mouseY - slot.y;
+      const distanceSquared = dx * dx + dy * dy;
 
-      if (distance <= hoverRadius && distance < minDistance) {
-        minDistance = distance;
+      if (distanceSquared <= hoverRadiusSquared && distanceSquared < minDistanceSquared) {
+        minDistanceSquared = distanceSquared;
         hoveredSlot = idx;
       }
     });
 
-    // Update hover state with debouncing
+    // Update hover state with debouncing - prevents excessive state updates
     if (hoveredSlot !== dragState.hoveredSlot) {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
@@ -246,9 +250,10 @@ export const useTowerDrag = () => {
           }
           return { ...zone, animationPhase: zone.isValid ? 'highlight' : 'idle' };
         }));
-      }, 50);
+      }, 50); // Debounce to prevent excessive updates
     }
 
+    // Batch state update - single setState call
     setDragState(prev => ({
       ...prev,
       mousePosition: { x: mouseX, y: mouseY },
@@ -267,21 +272,23 @@ export const useTowerDrag = () => {
     const mouseX = clientX - svgRect.left;
     const mouseY = clientY - svgRect.top;
 
-    // Enhanced target detection
+    // Enhanced target detection - OPTIMIZED O(n) → O(n) but faster calculations
     let targetSlotIdx = -1;
-    let minDistance = Infinity;
+    let minDistanceSquared = Infinity; // Use squared distance
     let invalidReason = '';
     const detectionRadius = GAME_CONSTANTS.TOWER_SIZE * 2;
+    const detectionRadiusSquared = detectionRadius * detectionRadius; // Pre-calculate
 
     towerSlots.forEach((slot, idx) => {
       if (idx === dragState.draggedTowerSlotIdx) return;
 
-      const distance = Math.sqrt(
-        Math.pow(mouseX - slot.x, 2) + Math.pow(mouseY - slot.y, 2)
-      );
+      // OPTIMIZED: Use squared distance calculation (no Math.sqrt)
+      const dx = mouseX - slot.x;
+      const dy = mouseY - slot.y;
+      const distanceSquared = dx * dx + dy * dy;
 
-      if (distance <= detectionRadius && distance < minDistance) {
-        minDistance = distance;
+      if (distanceSquared <= detectionRadiusSquared && distanceSquared < minDistanceSquared) {
+        minDistanceSquared = distanceSquared;
         
         if (!slot.unlocked) {
           invalidReason = 'Hedef slot kilitli';

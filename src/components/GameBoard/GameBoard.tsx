@@ -64,13 +64,34 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
 
   // Screen shake effect
   const [screenShake, setScreenShake] = React.useState(false);
+  const screenShakeTimerRef = React.useRef<number | null>(null);
 
-  // Animation States
+  // ⚠️ FIXED: Animation State Inconsistency  
+  // Enhanced animation management with proper cleanup and overlap prevention
   React.useEffect(() => {
+    // Clear any existing timer to prevent overlap
+    if (screenShakeTimerRef.current) {
+      clearTimeout(screenShakeTimerRef.current);
+      screenShakeTimerRef.current = null;
+    }
+
     if (unlockingSlots.size > 0) {
       setScreenShake(true);
-      const timer = setTimeout(() => setScreenShake(false), 600);
-      return () => clearTimeout(timer);
+      screenShakeTimerRef.current = window.setTimeout(() => {
+        setScreenShake(false);
+        screenShakeTimerRef.current = null;
+      }, 600);
+      
+      // Cleanup function for component unmount or dependency change
+      return () => {
+        if (screenShakeTimerRef.current) {
+          clearTimeout(screenShakeTimerRef.current);
+          screenShakeTimerRef.current = null;
+        }
+      };
+    } else {
+      // Immediately stop shake if no unlocking slots
+      setScreenShake(false);
     }
   }, [unlockingSlots]);
 
@@ -149,23 +170,44 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     return () => clearInterval(actionTimer);
   }, [isStarted, isPaused, tickActionRegen]);
 
-     // Screen shake effect (legacy support)
+     // Screen shake effect (legacy support) - Enhanced with proper cleanup
    React.useEffect(() => {
+     const legacyShakeTimerRef = { current: null as number | null };
+     
      const onScreenShake = () => {
+       // Clear existing timer to prevent overlap
+       if (legacyShakeTimerRef.current) {
+         clearTimeout(legacyShakeTimerRef.current);
+       }
+       
        setScreenShake(true);
-       setTimeout(() => setScreenShake(false), 600);
+       legacyShakeTimerRef.current = window.setTimeout(() => {
+         setScreenShake(false);
+         legacyShakeTimerRef.current = null;
+       }, 600);
      };
      
      window.addEventListener('screenShake', onScreenShake);
-     return () => window.removeEventListener('screenShake', onScreenShake);
+     return () => {
+       window.removeEventListener('screenShake', onScreenShake);
+       // Clean up any pending timer
+       if (legacyShakeTimerRef.current) {
+         clearTimeout(legacyShakeTimerRef.current);
+       }
+     };
    }, []);
 
-  // Global memory cleanup on unmount
+  // Global memory cleanup on unmount - Enhanced
   React.useEffect(() => {
     return () => {
       // Comprehensive cleanup when component unmounts
       performMemoryCleanup();
       bulletPool.clear();
+      
+      // Clear all animation timers
+      if (screenShakeTimerRef.current) {
+        clearTimeout(screenShakeTimerRef.current);
+      }
       
       if (GAME_CONSTANTS.DEBUG_MODE) {
         console.log('🧹 GameBoard: Global memory cleanup completed');
