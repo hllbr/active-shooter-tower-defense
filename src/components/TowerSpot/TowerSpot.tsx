@@ -111,15 +111,22 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           {/* Wall (behind tower) */}
           <WallRenderer slot={slot} wallLevel={wallLevel} />
           
-          {/* Tower with drag support */}
+          {/* Tower with enhanced drag & touch support */}
           <g 
             style={{ 
               cursor: 'grab',
               opacity: draggedTowerSlotIdx === slotIdx ? 0.5 : 1,
-              filter: draggedTowerSlotIdx === slotIdx ? 'brightness(0.7)' : 'none'
+              filter: draggedTowerSlotIdx === slotIdx ? 'brightness(0.7)' : 'none',
+              touchAction: 'none' // Prevent default touch behaviors
             }}
             onMouseDown={(e) => {
               if (onTowerDragStart) {
+                onTowerDragStart(slotIdx, e);
+              }
+            }}
+            onTouchStart={(e) => {
+              if (onTowerDragStart) {
+                e.preventDefault(); // Prevent default touch behaviors
                 onTowerDragStart(slotIdx, e);
               }
             }}

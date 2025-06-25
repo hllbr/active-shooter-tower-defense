@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/Constants';
 import { TowerSpot } from '../TowerSpot';
@@ -7,7 +7,9 @@ import { startGameLoop } from '../../logic/GameLoop';
 import { waveManager } from '../../logic/WaveManager';
 import { initUpgradeEffects } from '../../logic/UpgradeEffects';
 import { UpgradeScreen } from '../game/UpgradeScreen';
-import { playSound, startBackgroundMusic } from '../../utils/sound';
+import { playSound, playContextualSound, startBackgroundMusic } from '../../utils/sound';
+import { performMemoryCleanup } from '../../logic/Effects';
+import { bulletPool } from '../../logic/TowerManager';
 
 // Import modular components
 import {
@@ -19,10 +21,12 @@ import {
   StartScreen,
   GameOverScreen,
   TowerDragVisualization,
-  SVGEffectsRenderer
+  SVGEffectsRenderer,
+  CommandCenter,
+  NotificationSystem
 } from './components';
 
-// Import hooks
+// Import enhanced hooks
 import { useTowerDrag } from './hooks';
 
 // Import styles and types
@@ -35,132 +39,111 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     currentWave,
     isStarted,
     isRefreshing,
-    setStarted,
-    setRefreshing,
-    resetGame,
-    nextWave,
-    resetDice,
-    deployMines,
     isPreparing,
     isPaused,
     prepRemaining,
-    tickPreparation,
-    pausePreparation,
-    resumePreparation,
-    speedUpPreparation,
     startWave,
+    tickPreparation,
     tickEnergyRegen,
     tickActionRegen,
     unlockingSlots,
-    mines
+    pausePreparation,
+    resumePreparation,
+    initializeAchievements
   } = useGameStore();
 
-  // Tower drag functionality
+  // Enhanced drag & drop system
   const {
     dragState,
-    debugMessage,
-    clearDebugMessage,
+    dropZones,
+    feedback,
     handleTowerDragStart,
     handleMouseMove,
-    handleMouseUp
+    handleMouseUp,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    debugMessage,
+    clearDebugMessage
   } = useTowerDrag();
 
   // Screen shake effect
-  const [screenShake, setScreenShake] = useState(false);
+  const [screenShake, setScreenShake] = React.useState(false);
+  const screenShakeTimerRef = React.useRef<number | null>(null);
 
-  // Animation States
-  useEffect(() => {
+  // Command Center state
+  const [commandCenterOpen, setCommandCenterOpen] = React.useState(false);
+
+  // ⚠️ FIXED: Animation State Inconsistency  
+  // Enhanced animation management with proper cleanup and overlap prevention
+  React.useEffect(() => {
+    // Clear any existing timer to prevent overlap
+    if (screenShakeTimerRef.current) {
+      clearTimeout(screenShakeTimerRef.current);
+      screenShakeTimerRef.current = null;
+    }
+
     if (unlockingSlots.size > 0) {
       setScreenShake(true);
-      const timer = setTimeout(() => setScreenShake(false), 600);
-      return () => clearTimeout(timer);
+      screenShakeTimerRef.current = window.setTimeout(() => {
+        setScreenShake(false);
+        screenShakeTimerRef.current = null;
+      }, 600);
+      
+      // Cleanup function for component unmount or dependency change
+      return () => {
+        if (screenShakeTimerRef.current) {
+          clearTimeout(screenShakeTimerRef.current);
+          screenShakeTimerRef.current = null;
+        }
+      };
+    } else {
+      // Immediately stop shake if no unlocking slots
+      setScreenShake(false);
     }
   }, [unlockingSlots]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     initUpgradeEffects();
-  }, []);
-
-  useEffect(() => {
-    waveManager.setHandlers(
-      () => {
-        // Continuous spawning handles this
-      },
-      () => {
-        setRefreshing(true);
-        nextWave();
-        resetDice();
-      },
-    );
-  }, [currentWave, nextWave, resetDice, setRefreshing]);
-
-  useEffect(() => {
-    if (isPreparing) {
-      waveManager.scheduleAutoStart(currentWave, GAME_CONSTANTS.PREP_TIME);
-    } else {
-      waveManager.cancelAutoStart();
-    }
-  }, [isPreparing, currentWave]);
-
-  // Deploy mines at the start of each wave
-  useEffect(() => {
-    if (isStarted) {
-      deployMines();
-    }
-  }, [currentWave, isStarted, deployMines]);
-
-  // Redeploy mines when window size changes to keep them visible
-  useEffect(() => {
-    if (!isStarted) return;
     
-    const handleResize = () => {
-      if (mines.length > 0) {
-        deployMines();
+    // ✅ ACHIEVEMENT SYSTEM: Initialize on game start (Faz 1: Temel Mekanikler)
+    initializeAchievements();
+  }, [initializeAchievements]);
+
+  // Command Center keyboard handler
+  React.useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 's' || event.key === 'S') {
+        if (event.ctrlKey || event.metaKey) return; // Ignore Ctrl+S (save)
+        
+        event.preventDefault();
+        setCommandCenterOpen(prev => {
+          const newState = !prev;
+          
+          // Pause/resume game when command center opens/closes
+          if (newState && isPreparing && !isPaused) {
+            pausePreparation();
+          } else if (!newState && isPreparing && isPaused) {
+            resumePreparation();
+          }
+          
+          if (newState) {
+            playSound('levelupwav'); // Temporary - will use command-center-open.wav
+          }
+          
+          return newState;
+        });
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isStarted, mines.length, deployMines]);
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [commandCenterOpen, isPreparing, isPaused, pausePreparation, resumePreparation]);
 
-  // Enerji rejenerasyonu timer'ı - 5 saniye intervals
-  useEffect(() => {
-    if (!isStarted || isPaused) return;
-    
-    const energyTimer = setInterval(() => {
-      tickEnergyRegen(5000);
-    }, 5000);
-    
-    return () => clearInterval(energyTimer);
-  }, [isStarted, isPaused, tickEnergyRegen]);
-
-  // Action rejenerasyonu timer'ı
-  useEffect(() => {
-    if (!isStarted || isPaused) return;
-    
-    const actionTimer = setInterval(() => {
-      tickActionRegen(1000);
-    }, 1000);
-    
-    return () => clearInterval(actionTimer);
-  }, [isStarted, isPaused, tickActionRegen]);
-
-  // Start/reset logic
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'F5' || e.key === 'r' || e.key === 'R') {
-        resetGame();
-        setStarted(false);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [resetGame, setStarted]);
-
+  // Main game loop effect
   const loopStopper = useRef<(() => void) | null>(null);
 
-  // Handle game loop start/stop based on game state and refresh screen
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isStarted || isRefreshing || isPreparing) {
       stopEnemyWave();
       stopContinuousSpawning();
@@ -170,10 +153,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     }
     if (!loopStopper.current) {
       loopStopper.current = startGameLoop();
-      // Background müzik başlat
+      // ✅ SMART MUSIC: No more overlaps! Music manager prevents restarts
       startBackgroundMusic();
     }
-    // Sürekli düşman yaratma sistemini başlat
+    // Start continuous spawning system
     startContinuousSpawning();
     waveManager.startWave(currentWave);
     return () => {
@@ -181,49 +164,123 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       stopContinuousSpawning();
       loopStopper.current?.();
       loopStopper.current = null;
+      // Don't stop music here - let it continue between waves
     };
   }, [isStarted, isRefreshing, isPreparing, currentWave]);
 
+  // Warning system
   const warningPlayed = useRef(false);
 
-  useEffect(() => {
+  // Preparation timer
+  React.useEffect(() => {
     if (!isPreparing || isPaused) return;
     const id = setInterval(() => tickPreparation(1000), 1000);
     return () => clearInterval(id);
   }, [isPreparing, isPaused, tickPreparation]);
 
-  useEffect(() => {
+  // Preparation warning and auto-start
+  React.useEffect(() => {
     if (isPreparing && prepRemaining <= GAME_CONSTANTS.PREP_WARNING_THRESHOLD && !warningPlayed.current) {
-      playSound('warning');
+      playContextualSound('warning'); // ✅ Enhanced: Uses fallback gameover.wav for attention
       warningPlayed.current = true;
     }
     if (isPreparing && prepRemaining <= 0) {
       startWave();
     }
     if (!isPreparing) warningPlayed.current = false;
-  }, [isPreparing, startWave]);
+  }, [isPreparing, startWave, prepRemaining]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (!isPreparing) return;
-      if (e.key === 'p' || e.key === 'P') {
-        if (isPaused) {
-          resumePreparation();
-        } else {
-          pausePreparation();
-        }
+  // Enerji rejenerasyonu timer'ı - 5 saniye intervals (memory managed)
+  React.useEffect(() => {
+    if (!isStarted || isPaused) return;
+    
+    const energyTimer = setInterval(() => {
+      tickEnergyRegen(5000);
+    }, 5000);
+    
+    return () => clearInterval(energyTimer);
+  }, [isStarted, isPaused, tickEnergyRegen]);
+
+  // Action rejenerasyonu timer'ı (memory managed)
+  React.useEffect(() => {
+    if (!isStarted || isPaused) return;
+    
+    const actionTimer = setInterval(() => {
+      tickActionRegen(1000);
+    }, 1000);
+    
+    return () => clearInterval(actionTimer);
+  }, [isStarted, isPaused, tickActionRegen]);
+
+     // Screen shake effect (legacy support) - Enhanced with proper cleanup
+   React.useEffect(() => {
+     const legacyShakeTimerRef = { current: null as number | null };
+     
+     const onScreenShake = () => {
+       // Clear existing timer to prevent overlap
+       if (legacyShakeTimerRef.current) {
+         clearTimeout(legacyShakeTimerRef.current);
+       }
+       
+       setScreenShake(true);
+       legacyShakeTimerRef.current = window.setTimeout(() => {
+         setScreenShake(false);
+         legacyShakeTimerRef.current = null;
+       }, 600);
+     };
+     
+     window.addEventListener('screenShake', onScreenShake);
+     return () => {
+       window.removeEventListener('screenShake', onScreenShake);
+       // Clean up any pending timer
+       if (legacyShakeTimerRef.current) {
+         clearTimeout(legacyShakeTimerRef.current);
+       }
+     };
+   }, []);
+
+  // Global memory cleanup on unmount - Enhanced
+  React.useEffect(() => {
+    return () => {
+      // Comprehensive cleanup when component unmounts
+      performMemoryCleanup();
+      bulletPool.clear();
+      
+      // Clear all animation timers
+      if (screenShakeTimerRef.current) {
+        clearTimeout(screenShakeTimerRef.current);
       }
-      if (e.key === 'f' || e.key === 'F') {
-        speedUpPreparation(GAME_CONSTANTS.PREP_TIME);
+      
+      if (GAME_CONSTANTS.DEBUG_MODE) {
+        console.log('🧹 GameBoard: Global memory cleanup completed');
+        
+        // Log pool statistics
+        const bulletStats = bulletPool.getStats();
+        console.log(`📊 Bullet Pool Stats: Created: ${bulletStats.created}, Reused: ${bulletStats.reused}, Reuse Rate: ${bulletStats.reuseRate.toFixed(1)}%`);
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isPreparing, isPaused, pausePreparation, resumePreparation, speedUpPreparation]);
+  }, []);
 
-  // SVG size
-  const width = window.innerWidth;
-  const height = window.innerHeight;
+  // ✅ PERFORMANCE FIX #1: Cache viewport dimensions (prevents re-render on every frame)
+  const [dimensions, setDimensions] = React.useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }));
+
+  // Only update dimensions on actual window resize
+  React.useEffect(() => {
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  const { width, height } = dimensions;
 
   return (
     <div style={{ 
@@ -236,7 +293,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       </style>
       
       {/* UI Components */}
-      <GameStatsPanel />
+      <GameStatsPanel onCommandCenterOpen={() => setCommandCenterOpen(true)} />
       <EnergyWarning />
       <DebugMessage message={debugMessage} onClear={clearDebugMessage} />
       <PreparationScreen />
@@ -245,29 +302,57 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       <FrostOverlay />
 
       {isRefreshing && <UpgradeScreen />}
+      
+      {/* Command Center (S Key) */}
+      <CommandCenter 
+        isOpen={commandCenterOpen} 
+        onClose={() => {
+          setCommandCenterOpen(false);
+          // Resume game if it was paused due to command center
+          if (isPreparing && isPaused) {
+            resumePreparation();
+          }
+        }} 
+      />
 
-      {/* SVG Game Area */}
+      {/* ✅ NOTIFICATION SYSTEM: User Purchase Feedback (fixes "can't tell if purchase worked") */}
+      <NotificationSystem />
+
+      {/* SVG Game Area with Enhanced Touch Support */}
       <svg 
         width={width} 
         height={height} 
         style={{ display: 'block', position: 'absolute', top: 0, left: 0 }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        {/* Tower Slots */}
+        {/* Tower Slots with Enhanced Drag Support */}
         {towerSlots.map((slot, i) => (
           <TowerSpot 
             key={i} 
             slot={slot} 
             slotIdx={i} 
-            onTowerDragStart={handleTowerDragStart}
+            onTowerDragStart={(slotIdx, event) => {
+              // Support both mouse and touch events
+              if ('touches' in event) {
+                handleTouchStart(slotIdx, event as React.TouchEvent);
+              } else {
+                handleTowerDragStart(slotIdx, event as React.MouseEvent);
+              }
+            }}
             isDragTarget={dragState.isDragging && i !== dragState.draggedTowerSlotIdx && slot.unlocked && !slot.tower}
             draggedTowerSlotIdx={dragState.draggedTowerSlotIdx}
           />
         ))}
 
-        {/* Dragged Tower Visualization */}
-        <TowerDragVisualization dragState={dragState} />
+        {/* Enhanced Drag Visualization System */}
+        <TowerDragVisualization 
+          dragState={dragState}
+          dropZones={dropZones}
+          feedback={feedback}
+        />
 
         {/* SVG Effects (Enemies, Bullets, Effects, Mines) */}
         <SVGEffectsRenderer />

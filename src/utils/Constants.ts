@@ -276,115 +276,115 @@ export const GAME_CONSTANTS = {
   UPGRADE_ARROW_SIZE: 14,
   UPGRADE_ARROW_COLOR: '#4ade80',
 
-  // Tower Upgrades - 25 Levels with Special Mechanics
+  // ✅ BALANCED TOWER UPGRADES - Consistent efficiency across all levels
   TOWER_UPGRADES: [
-    // Level 1-5: Defense Focus
+    // Level 1-5: Defense Focus (Early game viable, good ROI)
     { 
-      level: 1, damage: 20, fireRate: 800, health: 100, cost: 60,
+      level: 1, damage: 25, fireRate: 800, health: 100, cost: 50,
       name: 'Gözetleme Kulesi', special: 'none'
     },
     { 
-      level: 2, damage: 30, fireRate: 700, health: 150, cost: 120,
+      level: 2, damage: 40, fireRate: 700, health: 150, cost: 80,
       name: 'Ortaçağ Kalesi', special: 'none'
     },
     { 
-      level: 3, damage: 45, fireRate: 600, health: 200, cost: 200,
+      level: 3, damage: 60, fireRate: 600, health: 200, cost: 120,
       name: 'Saray Kulesi', special: 'none'
     },
     { 
-      level: 4, damage: 65, fireRate: 550, health: 300, cost: 350,
+      level: 4, damage: 85, fireRate: 550, health: 300, cost: 170,
       name: 'Kraliyet Kalesi', special: 'none'
     },
     { 
-      level: 5, damage: 90, fireRate: 500, health: 450, cost: 600,
+      level: 5, damage: 115, fireRate: 500, health: 450, cost: 230,
       name: 'İmparatorluk Kulesi', special: 'none'
     },
     
-    // Level 6-10: Fire Rate Focus
+    // Level 6-10: Fire Rate Focus (Consistent efficiency maintained)
     { 
-      level: 6, damage: 120, fireRate: 450, health: 600, cost: 1000,
+      level: 6, damage: 150, fireRate: 450, health: 600, cost: 300,
       name: 'Hızlı Atış Kulesi', special: 'rapid_fire'
     },
     { 
-      level: 7, damage: 160, fireRate: 400, health: 750, cost: 1500,
+      level: 7, damage: 190, fireRate: 400, health: 750, cost: 380,
       name: 'Çoklu Atış Kulesi', special: 'multi_shot'
     },
     { 
-      level: 8, damage: 210, fireRate: 350, health: 900, cost: 2200,
+      level: 8, damage: 235, fireRate: 350, health: 900, cost: 470,
       name: 'Otomatik Kule', special: 'auto_target'
     },
     { 
-      level: 9, damage: 270, fireRate: 300, health: 1100, cost: 3200,
+      level: 9, damage: 285, fireRate: 300, health: 1100, cost: 570,
       name: 'Gatling Kulesi', special: 'gatling'
     },
     { 
-      level: 10, damage: 340, fireRate: 250, health: 1300, cost: 4500,
+      level: 10, damage: 340, fireRate: 250, health: 1300, cost: 680,
       name: 'Lazer Kulesi', special: 'laser'
     },
     
-    // Level 11-15: Damage Focus
+    // Level 11-15: Damage Focus (Mid-game progression)
     { 
-      level: 11, damage: 420, fireRate: 220, health: 1500, cost: 6500,
+      level: 11, damage: 400, fireRate: 220, health: 1500, cost: 800,
       name: 'Plazma Kulesi', special: 'plasma'
     },
     { 
-      level: 12, damage: 510, fireRate: 200, health: 1700, cost: 9000,
+      level: 12, damage: 465, fireRate: 200, health: 1700, cost: 930,
       name: 'Elektrik Kulesi', special: 'chain_lightning'
     },
     { 
-      level: 13, damage: 610, fireRate: 180, health: 1900, cost: 12000,
+      level: 13, damage: 535, fireRate: 180, health: 1900, cost: 1070,
       name: 'Buz Kulesi', special: 'freeze'
     },
     { 
-      level: 14, damage: 720, fireRate: 160, health: 2100, cost: 16000,
+      level: 14, damage: 610, fireRate: 160, health: 2100, cost: 1220,
       name: 'Ateş Kulesi', special: 'burn'
     },
     { 
-      level: 15, damage: 840, fireRate: 140, health: 2300, cost: 21000,
+      level: 15, damage: 690, fireRate: 140, health: 2300, cost: 1380,
       name: 'Asit Kulesi', special: 'acid'
     },
     
-    // Level 16-20: Hybrid Focus
+    // Level 16-20: Hybrid Focus (Late game power with reasonable costs)
     { 
-      level: 16, damage: 970, fireRate: 120, health: 2600, cost: 27000,
+      level: 16, damage: 775, fireRate: 120, health: 2600, cost: 1550,
       name: 'Kuantum Kulesi', special: 'quantum'
     },
     { 
-      level: 17, damage: 1110, fireRate: 100, health: 2900, cost: 35000,
+      level: 17, damage: 865, fireRate: 100, health: 2900, cost: 1730,
       name: 'Nano Kulesi', special: 'nano'
     },
     { 
-      level: 18, damage: 1260, fireRate: 80, health: 3200, cost: 45000,
+      level: 18, damage: 960, fireRate: 80, health: 3200, cost: 1920,
       name: 'Psi Kulesi', special: 'psi'
     },
     { 
-      level: 19, damage: 1420, fireRate: 60, health: 3500, cost: 58000,
+      level: 19, damage: 1060, fireRate: 60, health: 3500, cost: 2120,
       name: 'Zaman Kulesi', special: 'time_warp'
     },
     { 
-      level: 20, damage: 1590, fireRate: 40, health: 3800, cost: 75000,
+      level: 20, damage: 1165, fireRate: 40, health: 3800, cost: 2330,
       name: 'Uzay Kulesi', special: 'space'
     },
     
-    // Level 21-25: Ultimate Focus
+    // Level 21-25: Ultimate Focus (End-game progression with reasonable scaling)
     { 
-      level: 21, damage: 1770, fireRate: 30, health: 4200, cost: 95000,
+      level: 21, damage: 1275, fireRate: 30, health: 4200, cost: 2550,
       name: 'Efsanevi Kule', special: 'legendary'
     },
     { 
-      level: 22, damage: 1960, fireRate: 25, health: 4600, cost: 120000,
+      level: 22, damage: 1390, fireRate: 25, health: 4600, cost: 2780,
       name: 'Kutsal Kule', special: 'divine'
     },
     { 
-      level: 23, damage: 2160, fireRate: 20, health: 5000, cost: 150000,
+      level: 23, damage: 1510, fireRate: 20, health: 5000, cost: 3020,
       name: 'Kozmik Kule', special: 'cosmic'
     },
     { 
-      level: 24, damage: 2370, fireRate: 15, health: 5500, cost: 200000,
+      level: 24, damage: 1635, fireRate: 15, health: 5500, cost: 3270,
       name: 'Sonsuzluk Kulesi', special: 'infinity'
     },
     { 
-      level: 25, damage: 2600, fireRate: 10, health: 6000, cost: 300000,
+      level: 25, damage: 1765, fireRate: 10, health: 6000, cost: 3530,
       name: 'Tanrı Kulesi', special: 'god_mode'
     }
   ],
@@ -416,10 +416,35 @@ export const GAME_CONSTANTS = {
   ENEMY_COLORS: ['#ff3333', '#ff8800', '#ffcc00'],
   ENEMY_HEALTHBAR_HEIGHT: 6,
   ENEMY_TYPES: {
+    // Basic Enemies (Wave 1-10)
     Basic: { speed: 80, hp: 60, damage: 10, color: '#ff3333', behaviorTag: 'normal' },
     Scout: { speed: 140, hp: 40, damage: 8, color: '#6ee7b7', behaviorTag: 'avoid' },
     Tank: { speed: 60, hp: 200, damage: 20, color: '#94a3b8', behaviorTag: 'tank' },
     Ghost: { speed: 100, hp: 70, damage: 12, color: '#a78bfa', behaviorTag: 'ghost' },
+    
+    // Advanced Enemies (Wave 11-30)
+    Assassin: { speed: 160, hp: 80, damage: 15, color: '#dc2626', behaviorTag: 'stealth' },
+    Berserker: { speed: 90, hp: 180, damage: 25, color: '#ea580c', behaviorTag: 'rage' },
+    Shaman: { speed: 70, hp: 120, damage: 18, color: '#7c3aed', behaviorTag: 'healer' },
+    Archer: { speed: 110, hp: 90, damage: 22, color: '#059669', behaviorTag: 'ranged' },
+    
+    // Elite Enemies (Wave 31-60)
+    Demon: { speed: 120, hp: 250, damage: 35, color: '#991b1b', behaviorTag: 'fire' },
+    Wraith: { speed: 130, hp: 150, damage: 30, color: '#4338ca', behaviorTag: 'phase' },
+    Golem: { speed: 40, hp: 400, damage: 40, color: '#78716c', behaviorTag: 'armor' },
+    Phoenix: { speed: 150, hp: 200, damage: 28, color: '#f97316', behaviorTag: 'resurrect' },
+    
+    // Boss Enemies (Wave 10, 20, 30, etc.)
+    TankBoss: { speed: 30, hp: 800, damage: 50, color: '#475569', behaviorTag: 'tank_boss' },
+    GhostBoss: { speed: 80, hp: 600, damage: 45, color: '#6366f1', behaviorTag: 'ghost_boss' },
+    DemonLord: { speed: 60, hp: 1200, damage: 80, color: '#7f1d1d', behaviorTag: 'demon_boss' },
+    DragonKing: { speed: 50, hp: 2000, damage: 120, color: '#dc2626', behaviorTag: 'dragon_boss' },
+    
+    // Ultimate Bosses (Wave 70-100)
+    LichKing: { speed: 70, hp: 3000, damage: 150, color: '#1e1b4b', behaviorTag: 'lich_boss' },
+    TitanLord: { speed: 35, hp: 5000, damage: 200, color: '#365314', behaviorTag: 'titan_boss' },
+    VoidGod: { speed: 90, hp: 8000, damage: 300, color: '#0c0a09', behaviorTag: 'void_boss' },
+    UltimateGod: { speed: 100, hp: 15000, damage: 500, color: '#fbbf24', behaviorTag: 'ultimate_boss' },
   },
   TANK_DEATH_RADIUS: 80,
 
@@ -473,8 +498,14 @@ export const GAME_CONSTANTS = {
   // ENEMY_WAVE_INCREASE to match spawn count.
   getWaveEnemiesRequired: (wave: number) => {
     const comp = waveCompositions[wave];
-    if (comp) return comp.reduce((sum, c) => sum + c.count, 0);
-    return GAME_CONSTANTS.ENEMY_WAVE_INCREASE * wave;
+    if (comp) {
+      const required = comp.reduce((sum, c) => sum + c.count, 0);
+      console.log(`🎯 Wave ${wave} requires ${required} enemies:`, comp);
+      return required;
+    }
+    const fallback = GAME_CONSTANTS.ENEMY_WAVE_INCREASE * wave;
+    console.log(`⚠️ Wave ${wave} fallback: ${fallback} enemies`);
+    return fallback;
   },
 
   // Bullet
@@ -717,4 +748,16 @@ export const GAME_CONSTANTS = {
   BULLET_COST_MULTIPLIER: 1.8,
 
   // Package System Weights (Wave-based availability)
+
+  // Defense Upgrade Limits (CRITICAL FIX for unlimited purple cards bug)
+  DEFENSE_UPGRADE_LIMITS: {
+    MINES: {
+      MAX_PURCHASES: 3, // Maximum mine upgrades per game
+      MAX_LEVEL: 11,    // Maximum level per upgrade
+    },
+    WALLS: {
+      MAX_PURCHASES: 5, // Maximum wall upgrades per game
+      MAX_LEVEL: 8,     // Maximum level per upgrade
+    },
+  },
 } as const; 

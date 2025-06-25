@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
-import { playSound, stopBackgroundMusic } from '../../../utils/sound';
+import { playContextualSound, stopBackgroundMusic } from '../../../utils/sound';
 import { useAnimatedCounter } from '../hooks/useAnimatedCounter';
 import { statCardStyle } from '../styles';
 
@@ -25,13 +25,21 @@ export const GameOverScreen: React.FC = () => {
   const animatedShield = useAnimatedCounter(shieldUpgradesPurchased, isGameOver);
   const animatedPackages = useAnimatedCounter(packagesPurchased, isGameOver);
 
+  // ✅ AUDIO FIX: Immediate impactful game over sound + Victory vs Defeat logic
   useEffect(() => {
-    if (isGameOver) {
-      // Game over müzik
-      stopBackgroundMusic();
-      setTimeout(() => playSound('gameover'), 500);
+    if (!isGameOver) return;
+    
+    // Stop background music immediately
+    stopBackgroundMusic();
+    
+    // ✅ FIXED: Play contextual sound immediately for maximum impact (no delay!)
+    const isVictory = currentWave >= 100;
+    if (isVictory) {
+      playContextualSound('victory'); // Victory celebration sound (levelupwav.wav)
+    } else {
+      playContextualSound('defeat'); // Immediate defeat sound (gameover.wav)
     }
-  }, [isGameOver]);
+  }, [isGameOver, currentWave]);
 
   if (!isGameOver) return null;
 

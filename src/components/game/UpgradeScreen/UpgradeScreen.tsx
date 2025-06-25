@@ -51,11 +51,21 @@ export const UpgradeScreen: React.FC = () => {
   }, []);
 
   const handleContinue = useCallback(() => {
-    setRefreshing(false);
+    // CRITICAL FIX: Correct execution order for wave progression
+    // 1. First increment wave and setup next wave state
     nextWave();
+    
+    // 2. Start preparation phase (includes timer setup)
     startPreparation();
+    
+    // 3. Reset dice for next upgrade opportunity
     resetDice();
-  }, [setRefreshing, nextWave, startPreparation, resetDice]);
+    
+    // 4. FINALLY close UpgradeScreen (after all state is stable)
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 50); // Small delay ensures state stability
+  }, [nextWave, startPreparation, resetDice, setRefreshing]);
 
   return (
     <div style={upgradeScreenStyles.overlay}>

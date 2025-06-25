@@ -2,6 +2,7 @@ import React from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 import { getNearestEnemy } from '../../../logic/TowerManager';
+import { formatProfessional } from '../../../utils/numberFormatting';
 import type { TowerSlot, Enemy } from '../../../models/gameTypes';
 import type { TowerUpgradeInfo } from '../types';
 
@@ -47,9 +48,9 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const canAffordUpgrade = Boolean(upgradeInfo && hasEnoughGold && hasEnoughEnergy);
   const upgradeMessage = upgradeInfo
     ? canAffordUpgrade
-      ? `Yükselt (${upgradeInfo.cost}💰)`
+      ? `Yükselt (${formatProfessional(upgradeInfo.cost, 'currency')}💰)`
       : !hasEnoughGold
-        ? `Yetersiz Altın (${upgradeInfo.cost}💰)`
+        ? `Yetersiz Altın (${formatProfessional(upgradeInfo.cost, 'currency')}💰)`
         : `Yetersiz Enerji (${energyCost})`
     : '';
 

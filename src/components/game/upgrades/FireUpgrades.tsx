@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, getUnifiedCostDisplay } from '../../../utils/numberFormatting';
 
 export const FireUpgrades: React.FC = () => {
   const { 
@@ -151,15 +152,15 @@ export const FireUpgrades: React.FC = () => {
                 color: '#999', 
                 textDecoration: 'line-through'
               }}>
-                {cost} 💰
+                {formatCurrency(cost)} 💰
               </div>
             )}
             <div style={{ 
               fontSize: 16, 
               fontWeight: 'bold',
-              color: isMaxed ? '#666' : canAfford ? GAME_CONSTANTS.GOLD_COLOR : '#ff6b6b'
+              color: isMaxed ? '#4ade80' : getAffordabilityColor(finalCost, gold)
             }}>
-              {isMaxed ? 'MAKSIMUM' : `${finalCost} 💰`}
+              {getUnifiedCostDisplay(finalCost, cost !== finalCost ? cost : undefined, isMaxed).mainText}
             </div>
           </div>
           
@@ -176,7 +177,7 @@ export const FireUpgrades: React.FC = () => {
               border: `2px solid ${canAfford ? color : '#666'}`,
               textShadow: canAfford ? '0 1px 2px rgba(0,0,0,0.5)' : 'none',
             }}>
-              {canAfford ? '✅ Yükselt' : '❌ Yetersiz'}
+              {getUnifiedButtonText(isMaxed, canAfford, false, 'upgrade')}
             </div>
           )}
         </div>

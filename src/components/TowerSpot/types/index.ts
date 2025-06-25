@@ -13,7 +13,7 @@ export interface TowerUpgradeInfo {
 export interface TowerSpotProps {
   slot: TowerSlot;
   slotIdx: number;
-  onTowerDragStart?: (slotIdx: number, event: React.MouseEvent) => void;
+  onTowerDragStart?: (slotIdx: number, event: React.MouseEvent | React.TouchEvent) => void;
   isDragTarget?: boolean;
   draggedTowerSlotIdx?: number | null;
 }
