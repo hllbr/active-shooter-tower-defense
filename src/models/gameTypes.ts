@@ -220,9 +220,51 @@ export interface GameState {
   eliteModuleLevel: number;
   diceResult: number | null;
   
+  // Defense Upgrade Limits System (CRITICAL FIX for unlimited purple cards)
+  defenseUpgradeLimits: {
+    mines: {
+      current: number;
+      max: number;
+      purchaseCount: number;
+    };
+    walls: {
+      current: number;
+      max: number;
+      purchaseCount: number;
+    };
+  };
+  
+  // CRITICAL FIX: Individual Package Tracking System (fixes "0/10 stays 0/10" bug)
+  packageTracker: {
+    [packageId: string]: {
+      purchaseCount: number;
+      lastPurchased: number; // timestamp
+      maxAllowed: number;
+    };
+  };
+  
   // Slot Unlock Animation System
   unlockingSlots: Set<number>; // Şu anda animasyonda olan slot'lar
   recentlyUnlockedSlots: Set<number>; // Son 3 saniyede açılan slot'lar
+
+  // Notification System for User Feedback (fixes "can't tell if purchase worked")
+  notifications: {
+    id: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+    message: string;
+    timestamp: number;
+    duration?: number; // milliseconds, default 3000
+  }[];
+  
+  // Achievement & Player Progression System (Faz 1: Temel Mekanikler)
+  playerProfile: PlayerProfile;
+  achievements: Record<string, Achievement>; // achievement ID -> achievement
+  achievementSeries: Record<string, AchievementSeries>; // series ID -> series
+  gameStartTime: number; // For playtime tracking
+  
+  // Daily Missions System
+  dailyMissions: DailyMission[];
+  lastMissionRefresh: number;
 }
 
 export interface PowerUpgrade {
@@ -246,3 +288,124 @@ export interface PowerUpgradeEffect {
 // Backward compatibility
 export type EnergyUpgrade = PowerUpgrade;
 export type EnergyUpgradeEffect = PowerUpgradeEffect;
+
+// ===== ACHIEVEMENT SYSTEM TYPES =====
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  category: 'progression' | 'upgrade' | 'economy' | 'building' | 'combat' | 'special' | 'defense';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  target: number;
+  progress: number;
+  completed: boolean;
+  completedAt?: number; // timestamp
+  hidden?: boolean; // Secret achievements
+  series?: string; // Achievement series ID
+  rewards: AchievementReward;
+  tracking: AchievementTracking;
+}
+
+export interface AchievementReward {
+  type: 'research_points' | 'cosmetic' | 'title' | 'bonus' | 'unlock';
+  value: number;
+  name: string;
+  description: string;
+  permanent?: boolean; // Permanent bonuses
+}
+
+export interface AchievementTracking {
+  condition: string; // JavaScript condition to check
+  trackingFunction: string; // Function name to track progress
+  triggerEvents: string[]; // Game events that trigger progress check
+}
+
+export interface AchievementSeries {
+  id: string;
+  name: string;
+  description: string;
+  category: Achievement['category'];
+  achievements: string[]; // Achievement IDs in order
+  seriesReward?: AchievementReward; // Bonus for completing entire series
+}
+
+export interface PlayerProfile {
+  // Experience and Level
+  level: number;
+  experience: number;
+  experienceToNext: number;
+  
+  // Achievement Progress
+  achievementsCompleted: number;
+  achievementPoints: number;
+  unlockedTitles: string[];
+  activeTitle?: string;
+  
+  // Statistics for achievement tracking
+  statistics: PlayerStatistics;
+  
+  // Unlocks and rewards
+  unlockedCosmetics: string[];
+  researchPoints: number;
+  permanentBonuses: Record<string, number>;
+}
+
+export interface PlayerStatistics {
+  // Progression stats
+  totalWavesCompleted: number;
+  highestWaveReached: number;
+  totalPlaytime: number; // milliseconds
+  gamesPlayed: number;
+  
+  // Combat stats
+  totalEnemiesKilled: number;
+  totalDamageDealt: number;
+  perfectWaves: number; // Waves completed without losing towers
+  
+  // Building stats
+  totalTowersBuilt: number;
+  totalTowersLost: number;
+  highestTowerLevel: number;
+  totalUpgradesPurchased: number;
+  
+  // Economy stats
+  totalGoldEarned: number;
+  totalGoldSpent: number;
+  totalPackagesPurchased: number;
+  bestGoldPerWave: number;
+  
+  // Special achievements
+  speedrunRecords: Record<string, number>; // wave -> best time
+  efficiencyRecords: Record<string, number>; // wave -> best efficiency
+  survivalStreaks: number[]; // Consecutive perfect waves
+}
+
+export interface DailyMission {
+  id: string;
+  name: string;
+  description: string;
+  category: 'combat' | 'economic' | 'survival' | 'exploration';
+  objective: MissionObjective;
+  reward: MissionReward;
+  expiresAt: number;
+  completed: boolean;
+  progress: number;
+  maxProgress: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  isSecret?: boolean;
+}
+
+export interface MissionObjective {
+  type: 'survive_waves' | 'kill_enemies' | 'build_towers' | 'earn_gold' | 'complete_upgrades' | 'use_abilities' | 'perfect_waves';
+  target: number;
+  description: string;
+  trackingKey: string; // Key to track in player stats
+}
+
+export interface MissionReward {
+  type: 'gold' | 'energy' | 'actions' | 'experience' | 'unlock';
+  amount: number;
+  description: string;
+  special?: string; // Special rewards like unlocks
+}

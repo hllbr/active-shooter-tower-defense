@@ -7,4 +7,6 @@ export { PreparationScreen } from './PreparationScreen';
 export { StartScreen } from './StartScreen';
 export { GameOverScreen } from './GameOverScreen';
 export { TowerDragVisualization } from './TowerDragVisualization';
-export { SVGEffectsRenderer } from './SVGEffectsRenderer'; 
+export { SVGEffectsRenderer } from './SVGEffectsRenderer';
+export { CommandCenter } from './CommandCenter';
+export { NotificationSystem } from './NotificationSystem';

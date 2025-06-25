@@ -182,7 +182,8 @@ function createEnemy(wave: number, type: keyof typeof GAME_CONSTANTS.ENEMY_TYPES
 }
 
 /**
- * Enhanced wave spawning with dynamic system integration
+ * Enhanced wave spawning with KILL-BASED completion system
+ * CRITICAL FIX: Düşman spawn etmeye killsRequired'a ulaşana kadar devam eder
  */
 export function startEnemyWave(wave: number) {
   const { addEnemy, towers, towerSlots, buildTower, currentWaveModifier } = useGameStore.getState();
@@ -197,45 +198,76 @@ export function startEnemyWave(wave: number) {
   // Start dynamic spawning system
   dynamicSpawnController.startWaveSpawning(wave);
 
-  // Clear any existing interval. This is important when the upgrade screen
-  // temporarily stops waves to ensure spawning resumes correctly.
+  // Clear any existing interval
   if (spawnInterval) clearInterval(spawnInterval);
 
   spawnQueue = [];
   spawnIndex = 0;
   const composition = waveCompositions[wave];
+  
+  // CRITICAL FIX: Build initial spawn queue
   if (composition) {
     composition.forEach(cfg => {
       for (let i = 0; i < cfg.count; i++) spawnQueue.push(cfg.type);
     });
   } else {
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.error(`[WaveManager] No spawn config found for wave ${wave}`);
-    }
     const count = GAME_CONSTANTS.getWaveEnemiesRequired(wave);
     for (let i = 0; i < count; i++) spawnQueue.push('Basic');
   }
 
-  // Use dynamic spawn rates instead of fixed rate
+  // KILL-BASED SPAWN LOGIC: Continue spawning until required kills achieved
   let spawnCount = 0;
+  let totalSpawned = 0;
+  
   const spawnNext = () => {
-    if (spawnIndex >= spawnQueue.length) {
-      stopEnemyWave();
+    const state = useGameStore.getState();
+    const enemiesRequired = GAME_CONSTANTS.getWaveEnemiesRequired(wave);
+    const enemiesKilled = state.enemiesKilled;
+    
+    // CRITICAL: Check if we need more enemies to be spawnable
+    const totalAvailableToKill = totalSpawned - enemiesKilled;
+    
+    // If player could potentially finish wave with existing enemies, don't spam spawn
+    if (totalAvailableToKill >= enemiesRequired) {
+      // Schedule next check in 2 seconds
+      spawnInterval = window.setTimeout(spawnNext, 2000);
       return;
     }
     
-    const type = spawnQueue[spawnIndex++] as keyof typeof GAME_CONSTANTS.ENEMY_TYPES;
-    const enemy = createEnemy(wave, type);
+    // Determine what type to spawn
+    let enemyType: keyof typeof GAME_CONSTANTS.ENEMY_TYPES = 'Basic';
+    
+    if (spawnIndex < spawnQueue.length) {
+      // Use composition if available
+      enemyType = spawnQueue[spawnIndex++] as keyof typeof GAME_CONSTANTS.ENEMY_TYPES;
+    } else {
+      // After composition, spawn additional enemies based on wave pattern
+      const wavePattern = wave % 3;
+      if (wavePattern === 0) enemyType = 'Tank';
+      else if (wavePattern === 1) enemyType = 'Scout';
+      else enemyType = 'Basic';
+    }
+    
+    const enemy = createEnemy(wave, enemyType);
     addEnemy(enemy);
+    totalSpawned++;
     
     if (currentWaveModifier?.bonusEnemies) {
-      addEnemy(createEnemy(wave, type));
+      const bonusEnemy = createEnemy(wave, enemyType);
+      addEnemy(bonusEnemy);
+      totalSpawned++;
     }
     
     spawnCount++;
     
-    // Calculate next spawn delay dynamically
-    const nextDelay = spawnStrategy.calculateNextSpawnDelay(wave, spawnCount);
+    // Calculate next spawn delay (slower after initial composition)
+    let nextDelay = spawnStrategy.calculateNextSpawnDelay(wave, spawnCount);
+    if (spawnIndex >= spawnQueue.length) {
+      // Slower spawning for additional enemies
+      nextDelay = Math.max(3000, nextDelay * 2);
+    }
+    
+    // Continue spawning
     spawnInterval = window.setTimeout(spawnNext, nextDelay);
   };
 
@@ -328,7 +360,9 @@ export function updateEnemyMovement() {
   });
   
   const { currentWave, enemiesKilled, enemiesRequired, towers } = useGameStore.getState();
-  const pending = spawnInterval !== null && spawnIndex < spawnQueue.length;
+  
+  // CRITICAL FIX: Pending should be true if spawning is still active OR if we haven't reached required kills
+  const pending = spawnInterval !== null || enemiesKilled < enemiesRequired;
   
   // Track performance for dynamic difficulty adjustment
   if (!pending && enemies.length === 0) {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { formatProfessional } from '../../../utils/numberFormatting';
 import type { SlotUnlockProps } from '../types';
 
 export const SlotUnlockDisplay: React.FC<SlotUnlockProps> = ({
@@ -261,7 +262,7 @@ export const SlotUnlockDisplay: React.FC<SlotUnlockProps> = ({
         style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
         onClick={() => canUnlock && onUnlock(slotIdx)}
       >
-        {canUnlock ? `Aç (${unlockCost}💰)` : `Yetersiz Altın (${unlockCost}💰)`}
+        {canUnlock ? `Aç (${formatProfessional(unlockCost, 'currency')}💰)` : `Yetersiz Altın (${formatProfessional(unlockCost, 'currency')}💰)`}
       </text>
     </g>
   );

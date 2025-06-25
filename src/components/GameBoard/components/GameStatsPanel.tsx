@@ -2,7 +2,11 @@ import React, { useState, useCallback } from 'react';
 import { useGameStore } from '../../../models/store';
 import { infoIconStyle, tooltipStyle } from '../styles';
 
-export const GameStatsPanel: React.FC = () => {
+interface GameStatsPanelProps {
+  onCommandCenterOpen?: () => void;
+}
+
+export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterOpen }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   
   const {
@@ -47,7 +51,7 @@ export const GameStatsPanel: React.FC = () => {
   }, [handleKeyDown, handleKeyUp]); // Include handlers in deps
 
   return (
-    <div style={{ position: 'absolute', top: 24, left: 32, zIndex: 2, display: 'flex', alignItems: 'center' }}>
+    <div style={{ position: 'absolute', top: 24, left: 32, zIndex: 2, display: 'flex', alignItems: 'center', gap: 12 }}>
       {/* Enhanced Info Icon - Standalone */}
       <div
         style={infoIconStyle}
@@ -63,6 +67,28 @@ export const GameStatsPanel: React.FC = () => {
         }}
       >
         📊
+      </div>
+
+      {/* Command Center Button */}
+      <div
+        style={{
+          ...infoIconStyle,
+          background: 'linear-gradient(135deg, #1e3a8a, #3730a3)',
+          border: '2px solid #ffd700',
+          boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)',
+        }}
+        onClick={onCommandCenterOpen}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 215, 0, 0.3)';
+        }}
+        title="Komuta Merkezi (S)"
+      >
+        🎯
       </div>
 
       {/* Enhanced Tooltip - Left Aligned */}

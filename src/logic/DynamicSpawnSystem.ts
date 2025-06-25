@@ -275,11 +275,12 @@ export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
       { type: 'Basic', weight: 80, minWave: 1, maxConcurrent: -1 },
       { type: 'Scout', weight: 20, minWave: 3, maxConcurrent: 2 },
     ],
+    // ✅ BALANCED: Early game friendly health scaling
     difficultyModifiers: {
       performanceThreshold: 0.6,
       adaptiveSpawnModifier: 1.0,
-      healthScalingFactor: 1.15,
-      speedScalingFactor: 1.05,
+      healthScalingFactor: 1.12, // Reduced from 1.15 (too aggressive)
+      speedScalingFactor: 1.03,  // Reduced from 1.05 (too fast scaling)
     }
   },
   
@@ -299,11 +300,12 @@ export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
       speedMultiplier: 0.8,
       goldMultiplier: 2.0,
     },
+    // ✅ BALANCED: Medium game controlled scaling
     difficultyModifiers: {
       performanceThreshold: 0.65,
       adaptiveSpawnModifier: 1.1,
-      healthScalingFactor: 1.20,
-      speedScalingFactor: 1.08,
+      healthScalingFactor: 1.15, // Reduced from 1.20 (too aggressive)
+      speedScalingFactor: 1.05,  // Reduced from 1.08 (too fast)
     }
   },
   
@@ -324,11 +326,12 @@ export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
       speedMultiplier: 0.9,
       goldMultiplier: 2.5,
     },
+    // ✅ BALANCED: Hard game reasonable scaling
     difficultyModifiers: {
       performanceThreshold: 0.7,
       adaptiveSpawnModifier: 1.2,
-      healthScalingFactor: 1.25,
-      speedScalingFactor: 1.10,
+      healthScalingFactor: 1.18, // Reduced from 1.25 (too high)
+      speedScalingFactor: 1.06,  // Reduced from 1.10 (too fast)
     }
   },
   
@@ -349,11 +352,12 @@ export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
       speedMultiplier: 1.0,
       goldMultiplier: 3.0,
     },
+    // ✅ BALANCED: Extreme game controlled difficulty 
     difficultyModifiers: {
       performanceThreshold: 0.75,
       adaptiveSpawnModifier: 1.3,
-      healthScalingFactor: 1.30,
-      speedScalingFactor: 1.12,
+      healthScalingFactor: 1.22, // Reduced from 1.30 (too extreme)
+      speedScalingFactor: 1.08,  // Reduced from 1.12 (too fast)
     }
   },
   
@@ -374,11 +378,12 @@ export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
       speedMultiplier: 1.1,
       goldMultiplier: 4.0,
     },
+    // ✅ BALANCED: Nightmare mode reasonable but challenging
     difficultyModifiers: {
       performanceThreshold: 0.8,
       adaptiveSpawnModifier: 1.4,
-      healthScalingFactor: 1.35,
-      speedScalingFactor: 1.15,
+      healthScalingFactor: 1.25, // Reduced from 1.35 (too punishing)
+      speedScalingFactor: 1.10,  // Reduced from 1.15 (too fast)
     }
   }
 };

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { getUnifiedButtonText, getUnifiedLevelDisplay } from '../../../utils/numberFormatting';
 
 export const EnergyUpgrades: React.FC = () => {
   const gold = useGameStore((s) => s.gold);
@@ -45,10 +46,7 @@ export const EnergyUpgrades: React.FC = () => {
           <div style={{ color: '#00cfff', fontSize: '14px', fontWeight: 'bold' }}>Kill Bonus</div>
           <div style={{ color: '#fff', fontSize: '18px' }}>+{stats.killBonus + 2}</div>
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ color: '#00cfff', fontSize: '14px', fontWeight: 'bold' }}>Aktivite Bonus</div>
-          <div style={{ color: '#fff', fontSize: '18px' }}>{(stats.activityBonus * 100).toFixed(0)}%</div>
-        </div>
+        {/* CRITICAL FIX: Activity bonus system removed to prevent energy flowing backwards */}
         <div style={{ textAlign: 'center' }}>
           <div style={{ color: '#00cfff', fontSize: '14px', fontWeight: 'bold' }}>Verimlilik</div>
           <div style={{ color: '#fff', fontSize: '18px' }}>-{(stats.efficiency * 100).toFixed(0)}%</div>
@@ -69,7 +67,7 @@ export const EnergyUpgrades: React.FC = () => {
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: '16px'
       }}>
-        {GAME_CONSTANTS.ENERGY_UPGRADES.map((upgrade) => {
+        {GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES?.map((upgrade: any) => {
           const currentLevel = energyUpgrades[upgrade.id] || 0;
           const isMaxLevel = currentLevel >= upgrade.maxLevel;
           const nextCost = upgrade.cost * (currentLevel + 1);
@@ -97,7 +95,7 @@ export const EnergyUpgrades: React.FC = () => {
                   padding: '2px 8px', 
                   borderRadius: '4px' 
                 }}>
-                  {currentLevel}/{upgrade.maxLevel}
+                  {getUnifiedLevelDisplay(currentLevel, upgrade.maxLevel, isMaxLevel)}
                 </div>
               </div>
               
@@ -127,10 +125,7 @@ export const EnergyUpgrades: React.FC = () => {
                   transition: 'all 0.2s ease',
                 }}
               >
-                {isMaxLevel
-                  ? 'MAX SEVİYE'
-                  : `Yükselt (${nextCost}💰)`
-                }
+                {getUnifiedButtonText(isMaxLevel, canAfford, false, 'upgrade')}
               </button>
             </div>
           );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, getUnifiedCostDisplay, getUnifiedLevelDisplay } from '../../../utils/numberFormatting';
 
 export const PowerMarket: React.FC = () => {
   const { 
@@ -51,7 +52,7 @@ export const PowerMarket: React.FC = () => {
       <div
         style={{
           background: 'linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6))',
-          border: `3px solid ${isMaxed ? '#666' : canAfford ? color : 'rgba(255,255,255,0.2)'}`,
+          border: `3px solid ${isMaxed ? '#4ade80' : canAfford ? color : 'rgba(255,255,255,0.2)'}`,
           borderRadius: 16,
           padding: 20,
           display: 'flex',
@@ -61,7 +62,7 @@ export const PowerMarket: React.FC = () => {
           position: 'relative',
           transition: 'all 0.3s ease',
           cursor: canAfford ? 'pointer' : 'not-allowed',
-          opacity: isMaxed ? 0.7 : 1,
+          opacity: isMaxed ? 0.8 : 1,
           boxShadow: canAfford ? `0 8px 24px ${color}40` : 'none',
           transform: canAfford ? 'translateY(-2px)' : 'none',
         }}
@@ -87,7 +88,7 @@ export const PowerMarket: React.FC = () => {
         )}
 
         {/* Discount Badge */}
-        {((diceResult && diceResult >= 4) || discountMultiplier > 1) && (
+        {(diceResult && diceResult >= 4) && (
           <div style={{
             position: 'absolute',
             top: -8,
@@ -116,7 +117,7 @@ export const PowerMarket: React.FC = () => {
           <div style={{ fontSize: 28 }}>{icon}</div>
           <div>
             <div style={{ 
-              fontSize: 18, 
+              fontSize: 16, 
               fontWeight: 'bold', 
               color: color,
               textShadow: `0 0 10px ${color}50`
@@ -125,10 +126,11 @@ export const PowerMarket: React.FC = () => {
             </div>
             <div style={{ 
               fontSize: 12, 
-              color: '#ccc',
-              opacity: 0.9
+              color: isMaxed ? '#4ade80' : '#ccc',
+              opacity: 0.9,
+              fontWeight: isMaxed ? 'bold' : 'normal'
             }}>
-              Seviye: {currentLevel}/{maxLevel}
+              {getUnifiedLevelDisplay(currentLevel, maxLevel, isMaxed)}
             </div>
           </div>
         </div>
@@ -144,14 +146,12 @@ export const PowerMarket: React.FC = () => {
           {additionalInfo && (
             <div style={{ 
               marginTop: 8, 
-              padding: 8, 
-              background: 'rgba(255,255,255,0.05)',
-              borderRadius: 8,
-              fontSize: 12,
-              color: '#bbb',
-              border: '1px solid rgba(255,255,255,0.1)'
+              fontSize: 11, 
+              color: color, 
+              opacity: 0.8,
+              fontStyle: 'italic' 
             }}>
-              💡 {additionalInfo}
+              {additionalInfo}
             </div>
           )}
         </div>
@@ -175,15 +175,15 @@ export const PowerMarket: React.FC = () => {
                 color: '#999', 
                 textDecoration: 'line-through'
               }}>
-                {baseCost} 💰
+                {formatCurrency(baseCost)} 💰
               </div>
             )}
             <div style={{ 
               fontSize: 16, 
               fontWeight: 'bold',
-              color: isMaxed ? '#666' : canAfford ? GAME_CONSTANTS.GOLD_COLOR : '#ff6b6b'
+              color: isMaxed ? '#4ade80' : getAffordabilityColor(finalCost, gold)
             }}>
-              {isMaxed ? 'MAKSIMUM' : `${finalCost} 💰`}
+              {getUnifiedCostDisplay(finalCost, baseCost !== finalCost ? baseCost : undefined, isMaxed).mainText}
             </div>
           </div>
           
@@ -200,7 +200,7 @@ export const PowerMarket: React.FC = () => {
               border: `2px solid ${canAfford ? color : '#666'}`,
               textShadow: canAfford ? '0 1px 2px rgba(0,0,0,0.5)' : 'none',
             }}>
-              {canAfford ? '✅ Satın Al' : '❌ Yetersiz'}
+              {getUnifiedButtonText(isMaxed, canAfford, false, 'purchase')}
             </div>
           )}
         </div>
@@ -212,12 +212,12 @@ export const PowerMarket: React.FC = () => {
     <div style={{ 
       width: '100%', 
       display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
       gap: 20
     }}>
       {createUpgrade(
-        'Enerji Kapasitesi',
-        'Maksimum enerji kapasitesini artırır. Daha fazla enerji = daha fazla tower yerleştirme imkanı.',
+        'Enerji Güçlendirici',
+        'Maksimum enerji kapasitesini artırır ve enerji yenileme hızını yükseltir.',
         energyBoostLevel,
         GAME_CONSTANTS.ENERGY_BOOST_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, energyBoostLevel),
         GAME_CONSTANTS.MAX_ENERGY_BOOST_LEVEL,
@@ -236,15 +236,15 @@ export const PowerMarket: React.FC = () => {
           setGold(gold - finalCost);
           setEnergyBoostLevel(energyBoostLevel + 1);
         },
-        '🔋',
-        '#3b82f6',
+        '⚡',
+        '#fbbf24',
         false,
-        'Her seviye +20 enerji kapasitesi sağlar'
+        'Her seviye +20 enerji kapasitesi'
       )}
 
       {createUpgrade(
-        'Aksiyon Kapasitesi',
-        'Maksimum aksiyon sayısını artırır. Daha fazla aksiyon = wave başında daha fazla hareket.',
+        'Aksiyon Sistemi',
+        'Wave başına maksimum aksiyon sayısını artırır ve daha fazla harita değişikliği yapma imkanı sağlar.',
         maxActionsLevel,
         GAME_CONSTANTS.MAX_ACTIONS_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, maxActionsLevel),
         GAME_CONSTANTS.MAX_MAX_ACTIONS_LEVEL,
@@ -263,15 +263,15 @@ export const PowerMarket: React.FC = () => {
           setGold(gold - finalCost);
           setMaxActionsLevel(maxActionsLevel + 1);
         },
-        '⚡',
-        '#eab308',
+        '🎯',
+        '#06b6d4',
         false,
-        'Her seviye +1 aksiyon kapasitesi sağlar'
+        'Her seviye +1 aksiyon'
       )}
 
       {createUpgrade(
-        'Elite Savaş Modülü',
-        'Gelişmiş savaş sistemleri ve bonus efektler açar. Elite seviye modülleri maksimum performans sağlar.',
+        'Elite Modül',
+        'Gelişmiş oyun mekaniği açar ve özel yetenekler kazandırır. En üst seviye güçlendirme.',
         eliteModuleLevel,
         GAME_CONSTANTS.ELITE_MODULE_COST * Math.pow(GAME_CONSTANTS.ELITE_COST_MULTIPLIER, eliteModuleLevel),
         GAME_CONSTANTS.MAX_ELITE_MODULE_LEVEL,
@@ -290,10 +290,10 @@ export const PowerMarket: React.FC = () => {
           setGold(gold - finalCost);
           setEliteModuleLevel(eliteModuleLevel + 1);
         },
-        '🛡️',
-        '#dc2626',
+        '🚀',
+        '#8b5cf6',
         true,
-        'Özel bonus efektler ve gelişmiş yetenekler açar'
+        'Özel yetenekler ve bonuslar'
       )}
 
       <style>

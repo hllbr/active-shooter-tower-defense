@@ -7,7 +7,7 @@ import { startGameLoop } from '../../logic/GameLoop';
 import { waveManager } from '../../logic/WaveManager';
 import { initUpgradeEffects } from '../../logic/UpgradeEffects';
 import { UpgradeScreen } from '../game/UpgradeScreen';
-import { playSound, startBackgroundMusic } from '../../utils/sound';
+import { playSound, playContextualSound, startBackgroundMusic } from '../../utils/sound';
 import { performMemoryCleanup } from '../../logic/Effects';
 import { bulletPool } from '../../logic/TowerManager';
 
@@ -21,7 +21,9 @@ import {
   StartScreen,
   GameOverScreen,
   TowerDragVisualization,
-  SVGEffectsRenderer
+  SVGEffectsRenderer,
+  CommandCenter,
+  NotificationSystem
 } from './components';
 
 // Import enhanced hooks
@@ -44,7 +46,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     tickPreparation,
     tickEnergyRegen,
     tickActionRegen,
-    unlockingSlots
+    unlockingSlots,
+    pausePreparation,
+    resumePreparation,
+    initializeAchievements
   } = useGameStore();
 
   // Enhanced drag & drop system
@@ -65,6 +70,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
   // Screen shake effect
   const [screenShake, setScreenShake] = React.useState(false);
   const screenShakeTimerRef = React.useRef<number | null>(null);
+
+  // Command Center state
+  const [commandCenterOpen, setCommandCenterOpen] = React.useState(false);
 
   // ⚠️ FIXED: Animation State Inconsistency  
   // Enhanced animation management with proper cleanup and overlap prevention
@@ -97,7 +105,40 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
 
   React.useEffect(() => {
     initUpgradeEffects();
-  }, []);
+    
+    // ✅ ACHIEVEMENT SYSTEM: Initialize on game start (Faz 1: Temel Mekanikler)
+    initializeAchievements();
+  }, [initializeAchievements]);
+
+  // Command Center keyboard handler
+  React.useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 's' || event.key === 'S') {
+        if (event.ctrlKey || event.metaKey) return; // Ignore Ctrl+S (save)
+        
+        event.preventDefault();
+        setCommandCenterOpen(prev => {
+          const newState = !prev;
+          
+          // Pause/resume game when command center opens/closes
+          if (newState && isPreparing && !isPaused) {
+            pausePreparation();
+          } else if (!newState && isPreparing && isPaused) {
+            resumePreparation();
+          }
+          
+          if (newState) {
+            playSound('levelupwav'); // Temporary - will use command-center-open.wav
+          }
+          
+          return newState;
+        });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [commandCenterOpen, isPreparing, isPaused, pausePreparation, resumePreparation]);
 
   // Main game loop effect
   const loopStopper = useRef<(() => void) | null>(null);
@@ -112,7 +153,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     }
     if (!loopStopper.current) {
       loopStopper.current = startGameLoop();
-      // Background music
+      // ✅ SMART MUSIC: No more overlaps! Music manager prevents restarts
       startBackgroundMusic();
     }
     // Start continuous spawning system
@@ -123,6 +164,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       stopContinuousSpawning();
       loopStopper.current?.();
       loopStopper.current = null;
+      // Don't stop music here - let it continue between waves
     };
   }, [isStarted, isRefreshing, isPreparing, currentWave]);
 
@@ -139,7 +181,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
   // Preparation warning and auto-start
   React.useEffect(() => {
     if (isPreparing && prepRemaining <= GAME_CONSTANTS.PREP_WARNING_THRESHOLD && !warningPlayed.current) {
-      playSound('warning');
+      playContextualSound('warning'); // ✅ Enhanced: Uses fallback gameover.wav for attention
       warningPlayed.current = true;
     }
     if (isPreparing && prepRemaining <= 0) {
@@ -219,9 +261,26 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     };
   }, []);
 
-  // SVG viewport size
-  const width = window.innerWidth;
-  const height = window.innerHeight;
+  // ✅ PERFORMANCE FIX #1: Cache viewport dimensions (prevents re-render on every frame)
+  const [dimensions, setDimensions] = React.useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }));
+
+  // Only update dimensions on actual window resize
+  React.useEffect(() => {
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  const { width, height } = dimensions;
 
   return (
     <div style={{ 
@@ -234,7 +293,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       </style>
       
       {/* UI Components */}
-      <GameStatsPanel />
+      <GameStatsPanel onCommandCenterOpen={() => setCommandCenterOpen(true)} />
       <EnergyWarning />
       <DebugMessage message={debugMessage} onClear={clearDebugMessage} />
       <PreparationScreen />
@@ -243,6 +302,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       <FrostOverlay />
 
       {isRefreshing && <UpgradeScreen />}
+      
+      {/* Command Center (S Key) */}
+      <CommandCenter 
+        isOpen={commandCenterOpen} 
+        onClose={() => {
+          setCommandCenterOpen(false);
+          // Resume game if it was paused due to command center
+          if (isPreparing && isPaused) {
+            resumePreparation();
+          }
+        }} 
+      />
+
+      {/* ✅ NOTIFICATION SYSTEM: User Purchase Feedback (fixes "can't tell if purchase worked") */}
+      <NotificationSystem />
 
       {/* SVG Game Area with Enhanced Touch Support */}
       <svg 

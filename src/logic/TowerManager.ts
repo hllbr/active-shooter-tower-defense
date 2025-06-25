@@ -6,6 +6,7 @@ import { playSound } from '../utils/sound';
 import { energyManager } from './EnergyManager';
 import { collisionManager } from './CollisionDetection';
 import { cleanupManager } from './Effects';
+import { upgradeEffectsManager } from './UpgradeEffects';
 
 // =================== BULLET POOL SYSTEM ===================
 
@@ -574,23 +575,35 @@ function fireTower(
   enemy: Enemy,
   bulletType: { speedMultiplier: number; damageMultiplier: number; color: string },
 ) {
+  const state = useGameStore.getState();
+  
+  // CRITICAL FIX: Apply upgrade effects to bullet damage and speed
+  const baseDamage = tower.damage * bulletType.damageMultiplier;
+  const baseSpeed = GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier;
+  
+  const { damage, speed } = upgradeEffectsManager.applyUpgradeEffects(
+    baseDamage,
+    baseSpeed,
+    state.bulletLevel
+  );
+  
   // Use bullet pool for memory efficiency
   const bullet = bulletPool.createBullet(
     { x: tower.position.x, y: tower.position.y },
     getDirection(tower.position, enemy.position),
-    tower.damage * bulletType.damageMultiplier,
-    GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier,
+    damage, // FIXED: Now uses upgraded damage
+    speed,   // FIXED: Now uses upgraded speed
     bulletType.color,
-    useGameStore.getState().bulletLevel - 1,
+    state.bulletLevel - 1,
     enemy.id
   );
   
-  useGameStore.getState().addBullet(bullet);
+  state.addBullet(bullet);
   playSound(tower.attackSound);
   tower.lastFired = performance.now();
   
   if (GAME_CONSTANTS.DEBUG_MODE) {
-    console.log(`🔫 Tower ${tower.id} fired pooled bullet at ${enemy.id}`);
+    console.log(`🔫 Tower ${tower.id} fired upgraded bullet (${damage} dmg) at ${enemy.id}`);
   }
 }
 

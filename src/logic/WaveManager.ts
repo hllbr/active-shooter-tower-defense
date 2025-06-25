@@ -59,10 +59,14 @@ export class WaveManager {
     required: number,
   ) {
     if (!this.waveActive) return;
+    
+    // DEBUG: Always log progress for Wave 1
+    if (wave === 1 || GAME_CONSTANTS.DEBUG_MODE) {
+      console.log(`🌊 Wave ${wave}: ${kills}/${required} enemies killed, ${remainingEnemies} remaining, pending: ${pendingSpawns}`);
+    }
+    
     if (kills >= required) {
-      if (GAME_CONSTANTS.DEBUG_MODE) {
-        console.log(`[WaveManager] Wave ${wave} completed - ${kills} enemies defeated`);
-      }
+      console.log(`✅ Wave ${wave} COMPLETED! ${kills}/${required} enemies defeated`);
       this.waveActive = false;
       this.onComplete();
       this.completeListeners.forEach(l => l());
