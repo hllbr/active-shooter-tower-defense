@@ -475,10 +475,14 @@ export const useGameStore = create<Store>((set, get) => ({
   buyWall: () => {},
   hitWall: () => {},
   purchaseShield: () => {},
-  nextWave: () => {},
-  resetGame: () => {},
-  setStarted: () => {},
-  setRefreshing: () => {},
+  nextWave: () => set((state) => ({
+    currentWave: state.currentWave + 1,
+    enemiesKilled: 0,
+    enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(state.currentWave + 1)
+  })),
+  resetGame: () => set(() => ({ ...initialState })),
+  setStarted: (started: boolean) => set({ isStarted: started }),
+  setRefreshing: (refreshing: boolean) => set({ isRefreshing: refreshing }),
   upgradeBullet: () => {},
   refreshBattlefield: () => {},
   rollDice: () => {},
@@ -493,13 +497,43 @@ export const useGameStore = create<Store>((set, get) => ({
   activateFrostEffect: () => {},
   deactivateFrostEffect: () => {},
   performTileAction: () => {},
-  addTowerUpgradeListener: () => {},
-  startPreparation: () => {},
-  tickPreparation: () => {},
-  pausePreparation: () => {},
-  resumePreparation: () => {},
-  speedUpPreparation: () => {},
-  startWave: () => {},
+  addTowerUpgradeListener: (fn: TowerUpgradeListener) => set((state) => ({
+    towerUpgradeListeners: [...state.towerUpgradeListeners, fn]
+  })),
+  startPreparation: () => set({
+    isPreparing: true,
+    prepRemaining: GAME_CONSTANTS.PREP_TIME,
+    isPaused: false
+  }),
+  tickPreparation: (delta: number) => set((state) => {
+    if (!state.isPreparing || state.isPaused) return {} as Partial<GameState>;
+    const remaining = Math.max(0, state.prepRemaining - delta);
+    return { prepRemaining: remaining } as Partial<GameState>;
+  }),
+  pausePreparation: () => set({ isPaused: true }),
+  resumePreparation: () => set({ isPaused: false }),
+  speedUpPreparation: (amount: number) => {
+    const { prepRemaining, startWave } = get();
+    if (!get().isPreparing) return;
+    if (prepRemaining - amount <= 0) {
+      startWave();
+    } else {
+      set({ prepRemaining: Math.max(0, prepRemaining - amount) });
+    }
+  },
+  startWave: () => {
+    const state = get();
+    if (!state.isPreparing) return;
+    set({
+      isPreparing: false,
+      prepRemaining: 0,
+      isPaused: false,
+      waveStartTime: performance.now(),
+      enemiesKilled: 0,
+      enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(state.currentWave),
+      lostTowerThisWave: false
+    });
+  },
   consumeEnergy: () => false,
   addEnergy: () => {},
   clearEnergyWarning: () => {},
