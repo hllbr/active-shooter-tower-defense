@@ -164,22 +164,23 @@ export const FireUpgrades: React.FC = () => {
             </div>
           </div>
           
-          {!isMaxed && (
-            <div style={{
-              padding: '8px 16px',
-              borderRadius: 10,
-              background: canAfford 
+          <div style={{
+            padding: '8px 16px',
+            borderRadius: 10,
+            background: isMaxed
+              ? 'linear-gradient(135deg, #4ade80, #22c55e)'
+              : canAfford 
                 ? `linear-gradient(135deg, ${color}, ${color}cc)` 
                 : 'rgba(255,255,255,0.1)',
-              color: canAfford ? '#fff' : '#666',
-              fontSize: 14,
-              fontWeight: 'bold',
-              border: `2px solid ${canAfford ? color : '#666'}`,
-              textShadow: canAfford ? '0 1px 2px rgba(0,0,0,0.5)' : 'none',
-            }}>
-              {getUnifiedButtonText(isMaxed, canAfford, false, 'upgrade')}
-            </div>
-          )}
+            color: isMaxed ? '#fff' : canAfford ? '#fff' : '#666',
+            fontSize: 14,
+            fontWeight: 'bold',
+            border: `2px solid ${isMaxed ? '#4ade80' : canAfford ? color : '#666'}`,
+            textShadow: (isMaxed || canAfford) ? '0 1px 2px rgba(0,0,0,0.5)' : 'none',
+            cursor: isMaxed ? 'default' : 'inherit',
+          }}>
+            {getUnifiedButtonText(isMaxed, canAfford, false, 'upgrade')}
+          </div>
         </div>
       </div>
     );
@@ -198,12 +199,20 @@ export const FireUpgrades: React.FC = () => {
         const isNext = bulletLevel === level - 1;
         const cost = GAME_CONSTANTS.BULLET_COST * Math.pow(GAME_CONSTANTS.BULLET_COST_MULTIPLIER, index);
         
+        // Seviye gösterimini düzelt: bulletLevel bu mermi tipine sahipse 2/2, hazırsa 1/2, değilse 0/2
+        let currentLevel = 0;
+        if (isUnlocked) {
+          currentLevel = 2; // Sahip olunan upgrade'ler maksimum seviyede
+        } else if (isNext) {
+          currentLevel = 1; // Bir sonraki upgrade satın alınabilir durumda
+        }
+        
         return createUpgrade(
           bulletType.name,
           `${bulletType.name} mermi sistemi. Daha güçlü ve etkili saldırılar.`,
           cost,
-          isUnlocked ? level : 0,
-          level,
+          currentLevel,
+          2,
           () => {
             if (isNext) {
               const finalCost = cost;

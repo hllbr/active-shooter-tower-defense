@@ -51,20 +51,36 @@ export const UpgradeScreen: React.FC = () => {
   }, []);
 
   const handleContinue = useCallback(() => {
+    console.log('🚀 UpgradeScreen: handleContinue started');
+    
     // CRITICAL FIX: Correct execution order for wave progression
-    // 1. First increment wave and setup next wave state
-    nextWave();
-    
-    // 2. Start preparation phase (includes timer setup)
-    startPreparation();
-    
-    // 3. Reset dice for next upgrade opportunity
-    resetDice();
-    
-    // 4. FINALLY close UpgradeScreen (after all state is stable)
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 50); // Small delay ensures state stability
+    try {
+      // 1. First increment wave and setup next wave state
+      console.log('📈 Calling nextWave...');
+      nextWave();
+      console.log('✅ nextWave completed');
+      
+      // 2. Start preparation phase (includes timer setup)  
+      console.log('⏳ Calling startPreparation...');
+      startPreparation();
+      console.log('✅ startPreparation completed');
+      
+      // 3. Reset dice for next upgrade opportunity
+      console.log('🎲 Calling resetDice...');
+      resetDice();
+      console.log('✅ resetDice completed');
+      
+      // 4. FINALLY close UpgradeScreen (after all state is stable)
+      console.log('🔄 Setting refreshing to false...');
+      setTimeout(() => {
+        setRefreshing(false);
+        console.log('✅ setRefreshing(false) completed');
+        console.log('🎉 handleContinue completed successfully!');
+      }, 50); // Small delay ensures state stability
+      
+    } catch (error) {
+      console.error('❌ Error in handleContinue:', error);
+    }
   }, [nextWave, startPreparation, resetDice, setRefreshing]);
 
   return (

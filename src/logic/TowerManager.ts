@@ -807,6 +807,12 @@ function handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect
 
 export function updateTowerFire() {
   const state = useGameStore.getState();
+  
+  // ✅ CRITICAL FIX: Stop tower firing if game is over
+  if (state.isGameOver) {
+    return;
+  }
+  
   const modifier = state.currentWaveModifier;
   const now = performance.now();
   

@@ -57,6 +57,8 @@ export const GAME_CONSTANTS = {
   },
   BASE_ENERGY: 100,
   ENERGY_REGEN_WAVE: 10,
+  ENERGY_REGEN_PASSIVE: 0.5, // Saniye başına pasif rejenerasyon
+  ENERGY_REGEN_KILL: 2, // Düşman öldürme bonusu
   ENERGY_COSTS: {
     buildTower: 20,
     upgradeTower: 30,

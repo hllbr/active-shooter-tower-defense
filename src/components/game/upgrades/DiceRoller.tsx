@@ -28,6 +28,36 @@ export const DiceRoller: React.FC = () => {
     }
   }, [isDiceRolling]);
 
+  const handleDiceRoll = () => {
+    console.log('🎲 DiceRoller: Dice button clicked!');
+    console.log('📊 Dice state before roll:', {
+      diceUsed,
+      isDiceRolling,
+      diceRoll,
+      discountMultiplier
+    });
+    
+    try {
+      console.log('🔄 Calling rollDice...');
+      rollDice();
+      console.log('✅ rollDice called successfully');
+      
+      // Check state after a short delay
+      setTimeout(() => {
+        const newState = useGameStore.getState();
+        console.log('📊 Dice state after roll:', {
+          diceUsed: newState.diceUsed,
+          isDiceRolling: newState.isDiceRolling,
+          diceRoll: newState.diceRoll,
+          discountMultiplier: newState.discountMultiplier
+        });
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Error in rollDice:', error);
+    }
+  };
+
   return (
     <div style={{
       maxWidth: 'calc(100% - 40px)',
@@ -64,8 +94,8 @@ export const DiceRoller: React.FC = () => {
         <div style={{ fontSize: 14, color: '#aaa', marginBottom: 12, lineHeight: 1.4 }}>
           <div>💡 <strong>Güçlendirme indirimleri kazanmak ister misin?</strong></div>
           <div style={{ fontSize: 12, marginTop: 4 }}>
-            • 3 ve altı: İndirimler iptal edilir<br />
-            • 4-6: Mevcut indirim + %50-150 daha fazla<br />
+            • 1-3: Normal indirimler (%10-30)<br />
+            • 4-6: Süper indirimler (%30-50)<br />
             • <strong>Her wave'de sadece 1 hakkın var!</strong>
           </div>
         </div>
@@ -78,19 +108,19 @@ export const DiceRoller: React.FC = () => {
           marginBottom: 12,
           textAlign: 'center'
         }}>
-          <span>Zar atılıyor...</span>
+          <span>🎲 Zar atılıyor...</span>
           <div style={{
             marginTop: 8,
           }}>
             <span style={{
               display: 'inline-block',
               animation: 'spin 0.4s linear infinite',
-              fontSize: 24,
+              fontSize: 32,
             }}>
               🎲
             </span>
             <span style={{ fontSize: 24, marginLeft: '0.5em' }}>
-              {diceAnimation % 6 + 1}
+              {getDiceFace((diceAnimation % 6) + 1)}
             </span>
           </div>
         </div>
@@ -102,32 +132,32 @@ export const DiceRoller: React.FC = () => {
             fontSize: 64,
             lineHeight: 1,
             marginBottom: 8,
-            color: discountMultiplier === 0 ? '#ff4444' : discountMultiplier > 1 ? '#4ade80' : '#fff',
-            textShadow: `0 0 12px ${discountMultiplier === 0 ? '#ff4444' : discountMultiplier > 1 ? '#4ade80' : '#fff'}`
+            color: discountMultiplier < 1 ? '#4ade80' : discountMultiplier === 1 ? '#fbbf24' : '#fff',
+            textShadow: `0 0 12px ${discountMultiplier < 1 ? '#4ade80' : discountMultiplier === 1 ? '#fbbf24' : '#fff'}`
           }}>
             {getDiceFace(diceRoll)}
           </div>
           <div style={{ fontSize: 14, color: '#aaa' }}>
-            {discountMultiplier === 0 ? (
-              <span style={{ color: '#ff4444' }}>❌ İndirimler iptal edildi!</span>
-            ) : discountMultiplier > 1 ? (
-              <span style={{ color: '#4ade80' }}>🎉 İndirimler {Math.round((discountMultiplier - 1) * 100)}% daha artırıldı!</span>
+            {discountMultiplier < 1 ? (
+              <span style={{ color: '#4ade80' }}>🎉 Süper İndirim! %{Math.round((1 - discountMultiplier) * 100)} daha ucuz!</span>
+            ) : discountMultiplier === 1 ? (
+              <span style={{ color: '#fbbf24' }}>✅ Normal indirimler aktif</span>
             ) : (
-              <span style={{ color: GAME_CONSTANTS.GOLD_COLOR }}>✅ Normal indirimler aktif</span>
+              <span style={{ color: '#ff4444' }}>❌ İndirimler iptal edildi!</span>
             )}
           </div>
         </div>
       )}
 
       <button
-        onClick={rollDice}
+        onClick={handleDiceRoll}
         disabled={diceUsed || isDiceRolling}
         style={{
-          padding: !diceUsed && !isDiceRolling ? '8px 12px' : '8px 16px',
-          fontSize: !diceUsed && !isDiceRolling ? 24 : 16,
+          padding: !diceUsed && !isDiceRolling ? '12px 24px' : '8px 16px',
+          fontSize: !diceUsed && !isDiceRolling ? 18 : 16,
           borderRadius: 8,
           background: diceUsed || isDiceRolling ? '#444' : '#4ade80',
-          color: '#000',
+          color: diceUsed || isDiceRolling ? '#999' : '#000',
           border: 'none',
           cursor: diceUsed || isDiceRolling ? 'not-allowed' : 'pointer',
           fontWeight: 'bold',
@@ -135,8 +165,17 @@ export const DiceRoller: React.FC = () => {
           lineHeight: 1.2,
         }}
       >
-        {isDiceRolling ? '🎲 Zar Atılıyor...' : diceUsed ? '🎲 Zar Kullanıldı' : '🎲'}
+        {isDiceRolling ? '🎲 Zar Atılıyor...' : diceUsed ? '✅ Zar Kullanıldı' : '🎲 ZAR AT!'}
       </button>
+
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
     </div>
   );
 }; 

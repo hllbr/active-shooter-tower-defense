@@ -188,10 +188,19 @@ function createEnemy(wave: number, type: keyof typeof GAME_CONSTANTS.ENEMY_TYPES
 export function startEnemyWave(wave: number) {
   const { addEnemy, towers, towerSlots, buildTower, currentWaveModifier } = useGameStore.getState();
 
+  // ✅ ENHANCED: Auto-place tower if no towers exist
   if (towers.length === 0) {
-    const firstEmptySlotIndex = towerSlots.findIndex((s) => s.unlocked && !s.tower);
-    if (firstEmptySlotIndex !== -1) {
-      buildTower(firstEmptySlotIndex, true);
+    const emptySlots = towerSlots
+      .map((slot, index) => ({ slot, index }))
+      .filter(({ slot }) => slot.unlocked && !slot.tower);
+    
+    if (emptySlots.length > 0) {
+      // Choose random empty slot instead of first one for variety
+      const randomSlot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
+      console.log(`🏗️ Auto-building starter tower at slot ${randomSlot.index} (${emptySlots.length} slots available)`);
+      buildTower(randomSlot.index, true); // Free tower placement
+    } else {
+      console.warn('⚠️ No unlocked slots available for auto tower placement!');
     }
   }
 
@@ -221,6 +230,17 @@ export function startEnemyWave(wave: number) {
   
   const spawnNext = () => {
     const state = useGameStore.getState();
+    
+    // ✅ CRITICAL FIX: Stop spawning if game is over
+    if (state.isGameOver) {
+      console.log('💀 Stopping enemy spawn: Game Over');
+      if (spawnInterval) {
+        clearInterval(spawnInterval);
+        spawnInterval = null;
+      }
+      return;
+    }
+    
     const enemiesRequired = GAME_CONSTANTS.getWaveEnemiesRequired(wave);
     const enemiesKilled = state.enemiesKilled;
     
@@ -276,8 +296,13 @@ export function startEnemyWave(wave: number) {
 }
 
 export function updateEnemyMovement() {
-  const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall, damageEnemy, wallLevel } =
+  const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall, damageEnemy, wallLevel, isGameOver } =
     useGameStore.getState();
+  
+  // ✅ CRITICAL FIX: Stop enemy movement if game is over
+  if (isGameOver) {
+    return;
+  }
   
   enemies.forEach((enemy) => {
     if (enemy.frozenUntil && enemy.frozenUntil > performance.now()) {
