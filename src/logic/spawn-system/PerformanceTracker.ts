@@ -1,4 +1,4 @@
-import { IPerformanceTracker } from './types';
+import type { IPerformanceTracker } from './types';
 
 export class PerformanceTracker implements IPerformanceTracker {
   private performanceHistory: Array<{

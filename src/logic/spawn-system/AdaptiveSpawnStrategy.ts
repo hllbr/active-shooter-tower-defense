@@ -1,7 +1,11 @@
 import type { Enemy } from '../../models/gameTypes';
 import { GAME_CONSTANTS } from '../../utils/Constants';
 import { WAVE_SPAWN_CONFIGS } from './waveConfigs';
-import { ISpawnStrategy, IPerformanceTracker, WaveSpawnConfig } from './types';
+import type {
+  ISpawnStrategy,
+  IPerformanceTracker,
+  WaveSpawnConfig
+} from './types';
 
 export class AdaptiveSpawnStrategy implements ISpawnStrategy {
   private lastSpawnTime = 0;

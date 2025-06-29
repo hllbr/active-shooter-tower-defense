@@ -1,5 +1,5 @@
 import { WAVE_SPAWN_CONFIGS } from './waveConfigs';
-import { ISpawnStrategy, IPerformanceTracker } from './types';
+import type { ISpawnStrategy, IPerformanceTracker } from './types';
 
 export class DynamicSpawnController {
   private spawnInterval: number | null = null;
