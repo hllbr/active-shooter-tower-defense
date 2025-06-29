@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../../../models/store';
-import { playSound } from '../../../utils/sound';
+// import { playSound } from '../../../utils/sound'; // 🔇 SES SİSTEMİ DEVRE DIŞI
 import { OverviewTab } from './OverviewTab';
 import { BuildsTab } from './BuildsTab';
 import { StatisticsTab } from './StatisticsTab';
@@ -22,7 +22,7 @@ export const CommandCenter: React.FC<{ isOpen: boolean; onClose: () => void }> =
 
   useEffect(() => {
     if (isOpen) {
-      playSound('levelupwav'); // Temporary - will use command-center-open.wav
+      // playSound('levelupwav'); // 🔇 COMMAND CENTER AÇILIŞ SESİ DEVRE DIŞI
     }
   }, [isOpen]);
 
@@ -41,7 +41,7 @@ export const CommandCenter: React.FC<{ isOpen: boolean; onClose: () => void }> =
 
   const switchTab = (tabId: string) => {
     setActiveTab(tabId);
-    playSound('levelupwav'); // Temporary - will use ui-tab-switch.wav
+    // playSound('levelupwav'); // 🔇 TAB DEĞİŞTİRME SESİ DEVRE DIŞI
   };
 
   const renderTabContent = () => {

@@ -1,46 +1,14 @@
-import { ACHIEVEMENT_DEFINITIONS } from '../config/achievements/achievementDefinitions';
-import { ACHIEVEMENT_SERIES } from '../config/achievements/achievementSeries';
-import { createInitialPlayerProfile } from '../config/achievements/playerProfile';
 import type { GameState, Achievement, AchievementSeries, PlayerProfile } from '../models/gameTypes';
+import type { AchievementEventData } from './achievements/AchievementEventTypes';
 import {
   AchievementProgressTracker,
   AchievementRewardManager,
   AchievementDisplayHelper,
   AchievementStatisticsManager,
-  AchievementSeriesManager
+  AchievementSeriesManager,
+  AchievementInitializer,
+  AchievementEventProcessor
 } from './achievements';
-
-// Achievement Event Data Types
-interface WaveEventData {
-  waveNumber: number;
-  enemiesKilled: number;
-  timeElapsed: number;
-}
-
-interface PurchaseEventData {
-  itemType: string;
-  cost: number;
-  level: number;
-}
-
-interface EnemyEventData {
-  enemyType: string;
-  damage: number;
-  isSpecial: boolean;
-}
-
-interface TowerEventData {
-  towerType: string;
-  level: number;
-  position: { x: number; y: number };
-}
-
-type AchievementEventData = 
-  | WaveEventData 
-  | PurchaseEventData 
-  | EnemyEventData 
-  | TowerEventData 
-  | Record<string, string | number | boolean>;
 
 // ===== ACHIEVEMENT MANAGER =====
 
@@ -51,6 +19,7 @@ export class AchievementManager {
   private displayHelper: AchievementDisplayHelper;
   private statisticsManager: AchievementStatisticsManager;
   private seriesManager: AchievementSeriesManager;
+  private eventProcessor: AchievementEventProcessor;
 
   private constructor() {
     this.progressTracker = new AchievementProgressTracker();
@@ -58,6 +27,7 @@ export class AchievementManager {
     this.displayHelper = new AchievementDisplayHelper();
     this.statisticsManager = new AchievementStatisticsManager();
     this.seriesManager = new AchievementSeriesManager();
+    this.eventProcessor = new AchievementEventProcessor();
   }
 
   public static getInstance(): AchievementManager {
@@ -67,76 +37,60 @@ export class AchievementManager {
     return AchievementManager.instance;
   }
 
-  // Initialize achievements system
-  public initializeAchievements(): {
-    achievements: Record<string, Achievement>;
-    achievementSeries: Record<string, AchievementSeries>;
-    playerProfile: PlayerProfile;
-  } {
-    // Create achievements map
-    const achievements: Record<string, Achievement> = {};
-    ACHIEVEMENT_DEFINITIONS.forEach((achievement: Achievement) => {
-      achievements[achievement.id] = { ...achievement };
-    });
+  // ===== INITIALIZATION =====
 
-    // Create series map
-    const achievementSeries: Record<string, AchievementSeries> = {};
-    ACHIEVEMENT_SERIES.forEach((series: AchievementSeries) => {
-      achievementSeries[series.id] = { ...series };
-    });
-
-    // Create initial player profile
-    const playerProfile = createInitialPlayerProfile();
-
-    return {
-      achievements,
-      achievementSeries,
-      playerProfile
-    };
+  /**
+   * Initialize achievements system
+   */
+  public initializeAchievements() {
+    return AchievementInitializer.initializeAchievements();
   }
 
-  // Update achievement progress based on game events
+  /**
+   * Reset achievements to initial state
+   */
+  public resetAchievements(achievements: Record<string, Achievement>) {
+    return AchievementInitializer.resetAchievements(achievements);
+  }
+
+  /**
+   * Reset player profile to initial state
+   */
+  public resetPlayerProfile() {
+    return AchievementInitializer.resetPlayerProfile();
+  }
+
+  // ===== EVENT PROCESSING =====
+
+  /**
+   * Update achievement progress based on game events
+   */
   public updateAchievements(
     gameState: GameState,
     eventType: string,
     eventData?: AchievementEventData
-  ): {
-    newlyCompleted: Achievement[];
-    updatedAchievements: Record<string, Achievement>;
-    updatedProfile: PlayerProfile;
-  } {
-    const newlyCompleted: Achievement[] = [];
-    const updatedAchievements = { ...gameState.achievements };
-    let updatedProfile = { ...gameState.playerProfile };
+  ) {
+    return this.eventProcessor.processAchievementEvents(gameState, eventType, eventData);
+  }
 
-    // Get achievements that need updating
-    const achievementsToUpdate = this.progressTracker.getAchievementsToUpdate(updatedAchievements, eventType);
+  /**
+   * Process multiple events in batch
+   */
+  public processBatchEvents(
+    gameState: GameState,
+    events: Array<{ eventType: string; eventData?: AchievementEventData }>
+  ) {
+    return this.eventProcessor.processBatchEvents(gameState, events);
+  }
 
-    // Check all achievements for updates
-    achievementsToUpdate.forEach(achievement => {
-      // Update progress based on tracking function
-      const newProgress = this.progressTracker.calculateProgress(achievement, gameState, eventData);
-      
-      if (newProgress !== achievement.progress) {
-        achievement.progress = newProgress;
-        
-        // Check if achievement is completed
-        if (newProgress >= achievement.target && !achievement.completed) {
-          achievement.completed = true;
-          achievement.completedAt = Date.now();
-          newlyCompleted.push(achievement);
-
-          // Process achievement completion and rewards
-          updatedProfile = this.rewardManager.processAchievementCompletion(achievement, updatedProfile);
-        }
-      }
-    });
-
-    return {
-      newlyCompleted,
-      updatedAchievements,
-      updatedProfile
-    };
+  /**
+   * Check if any achievements are close to completion
+   */
+  public getNearCompletionAchievements(
+    achievements: Record<string, Achievement>,
+    threshold: number = 0.8
+  ) {
+    return this.eventProcessor.getNearCompletionAchievements(achievements, threshold);
   }
 
   // ===== DELEGATE TO SPECIALIZED COMPONENTS =====

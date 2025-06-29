@@ -266,7 +266,7 @@ export type Store = GameState & {
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
 };
 
-export const useGameStore = create<Store>((set, get) => ({
+export const useGameStore = create<Store>((set, get): Store => ({
   ...initialState,
 
   buildTower: (slotIdx, free = false, towerType: 'attack' | 'economy' = 'attack') => set((state) => {
@@ -343,6 +343,14 @@ export const useGameStore = create<Store>((set, get) => ({
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
     state.towerUpgradeListeners.forEach(fn => fn(newTower, 0, 1));
+    
+    // ✅ SOUND FIX: Play tower build sound effect
+    setTimeout(() => {
+      import('../utils/sound').then(({ playContextualSound }) => {
+        playContextualSound('tower-build'); // Kule inşa sesi
+      });
+    }, 50);
+    
     return {
       towers: [...state.towers, newTower],
       towerSlots: newSlots,
@@ -380,7 +388,7 @@ export const useGameStore = create<Store>((set, get) => ({
     setTimeout(() => {
       // Play unlock sound effect
       import('../utils/sound').then(({ playContextualSound }) => {
-        playContextualSound('unlock');
+        playContextualSound('unlock'); // Kilit açma sesi
       });
       
       // Start unlock animation sequence
@@ -429,6 +437,13 @@ export const useGameStore = create<Store>((set, get) => ({
     // Energy bonus for enemy kill (delayed to avoid state conflicts)
     setTimeout(() => get().onEnemyKilled(enemy.isSpecial), 0);
     
+    // ✅ SOUND FIX: Play death sound effect
+    setTimeout(() => {
+      import('../utils/sound').then(({ playContextualSound }) => {
+        playContextualSound('death'); // Düşman ölüm sesi
+      });
+    }, 50);
+    
     return {
       enemies: state.enemies.filter(e => e.id !== enemyId),
       gold: state.gold + enemy.goldValue, // Add gold when enemy is removed
@@ -456,6 +471,13 @@ export const useGameStore = create<Store>((set, get) => ({
         
         // Enerji sistemi: Düşman öldürme bonusu
         setTimeout(() => get().onEnemyKilled(enemy.isSpecial), 0);
+        
+        // ✅ SOUND FIX: Play death sound effect
+        setTimeout(() => {
+          import('../utils/sound').then(({ playContextualSound }) => {
+            playContextualSound('death'); // Düşman ölüm sesi
+          });
+        }, 50);
         
         return {
           enemies: state.enemies.filter(e => e.id !== enemyId),
@@ -494,11 +516,12 @@ export const useGameStore = create<Store>((set, get) => ({
     newSlots[slotIdx] = { ...slot, tower: upgraded };
     
     // ✅ SOUND FIX: Play upgrade sound effect
-    setTimeout(() => {
-      import('../utils/sound').then(({ playSound }) => {
-        playSound('lock-break');
-      });
-    }, 50);
+    // Ses kaldırıldı, yükseltme sırasında ses çalmayacak
+    // setTimeout(() => {
+    //   import('../utils/sound').then(({ playContextualSound }) => {
+    //     playContextualSound('tower-upgrade'); // Kule yükseltme sesi
+    //   });
+    // }, 50);
     
     return {
       towerSlots: newSlots,
@@ -1094,29 +1117,31 @@ export const useGameStore = create<Store>((set, get) => ({
   // ✅ PACKAGE TRACKING System
   purchasePackage: (packageId: string, cost: number, maxAllowed: number) => {
     const state = useGameStore.getState();
-    const current = state.packageTracker[packageId] || 0;
-    
+    const tracker = state.packageTracker[packageId] || { purchaseCount: 0, lastPurchased: 0, maxAllowed };
+    const current = tracker.purchaseCount;
     if (current >= maxAllowed || state.gold < cost) {
       return false;
     }
-    
     useGameStore.setState({
       packageTracker: {
         ...state.packageTracker,
-        [packageId]: current + 1
+        [packageId]: {
+          purchaseCount: current + 1,
+          lastPurchased: Date.now(),
+          maxAllowed,
+        }
       },
       gold: state.gold - cost,
       packagesPurchased: state.packagesPurchased + 1,
       totalGoldSpent: state.totalGoldSpent + cost,
     });
-    
     return true;
   },
 
   getPackageInfo: (packageId: string, maxAllowed: number) => {
     const state = useGameStore.getState();
-    const purchaseCount = state.packageTracker[packageId] || 0;
-    
+    const tracker = state.packageTracker[packageId] || { purchaseCount: 0, lastPurchased: 0, maxAllowed };
+    const purchaseCount = tracker.purchaseCount;
     return {
       purchaseCount,
       maxAllowed,
@@ -1131,7 +1156,7 @@ export const useGameStore = create<Store>((set, get) => ({
       id: `notification-${Date.now()}`,
       type,
       message,
-      createdAt: Date.now(),
+      timestamp: Date.now(),
       duration,
     };
     

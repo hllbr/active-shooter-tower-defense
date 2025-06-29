@@ -55,7 +55,7 @@ export interface TowerSlot {
   unlocked: boolean;
   /** build tile type */
   type?: 'fixed' | 'dynamic';
-  tower?: Tower;
+  tower?: Tower | null;
   modifier?: TileModifier;
   /** Indicates that a tower existed here and was destroyed */
   wasDestroyed?: boolean;

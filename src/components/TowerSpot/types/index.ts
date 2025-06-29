@@ -18,6 +18,19 @@ export interface TowerSpotProps {
   draggedTowerSlotIdx?: number | null;
 }
 
+export interface EmptySlotRendererProps {
+  slot: TowerSlot;
+  slotIdx: number;
+  isDragTarget: boolean;
+  shouldShowBuildText: boolean;
+  unlockCost: number;
+  canUnlock: boolean;
+  isUnlocking: boolean;
+  isRecentlyUnlocked: boolean;
+  onUnlock: (slotIdx: number) => void;
+  onBuildTower?: (slotIdx: number, type: 'attack' | 'economy') => void;
+}
+
 export interface TowerRenderProps {
   slot: TowerSlot;
   towerLevel: number;

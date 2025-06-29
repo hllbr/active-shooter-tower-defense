@@ -23,6 +23,13 @@ export const DiceRoller: React.FC = () => {
       discountMultiplier
     });
     
+    // ✅ SOUND FIX: Play dice roll sound effect
+    setTimeout(() => {
+      import('../../../utils/sound').then(({ playDiceRollSound }) => {
+        playDiceRollSound(); // Zar atma sesi
+      });
+    }, 50);
+    
     try {
       console.log('🔄 Calling rollDice...');
       rollDice();

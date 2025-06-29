@@ -1,19 +1,7 @@
 import React from 'react';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 import { SlotUnlockDisplay } from './SlotUnlockDisplay';
-import type { TowerSlot } from '../../../models/gameTypes';
-
-interface EmptySlotRendererProps {
-  slot: TowerSlot;
-  slotIdx: number;
-  isDragTarget: boolean;
-  shouldShowBuildText: boolean;
-  unlockCost: number;
-  canUnlock: boolean;
-  isUnlocking: boolean;
-  isRecentlyUnlocked: boolean;
-  onUnlock: (slotIdx: number) => void;
-}
+import type { EmptySlotRendererProps } from '../types';
 
 export const EmptySlotRenderer: React.FC<EmptySlotRendererProps> = ({
   slot,
@@ -24,12 +12,13 @@ export const EmptySlotRenderer: React.FC<EmptySlotRendererProps> = ({
   canUnlock,
   isUnlocking,
   isRecentlyUnlocked,
-  onUnlock
+  onUnlock,
+  onBuildTower
 }) => {
   if (slot.unlocked) {
     return (
-      <g>
-        {/* Basic slot circle */}
+      <g style={{ cursor: 'pointer' }}>
+        {/* Basic slot circle - always clickable */}
         <circle
           cx={slot.x}
           cy={slot.y}
@@ -38,6 +27,11 @@ export const EmptySlotRenderer: React.FC<EmptySlotRendererProps> = ({
           stroke="#888888"
           strokeWidth={2}
           strokeDasharray="4 2"
+          style={{ cursor: 'pointer' }}
+          onClick={() => {
+            console.log('Kule inşa et tıklandı', slotIdx);
+            if (onBuildTower) onBuildTower(slotIdx, 'attack');
+          }}
         />
         
         {/* Build indicator */}

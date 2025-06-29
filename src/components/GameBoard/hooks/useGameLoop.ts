@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { stopEnemyWave, startContinuousSpawning, stopContinuousSpawning } from '../../../logic/EnemySpawner';
 import { startGameLoop } from '../../../logic/GameLoop';
 import { waveManager } from '../../../logic/WaveManager';
-import { startBackgroundMusic } from '../../../utils/sound';
+// import { startBackgroundMusic } from '../../../utils/sound'; // 🎵 OYUN MÜZİĞİ DEVRE DIŞI
 
 export const useGameLoop = (
   isStarted: boolean,
@@ -23,7 +23,7 @@ export const useGameLoop = (
     
     if (!loopStopper.current) {
       loopStopper.current = startGameLoop();
-      startBackgroundMusic();
+      // startBackgroundMusic(); // 🎵 OYUN MÜZİĞİ DEVRE DIŞI
     }
     
     // Start continuous spawning system

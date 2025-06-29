@@ -105,7 +105,7 @@ export function playSound(sound: string): void {
 }
 
 // ✅ UPDATED: Context-aware sound system with new sounds
-export function playContextualSound(context: 'victory' | 'defeat' | 'warning' | 'purchase' | 'click' | 'unlock' | 'tower-build' | 'tower-upgrade' | 'death'): void {
+export function playContextualSound(context: 'victory' | 'defeat' | 'warning' | 'purchase' | 'click' | 'unlock' | 'tower-build' | 'tower-upgrade' | 'death' | 'dice-roll'): void {
   const soundMap: Record<string, string> = {
     victory: 'levelupwav',           // Wave completion celebration
     defeat: 'gameover',              // Game over screen
@@ -114,6 +114,7 @@ export function playContextualSound(context: 'victory' | 'defeat' | 'warning' | 
     purchase: 'lock-break',          // General purchase sound
     'tower-build': 'tower-create-sound',  // 🆕 Tower construction sound
     'tower-upgrade': 'tower-levelup-sound', // 🆕 Tower upgrade sound
+    'dice-roll': 'dice-roll',        // 🆕 Dice rolling sound
     click: '',                       // Silent until click.wav is added
     unlock: 'lock-break'             // Slot unlock sound
   };
@@ -153,6 +154,10 @@ export function playPurchaseSound(): void {
 
 export function playUnlockSound(): void {
   playContextualSound('unlock');
+}
+
+export function playDiceRollSound(): void {
+  playContextualSound('dice-roll');
 }
 
 // ✅ SMART MUSIC FUNCTIONS: Use the enhanced manager

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
-import { playContextualSound } from '../../../utils/sound';
+// import { playContextualSound } from '../../../utils/sound'; // 🔇 SES SİSTEMİ DEVRE DIŞI
 
 export const useGameTimers = (
   isStarted: boolean,
@@ -25,7 +25,7 @@ export const useGameTimers = (
   // Preparation warning and auto-start
   useEffect(() => {
     if (isPreparing && prepRemaining <= GAME_CONSTANTS.PREP_WARNING_THRESHOLD && !warningPlayed.current) {
-      playContextualSound('warning');
+      // playContextualSound('warning'); // 🔇 UYARI SESİ DEVRE DIŞI
       warningPlayed.current = true;
     }
     if (isPreparing && prepRemaining <= 0) {

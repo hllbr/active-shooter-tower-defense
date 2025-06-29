@@ -55,6 +55,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           isUnlocking={isUnlocking}
           isRecentlyUnlocked={isRecentlyUnlocked}
           onUnlock={() => handleUnlock(slotIdx)}
+          onBuildTower={handleBuildTower}
         />
       ) : (
         <TowerDragWrapper

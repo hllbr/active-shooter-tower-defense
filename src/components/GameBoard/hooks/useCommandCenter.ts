@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { playSound } from '../../../utils/sound';
+// import { playSound } from '../../../utils/sound'; // 🔇 SES SİSTEMİ DEVRE DIŞI
 
 export const useCommandCenter = (
   isPreparing: boolean,
@@ -26,7 +26,7 @@ export const useCommandCenter = (
           }
           
           if (newState) {
-            playSound('levelupwav'); // Temporary - will use command-center-open.wav
+            // playSound('levelupwav'); // 🔇 COMMAND CENTER SESİ DEVRE DIŞI
           }
           
           return newState;

@@ -70,8 +70,7 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   }, [slot.tower, enemies]);
 
   // Show build text logic
-  const totalTowers = towerSlots.filter(s => s.tower).length;
-  const shouldShowBuildText = canBuild && totalTowers < 2;
+  const shouldShowBuildText = canBuild;
 
   // Debug logging for slot unlock
   React.useEffect(() => {
