@@ -1,3 +1,5 @@
+import { formatCurrency } from './core';
+
 // AFFORDABILITY HELPERS
 // =============================================
 
