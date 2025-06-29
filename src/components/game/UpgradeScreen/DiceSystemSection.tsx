@@ -1,16 +1,16 @@
 import React from 'react';
 import type { DiceSystemSectionProps } from './types';
-import { upgradeScreenStyles } from './styles';
+import { diceSystemStyles } from './diceSystemStyles';
 import { DiceRoller } from '../upgrades/DiceRoller';
 import { DiscountStatusSection } from './DiscountStatusSection';
 import { DiceSystemDescription } from './DiceSystemDescription';
 
 export const DiceSystemSection: React.FC<DiceSystemSectionProps> = ({ discountMultiplier }) => {
   return (
-    <div style={upgradeScreenStyles.diceSystemContainer}>
+    <div style={diceSystemStyles.diceSystemContainer}>
       {/* Enhanced Dice System */}
-      <div style={upgradeScreenStyles.diceSystemMain}>
-        <div style={upgradeScreenStyles.diceSystemTitle}>
+      <div style={diceSystemStyles.diceSystemMain}>
+        <div style={diceSystemStyles.diceSystemTitle}>
           🎲 Evrensel İndirim Sistemi
         </div>
         

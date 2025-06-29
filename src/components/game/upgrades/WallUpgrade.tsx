@@ -1,13 +1,14 @@
 import React from 'react';
 import { useGameStore } from '../../../models/store';
+import type { Store } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, formatSmartPercentage, formatProfessional } from '../../../utils/numberFormatting';
 
 export const WallUpgrade: React.FC = () => {
-  const gold = useGameStore((s) => s.gold);
-  const wallLevel = useGameStore((s) => s.wallLevel);
-  const defenseUpgradeLimits = useGameStore((s) => s.defenseUpgradeLimits);
-  const upgradeWall = useGameStore((s) => s.upgradeWall);
+  const gold = useGameStore((s: Store) => s.gold);
+  const wallLevel = useGameStore((s: Store) => s.wallLevel);
+  const defenseUpgradeLimits = useGameStore((s: Store) => s.defenseUpgradeLimits);
+  const upgradeWall = useGameStore((s: Store) => s.upgradeWall);
 
   const maxWallLevel = GAME_CONSTANTS.WALL_SYSTEM.WALL_LEVELS.length;
   

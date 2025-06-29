@@ -2,26 +2,36 @@ import React from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, formatSmartPercentage } from '../../../utils/numberFormatting';
+import type { Store } from '../../../models/store';
+
+// Type for mine upgrade data
+interface MineUpgradeData {
+  cost: number;
+  count: number;
+  damage: number;
+  radius: number;
+  description?: string;
+}
 
 export const MineUpgrade: React.FC = () => {
-  const gold = useGameStore((s) => s.gold);
-  const mineLevel = useGameStore((s) => s.mineLevel);
-  const defenseUpgradeLimits = useGameStore((s) => s.defenseUpgradeLimits);
-  const upgradeMines = useGameStore((s) => s.upgradeMines);
-  const deployMines = useGameStore((s) => s.deployMines);
+    const gold: number = useGameStore((s: Store) => s.gold);
+    const mineLevel: number = useGameStore((s: Store) => s.mineLevel);
+    const defenseUpgradeLimits = useGameStore((s: Store) => s.defenseUpgradeLimits);
+    const upgradeMines = useGameStore((s: Store) => s.upgradeMines);
+    const deployMines = useGameStore((s: Store) => s.deployMines);
 
-  const maxMineLevel = GAME_CONSTANTS.MINE_UPGRADES.length;
+  const maxMineLevel: number = GAME_CONSTANTS.MINE_UPGRADES.length;
   
   // CRITICAL FIX: Proper limit checking for unlimited purple cards bug
-  const isMaxMineLevel = mineLevel >= maxMineLevel;
-  const isMaxMinePurchases = defenseUpgradeLimits.mines.purchaseCount >= GAME_CONSTANTS.DEFENSE_UPGRADE_LIMITS.MINES.MAX_PURCHASES;
-  const isMineUpgradeBlocked = isMaxMineLevel || isMaxMinePurchases;
+  const isMaxMineLevel: boolean = mineLevel >= maxMineLevel;
+  const isMaxMinePurchases: boolean = defenseUpgradeLimits.mines.purchaseCount >= GAME_CONSTANTS.DEFENSE_UPGRADE_LIMITS.MINES.MAX_PURCHASES;
+  const isMineUpgradeBlocked: boolean = isMaxMineLevel || isMaxMinePurchases;
   
-  const mineUpgrade = isMineUpgradeBlocked ? null : GAME_CONSTANTS.MINE_UPGRADES[mineLevel];
-  const canAffordMines = mineUpgrade && gold >= mineUpgrade.cost;
+  const mineUpgrade: MineUpgradeData | null = isMineUpgradeBlocked ? null : GAME_CONSTANTS.MINE_UPGRADES[mineLevel];
+  const canAffordMines: boolean = mineUpgrade ? gold >= mineUpgrade.cost : false;
 
-  const handleMineUpgrade = () => {
-    if (canAffordMines && !isMineUpgradeBlocked) {
+  const handleMineUpgrade = (): void => {
+    if (canAffordMines && !isMineUpgradeBlocked && mineUpgrade) {
       upgradeMines();
       // Deploy mines immediately on upgrade to see the new ones
       setTimeout(deployMines, 100); 

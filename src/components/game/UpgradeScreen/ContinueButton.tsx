@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { useGameStore } from '../../../models/store';
+import type { Store } from '../../../models/store';
 import { footerStyles } from './footerStyles';
 
 interface ContinueButtonProps {
@@ -7,14 +8,14 @@ interface ContinueButtonProps {
 }
 
 export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallback }) => {
-  const nextWave = useGameStore((s) => s.nextWave);
-  const resetDice = useGameStore((s) => s.resetDice);
-  const startPreparation = useGameStore((s) => s.startPreparation);
-  const setRefreshing = useGameStore((s) => s.setRefreshing);
+  const nextWave = useGameStore((s: Store) => s.nextWave);
+  const resetDice = useGameStore((s: Store) => s.resetDice);
+  const startPreparation = useGameStore((s: Store) => s.startPreparation);
+  const setRefreshing = useGameStore((s: Store) => s.setRefreshing);
   
-  const currentWave = useGameStore((s) => s.currentWave);
-  const isRefreshing = useGameStore((s) => s.isRefreshing);
-  const isPreparing = useGameStore((s) => s.isPreparing);
+  const currentWave = useGameStore((s: Store) => s.currentWave);
+  const isRefreshing = useGameStore((s: Store) => s.isRefreshing);
+  const isPreparing = useGameStore((s: Store) => s.isPreparing);
 
   const handleContinue = useCallback(() => {
     console.log('🚀 UpgradeScreen: handleContinue started');

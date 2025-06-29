@@ -1,11 +1,12 @@
 import React from 'react';
 import { useGameStore } from '../../../models/store';
+import type { Store } from '../../../models/store';
 import { headerStyles } from './styles';
 
 // Props artık gerekmiyor, gold'u direkt store'dan alıyoruz
 export const UpgradeHeader: React.FC = () => {
   // Gold hook - Ana componentten taşındı
-  const gold = useGameStore((s) => s.gold);
+  const gold = useGameStore((s: Store) => s.gold);
 
   return (
     <div style={headerStyles.headerContainer}>

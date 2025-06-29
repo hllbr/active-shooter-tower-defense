@@ -20,7 +20,11 @@ export const TowerDragVisualization: React.FC<TowerDragVisualizationProps> = ({
   // Memoized calculations for performance
   const { draggedSlot, dragPosition, nearestValidSlot } = useMemo(() => {
     if (!dragState.isDragging || dragState.draggedTowerSlotIdx === null) {
-      return { draggedSlot: null, dragPosition: null, nearestValidSlot: null };
+      return { 
+        draggedSlot: null, 
+        dragPosition: null, 
+        nearestValidSlot: null 
+      };
     }
 
     const slot = towerSlots[dragState.draggedTowerSlotIdx];
@@ -43,8 +47,16 @@ export const TowerDragVisualization: React.FC<TowerDragVisualizationProps> = ({
       }
     });
 
-    return { draggedSlot: slot, dragPosition: position, nearestValidSlot: nearest };
-  }, [dragState, dropZones, towerSlots]);
+    return { 
+      draggedSlot: slot, 
+      dragPosition: position, 
+      nearestValidSlot: nearest 
+    };
+  }, [dragState, dropZones, towerSlots]) as {
+    draggedSlot: TowerSlot | null;
+    dragPosition: { x: number; y: number } | null;
+    nearestValidSlot: { slot: TowerSlot; distance: number } | null;
+  };
 
   if (!dragState.isDragging || !draggedSlot || !dragPosition) {
     return null;
