@@ -29,7 +29,7 @@ const ENERGY_MESSAGES: Record<string, string> = {
 };
 
 class EnergyManager {
-  private energy = GAME_CONSTANTS.BASE_ENERGY;
+  private energy: number = GAME_CONSTANTS.BASE_ENERGY;
   private maxEnergy = 100; // Default max energy
   private history: EnergyLog[] = [];
   private listeners: EnergyListener[] = [];

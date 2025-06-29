@@ -1,4 +1,4 @@
-import { WaveSpawnConfig } from './types';
+import type { WaveSpawnConfig } from './types';
 
 export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
   easy: {

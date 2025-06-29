@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 import { performMemoryCleanup } from '../../../logic/Effects';
-import { bulletPool } from '../../../logic/TowerManager';
+import { bulletPool } from '../../../logic/bullet-system/BulletPool';
 
 export const useGameEffects = (unlockingSlots: Set<number>) => {
   // Screen shake effect
