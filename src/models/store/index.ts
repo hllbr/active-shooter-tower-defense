@@ -1,13 +1,13 @@
 import { create } from 'zustand';
-import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from './gameTypes';
-import { GAME_CONSTANTS } from '../utils/constants';
-// import { DailyMissionsManager } from '../logic/DailyMissionsManager';
-import { updateWaveTiles } from '../logic/TowerPlacementManager';
-import { waveRules } from '../config/waveRules';
-import { energyManager } from '../logic/EnergyManager';
-import { waveManager } from '../logic/WaveManager';
-import { upgradeEffectsManager } from '../logic/UpgradeEffects';
-import { initialState, initialSlots } from './initialState';
+import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from '../gameTypes';
+import { GAME_CONSTANTS } from '../../utils/constants';
+// import { DailyMissionsManager } from '../../logic/DailyMissionsManager';
+import { updateWaveTiles } from '../../logic/TowerPlacementManager';
+import { waveRules } from '../../config/waveRules';
+import { energyManager } from '../../logic/EnergyManager';
+import { waveManager } from '../../logic/WaveManager';
+import { upgradeEffectsManager } from '../../logic/UpgradeEffects';
+import { initialState } from './initialState';
 
 const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   let position: Position;
@@ -212,7 +212,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     // ✅ SOUND FIX: Play tower build sound effect
     setTimeout(() => {
-      import('../utils/sound').then(({ playContextualSound }) => {
+      import('../../utils/sound').then(({ playContextualSound }) => {
         playContextualSound('tower-build'); // Kule inşa sesi
       });
     }, 50);
@@ -253,7 +253,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     // ✅ SOUND & ANIMATION FIX: Play unlock sound and trigger animations
     setTimeout(() => {
       // Play unlock sound effect
-      import('../utils/sound').then(({ playContextualSound }) => {
+      import('../../utils/sound').then(({ playContextualSound }) => {
         playContextualSound('unlock'); // Kilit açma sesi
       });
       
@@ -305,7 +305,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     // ✅ SOUND FIX: Play death sound effect
     setTimeout(() => {
-      import('../utils/sound').then(({ playContextualSound }) => {
+      import('../../utils/sound').then(({ playContextualSound }) => {
         playContextualSound('death'); // Düşman ölüm sesi
       });
     }, 50);
@@ -340,7 +340,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
         
         // ✅ SOUND FIX: Play death sound effect
         setTimeout(() => {
-          import('../utils/sound').then(({ playContextualSound }) => {
+          import('../../utils/sound').then(({ playContextualSound }) => {
             playContextualSound('death'); // Düşman ölüm sesi
           });
         }, 50);
@@ -383,7 +383,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     // ✅ SOUND FIX: Play upgrade sound effect
     setTimeout(() => {
-      import('../utils/sound').then(({ playContextualSound }) => {
+      import('../../utils/sound').then(({ playContextualSound }) => {
         playContextualSound('tower-upgrade'); // Kule yükseltme sesi
       });
     }, 50);
@@ -421,13 +421,13 @@ export const useGameStore = create<Store>((set, get): Store => ({
           console.log('💀 Game Over: All towers destroyed!');
           
           // ✅ Stop all spawning immediately
-          import('../logic/EnemySpawner').then(({ stopEnemyWave }) => {
+          import('../../logic/EnemySpawner').then(({ stopEnemyWave }) => {
             stopEnemyWave();
           });
           
           setTimeout(() => {
             // Use playContextualSound from sound.ts
-            import('../utils/sound').then(({ playContextualSound }) => {
+            import('../../utils/sound').then(({ playContextualSound }) => {
               playContextualSound('defeat');
             });
           }, 100);
@@ -822,7 +822,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     // ✅ ENHANCED: Start enemy spawning when wave begins
     setTimeout(() => {
-      import('../logic/EnemySpawner').then(({ startEnemyWave }) => {
+      import('../../logic/EnemySpawner').then(({ startEnemyWave }) => {
         startEnemyWave(state.currentWave);
       });
     }, 100); // Small delay to ensure state is updated

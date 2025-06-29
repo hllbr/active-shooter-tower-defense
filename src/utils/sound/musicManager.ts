@@ -32,7 +32,9 @@ class SmartMusicManager {
       this.audio.pause();
       this.audio.currentTime = 0;
       this.audio = null;
-    } catch {}
+    } catch {
+      // Ignore errors
+    }
     this.isPlaying = false;
     this.currentTrack = null;
   }
