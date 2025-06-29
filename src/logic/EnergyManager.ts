@@ -115,6 +115,49 @@ class EnergyManager {
     }
     this.listeners.forEach(l => l(this.energy, log));
   }
+
+  // CRITICAL FIX: Add missing tick function for passive energy regeneration
+  tick(deltaTime: number) {
+    if (!deltaTime || isNaN(deltaTime) || deltaTime <= 0) return;
+    
+    // Pasif enerji rejenerasyonu - saniye başına
+    const regenPerSecond = GAME_CONSTANTS.ENERGY_REGEN_PASSIVE || 0.5;
+    const regenAmount = (deltaTime / 1000) * regenPerSecond;
+    
+    if (regenAmount > 0 && this.energy < this.maxEnergy) {
+      this.add(regenAmount, 'passiveRegen');
+    }
+  }
+
+  // CRITICAL FIX: Add setEnergy function to directly set energy value
+  setEnergy(value: number) {
+    if (isNaN(value) || value < 0) {
+      console.warn('⚠️ EnergyManager: Invalid energy value, resetting to 0:', value);
+      value = 0;
+    }
+    
+    this.energy = Math.min(value, this.maxEnergy);
+    this.energy = Number(this.energy.toFixed(2));
+    
+    if (this.setState) {
+      this.setState(this.energy, null);
+    }
+    
+    console.log(`🔋 EnergyManager: Energy set to ${this.energy}/${this.maxEnergy}`);
+  }
+
+  // CRITICAL FIX: Reset function to fix NaN issues
+  reset() {
+    this.energy = GAME_CONSTANTS.BASE_ENERGY || 100;
+    this.maxEnergy = 100;
+    this.history = [];
+    
+    if (this.setState) {
+      this.setState(this.energy, null);
+    }
+    
+    console.log('🔄 EnergyManager: Reset completed, energy =', this.energy);
+  }
 }
 
 export const energyManager = new EnergyManager();

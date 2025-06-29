@@ -1,4 +1,6 @@
 import { GAME_CONSTANTS } from '../utils/Constants';
+import { useGameStore } from '../models/store';
+
 export type WaveStartHandler = () => void;
 export type WaveCompleteHandler = () => void;
 
@@ -58,6 +60,18 @@ export class WaveManager {
     kills: number,
     required: number,
   ) {
+    const state = useGameStore.getState();
+    
+    // ✅ CRITICAL FIX: Stop wave management if game is over
+    if (state.isGameOver) {
+      this.waveActive = false;
+      if (this.idleTimer) {
+        clearTimeout(this.idleTimer);
+        this.idleTimer = null;
+      }
+      return;
+    }
+    
     if (!this.waveActive) return;
     
     // DEBUG: Always log progress for Wave 1
@@ -68,6 +82,14 @@ export class WaveManager {
     if (kills >= required) {
       console.log(`✅ Wave ${wave} COMPLETED! ${kills}/${required} enemies defeated`);
       this.waveActive = false;
+      
+      // ✅ CRITICAL FIX: Trigger upgrade screen when wave completes
+      // Show upgrade screen after wave 1 and every subsequent wave
+      if (wave >= 1) {
+        console.log(`🔄 Opening upgrade screen for Wave ${wave} completion`);
+        useGameStore.getState().setRefreshing(true);
+      }
+      
       this.onComplete();
       this.completeListeners.forEach(l => l());
     }

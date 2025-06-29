@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
+import type { Enemy, Bullet, Effect, Mine } from '../../../models/gameTypes';
 
 // ⚠️ FIXED: SVG Animation Memory Leak Prevention
 // Enhanced effects renderer with proper animation lifecycle management
@@ -105,7 +106,7 @@ export const SVGEffectsRenderer: React.FC = () => {
   return (
     <>
       {/* Enemies */}
-      {enemies.map((enemy) => (
+      {enemies.map((enemy: Enemy) => (
         <g key={enemy.id}>
           {/* Health bar */}
           <rect
@@ -171,7 +172,7 @@ export const SVGEffectsRenderer: React.FC = () => {
       ))}
 
       {/* Bullets */}
-      {bullets.map((bullet) => (
+      {bullets.map((bullet: Bullet) => (
         <line
           key={bullet.id}
           x1={bullet.position.x - bullet.direction.x * bullet.size}
@@ -184,7 +185,7 @@ export const SVGEffectsRenderer: React.FC = () => {
       ))}
 
       {/* Effects */}
-      {effects.map((effect) => (
+      {effects.map((effect: Effect) => (
         <circle
           key={effect.id}
           cx={effect.position.x}
@@ -197,7 +198,7 @@ export const SVGEffectsRenderer: React.FC = () => {
       ))}
 
       {/* Mines with managed animations */}
-      {mines.map((mine) => (
+      {mines.map((mine: Mine) => (
         <g key={mine.id} transform={`translate(${mine.position.x}, ${mine.position.y})`} style={{ pointerEvents: 'none' }}>
           {/* The horns of the mine */}
           {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (

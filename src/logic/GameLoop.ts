@@ -41,9 +41,16 @@ export function startGameLoop() {
     
     // Only update if enough time has passed
     if (deltaTime >= targetFrameTime) {
-             // Store previous counts for change detection
-       const prevEnemyCount = lastStateSnapshot.enemyCount;
-       const prevBulletCount = lastStateSnapshot.bulletCount;
+      // ✅ CRITICAL FIX: Stop game loop updates if game is over
+      if (state.isGameOver) {
+        // Still request animation frame to show game over screen, but don't update game logic
+        frameId = requestAnimationFrame(loop);
+        return;
+      }
+      
+      // Store previous counts for change detection
+      const prevEnemyCount = lastStateSnapshot.enemyCount;
+      const prevBulletCount = lastStateSnapshot.bulletCount;
       
       // Run game logic updates
       updateEnemyMovement();

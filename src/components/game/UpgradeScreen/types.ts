@@ -13,27 +13,27 @@ export interface DiscountCategory {
   description: string;
 }
 
-// UpgradeScreen props - Bu component herhangi bir prop almıyor, store kullanıyor
-export type UpgradeScreenProps = Record<string, never>;
-
-export interface TabNavigationProps {
-  tabs: TabConfig[];
-  activeTab: TabType;
-  onTabChange: (tab: TabType) => void;
-}
-
+// Component props - Sadece gerekli olanlar kaldı
 export interface TabContentProps {
   activeTab: TabType;
 }
 
-export interface HeaderProps {
-  gold: number;
+export interface DiceSystemSectionProps {
+  discountMultiplier: number;
 }
 
-export interface FooterProps {
+// Missing type exports
+export interface UpgradeScreenProps {
   onContinue: () => void;
 }
 
-export interface DiceSystemSectionProps {
-  discountMultiplier: number;
+export interface TabNavigationProps {
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
+}
+
+export type HeaderProps = Record<string, unknown>;
+
+export interface FooterProps {
+  onContinue: () => void;
 } 

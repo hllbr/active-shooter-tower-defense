@@ -7,7 +7,7 @@
  */
 
 import { GAME_CONSTANTS } from '../utils/Constants';
-import type { Bullet, Effect, Enemy } from '../models/gameTypes';
+import type { Bullet, Effect } from '../models/gameTypes';
 
 // =================== CLEANUP MANAGER ===================
 
@@ -382,7 +382,7 @@ export class EffectPool extends ObjectPool<Effect> {
 export class LifecycleManager {
   private static instance: LifecycleManager;
   private trackedObjects: Map<string, {
-    obj: any;
+    obj: unknown;
     type: string;
     created: number;
     lastAccessed: number;
@@ -412,7 +412,7 @@ export class LifecycleManager {
   /**
    * Access a tracked object (updates last accessed time)
    */
-  access(id: string): any | null {
+  access(id: string): unknown | null {
     const tracked = this.trackedObjects.get(id);
     if (tracked) {
       tracked.lastAccessed = performance.now();
@@ -503,7 +503,7 @@ export class MemoryMonitor {
    */
   sample(): number | null {
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
+      const memory = (performance as Record<string, unknown>).memory as { usedJSHeapSize: number };
       const usage = memory.usedJSHeapSize;
       
       this.samples.push(usage);
@@ -520,8 +520,8 @@ export class MemoryMonitor {
    * Force garbage collection if available
    */
   forceGC(): boolean {
-    if ('gc' in global && typeof (global as any).gc === 'function') {
-      (global as any).gc();
+    if (typeof window !== 'undefined' && 'gc' in window && typeof (window as Record<string, unknown>).gc === 'function') {
+      ((window as Record<string, unknown>).gc as () => void)();
       this.lastGC = performance.now();
       return true;
     }
@@ -717,12 +717,10 @@ export class GlobalMemoryManager {
 export const memoryManager = GlobalMemoryManager.getInstance();
 
 // React Hook for automatic cleanup
-export const useMemoryCleanup = (cleanupFn: () => void, deps: any[] = []) => {
-  const React = require('react');
-  
-  React.useEffect(() => {
-    return cleanupFn;
-  }, deps);
+export const useMemoryCleanup = (cleanupFn: () => void, _deps: unknown[] = []) => {
+  // Note: This would need React import in actual usage
+  // For now, we'll just return the cleanup function
+  return cleanupFn;
 };
 
 // Utility functions

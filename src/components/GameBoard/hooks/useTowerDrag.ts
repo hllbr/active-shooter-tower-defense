@@ -1,7 +1,11 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
-import type { DragState, DropZoneState, DragFeedback } from '../types';
+import type { DragState } from '../types';
+import { useDragFeedback } from './useDragFeedback';
+import { useDropZoneAnalysis } from './useDropZoneAnalysis';
+import { useSvgRectCache } from './useSvgRectCache';
+import { useDragEventHandlers } from './useDragEventHandlers';
 
 export const useTowerDrag = () => {
   const {
@@ -34,76 +38,10 @@ export const useTowerDrag = () => {
     touchStartPosition: null,
   });
 
-  const [dropZones, setDropZones] = useState<DropZoneState[]>([]);
-  const [feedback, setFeedback] = useState<DragFeedback | null>(null);
-  const feedbackTimeoutRef = useRef<number | undefined>(undefined);
-  const hoverTimeoutRef = useRef<number | undefined>(undefined);
-
-  // Enhanced feedback system
-  const showFeedback = useCallback((message: string, type: DragFeedback['type'], position: { x: number; y: number }, duration = 3000) => {
-    const newFeedback: DragFeedback = {
-      message,
-      type,
-      duration,
-      showAt: position
-    };
-    
-    setFeedback(newFeedback);
-    
-    if (feedbackTimeoutRef.current) {
-      clearTimeout(feedbackTimeoutRef.current);
-    }
-    
-    feedbackTimeoutRef.current = setTimeout(() => {
-      setFeedback(null);
-    }, duration);
-  }, []);
-
-  // Smart drop zone analysis
-  const analyzeDropZones = useCallback((draggedSlotIdx: number) => {
-    const validZones: number[] = [];
-    const invalidZones: number[] = [];
-    const zones: DropZoneState[] = [];
-
-    towerSlots.forEach((slot, idx) => {
-      if (idx === draggedSlotIdx) return;
-
-      const distance = Math.sqrt(
-        Math.pow(slot.x - towerSlots[draggedSlotIdx].x, 2) + 
-        Math.pow(slot.y - towerSlots[draggedSlotIdx].y, 2)
-      );
-
-      let isValid = true;
-      let reason = '';
-
-      if (!slot.unlocked) {
-        isValid = false;
-        reason = 'Slot kilitli';
-      } else if (slot.tower) {
-        isValid = false;
-        reason = 'Slot dolu';
-      }
-
-      const zoneState: DropZoneState = {
-        slotIdx: idx,
-        isValid,
-        reason,
-        distance,
-        animationPhase: 'idle'
-      };
-
-      zones.push(zoneState);
-
-      if (isValid) {
-        validZones.push(idx);
-      } else {
-        invalidZones.push(idx);
-      }
-    });
-
-    setDropZones(zones);
-    return { validZones, invalidZones, zones };
-  }, [towerSlots]);
+  // Sub-hooks
+  const { feedback, showFeedback, clearFeedback } = useDragFeedback();
+  const { dropZones, analyzeDropZones, updateDropZoneAnimations, clearDropZones } = useDropZoneAnalysis();
+  const { getSvgRect } = useSvgRectCache();
 
   // Enhanced drag start with UX features
   const handleTowerDragStart = useCallback((slotIdx: number, event: React.MouseEvent | React.TouchEvent) => {
@@ -159,7 +97,7 @@ export const useTowerDrag = () => {
     const mouseY = clientY - svgRect.top;
 
     // Analyze valid drop zones
-    const { validZones, invalidZones } = analyzeDropZones(slotIdx);
+    const { validZones, invalidZones } = analyzeDropZones(slotIdx, towerSlots);
 
     // Enhanced tower info
     const towerInfo = {
@@ -193,154 +131,27 @@ export const useTowerDrag = () => {
     });
 
     // Update drop zone animations
-    setDropZones(zones => zones.map(zone => ({
-      ...zone,
-      animationPhase: zone.isValid ? 'highlight' : 'shake'
-    })));
+    updateDropZoneAnimations('highlight');
 
-  }, [towerSlots, isStarted, isRefreshing, isPreparing, energy, analyzeDropZones, showFeedback]);
+  }, [towerSlots, isStarted, isRefreshing, isPreparing, energy, analyzeDropZones, showFeedback, updateDropZoneAnimations]);
 
-  // ✅ PERFORMANCE FIX #2: Cache SVG bounding rect (prevents expensive DOM calculation on every mouse move)
-  const svgRectCache = useRef<DOMRect | null>(null);
-  const svgElementRef = useRef<SVGElement | null>(null);
+  // Handle hover changes
+  const handleHoverChange = useCallback((hoveredSlot: number | null) => {
+    updateDropZoneAnimations('highlight', hoveredSlot);
+  }, [updateDropZoneAnimations]);
 
-  // Update SVG rect cache when needed
-  const updateSvgRectCache = useCallback(() => {
-    if (svgElementRef.current) {
-      svgRectCache.current = svgElementRef.current.getBoundingClientRect();
-    }
-  }, []);
+  // Handle drop
+  const handleDrop = useCallback((targetSlotIdx: number, invalidReason: string) => {
+    const feedbackPos = { x: dragState.mousePosition.x, y: dragState.mousePosition.y };
 
-  // ✅ PERFORMANCE FIX #4: Update cache on window resize
-  React.useEffect(() => {
-    const handleResize = () => {
-      updateSvgRectCache();
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [updateSvgRectCache]);
-
-  // Enhanced mouse/touch move with hover detection
-  const handleMouseMove = useCallback((event: React.MouseEvent | React.TouchEvent) => {
-    if (!dragState.isDragging) return;
-    
-    event.preventDefault();
-    
-    // ✅ OPTIMIZED: Use cached SVG rect (no expensive DOM calculation!)
-    const svgElement = event.currentTarget as SVGElement;
-    if (svgElementRef.current !== svgElement) {
-      svgElementRef.current = svgElement;
-      updateSvgRectCache();
-    }
-    
-    const svgRect = svgRectCache.current || svgElement.getBoundingClientRect();
-    const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
-    const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
-    const mouseX = clientX - svgRect.left;
-    const mouseY = clientY - svgRect.top;
-
-    // ✅ PERFORMANCE FIX #3: OPTIMIZED distance calculation (no Math.sqrt, 3x faster!)
-    let hoveredSlot: number | null = null;
-    let minDistanceSquared = Infinity;
-    const hoverRadius = GAME_CONSTANTS.TOWER_SIZE * 1.5;
-    const hoverRadiusSquared = hoverRadius * hoverRadius; // Pre-calculate squared radius
-
-    // Early exit if no slots to check
-    if (towerSlots.length === 0) return;
-
-    towerSlots.forEach((slot, idx) => {
-      if (idx === dragState.draggedTowerSlotIdx) return;
-      
-      // ✅ ULTRA-FAST: Squared distance calculation (no expensive Math.sqrt!)
-      const dx = mouseX - slot.x;
-      const dy = mouseY - slot.y;
-      const distanceSquared = dx * dx + dy * dy;
-
-      if (distanceSquared <= hoverRadiusSquared && distanceSquared < minDistanceSquared) {
-        minDistanceSquared = distanceSquared;
-        hoveredSlot = idx;
-      }
-    });
-
-    // Update hover state with debouncing - prevents excessive state updates
-    if (hoveredSlot !== dragState.hoveredSlot) {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-
-      hoverTimeoutRef.current = setTimeout(() => {
-        setDragState(prev => ({ ...prev, hoveredSlot }));
-        
-        // Update drop zone animations based on hover
-        setDropZones(zones => zones.map(zone => {
-          if (zone.slotIdx === hoveredSlot) {
-            return { ...zone, animationPhase: zone.isValid ? 'pulse' : 'shake' };
-          }
-          return { ...zone, animationPhase: zone.isValid ? 'highlight' : 'idle' };
-        }));
-      }, 50); // Debounce to prevent excessive updates
-    }
-
-    // Batch state update - single setState call
-    setDragState(prev => ({
-      ...prev,
-      mousePosition: { x: mouseX, y: mouseY },
-    }));
-  }, [dragState.isDragging, dragState.draggedTowerSlotIdx, dragState.hoveredSlot, towerSlots]);
-
-  // Enhanced drop with comprehensive feedback
-  const handleMouseUp = useCallback((event: React.MouseEvent | React.TouchEvent) => {
-    if (!dragState.isDragging || dragState.draggedTowerSlotIdx === null) return;
-
-    event.preventDefault();
-    const svgElement = event.currentTarget as SVGElement;
-    const svgRect = svgElement.getBoundingClientRect();
-    const clientX = 'touches' in event ? event.changedTouches[0].clientX : event.clientX;
-    const clientY = 'touches' in event ? event.changedTouches[0].clientY : event.clientY;
-    const mouseX = clientX - svgRect.left;
-    const mouseY = clientY - svgRect.top;
-
-    // Enhanced target detection - OPTIMIZED O(n) → O(n) but faster calculations
-    let targetSlotIdx = -1;
-    let minDistanceSquared = Infinity; // Use squared distance
-    let invalidReason = '';
-    const detectionRadius = GAME_CONSTANTS.TOWER_SIZE * 2;
-    const detectionRadiusSquared = detectionRadius * detectionRadius; // Pre-calculate
-
-    towerSlots.forEach((slot, idx) => {
-      if (idx === dragState.draggedTowerSlotIdx) return;
-
-      // OPTIMIZED: Use squared distance calculation (no Math.sqrt)
-      const dx = mouseX - slot.x;
-      const dy = mouseY - slot.y;
-      const distanceSquared = dx * dx + dy * dy;
-
-      if (distanceSquared <= detectionRadiusSquared && distanceSquared < minDistanceSquared) {
-        minDistanceSquared = distanceSquared;
-        
-        if (!slot.unlocked) {
-          invalidReason = 'Hedef slot kilitli';
-        } else if (slot.tower) {
-          invalidReason = 'Hedef slot dolu';
-        } else {
-          targetSlotIdx = idx;
-          invalidReason = '';
-        }
-      }
-    });
-
-    const feedbackPos = { x: clientX, y: clientY };
-
-         // Perform move with enhanced feedback
-     if (targetSlotIdx !== -1) {
-       moveTower(dragState.draggedTowerSlotIdx, targetSlotIdx);
-       showFeedback(
-         `✅ ${dragState.towerInfo?.emoji} Kule başarıyla taşındı!`,
-         'success',
-         feedbackPos,
-         2000
-       );
+    if (targetSlotIdx !== -1) {
+      moveTower(dragState.draggedTowerSlotIdx!, targetSlotIdx);
+      showFeedback(
+        `✅ ${dragState.towerInfo?.emoji} Kule başarıyla taşındı!`,
+        'success',
+        feedbackPos,
+        2000
+      );
     } else if (invalidReason) {
       showFeedback(
         `⚠️ ${invalidReason}`,
@@ -376,13 +187,17 @@ export const useTowerDrag = () => {
       touchStartPosition: null,
     });
 
-    setDropZones([]);
+    clearDropZones();
+  }, [dragState, moveTower, showFeedback, clearDropZones]);
 
-    // Clear timeouts
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-  }, [dragState, towerSlots, moveTower, showFeedback]);
+  // Event handlers
+  const { handleMouseMove, handleMouseUp } = useDragEventHandlers(
+    dragState,
+    setDragState,
+    towerSlots,
+    getSvgRect,
+    handleHoverChange
+  );
 
   // Touch support
   const handleTouchStart = useCallback((slotIdx: number, event: React.TouchEvent) => {
@@ -394,20 +209,13 @@ export const useTowerDrag = () => {
   }, [handleMouseMove]);
 
   const handleTouchEnd = useCallback((event: React.TouchEvent) => {
-    handleMouseUp(event);
-  }, [handleMouseUp]);
+    handleMouseUp(event, handleDrop);
+  }, [handleMouseUp, handleDrop]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (feedbackTimeoutRef.current) {
-        clearTimeout(feedbackTimeoutRef.current);
-      }
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-    };
-  }, []);
+  // Enhanced mouse up handler
+  const handleMouseUpEnhanced = useCallback((event: React.MouseEvent | React.TouchEvent) => {
+    handleMouseUp(event, handleDrop);
+  }, [handleMouseUp, handleDrop]);
 
   return {
     // Core drag state
@@ -418,7 +226,7 @@ export const useTowerDrag = () => {
     // Enhanced handlers
     handleTowerDragStart,
     handleMouseMove,
-    handleMouseUp,
+    handleMouseUp: handleMouseUpEnhanced,
     
     // Touch support
     handleTouchStart,
@@ -427,9 +235,10 @@ export const useTowerDrag = () => {
     
     // Utility functions
     showFeedback,
+    clearFeedback,
     
     // Legacy support (for backward compatibility)
     debugMessage: feedback?.message || '',
-    clearDebugMessage: () => setFeedback(null)
+    clearDebugMessage: clearFeedback
   };
 }; 

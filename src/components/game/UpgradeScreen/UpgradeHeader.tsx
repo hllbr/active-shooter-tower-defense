@@ -1,20 +1,25 @@
 import React from 'react';
-import type { HeaderProps } from './types';
-import { upgradeScreenStyles } from './styles';
+import { useGameStore } from '../../../models/store';
+import type { Store } from '../../../models/store';
+import { headerStyles } from './styles';
 
-export const UpgradeHeader: React.FC<HeaderProps> = ({ gold }) => {
+// Props artık gerekmiyor, gold'u direkt store'dan alıyoruz
+export const UpgradeHeader: React.FC = () => {
+  // Gold hook - Ana componentten taşındı
+  const gold = useGameStore((s: Store) => s.gold);
+
   return (
-    <div style={upgradeScreenStyles.headerContainer}>
-      <div style={upgradeScreenStyles.headerTitle}>
-        <span style={upgradeScreenStyles.titleText}>
+    <div style={headerStyles.headerContainer}>
+      <div style={headerStyles.headerTitle}>
+        <span style={headerStyles.titleText}>
           🛠️ Yükseltme Merkezi
         </span>
       </div>
       
       {/* Gold Display */}
-      <div style={upgradeScreenStyles.goldDisplay}>
+      <div style={headerStyles.goldDisplay}>
         <div style={{ fontSize: 18 }}>💰</div>
-        <div style={upgradeScreenStyles.goldText}>
+        <div style={headerStyles.goldText}>
           {gold.toLocaleString()}
         </div>
       </div>

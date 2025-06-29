@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 
 interface DebugMessageProps {
@@ -34,23 +34,4 @@ export const DebugMessage: React.FC<DebugMessageProps> = ({ message, onClear }) 
       {message}
     </div>
   );
-};
-
-// Hook for managing debug messages
-export const useDebugMessage = () => {
-  const [debugMessage, setDebugMessage] = useState<string>('');
-
-  const showMessage = (message: string) => {
-    setDebugMessage(message);
-  };
-
-  const clearMessage = () => {
-    setDebugMessage('');
-  };
-
-  return {
-    debugMessage,
-    showMessage,
-    clearMessage
-  };
 }; 

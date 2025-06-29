@@ -29,8 +29,8 @@ export interface MemoryTestResult {
   iterations: number;
   duration: number;
   details: {
-    effectPoolStats: any;
-    bulletPoolStats: any;
+    effectPoolStats: Record<string, unknown>;
+    bulletPoolStats: Record<string, unknown>;
     gcAvailable: boolean;
     memoryBeforeGC?: number;
     memoryAfterGC?: number;
@@ -122,8 +122,8 @@ export class MemoryTester {
    * Force garbage collection if available
    */
   forceGC(): boolean {
-    if ('gc' in window && typeof (window as any).gc === 'function') {
-      (window as any).gc();
+    if ('gc' in window && typeof (window as Record<string, unknown>).gc === 'function') {
+      ((window as Record<string, unknown>).gc as () => void)();
       return true;
     }
     return false;
