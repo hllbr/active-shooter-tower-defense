@@ -43,6 +43,7 @@ export const EmptySlotRenderer: React.FC<EmptySlotRendererProps> = ({
             fontSize={12}
             fill="#4ade80"
             fontWeight="bold"
+            pointerEvents="none"
           >
             İnşa Et
           </text>
