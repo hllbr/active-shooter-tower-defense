@@ -63,6 +63,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
                 stroke="#888888"
                 strokeWidth={2}
                 strokeDasharray="4 2"
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleBuildTower(slotIdx, 'attack')}
               />
               
               {/* Build indicator */}
