@@ -516,12 +516,11 @@ export const useGameStore = create<Store>((set, get): Store => ({
     newSlots[slotIdx] = { ...slot, tower: upgraded };
     
     // ✅ SOUND FIX: Play upgrade sound effect
-    // Ses kaldırıldı, yükseltme sırasında ses çalmayacak
-    // setTimeout(() => {
-    //   import('../utils/sound').then(({ playContextualSound }) => {
-    //     playContextualSound('tower-upgrade'); // Kule yükseltme sesi
-    //   });
-    // }, 50);
+    setTimeout(() => {
+      import('../utils/sound').then(({ playContextualSound }) => {
+        playContextualSound('tower-upgrade'); // Kule yükseltme sesi
+      });
+    }, 50);
     
     return {
       towerSlots: newSlots,
