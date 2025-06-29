@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { TowerSlot } from '../../../models/gameTypes';
 import type { DragState } from '../types';
 

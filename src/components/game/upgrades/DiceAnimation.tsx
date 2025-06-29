@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import { DiceFace } from './DiceFace';
 
 interface DiceAnimationProps {

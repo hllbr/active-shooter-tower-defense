@@ -1,5 +1,5 @@
 import React from 'react';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import { SlotUnlockDisplay } from './SlotUnlockDisplay';
 import type { EmptySlotRendererProps } from '../types';
 

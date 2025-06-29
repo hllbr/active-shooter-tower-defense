@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGameStore } from '../../../../models/store';
-import { GAME_CONSTANTS } from '../../../../utils/Constants';
-import { formatCurrency } from '../../../../utils/numberFormatting';
+import { GAME_CONSTANTS } from '../../../../utils/constants';
+import { formatCurrency } from '../../../../utils/formatters';
 import type { Tower } from '../../../../models/gameTypes';
 
 export const StrategyTab: React.FC = () => {

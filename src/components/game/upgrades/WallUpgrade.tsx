@@ -1,8 +1,8 @@
 import React from 'react';
 import { useGameStore } from '../../../models/store';
 import type { Store } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
-import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, formatSmartPercentage, formatProfessional } from '../../../utils/numberFormatting';
+import { GAME_CONSTANTS } from '../../../utils/constants';
+import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, formatSmartPercentage, formatProfessional } from '../../../utils/formatters';
 
 export const WallUpgrade: React.FC = () => {
   const gold = useGameStore((s: Store) => s.gold);

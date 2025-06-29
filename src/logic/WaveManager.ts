@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS } from '../utils/Constants';
+import { GAME_CONSTANTS } from '../utils/constants';
 import { useGameStore } from '../models/store';
 
 export type WaveStartHandler = () => void;

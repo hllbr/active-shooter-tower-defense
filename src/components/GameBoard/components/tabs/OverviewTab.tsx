@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../../../models/store';
-import { formatCurrency, formatPercentage } from '../../../../utils/numberFormatting';
+import { formatCurrency, formatPercentage } from '../../../../utils/formatters';
 import type { Tower } from '../../../../models/gameTypes';
 
 interface PowerOverview {

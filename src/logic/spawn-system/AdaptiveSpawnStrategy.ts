@@ -1,5 +1,5 @@
 import type { Enemy } from '../../models/gameTypes';
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import { WAVE_SPAWN_CONFIGS } from './waveConfigs';
 import type {
   ISpawnStrategy,

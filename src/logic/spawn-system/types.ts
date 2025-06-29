@@ -1,5 +1,5 @@
 import type { Enemy } from "../../models/gameTypes";
-import { GAME_CONSTANTS } from "../../utils/Constants";
+import { GAME_CONSTANTS } from "../../utils/constants";
 
 export interface WaveSpawnConfig {
   baseSpawnRate: number;

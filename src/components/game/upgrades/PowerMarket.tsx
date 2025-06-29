@@ -1,7 +1,7 @@
 import React from 'react';
 import { EnergyUpgradeCard } from './EnergyUpgradeCard';
 import { useGameStore } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { Store } from '../../../models/store';
 
 export const PowerMarket: React.FC = () => {

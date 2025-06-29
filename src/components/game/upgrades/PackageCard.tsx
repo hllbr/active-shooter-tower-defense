@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, getUnifiedStatusDisplay } from '../../../utils/numberFormatting';
+import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, getUnifiedStatusDisplay } from '../../../utils/formatters';
 
 interface PackageCardProps {
   packageId: string;

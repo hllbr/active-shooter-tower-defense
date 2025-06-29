@@ -1,5 +1,5 @@
 import React from 'react';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { TowerInfoPanelProps } from '../types';
 
 export const TowerInfoPanel: React.FC<TowerInfoPanelProps> = ({

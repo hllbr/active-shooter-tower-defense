@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useGameStore } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { DragState } from '../types';
 import { useDragFeedback } from './useDragFeedback';
 import { useDropZoneAnalysis } from './useDropZoneAnalysis';

@@ -1,5 +1,5 @@
 import { useGameStore } from '../../models/store';
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Enemy, WaveModifier } from '../../models/gameTypes';
 import { spawnStrategy } from '../spawn-system';
 import { getRandomSpawnPosition } from './index';

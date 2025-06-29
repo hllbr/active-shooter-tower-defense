@@ -1,5 +1,5 @@
 import { useGameStore } from '../../models/store';
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import { waveCompositions } from '../../config/waves';
 import { spawnStrategy, performanceTracker, dynamicSpawnController } from '../spawn-system';
 import { waveManager } from '../WaveManager';

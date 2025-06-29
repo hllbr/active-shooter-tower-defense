@@ -1,5 +1,5 @@
 import { useGameStore } from '../models/store';
-import { GAME_CONSTANTS } from '../utils/Constants';
+import { GAME_CONSTANTS } from '../utils/constants';
 import type { TowerUpgradeListener } from '../models/gameTypes';
 
 // CRITICAL FIX: Real Fire Upgrade Effects System

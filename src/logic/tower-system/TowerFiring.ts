@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Enemy, Tower, Bullet, Effect, TowerSlot } from '../../models/gameTypes';
 import { playSound } from '../../utils/sound';
 import { upgradeEffectsManager } from '../UpgradeEffects';

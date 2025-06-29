@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, getUnifiedCostDisplay } from '../../../utils/numberFormatting';
+import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, getUnifiedCostDisplay } from '../../../utils/formatters';
 
 interface UpgradeCardFooterProps {
   baseCost: number;

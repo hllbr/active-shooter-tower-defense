@@ -1,8 +1,8 @@
 import React from 'react';
 import { useGameStore } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import { getNearestEnemy } from '../../../logic/TowerManager';
-import { formatProfessional } from '../../../utils/numberFormatting';
+import { formatProfessional } from '../../../utils/formatters';
 import type { TowerSlot, Enemy } from '../../../models/gameTypes';
 import type { TowerUpgradeInfo } from '../types';
 

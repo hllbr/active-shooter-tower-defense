@@ -2,7 +2,7 @@
  * 🧪 Memory Leak Tester - Comprehensive memory leak detection and testing
  */
 
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import { bulletPool } from '../bullet-system/BulletPool';
 import { effectPool } from '../Effects';
 import { performMemoryCleanup } from '../Effects';

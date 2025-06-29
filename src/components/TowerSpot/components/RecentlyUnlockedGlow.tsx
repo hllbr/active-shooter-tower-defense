@@ -1,5 +1,5 @@
 import React from 'react';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 
 interface RecentlyUnlockedGlowProps {
   slot: { x: number; y: number };

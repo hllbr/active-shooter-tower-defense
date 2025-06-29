@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../../../models/store';
-import { formatCurrency, formatProfessional, formatSmartPercentage } from '../../../../utils/numberFormatting';
+import { formatCurrency, formatProfessional, formatSmartPercentage } from '../../../../utils/formatters';
 import type { Tower } from '../../../../models/gameTypes';
 
 export const StatisticsTab: React.FC = () => {

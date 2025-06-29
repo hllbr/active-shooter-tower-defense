@@ -1,6 +1,6 @@
 import React from 'react';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
-import { formatProfessional } from '../../../utils/numberFormatting';
+import { GAME_CONSTANTS } from '../../../utils/constants';
+import { formatProfessional } from '../../../utils/formatters';
 
 interface UnlockButtonProps {
   slot: { x: number; y: number };

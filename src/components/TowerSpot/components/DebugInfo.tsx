@@ -1,5 +1,5 @@
 import React from 'react';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { DebugInfoProps } from '../types';
 
 export const DebugInfo: React.FC<DebugInfoProps> = ({ slot, debugInfo }) => {

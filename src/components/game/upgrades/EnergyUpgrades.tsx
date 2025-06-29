@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore, type Store } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import { EnergyStatusPanel } from './EnergyStatusPanel';
 import { EnergyUpgradeCard } from './EnergyUpgradeCard';
 import type { EnergySystemState, EnergyStats } from './types';

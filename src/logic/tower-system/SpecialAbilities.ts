@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Effect, Enemy, Tower } from '../../models/gameTypes';
 import { energyManager } from '../EnergyManager';
 import { getEnemiesInRange, getDirection } from '../targeting-system/TargetingSystem';
