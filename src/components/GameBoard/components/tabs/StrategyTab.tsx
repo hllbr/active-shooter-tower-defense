@@ -1,8 +1,8 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
-import { formatCurrency } from '../../../utils/numberFormatting';
-import type { Tower } from '../../../models/gameTypes';
+import { useGameStore } from '../../../../models/store';
+import { GAME_CONSTANTS } from '../../../../utils/Constants';
+import { formatCurrency } from '../../../../utils/numberFormatting';
+import type { Tower } from '../../../../models/gameTypes';
 
 export const StrategyTab: React.FC = () => {
   const { currentWave, towers, gold, enemies } = useGameStore();

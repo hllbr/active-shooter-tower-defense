@@ -1,6 +1,6 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
-import type { Achievement } from '../../../models/gameTypes';
+import { useGameStore } from '../../../../models/store';
+import type { Achievement } from '../../../../models/gameTypes';
 
 export const AchievementsTab: React.FC = () => {
   const { achievements } = useGameStore();

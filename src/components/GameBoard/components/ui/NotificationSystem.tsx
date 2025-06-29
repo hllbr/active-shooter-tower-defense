@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useGameStore } from '../../../models/store';
+import { useGameStore } from '../../../../models/store';
 import './NotificationSystem.css';
 
 export const NotificationSystem: React.FC = () => {

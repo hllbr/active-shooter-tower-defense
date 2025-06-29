@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { useGameStore } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
-import { playContextualSound, stopBackgroundMusic } from '../../../utils/sound';
-import { useAnimatedCounter } from '../hooks/useAnimatedCounter';
-import { statCardStyle } from '../styles';
+import { useGameStore } from '../../../../models/store';
+import { GAME_CONSTANTS } from '../../../../utils/Constants';
+import { playContextualSound, stopBackgroundMusic } from '../../../../utils/sound';
+import { useAnimatedCounter } from '../../hooks/useAnimatedCounter';
+import { statCardStyle } from '../../styles';
 
 export const GameOverScreen: React.FC = () => {
   const {

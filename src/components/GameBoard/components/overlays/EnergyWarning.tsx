@@ -1,6 +1,6 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { useGameStore } from '../../../../models/store';
+import { GAME_CONSTANTS } from '../../../../utils/Constants';
 
 export const EnergyWarning: React.FC = () => {
   const { energyWarning, clearEnergyWarning } = useGameStore();

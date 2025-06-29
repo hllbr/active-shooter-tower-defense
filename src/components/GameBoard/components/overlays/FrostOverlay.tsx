@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
+import { useGameStore } from '../../../../models/store';
 
 export const FrostOverlay: React.FC = () => {
   const { frostEffectActive } = useGameStore();

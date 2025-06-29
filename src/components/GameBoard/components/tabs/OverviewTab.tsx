@@ -1,7 +1,7 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
-import { formatCurrency, formatPercentage } from '../../../utils/numberFormatting';
-import type { Tower } from '../../../models/gameTypes';
+import { useGameStore } from '../../../../models/store';
+import { formatCurrency, formatPercentage } from '../../../../utils/numberFormatting';
+import type { Tower } from '../../../../models/gameTypes';
 
 interface PowerOverview {
   totalCombatPower: number;
