@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { useGameStore } from '../../../models/store';
-import { infoIconStyle, tooltipStyle } from '../styles';
+import { useGameStore } from '../../../../models/store';
+import { infoIconStyle, tooltipStyle } from '../../styles';
 
 interface GameStatsPanelProps {
   onCommandCenterOpen?: () => void;

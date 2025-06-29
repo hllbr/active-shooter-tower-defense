@@ -1,9 +1,9 @@
 import React from 'react';
-import { TowerSpot } from '../../TowerSpot';
+import { TowerSpot } from '../../../TowerSpot';
 import { TowerDragVisualization } from './TowerDragVisualization';
 import { SVGEffectsRenderer } from './SVGEffectsRenderer';
-import type { TowerSlot } from '../../../models/gameTypes';
-import type { DragState, DropZoneState, DragFeedback } from '../types';
+import type { TowerSlot } from '../../../../models/gameTypes';
+import type { DragState, DropZoneState, DragFeedback } from '../../types';
 
 interface GameAreaProps {
   width: number;

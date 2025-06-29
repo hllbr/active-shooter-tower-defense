@@ -1,6 +1,6 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { useGameStore } from '../../../../models/store';
+import { GAME_CONSTANTS } from '../../../../utils/Constants';
 
 export const StartScreen: React.FC = () => {
   const { isStarted, setStarted, startPreparation } = useGameStore();

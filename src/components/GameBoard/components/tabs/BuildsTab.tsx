@@ -1,7 +1,7 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
-import { formatProfessional } from '../../../utils/numberFormatting';
-import type { Tower } from '../../../models/gameTypes';
+import { useGameStore } from '../../../../models/store';
+import { formatProfessional } from '../../../../utils/numberFormatting';
+import type { Tower } from '../../../../models/gameTypes';
 
 export const BuildsTab: React.FC = () => {
   const { towers, bulletLevel, fireUpgradesPurchased, shieldUpgradesPurchased, globalWallStrength, mineLevel, mines, packagesPurchased, maxEnergy, maxActions } = useGameStore();

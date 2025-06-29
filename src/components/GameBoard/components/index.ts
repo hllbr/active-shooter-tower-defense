@@ -1,20 +1,20 @@
 // GameBoard components index file
-export { GameStatsPanel } from './GameStatsPanel';
-export { EnergyWarning } from './EnergyWarning';
-export { DebugMessage } from './DebugMessage';
-export { FrostOverlay } from './FrostOverlay';
-export { PreparationScreen } from './PreparationScreen';
-export { StartScreen } from './StartScreen';
-export { GameOverScreen } from './GameOverScreen';
-export { TowerDragVisualization } from './TowerDragVisualization';
-export { SVGEffectsRenderer } from './SVGEffectsRenderer';
-export { CommandCenter } from './CommandCenter';
-export { NotificationSystem } from './NotificationSystem';
-export { GameArea } from './GameArea';
+export { GameStatsPanel } from './ui/GameStatsPanel';
+export { EnergyWarning } from './overlays/EnergyWarning';
+export { DebugMessage } from './overlays/DebugMessage';
+export { FrostOverlay } from './overlays/FrostOverlay';
+export { PreparationScreen } from './screens/PreparationScreen';
+export { StartScreen } from './screens/StartScreen';
+export { GameOverScreen } from './screens/GameOverScreen';
+export { TowerDragVisualization } from './renderers/TowerDragVisualization';
+export { SVGEffectsRenderer } from './renderers/SVGEffectsRenderer';
+export { CommandCenter } from './ui/CommandCenter';
+export { NotificationSystem } from './ui/NotificationSystem';
+export { GameArea } from './renderers/GameArea';
 
 // CommandCenter Tab Components
-export { OverviewTab } from './OverviewTab';
-export { BuildsTab } from './BuildsTab';
-export { StatisticsTab } from './StatisticsTab';
-export { StrategyTab } from './StrategyTab';
-export { AchievementsTab } from './AchievementsTab';
+export { OverviewTab } from './tabs/OverviewTab';
+export { BuildsTab } from './tabs/BuildsTab';
+export { StatisticsTab } from './tabs/StatisticsTab';
+export { StrategyTab } from './tabs/StrategyTab';
+export { AchievementsTab } from './tabs/AchievementsTab';

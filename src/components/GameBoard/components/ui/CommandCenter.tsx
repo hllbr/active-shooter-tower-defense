@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useGameStore } from '../../../models/store';
-// import { playSound } from '../../../utils/sound'; // 🔇 SES SİSTEMİ DEVRE DIŞI
-import { OverviewTab } from './OverviewTab';
-import { BuildsTab } from './BuildsTab';
-import { StatisticsTab } from './StatisticsTab';
-import { StrategyTab } from './StrategyTab';
-import { AchievementsTab } from './AchievementsTab';
+import { useGameStore } from '../../../../models/store';
+// import { playSound } from '../../../../utils/sound'; // 🔇 SES SİSTEMİ DEVRE DIŞI
+import { OverviewTab } from '../tabs/OverviewTab';
+import { BuildsTab } from '../tabs/BuildsTab';
+import { StatisticsTab } from '../tabs/StatisticsTab';
+import { StrategyTab } from '../tabs/StrategyTab';
+import { AchievementsTab } from '../tabs/AchievementsTab';
 import './CommandCenter.css';
 
 const TABS: { [key: string]: string } = {
