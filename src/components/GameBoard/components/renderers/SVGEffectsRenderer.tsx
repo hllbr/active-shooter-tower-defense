@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useGameStore } from '../../../../models/store';
-import { GAME_CONSTANTS } from '../../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../../utils/constants';
 import type { Enemy, Bullet, Effect, Mine } from '../../../../models/gameTypes';
 
 // ⚠️ FIXED: SVG Animation Memory Leak Prevention

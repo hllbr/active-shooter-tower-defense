@@ -7,7 +7,7 @@ import { BulletPool } from './BulletPool';
 import { EffectPool } from './EffectPool';
 import { LifecycleManager } from './LifecycleManager';
 import { MemoryMonitor } from './MemoryMonitor';
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 
 export class GlobalMemoryManager {
   private static instance: GlobalMemoryManager;

@@ -3,7 +3,7 @@
  */
 
 import { useGameStore } from '../../models/store';
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Effect } from '../../models/gameTypes';
 import { effectPool } from './EffectPool';
 import { cleanupManager } from '../memory';

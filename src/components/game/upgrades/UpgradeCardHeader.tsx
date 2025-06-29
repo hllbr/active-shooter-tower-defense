@@ -1,5 +1,5 @@
 import React from 'react';
-import { getUnifiedLevelDisplay } from '../../../utils/numberFormatting';
+import { getUnifiedLevelDisplay } from '../../../utils/formatters';
 
 interface UpgradeCardHeaderProps {
   icon: string;

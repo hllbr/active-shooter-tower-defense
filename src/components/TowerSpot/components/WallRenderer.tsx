@@ -1,5 +1,5 @@
 import React from 'react';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { WallRenderProps } from '../types';
 
 export const WallRenderer: React.FC<WallRenderProps> = ({ slot, wallLevel }) => {

@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Bullet, Enemy, Effect } from '../../models/gameTypes';
 import { bulletPool } from './BulletPool';
 import { collisionManager } from '../CollisionDetection';

@@ -2,7 +2,7 @@
  * 🛠️ Memory Testing Utilities
  */
 
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import { MemoryTester } from './MemoryTester';
 import { MemoryLeakTester } from './MemoryLeakTester';
 

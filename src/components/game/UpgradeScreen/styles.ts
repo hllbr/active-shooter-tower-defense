@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 
 // Re-export styles from specialized files
 export { headerStyles } from './headerStyles';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../models/store';
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 import { initUpgradeEffects } from '../../logic/UpgradeEffects';
 import { UpgradeScreen } from '../game/UpgradeScreen';
 

@@ -1,5 +1,5 @@
 import type { Bullet, Position } from '../../models/gameTypes';
-import { GAME_CONSTANTS } from '../../utils/Constants';
+import { GAME_CONSTANTS } from '../../utils/constants';
 
 /**
  * Bullet Pool System for efficient memory management

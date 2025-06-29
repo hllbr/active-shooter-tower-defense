@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useGameStore } from '../../../../models/store';
-import { GAME_CONSTANTS } from '../../../../utils/Constants';
+import { GAME_CONSTANTS } from '../../../../utils/constants';
 import { playContextualSound, stopBackgroundMusic } from '../../../../utils/sound';
 import { useAnimatedCounter } from '../../hooks/useAnimatedCounter';
 import { statCardStyle } from '../../styles';
