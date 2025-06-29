@@ -49,10 +49,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     unlockingSlots,
     pausePreparation,
     resumePreparation,
-    initializeAchievements,
-    setStarted,
-    enemiesKilled,
-    enemiesRequired
+    initializeAchievements
   } = useGameStore();
 
   // Enhanced drag & drop system

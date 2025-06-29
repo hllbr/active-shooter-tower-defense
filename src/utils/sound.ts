@@ -1,6 +1,5 @@
 export const audioCache: Record<string, HTMLAudioElement> = {};
-let backgroundMusic: HTMLAudioElement | null = null;
-let gameAudio: HTMLAudioElement | null = null;
+const gameAudio: HTMLAudioElement | null = null;
 
 // ✅ ENHANCED AUDIO SYSTEM: Smart Music Management (prevents overlaps and chaos)
 class SmartMusicManager {
@@ -105,15 +104,18 @@ export function playSound(sound: string): void {
   }
 }
 
-// ✅ NEW: Context-aware sound system with fallbacks for missing sounds
-export function playContextualSound(context: 'victory' | 'defeat' | 'warning' | 'purchase' | 'click' | 'unlock'): void {
+// ✅ UPDATED: Context-aware sound system with new sounds
+export function playContextualSound(context: 'victory' | 'defeat' | 'warning' | 'purchase' | 'click' | 'unlock' | 'tower-build' | 'tower-upgrade' | 'death'): void {
   const soundMap: Record<string, string> = {
-    victory: 'levelupwav',    // Fallback: celebration sound for victory
-    defeat: 'gameover',       // Direct mapping
-    warning: 'gameover',      // Fallback: attention sound for warnings  
-    purchase: 'lock-break',   // Fallback: transaction sound
-    click: '',                // Silent until click.wav is added
-    unlock: 'lock-break'      // Direct mapping
+    victory: 'levelupwav',           // Wave completion celebration
+    defeat: 'gameover',              // Game over screen
+    death: 'death-soundü',           // 🆕 Enemy/tower death sound
+    warning: 'gameover',             // Fallback: attention sound for warnings  
+    purchase: 'lock-break',          // General purchase sound
+    'tower-build': 'tower-create-sound',  // 🆕 Tower construction sound
+    'tower-upgrade': 'tower-levelup-sound', // 🆕 Tower upgrade sound
+    click: '',                       // Silent until click.wav is added
+    unlock: 'lock-break'             // Slot unlock sound
   };
   
   const soundFile = soundMap[context];
@@ -122,6 +124,35 @@ export function playContextualSound(context: 'victory' | 'defeat' | 'warning' | 
   } else {
     console.log(`🔇 Silent context: ${context} (no sound file)`);
   }
+}
+
+// ✅ NEW: Specific sound functions for common game events
+export function playTowerBuildSound(): void {
+  playContextualSound('tower-build');
+}
+
+export function playTowerUpgradeSound(): void {
+  playContextualSound('tower-upgrade');
+}
+
+export function playDeathSound(): void {
+  playContextualSound('death');
+}
+
+export function playVictorySound(): void {
+  playContextualSound('victory');
+}
+
+export function playDefeatSound(): void {
+  playContextualSound('defeat');
+}
+
+export function playPurchaseSound(): void {
+  playContextualSound('purchase');
+}
+
+export function playUnlockSound(): void {
+  playContextualSound('unlock');
 }
 
 // ✅ SMART MUSIC FUNCTIONS: Use the enhanced manager
@@ -165,6 +196,32 @@ export function clearSoundCache(): void {
 // ✅ MISSING SOUND DETECTION: Get list of missing sounds
 export function getMissingSounds(): string[] {
   return Array.from(missingSounds);
+}
+
+// ✅ SOUND VALIDATION: Check if all required sounds are available
+export function validateSounds(): { available: string[]; missing: string[] } {
+  const requiredSounds = [
+    'gamesound',
+    'gameover', 
+    'levelupwav',
+    'lock-break',
+    'death-soundü',
+    'tower-create-sound',
+    'tower-levelup-sound'
+  ];
+  
+  const available: string[] = [];
+  const missing: string[] = [];
+  
+  requiredSounds.forEach(sound => {
+    if (missingSounds.has(sound)) {
+      missing.push(sound);
+    } else {
+      available.push(sound);
+    }
+  });
+  
+  return { available, missing };
 }
 
 // Legacy support (backward compatibility)

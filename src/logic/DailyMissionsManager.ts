@@ -329,25 +329,28 @@ export class DailyMissionsManager {
     const updates: Partial<GameState> = {};
 
     switch (mission.reward.type) {
-      case 'gold':
+      case 'gold': {
         updates.gold = (gameState.gold || 0) + mission.reward.amount;
         break;
+      }
 
-      case 'energy':
+      case 'energy': {
         updates.energy = Math.min(
           gameState.maxEnergy, 
           gameState.energy + mission.reward.amount
         );
         break;
+      }
 
-      case 'actions':
+      case 'actions': {
         updates.actionsRemaining = Math.min(
           gameState.maxActions,
           gameState.actionsRemaining + mission.reward.amount
         );
         break;
+      }
 
-      case 'experience':
+      case 'experience': {
         // Apply experience to player profile
         const newProfile = { ...gameState.playerProfile };
         newProfile.experience += mission.reward.amount;
@@ -360,13 +363,15 @@ export class DailyMissionsManager {
         
         updates.playerProfile = newProfile;
         break;
+      }
 
-      case 'unlock':
+      case 'unlock': {
         // Handle special unlocks
         if (mission.reward.special) {
           // Could unlock new features, achievements, etc.
         }
         break;
+      }
     }
 
     return updates;

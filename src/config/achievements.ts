@@ -1,4 +1,4 @@
-import type { Achievement, AchievementSeries, PlayerProfile, PlayerStatistics } from '../models/gameTypes';
+import type { Achievement, AchievementSeries, PlayerProfile } from '../models/gameTypes';
 
 // ===== ACHIEVEMENT DEFINITIONS =====
 

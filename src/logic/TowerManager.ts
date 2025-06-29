@@ -5,7 +5,6 @@ import type { Enemy, Position, Tower } from '../models/gameTypes';
 import { playSound } from '../utils/sound';
 import { energyManager } from './EnergyManager';
 import { collisionManager } from './CollisionDetection';
-import { cleanupManager } from './Effects';
 import { upgradeEffectsManager } from './UpgradeEffects';
 
 // =================== BULLET POOL SYSTEM ===================
@@ -449,7 +448,7 @@ export class EliteTargetingStrategy implements ITargetingStrategy {
     return { x: dx / len, y: dy / len };
   }
 
-  private getNearestTowerSlot(pos: Position, towerSlots: any[]): Position | null {
+  private getNearestTowerSlot(pos: Position, towerSlots: { x: number; y: number; unlocked: boolean; tower?: Tower }[]): Position | null {
     const slotsWithTowers = towerSlots.filter(s => s.unlocked && s.tower);
     if (slotsWithTowers.length === 0) {
       return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
@@ -543,7 +542,7 @@ export function getTargetEnemy(
 export function getTargetEnemies(
   tower: Tower,
   enemies: Enemy[],
-  mode: TargetingMode = TargetingMode.THREAT_ASSESSMENT,
+  _mode: TargetingMode = TargetingMode.THREAT_ASSESSMENT,
   maxTargets: number = 5
 ): Enemy[] {
   const enemiesInRange = getEnemiesInRange(tower.position, tower.range * (tower.rangeMultiplier ?? 1), enemies);

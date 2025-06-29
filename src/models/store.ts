@@ -1,14 +1,11 @@
 import { create } from 'zustand';
-import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener, TileModifier } from './gameTypes';
+import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from './gameTypes';
 import { GAME_CONSTANTS } from '../utils/Constants';
-import { AchievementManager } from '../logic/AchievementManager';
 // import { DailyMissionsManager } from '../logic/DailyMissionsManager';
 import { updateWaveTiles } from '../logic/TowerPlacementManager';
 import { waveRules } from '../config/waveRules';
-import { economyConfig, calculateTotalWaveIncome } from '../config/economy';
 import { energyManager } from '../logic/EnergyManager';
 import { waveManager } from '../logic/WaveManager';
-import { playSound } from '../utils/sound';
 import { upgradeEffectsManager } from '../logic/UpgradeEffects';
 
 const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
@@ -170,7 +167,7 @@ const initialState: GameState = {
   lastMissionRefresh: 0,
 };
 
-type Store = GameState & {
+export type Store = GameState & {
   buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy') => void;
   upgradeTower: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
@@ -774,7 +771,7 @@ export const useGameStore = create<Store>((set, get) => ({
     isDiceRolling: false,
   })),
 
-  setDiceResult: (roll: number, multiplier: number) => set(() => ({
+  setDiceResult: (roll: number, _multiplier: number) => set(() => ({
     diceResult: roll // ✅ FIX: Just store the roll number 
   })),
 
@@ -879,7 +876,6 @@ export const useGameStore = create<Store>((set, get) => ({
 
   // ✅ TILE ACTIONS Implementation
   performTileAction: (slotIdx: number, action: 'wall' | 'trench' | 'buff') => set((state) => {
-    const cost = 25; // ✅ FIX: Hardcoded tile action cost
     if (state.actionsRemaining < 1) return {};
     
     const newSlots = [...state.towerSlots];
@@ -969,11 +965,11 @@ export const useGameStore = create<Store>((set, get) => ({
   
   // ✅ ENERGY SYSTEM Implementation
   upgradeEnergySystem: (upgradeId: string) => set((state) => {
-    const upgrade = GAME_CONSTANTS.ENERGY_UPGRADES[upgradeId];
+    const upgrade = GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES?.find(u => u.id === upgradeId);
     if (!upgrade) return {};
     
     const currentLevel = state.energyUpgrades[upgradeId] || 0;
-    const cost = upgrade.baseCost * Math.pow(upgrade.costMultiplier, currentLevel);
+    const cost = upgrade.cost * Math.pow(1.5, currentLevel); // Standard cost scaling
     
     if (state.gold < cost) return {};
     
@@ -1011,8 +1007,8 @@ export const useGameStore = create<Store>((set, get) => ({
     };
   }),
 
-  tickEnergyRegen: (deltaTime: number) => {
-    energyManager.tick(deltaTime);
+  tickEnergyRegen: (_deltaTime: number) => {
+    energyManager.tick(_deltaTime);
   },
 
   calculateEnergyStats: () => {
@@ -1044,7 +1040,7 @@ export const useGameStore = create<Store>((set, get) => ({
   },
 
   // ✅ ACTION SYSTEM Implementation
-  tickActionRegen: (deltaTime: number) => set((state) => {
+  tickActionRegen: (_deltaTime: number) => set((state) => {
     const now = performance.now();
     const timeSinceLastRegen = now - state.lastActionRegen;
     

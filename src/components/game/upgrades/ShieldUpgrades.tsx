@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useGameStore } from '../../../models/store';
+import { useGameStore, type Store } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 import { ShieldStatsDisplay } from './ShieldStatsDisplay';
 import { ShieldUpgradeCard } from './ShieldUpgradeCard';
 
 export const ShieldUpgrades: React.FC = () => {
-  const gold = useGameStore((state) => state.gold);
-  const globalWallStrength = useGameStore((state) => state.globalWallStrength);
-  const purchaseShield = useGameStore((state) => state.purchaseShield);
-  const discountMultiplier = useGameStore((state) => state.discountMultiplier);
+  const gold = useGameStore((state: Store) => state.gold);
+  const globalWallStrength = useGameStore((state: Store) => state.globalWallStrength);
+  const purchaseShield = useGameStore((state: Store) => state.purchaseShield);
+  const discountMultiplier = useGameStore((state: Store) => state.discountMultiplier);
   
   const [prevWallStrength, setPrevWallStrength] = useState(globalWallStrength);
   const [showUpgradeAnimation, setShowUpgradeAnimation] = useState(false);

@@ -91,7 +91,13 @@ export function testDiceButton() {
 }
 
 // Make available globally for easy testing
-(window as any).testContinueButton = testContinueButton;
-(window as any).testDiceButton = testDiceButton;
+declare global {
+  interface Window {
+    testContinueButton: typeof testContinueButton;
+    testDiceButton: typeof testDiceButton;
+  }
+}
+window.testContinueButton = testContinueButton;
+window.testDiceButton = testDiceButton;
 
 export default { testContinueButton, testDiceButton }; 

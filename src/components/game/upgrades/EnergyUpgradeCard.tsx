@@ -1,49 +1,50 @@
 import React from 'react';
 import { useGameStore } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/Constants';
 import { UpgradeCard } from './UpgradeCard';
 import type { UpgradeData } from './types';
 
-export const EnergyUpgradeCard: React.FC = () => {
+interface EnergyUpgradeCardProps {
+  upgrade: {
+    id: string;
+    name: string;
+    description: string;
+    cost: number;
+    maxLevel: number;
+    category: string;
+    icon: string;
+  };
+  currentLevel: number;
+  gold: number;
+  onUpgrade: (upgradeId: string) => void;
+}
+
+export const EnergyUpgradeCard: React.FC<EnergyUpgradeCardProps> = ({ 
+  upgrade, 
+  currentLevel, 
+  gold, 
+  onUpgrade 
+}) => {
   const { 
-    gold, 
-    setGold, 
-    energyBoostLevel, 
-    setEnergyBoostLevel, 
     discountMultiplier,
     diceResult 
   } = useGameStore();
 
-  const energyUpgrade: UpgradeData = {
-    name: 'Enerji Güçlendirici',
-    description: 'Maksimum enerji kapasitesini artırır ve enerji yenileme hızını yükseltir.',
-    currentLevel: energyBoostLevel,
-    baseCost: GAME_CONSTANTS.ENERGY_BOOST_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, energyBoostLevel),
-    maxLevel: GAME_CONSTANTS.MAX_ENERGY_BOOST_LEVEL,
-    onUpgrade: () => {
-      const cost = GAME_CONSTANTS.ENERGY_BOOST_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, energyBoostLevel);
-      let finalCost = cost;
-      
-      if (diceResult && diceResult === 6) finalCost = Math.floor(cost * 0.5);
-      else if (diceResult && diceResult === 5) finalCost = Math.floor(cost * 0.7);
-      else if (diceResult && diceResult === 4) finalCost = Math.floor(cost * 0.85);
-      
-      if (discountMultiplier !== 1) {
-        finalCost = Math.floor(finalCost / discountMultiplier);
-      }
-      
-      setGold(gold - finalCost);
-      setEnergyBoostLevel(energyBoostLevel + 1);
-    },
-    icon: '⚡',
-    color: '#fbbf24',
+  const upgradeData: UpgradeData = {
+    name: upgrade.name,
+    description: upgrade.description,
+    currentLevel: currentLevel,
+    baseCost: upgrade.cost * Math.pow(1.5, currentLevel),
+    maxLevel: upgrade.maxLevel,
+    onUpgrade: () => onUpgrade(upgrade.id),
+    icon: upgrade.icon,
+    color: '#00cfff',
     isElite: false,
-    additionalInfo: 'Her seviye +20 enerji kapasitesi'
+    additionalInfo: `${upgrade.category} upgrade`
   };
 
   return (
     <UpgradeCard
-      upgrade={energyUpgrade}
+      upgrade={upgradeData}
       gold={gold}
       diceResult={diceResult}
       discountMultiplier={discountMultiplier}

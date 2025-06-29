@@ -1,6 +1,38 @@
 import type { GameState, Achievement, AchievementSeries, PlayerProfile } from '../models/gameTypes';
 import { ACHIEVEMENT_DEFINITIONS, ACHIEVEMENT_SERIES, createInitialPlayerProfile } from '../config/achievements';
 
+// Achievement Event Data Types
+interface WaveEventData {
+  waveNumber: number;
+  enemiesKilled: number;
+  timeElapsed: number;
+}
+
+interface PurchaseEventData {
+  itemType: string;
+  cost: number;
+  level: number;
+}
+
+interface EnemyEventData {
+  enemyType: string;
+  damage: number;
+  isSpecial: boolean;
+}
+
+interface TowerEventData {
+  towerType: string;
+  level: number;
+  position: { x: number; y: number };
+}
+
+type AchievementEventData = 
+  | WaveEventData 
+  | PurchaseEventData 
+  | EnemyEventData 
+  | TowerEventData 
+  | Record<string, string | number | boolean>;
+
 // ===== ACHIEVEMENT MANAGER =====
 
 export class AchievementManager {
@@ -45,7 +77,7 @@ export class AchievementManager {
   public updateAchievements(
     gameState: GameState,
     eventType: string,
-    eventData?: any
+    eventData?: AchievementEventData
   ): {
     newlyCompleted: Achievement[];
     updatedAchievements: Record<string, Achievement>;
@@ -95,7 +127,7 @@ export class AchievementManager {
   }
 
   // Calculate progress for specific achievement
-  private calculateProgress(achievement: Achievement, gameState: GameState, eventData?: any): number {
+  private calculateProgress(achievement: Achievement, gameState: GameState, eventData?: AchievementEventData): number {
     switch (achievement.tracking.trackingFunction) {
       case 'trackWaveProgress':
         return gameState.currentWave;
@@ -138,8 +170,11 @@ export class AchievementManager {
         return gameState.energy >= gameState.maxEnergy ? 1 : 0;
         
       case 'trackSpeedrun':
-        // This would need special tracking for wave completion times
-        return 0; // Placeholder
+        // Use event data for speedrun tracking
+        if (eventData && 'timeElapsed' in eventData && typeof eventData.timeElapsed === 'number' && eventData.timeElapsed < 60000) {
+          return achievement.progress + 1; // Count fast wave completions
+        }
+        return achievement.progress;
         
       default:
         return achievement.progress;
@@ -311,7 +346,6 @@ export class AchievementManager {
     message: string;
     duration: number;
   } {
-    const rarityInfo = this.getRarityInfo(achievement.rarity);
     const rarityText = achievement.rarity.charAt(0).toUpperCase() + achievement.rarity.slice(1);
     
     return {

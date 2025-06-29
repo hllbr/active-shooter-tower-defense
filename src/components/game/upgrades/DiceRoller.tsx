@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
+import { useGameStore, type Store } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 import { DiceFace } from './DiceFace';
 import { DiceInfo } from './DiceInfo';
@@ -8,11 +8,11 @@ import { DiceResult } from './DiceResult';
 import { DiceButton } from './DiceButton';
 
 export const DiceRoller: React.FC = () => {
-  const diceRoll = useGameStore((state) => state.diceRoll);
-  const diceUsed = useGameStore((state) => state.diceUsed);
-  const discountMultiplier = useGameStore((state) => state.discountMultiplier);
-  const isDiceRolling = useGameStore((state) => state.isDiceRolling);
-  const rollDice = useGameStore((state) => state.rollDice);
+  const diceRoll = useGameStore((state: Store) => state.diceRoll);
+  const diceUsed = useGameStore((state: Store) => state.diceUsed);
+  const discountMultiplier = useGameStore((state: Store) => state.discountMultiplier);
+  const isDiceRolling = useGameStore((state: Store) => state.isDiceRolling);
+  const rollDice = useGameStore((state: Store) => state.rollDice);
 
   const handleDiceRoll = () => {
     console.log('🎲 DiceRoller: Dice button clicked!');

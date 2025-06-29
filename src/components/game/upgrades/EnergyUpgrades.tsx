@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
+import { useGameStore, type Store } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 import { EnergyStatusPanel } from './EnergyStatusPanel';
 import { EnergyUpgradeCard } from './EnergyUpgradeCard';
@@ -8,17 +8,17 @@ import type { EnergySystemState, EnergyStats } from './types';
 export const EnergyUpgrades: React.FC = () => {
   // Validated energy system state
   const energySystemState: EnergySystemState = {
-    gold: useGameStore((state) => state.gold),
-    energyUpgrades: useGameStore((state) => state.energyUpgrades),
-    energy: useGameStore((state) => state.energy),
-    maxEnergy: useGameStore((state) => state.maxEnergy),
-    actionsRemaining: useGameStore((state) => state.actionsRemaining),
-    maxActions: useGameStore((state) => state.maxActions),
-    actionRegenTime: useGameStore((state) => state.actionRegenTime)
+    gold: useGameStore((state: Store) => state.gold),
+    energyUpgrades: useGameStore((state: Store) => state.energyUpgrades),
+    energy: useGameStore((state: Store) => state.energy),
+    maxEnergy: useGameStore((state: Store) => state.maxEnergy),
+    actionsRemaining: useGameStore((state: Store) => state.actionsRemaining),
+    maxActions: useGameStore((state: Store) => state.maxActions),
+    actionRegenTime: useGameStore((state: Store) => state.actionRegenTime)
   };
 
-  const upgradeEnergySystem = useGameStore((state) => state.upgradeEnergySystem);
-  const calculateEnergyStats = useGameStore((state) => state.calculateEnergyStats);
+  const upgradeEnergySystem = useGameStore((state: Store) => state.upgradeEnergySystem);
+  const calculateEnergyStats = useGameStore((state: Store) => state.calculateEnergyStats);
 
   const stats: EnergyStats = calculateEnergyStats();
 

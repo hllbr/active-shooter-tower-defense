@@ -83,8 +83,15 @@ export class ButtonTestDiagnostic {
     });
     
     // Test functions exist
-    const functionsToTest = ['nextWave', 'startPreparation', 'resetDice', 'setRefreshing'];
-    const missingFunctions = functionsToTest.filter(fn => typeof store[fn] !== 'function');
+    const functionsToTest = {
+      nextWave: store.nextWave,
+      startPreparation: store.startPreparation,
+      resetDice: store.resetDice,
+      setRefreshing: store.setRefreshing
+    };
+    const missingFunctions = Object.entries(functionsToTest)
+      .filter(([_name, fn]) => typeof fn !== 'function')
+      .map(([name]) => name);
     
     if (missingFunctions.length > 0) {
       console.error('❌ Missing functions:', missingFunctions);
@@ -202,6 +209,11 @@ export class ButtonTestDiagnostic {
 }
 
 // Make it available globally for testing
-(window as any).ButtonTestDiagnostic = ButtonTestDiagnostic;
+declare global {
+  interface Window {
+    ButtonTestDiagnostic: typeof ButtonTestDiagnostic;
+  }
+}
+window.ButtonTestDiagnostic = ButtonTestDiagnostic;
 
 export default ButtonTestDiagnostic; 

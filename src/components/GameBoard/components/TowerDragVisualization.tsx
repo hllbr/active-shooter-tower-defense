@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
+import type { TowerSlot } from '../../../models/gameTypes';
 import type { DragState, DropZoneState, DragFeedback } from '../types';
 
 interface TowerDragVisualizationProps {
@@ -29,7 +30,7 @@ export const TowerDragVisualization: React.FC<TowerDragVisualizationProps> = ({
     };
 
     // Find nearest valid slot for connection line
-    let nearest: { slot: any; distance: number } | null = null;
+    let nearest: { slot: TowerSlot; distance: number } | null = null;
     let minDist = Infinity;
     
     dropZones.forEach((zone) => {
