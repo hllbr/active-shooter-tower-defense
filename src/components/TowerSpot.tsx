@@ -63,6 +63,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
                 stroke="#888888"
                 strokeWidth={2}
                 strokeDasharray="4 2"
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleBuildTower(slotIdx, 'attack')}
               />
               
               {/* Build indicator */}
@@ -74,6 +76,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
                   fontSize={12}
                   fill="#4ade80"
                   fontWeight="bold"
+                  pointerEvents="none"
                 >
                   İnşa Et
                 </text>
