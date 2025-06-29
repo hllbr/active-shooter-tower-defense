@@ -1,6 +1,6 @@
 import { useGameStore } from '../models/store';
 import { waveManager } from "./WaveManager";
-import { performanceTracker, dynamicSpawnController } from './DynamicSpawnSystem';
+import { performanceTracker, dynamicSpawnController } from './spawn-system';
 import { 
   EnemyFactory, 
   EnemyMovement, 

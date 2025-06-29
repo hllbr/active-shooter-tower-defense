@@ -1,7 +1,7 @@
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/Constants';
 import { waveCompositions } from '../../config/waves';
-import { spawnStrategy, performanceTracker, dynamicSpawnController } from '../DynamicSpawnSystem';
+import { spawnStrategy, performanceTracker, dynamicSpawnController } from '../spawn-system';
 import { waveManager } from '../WaveManager';
 import { EnemyFactory } from './EnemyFactory';
 import type { Tower, TowerSlot, WaveEnemyConfig } from '../../models/gameTypes';
