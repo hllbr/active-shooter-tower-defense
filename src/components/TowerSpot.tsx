@@ -25,7 +25,6 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
     menuPos,
     isUnlocking,
     isRecentlyUnlocked,
-    canBuild,
     canUnlock,
     unlockCost,
     canUpgrade,
@@ -52,67 +51,56 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
       {/* Slot or Tower */}
       {!slot.tower ? (
         <g>
-          {/* Enlarged drop zone for better targeting */}
-          {isDragTarget && (
-            <circle
-              cx={slot.x}
-              cy={slot.y}
-              r={GAME_CONSTANTS.TOWER_SIZE * 2}
-              fill="rgba(68, 222, 128, 0.2)"
-              stroke="#22c55e"
-              strokeWidth={2}
-              strokeDasharray="8 4"
-              style={{ animation: 'pulse 1s ease-in-out infinite' }}
-            />
-          )}
+          {/* Empty slot visualization */}
           {slot.unlocked ? (
-            // Unlocked slot content
             <>
-              <rect
-                x={slot.x - GAME_CONSTANTS.TOWER_SIZE / 2}
-                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2}
-                width={GAME_CONSTANTS.TOWER_SIZE}
-                height={GAME_CONSTANTS.TOWER_SIZE}
-                                                   fill={canBuild ? (slot.type === 'dynamic' ? GAME_CONSTANTS.BUILD_TILE_COLORS.dynamic : GAME_CONSTANTS.BUILD_TILE_COLORS.fixed) : '#444444'}
-                  stroke={canBuild ? (slot.type === 'dynamic' ? '#1e3a8a' : '#166534') : '#555555'}
+              {/* Basic slot circle */}
+              <circle
+                cx={slot.x}
+                cy={slot.y}
+                r={GAME_CONSTANTS.TOWER_SIZE / 2}
+                fill="rgba(100, 100, 100, 0.2)"
+                stroke="#888888"
                 strokeWidth={2}
-                rx={6}
-                                                   style={{ cursor: canBuild ? 'pointer' : 'not-allowed' }}
-                  onClick={() => canBuild && handleBuildTower(slotIdx, 'attack')}
+                strokeDasharray="4 2"
               />
+              
+              {/* Build indicator */}
               {shouldShowBuildText && (
                 <text
                   x={slot.x}
-                  y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 35}
-                  fill="#ffffff"
-                  fontSize={14}
-                  fontWeight="bold"
+                  y={slot.y + 4}
                   textAnchor="middle"
-                  pointerEvents="none"
+                  fontSize={12}
+                  fill="#4ade80"
+                  fontWeight="bold"
                 >
-                  Kule inşa et
+                  İnşa Et
                 </text>
               )}
-              <polygon
-                points={`${slot.x},${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 28} ${
-                  slot.x - 6
-                },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 18} ${
-                  slot.x + 6
-                },${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 18}`}
-                fill="#ffffff"
-                pointerEvents="none"
-              />
+              
+              {/* Drag target highlight */}
+              {isDragTarget && (
+                <circle
+                  cx={slot.x}
+                  cy={slot.y}
+                  r={GAME_CONSTANTS.TOWER_SIZE / 2 + 5}
+                  fill="rgba(0, 255, 0, 0.3)"
+                  stroke="#00FF00"
+                  strokeWidth={3}
+                />
+              )}
             </>
-                      ) : (
-             <SlotUnlockDisplay
+          ) : (
+            <SlotUnlockDisplay
               slot={slot}
               slotIdx={slotIdx}
               unlockCost={unlockCost}
               canUnlock={canUnlock}
               isUnlocking={isUnlocking}
               isRecentlyUnlocked={isRecentlyUnlocked}
-                             onUnlock={handleUnlock}
-             />
+              onUnlock={handleUnlock}
+            />
           )}
         </g>
       ) : (
@@ -123,15 +111,22 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           {/* Wall (behind tower) */}
           <WallRenderer slot={slot} wallLevel={wallLevel} />
           
-          {/* Tower with drag support */}
+          {/* Tower with enhanced drag & touch support */}
           <g 
             style={{ 
               cursor: 'grab',
               opacity: draggedTowerSlotIdx === slotIdx ? 0.5 : 1,
-              filter: draggedTowerSlotIdx === slotIdx ? 'brightness(0.7)' : 'none'
+              filter: draggedTowerSlotIdx === slotIdx ? 'brightness(0.7)' : 'none',
+              touchAction: 'none' // Prevent default touch behaviors
             }}
             onMouseDown={(e) => {
               if (onTowerDragStart) {
+                onTowerDragStart(slotIdx, e);
+              }
+            }}
+            onTouchStart={(e) => {
+              if (onTowerDragStart) {
+                e.preventDefault(); // Prevent default touch behaviors
                 onTowerDragStart(slotIdx, e);
               }
             }}

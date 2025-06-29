@@ -1,5 +1,14 @@
+import { ACHIEVEMENT_DEFINITIONS } from '../config/achievements/achievementDefinitions';
+import { ACHIEVEMENT_SERIES } from '../config/achievements/achievementSeries';
+import { createInitialPlayerProfile } from '../config/achievements/playerProfile';
 import type { GameState, Achievement, AchievementSeries, PlayerProfile } from '../models/gameTypes';
-import { ACHIEVEMENT_DEFINITIONS, ACHIEVEMENT_SERIES, createInitialPlayerProfile } from '../config/achievements';
+import {
+  AchievementProgressTracker,
+  AchievementRewardManager,
+  AchievementDisplayHelper,
+  AchievementStatisticsManager,
+  AchievementSeriesManager
+} from './achievements';
 
 // Achievement Event Data Types
 interface WaveEventData {
@@ -37,6 +46,19 @@ type AchievementEventData =
 
 export class AchievementManager {
   private static instance: AchievementManager;
+  private progressTracker: AchievementProgressTracker;
+  private rewardManager: AchievementRewardManager;
+  private displayHelper: AchievementDisplayHelper;
+  private statisticsManager: AchievementStatisticsManager;
+  private seriesManager: AchievementSeriesManager;
+
+  private constructor() {
+    this.progressTracker = new AchievementProgressTracker();
+    this.rewardManager = new AchievementRewardManager();
+    this.displayHelper = new AchievementDisplayHelper();
+    this.statisticsManager = new AchievementStatisticsManager();
+    this.seriesManager = new AchievementSeriesManager();
+  }
 
   public static getInstance(): AchievementManager {
     if (!AchievementManager.instance) {
@@ -53,13 +75,13 @@ export class AchievementManager {
   } {
     // Create achievements map
     const achievements: Record<string, Achievement> = {};
-    ACHIEVEMENT_DEFINITIONS.forEach(achievement => {
+    ACHIEVEMENT_DEFINITIONS.forEach((achievement: Achievement) => {
       achievements[achievement.id] = { ...achievement };
     });
 
     // Create series map
     const achievementSeries: Record<string, AchievementSeries> = {};
-    ACHIEVEMENT_SERIES.forEach(series => {
+    ACHIEVEMENT_SERIES.forEach((series: AchievementSeries) => {
       achievementSeries[series.id] = { ...series };
     });
 
@@ -85,16 +107,15 @@ export class AchievementManager {
   } {
     const newlyCompleted: Achievement[] = [];
     const updatedAchievements = { ...gameState.achievements };
-    const updatedProfile = { ...gameState.playerProfile };
+    let updatedProfile = { ...gameState.playerProfile };
+
+    // Get achievements that need updating
+    const achievementsToUpdate = this.progressTracker.getAchievementsToUpdate(updatedAchievements, eventType);
 
     // Check all achievements for updates
-    Object.values(updatedAchievements).forEach(achievement => {
-      if (achievement.completed || !achievement.tracking.triggerEvents.includes(eventType)) {
-        return;
-      }
-
+    achievementsToUpdate.forEach(achievement => {
       // Update progress based on tracking function
-      const newProgress = this.calculateProgress(achievement, gameState, eventData);
+      const newProgress = this.progressTracker.calculateProgress(achievement, gameState, eventData);
       
       if (newProgress !== achievement.progress) {
         achievement.progress = newProgress;
@@ -105,19 +126,11 @@ export class AchievementManager {
           achievement.completedAt = Date.now();
           newlyCompleted.push(achievement);
 
-          // Apply rewards
-          this.applyAchievementReward(achievement, updatedProfile);
-          
-          // Update profile stats
-          updatedProfile.achievementsCompleted++;
-          updatedProfile.achievementPoints += this.getAchievementPoints(achievement);
-          updatedProfile.experience += this.getExperienceReward(achievement);
+          // Process achievement completion and rewards
+          updatedProfile = this.rewardManager.processAchievementCompletion(achievement, updatedProfile);
         }
       }
     });
-
-    // Check level up
-    this.checkLevelUp(updatedProfile);
 
     return {
       newlyCompleted,
@@ -126,232 +139,120 @@ export class AchievementManager {
     };
   }
 
-  // Calculate progress for specific achievement
-  private calculateProgress(achievement: Achievement, gameState: GameState, eventData?: AchievementEventData): number {
-    switch (achievement.tracking.trackingFunction) {
-      case 'trackWaveProgress':
-        return gameState.currentWave;
-        
-      case 'trackFireUpgrades':
-        return gameState.fireUpgradesPurchased;
-        
-      case 'trackShieldUpgrades':
-        return gameState.shieldUpgradesPurchased;
-        
-      case 'trackPackagePurchases':
-        return gameState.packagesPurchased;
-        
-      case 'trackGoldSpending':
-        return gameState.totalGoldSpent;
-        
-      case 'trackActiveTowers':
-        return gameState.towers.length;
-        
-      case 'trackMaxTowerLevel':
-        return gameState.towers.length > 0 ? Math.max(...gameState.towers.map(t => t.level)) : 0;
-        
-      case 'trackEnemyKills':
-        return gameState.totalEnemiesKilled;
-        
-      case 'trackPerfectWaves':
-        return gameState.playerProfile.statistics.perfectWaves;
-        
-      case 'trackMineUpgrades':
-        return gameState.defenseUpgradeLimits.mines.purchaseCount;
-        
-      case 'trackWallUpgrades':
-        return gameState.defenseUpgradeLimits.walls.purchaseCount;
-        
-      case 'trackDiceRolls':
-        // This would need to be tracked separately
-        return gameState.playerProfile.statistics.totalUpgradesPurchased; // Placeholder
-        
-      case 'trackEnergyUsage':
-        return gameState.energy >= gameState.maxEnergy ? 1 : 0;
-        
-      case 'trackSpeedrun':
-        // Use event data for speedrun tracking
-        if (eventData && 'timeElapsed' in eventData && typeof eventData.timeElapsed === 'number' && eventData.timeElapsed < 60000) {
-          return achievement.progress + 1; // Count fast wave completions
-        }
-        return achievement.progress;
-        
-      default:
-        return achievement.progress;
-    }
+  // ===== DELEGATE TO SPECIALIZED COMPONENTS =====
+
+  // Progress tracking methods
+  public calculateProgress(achievement: Achievement, gameState: GameState, eventData?: AchievementEventData): number {
+    return this.progressTracker.calculateProgress(achievement, gameState, eventData);
   }
 
-  // Apply achievement reward to player profile
-  private applyAchievementReward(achievement: Achievement, profile: PlayerProfile): void {
-    const reward = achievement.rewards;
-    
-    switch (reward.type) {
-      case 'research_points':
-        profile.researchPoints += reward.value;
-        break;
-        
-      case 'title':
-        if (!profile.unlockedTitles.includes(reward.name)) {
-          profile.unlockedTitles.push(reward.name);
-        }
-        break;
-        
-      case 'bonus':
-        if (reward.permanent) {
-          profile.permanentBonuses[achievement.id] = reward.value;
-        }
-        break;
-        
-      case 'cosmetic':
-        if (!profile.unlockedCosmetics.includes(reward.name)) {
-          profile.unlockedCosmetics.push(reward.name);
-        }
-        break;
-        
-      case 'unlock':
-        // Handle special unlocks (like prestige system)
-        break;
-    }
+  public shouldUpdateAchievement(achievement: Achievement, eventType: string): boolean {
+    return this.progressTracker.shouldUpdateAchievement(achievement, eventType);
   }
 
-  // Get achievement points based on rarity
-  private getAchievementPoints(achievement: Achievement): number {
-    switch (achievement.rarity) {
-      case 'common': return 10;
-      case 'rare': return 25;
-      case 'epic': return 50;
-      case 'legendary': return 100;
-      default: return 10;
-    }
+  // Reward management methods
+  public applyAchievementReward(achievement: Achievement, profile: PlayerProfile): PlayerProfile {
+    return this.rewardManager.applyAchievementReward(achievement, profile);
   }
 
-  // Get experience reward based on rarity
-  private getExperienceReward(achievement: Achievement): number {
-    switch (achievement.rarity) {
-      case 'common': return 50;
-      case 'rare': return 150;
-      case 'epic': return 400;
-      case 'legendary': return 1000;
-      default: return 50;
-    }
+  public getAchievementPoints(achievement: Achievement): number {
+    return this.rewardManager.getAchievementPoints(achievement);
   }
 
-  // Check if player levels up
-  private checkLevelUp(profile: PlayerProfile): void {
-    while (profile.experience >= profile.experienceToNext) {
-      profile.experience -= profile.experienceToNext;
-      profile.level++;
-      profile.experienceToNext = this.calculateExperienceToNext(profile.level);
-      
-      // Level up rewards
-      profile.researchPoints += profile.level * 10; // 10 research points per level
-    }
+  public getExperienceReward(achievement: Achievement): number {
+    return this.rewardManager.getExperienceReward(achievement);
   }
 
-  // Calculate experience needed for next level
-  private calculateExperienceToNext(level: number): number {
-    return Math.floor(1000 * Math.pow(1.15, level - 1));
+  public checkLevelUp(profile: PlayerProfile): PlayerProfile {
+    return this.rewardManager.checkLevelUp(profile);
   }
 
-  // Get achievement category display info
-  public getCategoryInfo(category: Achievement['category']): { icon: string; name: string; color: string } {
-    switch (category) {
-      case 'progression':
-        return { icon: '🌊', name: 'İlerleme', color: '#3b82f6' };
-      case 'upgrade':
-        return { icon: '🔥', name: 'Yükseltme', color: '#ef4444' };
-      case 'economy':
-        return { icon: '💰', name: 'Ekonomi', color: '#f59e0b' };
-      case 'building':
-        return { icon: '🏰', name: 'İnşaat', color: '#8b5cf6' };
-      case 'combat':
-        return { icon: '⚔️', name: 'Savaş', color: '#dc2626' };
-      case 'special':
-        return { icon: '⚡', name: 'Özel', color: '#7c3aed' };
-      case 'defense':
-        return { icon: '🛡️', name: 'Savunma', color: '#059669' };
-      default:
-        return { icon: '🏆', name: 'Genel', color: '#6b7280' };
-    }
+  // Display helper methods
+  public getCategoryInfo(category: Achievement['category']) {
+    return this.displayHelper.getCategoryInfo(category);
   }
 
-  // Get rarity display info
-  public getRarityInfo(rarity: Achievement['rarity']): { color: string; glow: string } {
-    switch (rarity) {
-      case 'common':
-        return { color: '#9ca3af', glow: 'rgba(156, 163, 175, 0.3)' };
-      case 'rare':
-        return { color: '#3b82f6', glow: 'rgba(59, 130, 246, 0.4)' };
-      case 'epic':
-        return { color: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.4)' };
-      case 'legendary':
-        return { color: '#f59e0b', glow: 'rgba(245, 158, 11, 0.5)' };
-      default:
-        return { color: '#6b7280', glow: 'rgba(107, 114, 128, 0.3)' };
-    }
+  public getRarityInfo(rarity: Achievement['rarity']) {
+    return this.displayHelper.getRarityInfo(rarity);
   }
 
-  // Update player statistics (called from game events)
+  public createUnlockNotification(achievement: Achievement) {
+    return this.displayHelper.createUnlockNotification(achievement);
+  }
+
+  public getProgressPercentage(achievement: Achievement): number {
+    return this.displayHelper.getProgressPercentage(achievement);
+  }
+
+  public getProgressText(achievement: Achievement): string {
+    return this.displayHelper.getProgressText(achievement);
+  }
+
+  public getAchievementStatus(achievement: Achievement) {
+    return this.displayHelper.getAchievementStatus(achievement);
+  }
+
+  // Statistics management methods
   public updateStatistics(
     profile: PlayerProfile,
     statType: keyof PlayerProfile['statistics'],
     value: number,
     operation: 'add' | 'set' | 'max' = 'add'
   ): PlayerProfile {
-    const updatedProfile = { ...profile };
-    const stats = { ...updatedProfile.statistics };
-    
-    switch (operation) {
-      case 'add':
-        (stats[statType] as number) += value;
-        break;
-      case 'set':
-        (stats[statType] as number) = value;
-        break;
-      case 'max':
-        (stats[statType] as number) = Math.max((stats[statType] as number), value);
-        break;
-    }
-    
-    updatedProfile.statistics = stats;
-    return updatedProfile;
+    return this.statisticsManager.updateStatistics(profile, statType, value, operation);
   }
 
-  // Get series completion status
-  public getSeriesCompletion(achievements: Record<string, Achievement>, series: AchievementSeries): {
-    completed: number;
-    total: number;
-    isComplete: boolean;
-    nextAchievement?: Achievement;
-  } {
-    const seriesAchievements = series.achievements.map(id => achievements[id]).filter(Boolean);
-    const completed = seriesAchievements.filter(achievement => achievement.completed).length;
-    const total = seriesAchievements.length;
-    const isComplete = completed === total;
-    
-    // Find next uncompleted achievement in series
-    const nextAchievement = seriesAchievements.find(achievement => !achievement.completed);
-    
-    return {
-      completed,
-      total,
-      isComplete,
-      nextAchievement
-    };
+  public updateMultipleStatistics(
+    profile: PlayerProfile,
+    updates: Array<{
+      statType: keyof PlayerProfile['statistics'];
+      value: number;
+      operation?: 'add' | 'set' | 'max';
+    }>
+  ): PlayerProfile {
+    return this.statisticsManager.updateMultipleStatistics(profile, updates);
   }
 
-  // Create achievement unlock notification
-  public createUnlockNotification(achievement: Achievement): {
-    type: 'success';
-    message: string;
-    duration: number;
-  } {
-    const rarityText = achievement.rarity.charAt(0).toUpperCase() + achievement.rarity.slice(1);
-    
-    return {
-      type: 'success',
-      message: `🏆 ${achievement.title} - ${rarityText} başarı açıldı! ${achievement.rewards.description}`,
-      duration: 5000 // 5 seconds for achievements
-    };
+  public getStatisticsSummary(profile: PlayerProfile) {
+    return this.statisticsManager.getStatisticsSummary(profile);
+  }
+
+  public checkForNewRecord(
+    profile: PlayerProfile,
+    statType: keyof PlayerProfile['statistics'],
+    newValue: number
+  ) {
+    return this.statisticsManager.checkForNewRecord(profile, statType, newValue);
+  }
+
+  // Series management methods
+  public getSeriesCompletion(achievements: Record<string, Achievement>, series: AchievementSeries) {
+    return this.seriesManager.getSeriesCompletion(achievements, series);
+  }
+
+  public getAllSeriesCompletions(
+    achievements: Record<string, Achievement>,
+    series: Record<string, AchievementSeries>
+  ) {
+    return this.seriesManager.getAllSeriesCompletions(achievements, series);
+  }
+
+  public checkSeriesReward(achievements: Record<string, Achievement>, series: AchievementSeries) {
+    return this.seriesManager.checkSeriesReward(achievements, series);
+  }
+
+  public getAchievementsBySeries(achievements: Record<string, Achievement>, seriesId: string): Achievement[] {
+    return this.seriesManager.getAchievementsBySeries(achievements, seriesId);
+  }
+
+  public getSeriesByCategory(
+    series: Record<string, AchievementSeries>,
+    category: Achievement['category']
+  ): AchievementSeries[] {
+    return this.seriesManager.getSeriesByCategory(series, category);
+  }
+
+  public getNextAchievementInSeries(achievements: Record<string, Achievement>, series: AchievementSeries) {
+    return this.seriesManager.getNextAchievementInSeries(achievements, series);
   }
 } 
