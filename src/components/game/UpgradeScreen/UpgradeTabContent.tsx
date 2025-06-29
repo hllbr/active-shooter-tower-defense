@@ -1,6 +1,6 @@
 import React from 'react';
 import type { TabContentProps } from './types';
-import { upgradeScreenStyles } from './styles';
+import { tabStyles } from './styles';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/Constants';
 
@@ -23,7 +23,7 @@ export const UpgradeTabContent: React.FC<TabContentProps> = ({ activeTab }) => {
         
       case 'core':
         return (
-          <div style={upgradeScreenStyles.coreTabContainer}>
+          <div style={tabStyles.coreTabContainer}>
             <FireUpgrades />
             <ShieldUpgrades />
             {bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length && <DefenseUpgrades />}
@@ -42,7 +42,7 @@ export const UpgradeTabContent: React.FC<TabContentProps> = ({ activeTab }) => {
   };
 
   return (
-    <div style={upgradeScreenStyles.tabContent}>
+    <div style={tabStyles.tabContent}>
       {renderContent()}
     </div>
   );

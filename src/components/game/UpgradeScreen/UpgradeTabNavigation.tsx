@@ -1,12 +1,46 @@
-import React from 'react';
-import type { TabNavigationProps } from './types';
-import { upgradeScreenStyles, getTabButtonStyle, getPriorityBadgeStyle } from './styles';
+import React, { useCallback } from 'react';
+import type { TabType, TabConfig } from './types';
+import { tabStyles, getTabButtonStyle, getPriorityBadgeStyle } from './styles';
 
-export const UpgradeTabNavigation: React.FC<TabNavigationProps> = ({ 
-  tabs, 
-  activeTab, 
+interface UpgradeTabNavigationProps {
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
+}
+
+export const UpgradeTabNavigation: React.FC<UpgradeTabNavigationProps> = ({ 
+  activeTab,
   onTabChange 
 }) => {
+  // Tab configuration - Ana componentten taşındı
+  const tabs: TabConfig[] = [
+    { 
+      id: 'dice', 
+      name: '🎲 İndirim Merkezi', 
+      color: '#ef4444',
+      priority: '🔥 ÖNCE BU'
+    },
+    { 
+      id: 'core', 
+      name: '🏪 Temel Güçler', 
+      color: '#4ade80'
+    },
+    { 
+      id: 'packages', 
+      name: '🎁 Kombo Paketler', 
+      color: '#fbbf24'
+    },
+    { 
+      id: 'advanced', 
+      name: '⚡ Elite Sistemler', 
+      color: '#8b5cf6'
+    },
+  ];
+
+  // Tab change handler
+  const handleTabChange = useCallback((tab: TabType) => {
+    onTabChange(tab);
+  }, [onTabChange]);
+
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.style.transform = 'translateY(-2px)';
   };
@@ -16,7 +50,7 @@ export const UpgradeTabNavigation: React.FC<TabNavigationProps> = ({
   };
 
   return (
-    <div style={upgradeScreenStyles.tabNavigation}>
+    <div style={tabStyles.tabNavigation}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         const isDiceTab = tab.id === 'dice';
@@ -24,7 +58,7 @@ export const UpgradeTabNavigation: React.FC<TabNavigationProps> = ({
         return (
           <button
             key={tab.id}
-            onClick={() => onTabChange(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             style={getTabButtonStyle(isActive, tab.color, isDiceTab)}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={(e) => handleMouseLeave(e, isActive)}

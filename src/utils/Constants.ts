@@ -1,4 +1,5 @@
 import type { TowerVisual } from '../models/gameTypes';
+import type { BulletTypeData } from '../components/game/upgrades/types';
 import { waveCompositions } from '../config/waves';
 
 const generateCircularTowerSlots = (count: number, centerX: number, centerY: number, radius: number) => {
@@ -571,7 +572,7 @@ export const GAME_CONSTANTS = {
       fireRateMultiplier: 0.6,
       speedMultiplier: 1.7,
     },
-  ],
+  ] as const satisfies BulletTypeData[],
   BULLET_UPGRADE_COST: 300,
   WALL_COST: 150,
   WALL_SHIELDS: [
