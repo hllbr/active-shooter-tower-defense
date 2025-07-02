@@ -2,11 +2,11 @@ import { create } from 'zustand';
 import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from '../gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
 // import { DailyMissionsManager } from '../../logic/DailyMissionsManager';
-import { updateWaveTiles } from '../../logic/TowerPlacementManager';
+import { updateWaveTiles } from '../../game-systems/TowerPlacementManager';
 import { waveRules } from '../../config/waveRules';
-import { energyManager } from '../../logic/EnergyManager';
-import { waveManager } from '../../logic/WaveManager';
-import { upgradeEffectsManager } from '../../logic/UpgradeEffects';
+import { energyManager } from '../../game-systems/EnergyManager';
+import { waveManager } from '../../game-systems/WaveManager';
+import { upgradeEffectsManager } from '../../game-systems/UpgradeEffects';
 import { initialState } from './initialState';
 
 const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
@@ -421,7 +421,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
           console.log('💀 Game Over: All towers destroyed!');
           
           // ✅ Stop all spawning immediately
-          import('../../logic/EnemySpawner').then(({ stopEnemyWave }) => {
+          import('../../game-systems/EnemySpawner').then(({ stopEnemyWave }) => {
             stopEnemyWave();
           });
           
@@ -822,7 +822,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     // ✅ ENHANCED: Start enemy spawning when wave begins
     setTimeout(() => {
-      import('../../logic/EnemySpawner').then(({ startEnemyWave }) => {
+      import('../../game-systems/EnemySpawner').then(({ startEnemyWave }) => {
         startEnemyWave(state.currentWave);
       });
     }, 100); // Small delay to ensure state is updated

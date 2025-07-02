@@ -11,7 +11,7 @@ export function playSound(sound: string): void {
   try {
     let audio = soundCache.get(sound);
     if (!audio) {
-      audio = new Audio(`/sounds/${sound}.wav`);
+      audio = new Audio(`/assets/sounds/${sound}.wav`);
       audio.volume = 0.8;
       soundCache.set(sound, audio);
     }

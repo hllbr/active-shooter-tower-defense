@@ -1,7 +1,7 @@
 import type { GameState, TowerSlot } from '../gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
-import { updateWaveTiles } from '../../logic/TowerPlacementManager';
 import { waveRules } from '../../config/waveRules';
+import { updateWaveTiles } from '../../game-systems/TowerPlacementManager';
 
 export const initialSlots: TowerSlot[] = updateWaveTiles(1, []);
 
