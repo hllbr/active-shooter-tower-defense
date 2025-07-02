@@ -11,7 +11,7 @@ export const footerStyles = {
     padding: 12
   } as CSSProperties,
 
-  continueButton: {
+  continueButtonBase: {
     padding: '14px 32px',
     fontSize: 18,
     borderRadius: 12,
@@ -20,9 +20,16 @@ export const footerStyles = {
     border: 'none',
     cursor: 'pointer',
     fontWeight: 'bold',
-    boxShadow: '0 6px 18px rgba(74, 222, 128, 0.4)',
     transition: 'all 0.3s ease',
     minWidth: 180,
     textShadow: '0 1px 2px rgba(0,0,0,0.3)',
   } as CSSProperties,
-}; 
+};
+
+export const getContinueButtonStyle = (hovered: boolean): CSSProperties => ({
+  ...footerStyles.continueButtonBase,
+  transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+  boxShadow: hovered
+    ? '0 8px 24px rgba(74, 222, 128, 0.6)'
+    : '0 6px 18px rgba(74, 222, 128, 0.4)',
+});

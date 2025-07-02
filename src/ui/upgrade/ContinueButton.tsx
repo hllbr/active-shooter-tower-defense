@@ -1,7 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useGameStore } from '../../models/store';
 import type { Store } from '../../models/store';
-import { footerStyles } from './Footer/footerStyles';
+import { footerStyles, getContinueButtonStyle } from './Footer/footerStyles';
 
 interface ContinueButtonProps {
   onContinueCallback?: () => void;
@@ -49,14 +49,14 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     }
   }, [nextWave, startPreparation, resetDice, setRefreshing, onContinueCallback]);
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = 'translateY(-2px)';
-    e.currentTarget.style.boxShadow = '0 8px 24px rgba(74, 222, 128, 0.6)';
+  const [hovered, setHovered] = useState(false);
+
+  const handleMouseEnter = () => {
+    setHovered(true);
   };
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = 'translateY(0)';
-    e.currentTarget.style.boxShadow = '0 6px 18px rgba(74, 222, 128, 0.4)';
+  const handleMouseLeave = () => {
+    setHovered(false);
   };
 
   const handleContinueClick = () => {
@@ -79,7 +79,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   return (
     <button
       onClick={handleContinueClick}
-      style={footerStyles.continueButton}
+      style={getContinueButtonStyle(hovered)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

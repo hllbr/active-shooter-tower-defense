@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { TabType, TabConfig } from './types';
 import { tabStyles, getTabButtonStyle, getPriorityBadgeStyle } from './tabStyles';
 
@@ -41,12 +41,14 @@ export const UpgradeTabNavigation: React.FC<UpgradeTabNavigationProps> = ({
     onTabChange(tab);
   }, [onTabChange]);
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = 'translateY(-2px)';
+  const [hoveredTab, setHoveredTab] = useState<TabType | null>(null);
+
+  const handleMouseEnter = (tabId: TabType) => {
+    setHoveredTab(tabId);
   };
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>, isActive: boolean) => {
-    e.currentTarget.style.transform = isActive ? 'translateY(-1px)' : 'translateY(0)';
+  const handleMouseLeave = () => {
+    setHoveredTab(null);
   };
 
   return (
@@ -59,9 +61,9 @@ export const UpgradeTabNavigation: React.FC<UpgradeTabNavigationProps> = ({
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
-            style={getTabButtonStyle(isActive, tab.color, isDiceTab)}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={(e) => handleMouseLeave(e, isActive)}
+            style={getTabButtonStyle(isActive, tab.color, isDiceTab, hoveredTab === tab.id)}
+            onMouseEnter={() => handleMouseEnter(tab.id)}
+            onMouseLeave={handleMouseLeave}
           >
             {/* Priority Badge */}
             {tab.priority && (
