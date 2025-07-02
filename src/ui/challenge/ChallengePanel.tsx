@@ -38,9 +38,9 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
           {challenges.filter(c => !c.weekly).map(c => {
             const isCompleted = c.completed;
             const isClaimed = claimedRewards.includes(c.id);
-            const canClaim = isCompleted && !isClaimed;
-            const showCheck = isCompleted && isClaimed;
-            const _progressDone = c.progress >= c.target;
+            if (isCompleted && !isClaimed) {
+              handleClaim(c.id, c.reward);
+            }
             return (
               <li key={c.id} className={isCompleted ? 'completed' : ''} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 22, userSelect: 'none' }}>
@@ -54,14 +54,6 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
                   {c.text} <span className="progress">({c.progress}/{c.target})</span>
                 </span>
                 <span className="reward">Ödül: {c.reward.type === 'gold' ? `${c.reward.amount} altın` : c.reward.type === 'skin' ? `Skin: ${c.reward.name}` : `Kule: ${c.reward.towerType}`}</span>
-                {canClaim && (
-                  <button onClick={() => handleClaim(c.id, c.reward)} style={{ marginLeft: 8 }}>Ödülü Al</button>
-                )}
-                {showCheck && (
-                  <span style={{ color: '#4ade80', marginLeft: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span>✔️</span> <span style={{ fontSize: 13 }}>Tamamlandı</span>
-                  </span>
-                )}
               </li>
             );
           })}
@@ -71,9 +63,9 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
           {challenges.filter(c => c.weekly).map(c => {
             const isCompleted = c.completed;
             const isClaimed = claimedRewards.includes(c.id);
-            const canClaim = isCompleted && !isClaimed;
-            const showCheck = isCompleted && isClaimed;
-            const _progressDone = c.progress >= c.target;
+            if (isCompleted && !isClaimed) {
+              handleClaim(c.id, c.reward);
+            }
             return (
               <li key={c.id} className={isCompleted ? 'completed' : ''} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 22, userSelect: 'none' }}>
@@ -87,14 +79,6 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
                   {c.text} <span className="progress">({c.progress}/{c.target})</span>
                 </span>
                 <span className="reward">Ödül: {c.reward.type === 'gold' ? `${c.reward.amount} altın` : c.reward.type === 'skin' ? `Skin: ${c.reward.name}` : `Kule: ${c.reward.towerType}`}</span>
-                {canClaim && (
-                  <button onClick={() => handleClaim(c.id, c.reward)} style={{ marginLeft: 8 }}>Ödülü Al</button>
-                )}
-                {showCheck && (
-                  <span style={{ color: '#4ade80', marginLeft: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span>✔️</span> <span style={{ fontSize: 13 }}>Tamamlandı</span>
-                  </span>
-                )}
               </li>
             );
           })}

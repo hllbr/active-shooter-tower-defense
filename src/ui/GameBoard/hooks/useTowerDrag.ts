@@ -6,6 +6,7 @@ import { useDragFeedback } from './useDragFeedback';
 import { useDropZoneAnalysis } from './useDropZoneAnalysis';
 import { useSvgRectCache } from './useSvgRectCache';
 import { useDragEventHandlers } from './useDragEventHandlers';
+import { toast } from 'react-toastify';
 
 export const useTowerDrag = () => {
   const {
@@ -142,28 +143,13 @@ export const useTowerDrag = () => {
 
   // Handle drop
   const handleDrop = useCallback((targetSlotIdx: number, invalidReason: string) => {
-    const feedbackPos = { x: dragState.mousePosition.x, y: dragState.mousePosition.y };
-
     if (targetSlotIdx !== -1) {
       moveTower(dragState.draggedTowerSlotIdx!, targetSlotIdx);
-      showFeedback(
-        `✅ ${dragState.towerInfo?.emoji} Kule başarıyla taşındı!`,
-        'success',
-        feedbackPos,
-        2000
-      );
+      toast.success('Kule başarıyla taşındı!');
     } else if (invalidReason) {
-      showFeedback(
-        `⚠️ ${invalidReason}`,
-        'warning',
-        feedbackPos
-      );
+      toast.error('Kule buraya taşınamaz!');
     } else {
-      showFeedback(
-        `❌ Geçersiz hedef! Boş bir slota taşıyın`,
-        'error',
-        feedbackPos
-      );
+      toast.error('Kule buraya taşınamaz!');
     }
 
     // Reset all states
@@ -188,7 +174,7 @@ export const useTowerDrag = () => {
     });
 
     clearDropZones();
-  }, [dragState, moveTower, showFeedback, clearDropZones]);
+  }, [dragState, moveTower, clearDropZones]);
 
   // Event handlers
   const { handleMouseMove, handleMouseUp } = useDragEventHandlers(
