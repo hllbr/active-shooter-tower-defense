@@ -1,13 +1,13 @@
 import { create } from 'zustand';
-import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from './gameTypes';
-import { GAME_CONSTANTS } from '../utils/constants';
-// import { DailyMissionsManager } from '../logic/DailyMissionsManager';
-import { updateWaveTiles } from '../logic/TowerPlacementManager';
-import { waveRules } from '../config/waveRules';
-import { energyManager } from '../logic/EnergyManager';
-import { waveManager } from '../logic/WaveManager';
-import { upgradeEffectsManager } from '../logic/UpgradeEffects';
-import { initialState, initialSlots } from './initialState';
+import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from '../gameTypes';
+import { GAME_CONSTANTS } from '../../utils/constants';
+// import { DailyMissionsManager } from '../../logic/DailyMissionsManager';
+import { updateWaveTiles } from '../../game-systems/TowerPlacementManager';
+import { waveRules } from '../../config/waveRules';
+import { energyManager } from '../../game-systems/EnergyManager';
+import { waveManager } from '../../game-systems/WaveManager';
+import { upgradeEffectsManager } from '../../game-systems/UpgradeEffects';
+import { initialState } from './initialState';
 
 const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   let position: Position;
@@ -32,6 +32,15 @@ const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   return position;
 };
 
+// Listener tipi
+let enemyKillListeners: ((isSpecial?: boolean, enemyType?: string) => void)[] = [];
+
+const addEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) => void) => {
+  enemyKillListeners.push(fn);
+};
+const removeEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) => void) => {
+  enemyKillListeners = enemyKillListeners.filter(l => l !== fn);
+};
 
 export type Store = GameState & {
   buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy') => void;
@@ -84,7 +93,7 @@ export type Store = GameState & {
   
   // Yeni Enerji Sistemi
   upgradeEnergySystem: (upgradeId: string) => void;
-  onEnemyKilled: (isSpecial?: boolean) => void;
+  onEnemyKilled: (isSpecial?: boolean, enemyType?: string) => void;
   tickEnergyRegen: (deltaTime: number) => void;
   calculateEnergyStats: () => {
     passiveRegen: number;
@@ -122,14 +131,15 @@ export type Store = GameState & {
     isMaxed: boolean;
   };
   
-  // Notification System Functions (fixes "can't tell if purchase worked")
-  addNotification: (type: 'success' | 'error' | 'info' | 'warning', message: string, duration?: number) => void;
-  removeNotification: (id: string) => void;
-  clearNotifications: () => void;
-  
   // Achievement System Functions (Faz 1: Temel Mekanikler)
   initializeAchievements: () => void;
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
+
+  addEnemyKillListener: (fn: (isSpecial?: boolean, enemyType?: string) => void) => void;
+  removeEnemyKillListener: (fn: (isSpecial?: boolean, enemyType?: string) => void) => void;
+
+  unlockTowerType: (towerType: string) => void;
+  unlockSkin: (skinName: string) => void;
 };
 
 export const useGameStore = create<Store>((set, get): Store => ({
@@ -212,7 +222,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     // ✅ SOUND FIX: Play tower build sound effect
     setTimeout(() => {
-      import('../utils/sound').then(({ playContextualSound }) => {
+      import('../../utils/sound').then(({ playContextualSound }) => {
         playContextualSound('tower-build'); // Kule inşa sesi
       });
     }, 50);
@@ -253,7 +263,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     // ✅ SOUND & ANIMATION FIX: Play unlock sound and trigger animations
     setTimeout(() => {
       // Play unlock sound effect
-      import('../utils/sound').then(({ playContextualSound }) => {
+      import('../../utils/sound').then(({ playContextualSound }) => {
         playContextualSound('unlock'); // Kilit açma sesi
       });
       
@@ -301,11 +311,11 @@ export const useGameStore = create<Store>((set, get): Store => ({
     }
     
     // Energy bonus for enemy kill (delayed to avoid state conflicts)
-    setTimeout(() => get().onEnemyKilled(enemy.isSpecial), 0);
+    setTimeout(() => get().onEnemyKilled(enemy.isSpecial, enemy.type), 0);
     
     // ✅ SOUND FIX: Play death sound effect
     setTimeout(() => {
-      import('../utils/sound').then(({ playContextualSound }) => {
+      import('../../utils/sound').then(({ playContextualSound }) => {
         playContextualSound('death'); // Düşman ölüm sesi
       });
     }, 50);
@@ -336,11 +346,11 @@ export const useGameStore = create<Store>((set, get): Store => ({
         }
         
         // Enerji sistemi: Düşman öldürme bonusu
-        setTimeout(() => get().onEnemyKilled(enemy.isSpecial), 0);
+        setTimeout(() => get().onEnemyKilled(enemy.isSpecial, enemy.type), 0);
         
         // ✅ SOUND FIX: Play death sound effect
         setTimeout(() => {
-          import('../utils/sound').then(({ playContextualSound }) => {
+          import('../../utils/sound').then(({ playContextualSound }) => {
             playContextualSound('death'); // Düşman ölüm sesi
           });
         }, 50);
@@ -383,7 +393,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     // ✅ SOUND FIX: Play upgrade sound effect
     setTimeout(() => {
-      import('../utils/sound').then(({ playContextualSound }) => {
+      import('../../utils/sound').then(({ playContextualSound }) => {
         playContextualSound('tower-upgrade'); // Kule yükseltme sesi
       });
     }, 50);
@@ -421,13 +431,13 @@ export const useGameStore = create<Store>((set, get): Store => ({
           console.log('💀 Game Over: All towers destroyed!');
           
           // ✅ Stop all spawning immediately
-          import('../logic/EnemySpawner').then(({ stopEnemyWave }) => {
+          import('../../game-systems/EnemySpawner').then(({ stopEnemyWave }) => {
             stopEnemyWave();
           });
           
           setTimeout(() => {
             // Use playContextualSound from sound.ts
-            import('../utils/sound').then(({ playContextualSound }) => {
+            import('../../utils/sound').then(({ playContextualSound }) => {
               playContextualSound('defeat');
             });
           }, 100);
@@ -822,7 +832,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     // ✅ ENHANCED: Start enemy spawning when wave begins
     setTimeout(() => {
-      import('../logic/EnemySpawner').then(({ startEnemyWave }) => {
+      import('../../game-systems/EnemySpawner').then(({ startEnemyWave }) => {
         startEnemyWave(state.currentWave);
       });
     }, 100); // Small delay to ensure state is updated
@@ -871,7 +881,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     };
   }),
 
-  onEnemyKilled: (isSpecial?: boolean) => set((state) => {
+  onEnemyKilled: (isSpecial?: boolean, enemyType?: string) => set((state) => {
     const now = performance.now();
     const timeSinceLastKill = now - state.lastKillTime;
     
@@ -887,6 +897,11 @@ export const useGameStore = create<Store>((set, get): Store => ({
     if (!isNaN(energyBonus) && energyBonus > 0) {
       energyManager.add(energyBonus, 'enemyKill');
     }
+    
+    // Challenge event listener tetikleme
+    setTimeout(() => {
+      enemyKillListeners.forEach(fn => fn(isSpecial, enemyType));
+    }, 0);
     
     return {
       killCombo: newCombo,
@@ -1015,29 +1030,6 @@ export const useGameStore = create<Store>((set, get): Store => ({
     };
   },
 
-  // ✅ NOTIFICATION System
-  addNotification: (type: 'success' | 'error' | 'info' | 'warning', message: string, duration = 3000) => set((state) => {
-    const notification = {
-      id: `notification-${Date.now()}`,
-      type,
-      message,
-      timestamp: Date.now(),
-      duration,
-    };
-    
-    return {
-      notifications: [...state.notifications, notification]
-    };
-  }),
-
-  removeNotification: (id: string) => set((state) => ({
-    notifications: state.notifications.filter(n => n.id !== id)
-  })),
-
-  clearNotifications: () => set(() => ({
-    notifications: []
-  })),
-
   // ✅ ACHIEVEMENT System
   initializeAchievements: () => {
     // Implementation will be added when achievement system is ready
@@ -1048,6 +1040,25 @@ export const useGameStore = create<Store>((set, get): Store => ({
     // Implementation will be added when achievement system is ready
     console.log(`Achievement event: ${eventType}`, eventData);
   },
+
+  addEnemyKillListener,
+  removeEnemyKillListener,
+
+  unlockTowerType: (towerType: string) => set((state) => {
+    if (state.unlockedTowerTypes && state.unlockedTowerTypes.includes(towerType)) return {};
+    return {
+      unlockedTowerTypes: [...(state.unlockedTowerTypes || []), towerType]
+    };
+  }),
+  unlockSkin: (skinName: string) => set((state) => {
+    if (state.playerProfile.unlockedCosmetics.includes(skinName)) return {};
+    return {
+      playerProfile: {
+        ...state.playerProfile,
+        unlockedCosmetics: [...state.playerProfile.unlockedCosmetics, skinName]
+      }
+    };
+  }),
 }));
 
 // CRITICAL FIX: Initialize energy manager with proper error handling

@@ -265,6 +265,7 @@ export interface GameState {
   // Daily Missions System
   dailyMissions: DailyMission[];
   lastMissionRefresh: number;
+  unlockedTowerTypes: string[];
 }
 
 export interface PowerUpgrade {

@@ -16,9 +16,11 @@
   },
   "dependencies": {
     "@types/pixi.js": "^5.0.0",
+    "date-fns": "^4.1.0",
     "pixi.js": "^8.10.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-toastify": "^11.0.5",
     "zustand": "^5.0.5"
   },
   "devDependencies": {
