@@ -8,8 +8,6 @@ export { StartScreen } from './screens/StartScreen';
 export { GameOverScreen } from './screens/GameOverScreen';
 export { TowerDragVisualization } from './renderers/TowerDragVisualization';
 export { SVGEffectsRenderer } from './renderers/SVGEffectsRenderer';
-export { CommandCenter } from './ui/CommandCenter';
-export { NotificationSystem } from './ui/NotificationSystem';
 export { GameArea } from './renderers/GameArea';
 
 // CommandCenter Tab Components

@@ -3,6 +3,7 @@ import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { initUpgradeEffects } from '../../game-systems/UpgradeEffects';
 import { UpgradeScreen } from '../game/UpgradeScreen';
+import { useChallenge } from '../challenge/ChallengeContext';
 
 // Import modular components
 import {
@@ -13,10 +14,9 @@ import {
   PreparationScreen,
   StartScreen,
   GameOverScreen,
-  CommandCenter,
-  NotificationSystem,
   GameArea
 } from './components';
+import { CommandCenter } from './components/ui/CommandCenter';
 
 // Import enhanced hooks
 import { 
@@ -47,8 +47,53 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     unlockingSlots,
     pausePreparation,
     resumePreparation,
-    initializeAchievements
+    initializeAchievements,
+    addEnemyKillListener,
+    removeEnemyKillListener,
+    addTowerUpgradeListener,
   } = useGameStore();
+
+  const { incrementChallenge } = useChallenge();
+  const prevWaveRef = React.useRef(currentWave);
+
+  React.useEffect(() => {
+    if (isStarted && currentWave > prevWaveRef.current) {
+      incrementChallenge('wave');
+    }
+    prevWaveRef.current = currentWave;
+  }, [currentWave, isStarted, incrementChallenge]);
+
+  // Düşman öldürme event listener
+  React.useEffect(() => {
+    const handleEnemyKill = (isSpecial?: boolean, enemyType?: string) => {
+      incrementChallenge('enemy');
+      // Boss düşmanlar için
+      if (enemyType && (enemyType.toLowerCase().includes('boss') || enemyType.toLowerCase().includes('king') || enemyType.toLowerCase().includes('lord') || enemyType.toLowerCase().includes('god'))) {
+        incrementChallenge('boss');
+      }
+    };
+    addEnemyKillListener(handleEnemyKill);
+    return () => {
+      removeEnemyKillListener(handleEnemyKill);
+    };
+  }, [addEnemyKillListener, removeEnemyKillListener, incrementChallenge]);
+
+  // Kule yükseltme event listener
+  React.useEffect(() => {
+    const handleTowerUpgrade = (_tower: unknown, oldLevel: number, newLevel: number) => {
+      if (newLevel > oldLevel) {
+        incrementChallenge('upgrade');
+      }
+    };
+    addTowerUpgradeListener(handleTowerUpgrade);
+    return () => {
+      // removeTowerUpgradeListener yok, array'den elle çıkar
+      const store = useGameStore.getState();
+      if (store.towerUpgradeListeners) {
+        store.towerUpgradeListeners = store.towerUpgradeListeners.filter(fn => fn !== handleTowerUpgrade);
+      }
+    };
+  }, [addTowerUpgradeListener, incrementChallenge]);
 
   // Enhanced drag & drop system
   const {
@@ -124,9 +169,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
         isOpen={commandCenterOpen} 
         onClose={closeCommandCenter} 
       />
-
-      {/* Notification System */}
-      <NotificationSystem />
 
       {/* Game Area */}
       <GameArea

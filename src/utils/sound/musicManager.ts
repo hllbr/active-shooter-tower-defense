@@ -1,3 +1,5 @@
+import { getSettings } from '../settings';
+
 class SmartMusicManager {
   private isPlaying = false;
   private currentTrack: string | null = null;
@@ -9,7 +11,8 @@ class SmartMusicManager {
     try {
       this.audio = new Audio(`/sounds/${track}.wav`);
       this.audio.loop = true;
-      this.audio.volume = 0.6;
+      const settings = getSettings();
+      this.audio.volume = settings.mute ? 0 : settings.musicVolume;
       const playPromise = this.audio.play();
       if (playPromise) {
         playPromise.then(() => {
@@ -37,6 +40,13 @@ class SmartMusicManager {
     }
     this.isPlaying = false;
     this.currentTrack = null;
+  }
+
+  updateSettings(): void {
+    if (this.audio) {
+      const settings = getSettings();
+      this.audio.volume = settings.mute ? 0 : settings.musicVolume;
+    }
   }
 
   getStatus(): { isPlaying: boolean; currentTrack: string | null } {
@@ -70,4 +80,8 @@ export function transitionMusic(to: 'game' | 'victory' | 'silence'): void {
 
 export function getMusicStatus(): { isPlaying: boolean; currentTrack: string | null } {
   return musicManager.getStatus();
+}
+
+export function updateMusicSettings(): void {
+  musicManager.updateSettings();
 }

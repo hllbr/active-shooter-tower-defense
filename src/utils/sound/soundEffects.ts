@@ -1,4 +1,5 @@
 import { musicManager } from './musicManager';
+import { getSettings } from '../settings';
 
 export const audioCache: Record<string, HTMLAudioElement> = {};
 export const gameAudio: HTMLAudioElement | null = null;
@@ -12,9 +13,10 @@ export function playSound(sound: string): void {
     let audio = soundCache.get(sound);
     if (!audio) {
       audio = new Audio(`/assets/sounds/${sound}.wav`);
-      audio.volume = 0.8;
       soundCache.set(sound, audio);
     }
+    const settings = getSettings();
+    audio.volume = settings.mute ? 0 : settings.sfxVolume;
     audio.currentTime = 0;
     const playPromise = audio.play();
     if (playPromise) {

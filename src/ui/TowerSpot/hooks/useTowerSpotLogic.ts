@@ -6,6 +6,8 @@ import { formatProfessional } from '../../../utils/formatters';
 import type { TowerSlot, Enemy } from '../../../models/gameTypes';
 import type { TowerUpgradeInfo } from '../types';
 import { playSound } from '../../../utils/sound/soundEffects';
+import { useChallenge } from '../../challenge/ChallengeContext';
+import { toast } from 'react-toastify';
 
 export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const gold = useGameStore((s) => s.gold);
@@ -20,6 +22,8 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const towerSlots = useGameStore(s => s.towerSlots);
   const unlockingSlots = useGameStore(s => s.unlockingSlots);
   const recentlyUnlockedSlots = useGameStore(s => s.recentlyUnlockedSlots);
+
+  const { incrementChallenge } = useChallenge();
 
   // Menu state
   const [menuPos, setMenuPos] = React.useState<{x:number;y:number}|null>(null);
@@ -102,6 +106,8 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const handleBuildTower = (slotIdx: number, type: 'attack' | 'economy' = 'attack') => {
     buildTower(slotIdx, false, type);
     playSound('tower-create-sound');
+    toast.success('Kule inşa edildi!');
+    incrementChallenge('build');
   };
 
   const handlePerformTileAction = (slotIdx: number, action: 'wall' | 'trench' | 'buff') => {
@@ -109,11 +115,35 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   };
 
   const handleUpgrade = (slotIdx: number) => {
+    if (!canUpgrade) {
+      toast.error('Kule yükseltilemez!');
+      return;
+    }
+    if (!canAffordUpgrade) {
+      if (!hasEnoughGold) {
+        toast.warning('Yetersiz altın!');
+      } else if (!hasEnoughEnergy) {
+        toast.warning('Yetersiz enerji!');
+      }
+      return;
+    }
     upgradeTower(slotIdx);
+    toast.success('Kule yükseltildi!');
   };
 
   const handleUnlock = (slotIdx: number) => {
+    if (!canUnlock) {
+      if (!(gold >= unlockCost)) {
+        toast.warning('Yetersiz altın!');
+      } else if (!(energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower)) {
+        toast.warning('Yetersiz enerji!');
+      } else {
+        toast.error('Slot açılamaz!');
+      }
+      return;
+    }
     unlockSlot(slotIdx);
+    toast.success('Slot açıldı!');
   };
 
   return {

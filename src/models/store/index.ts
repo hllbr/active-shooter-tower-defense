@@ -32,6 +32,15 @@ const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   return position;
 };
 
+// Listener tipi
+let enemyKillListeners: ((isSpecial?: boolean, enemyType?: string) => void)[] = [];
+
+const addEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) => void) => {
+  enemyKillListeners.push(fn);
+};
+const removeEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) => void) => {
+  enemyKillListeners = enemyKillListeners.filter(l => l !== fn);
+};
 
 export type Store = GameState & {
   buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy') => void;
@@ -84,7 +93,7 @@ export type Store = GameState & {
   
   // Yeni Enerji Sistemi
   upgradeEnergySystem: (upgradeId: string) => void;
-  onEnemyKilled: (isSpecial?: boolean) => void;
+  onEnemyKilled: (isSpecial?: boolean, enemyType?: string) => void;
   tickEnergyRegen: (deltaTime: number) => void;
   calculateEnergyStats: () => {
     passiveRegen: number;
@@ -122,14 +131,15 @@ export type Store = GameState & {
     isMaxed: boolean;
   };
   
-  // Notification System Functions (fixes "can't tell if purchase worked")
-  addNotification: (type: 'success' | 'error' | 'info' | 'warning', message: string, duration?: number) => void;
-  removeNotification: (id: string) => void;
-  clearNotifications: () => void;
-  
   // Achievement System Functions (Faz 1: Temel Mekanikler)
   initializeAchievements: () => void;
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
+
+  addEnemyKillListener: (fn: (isSpecial?: boolean, enemyType?: string) => void) => void;
+  removeEnemyKillListener: (fn: (isSpecial?: boolean, enemyType?: string) => void) => void;
+
+  unlockTowerType: (towerType: string) => void;
+  unlockSkin: (skinName: string) => void;
 };
 
 export const useGameStore = create<Store>((set, get): Store => ({
@@ -301,7 +311,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     }
     
     // Energy bonus for enemy kill (delayed to avoid state conflicts)
-    setTimeout(() => get().onEnemyKilled(enemy.isSpecial), 0);
+    setTimeout(() => get().onEnemyKilled(enemy.isSpecial, enemy.type), 0);
     
     // ✅ SOUND FIX: Play death sound effect
     setTimeout(() => {
@@ -336,7 +346,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
         }
         
         // Enerji sistemi: Düşman öldürme bonusu
-        setTimeout(() => get().onEnemyKilled(enemy.isSpecial), 0);
+        setTimeout(() => get().onEnemyKilled(enemy.isSpecial, enemy.type), 0);
         
         // ✅ SOUND FIX: Play death sound effect
         setTimeout(() => {
@@ -871,7 +881,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     };
   }),
 
-  onEnemyKilled: (isSpecial?: boolean) => set((state) => {
+  onEnemyKilled: (isSpecial?: boolean, enemyType?: string) => set((state) => {
     const now = performance.now();
     const timeSinceLastKill = now - state.lastKillTime;
     
@@ -887,6 +897,11 @@ export const useGameStore = create<Store>((set, get): Store => ({
     if (!isNaN(energyBonus) && energyBonus > 0) {
       energyManager.add(energyBonus, 'enemyKill');
     }
+    
+    // Challenge event listener tetikleme
+    setTimeout(() => {
+      enemyKillListeners.forEach(fn => fn(isSpecial, enemyType));
+    }, 0);
     
     return {
       killCombo: newCombo,
@@ -1015,29 +1030,6 @@ export const useGameStore = create<Store>((set, get): Store => ({
     };
   },
 
-  // ✅ NOTIFICATION System
-  addNotification: (type: 'success' | 'error' | 'info' | 'warning', message: string, duration = 3000) => set((state) => {
-    const notification = {
-      id: `notification-${Date.now()}`,
-      type,
-      message,
-      timestamp: Date.now(),
-      duration,
-    };
-    
-    return {
-      notifications: [...state.notifications, notification]
-    };
-  }),
-
-  removeNotification: (id: string) => set((state) => ({
-    notifications: state.notifications.filter(n => n.id !== id)
-  })),
-
-  clearNotifications: () => set(() => ({
-    notifications: []
-  })),
-
   // ✅ ACHIEVEMENT System
   initializeAchievements: () => {
     // Implementation will be added when achievement system is ready
@@ -1048,6 +1040,25 @@ export const useGameStore = create<Store>((set, get): Store => ({
     // Implementation will be added when achievement system is ready
     console.log(`Achievement event: ${eventType}`, eventData);
   },
+
+  addEnemyKillListener,
+  removeEnemyKillListener,
+
+  unlockTowerType: (towerType: string) => set((state) => {
+    if (state.unlockedTowerTypes && state.unlockedTowerTypes.includes(towerType)) return {};
+    return {
+      unlockedTowerTypes: [...(state.unlockedTowerTypes || []), towerType]
+    };
+  }),
+  unlockSkin: (skinName: string) => set((state) => {
+    if (state.playerProfile.unlockedCosmetics.includes(skinName)) return {};
+    return {
+      playerProfile: {
+        ...state.playerProfile,
+        unlockedCosmetics: [...state.playerProfile.unlockedCosmetics, skinName]
+      }
+    };
+  }),
 }));
 
 // CRITICAL FIX: Initialize energy manager with proper error handling

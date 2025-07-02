@@ -125,4 +125,5 @@ export const initialState: GameState = {
   gameStartTime: Date.now(),
   dailyMissions: [],
   lastMissionRefresh: 0,
+  unlockedTowerTypes: [],
 };
