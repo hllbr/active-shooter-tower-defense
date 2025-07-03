@@ -10,7 +10,8 @@ import {
   TowerMenu,
   TowerInfoPanel,
   SlotUnlockDisplay,
-  DebugInfo
+  DebugInfo,
+  ParticleSystem
 } from './components';
 
 export const TowerSpot: React.FC<TowerSpotProps> = ({ 
@@ -46,8 +47,48 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
     handleUnlock
   } = useTowerSpotLogic(slot, slotIdx);
 
+  // --- YENİ: Build animasyonu için state ---
+  const [showTowerVisible, setShowTowerVisible] = React.useState(true); // Kule görünür mü
+  const [showDust, setShowDust] = React.useState(false); // Toz bulutu animasyonu
+  const [showUpgrade, setShowUpgrade] = React.useState(false); // Upgrade efekti
+  const prevTower = React.useRef(slot.tower);
+
+  React.useEffect(() => {
+    // Kule yeni inşa edildiyse animasyonu tetikle
+    if (!prevTower.current && slot.tower) {
+      setShowTowerVisible(false);
+      setShowDust(false);
+      setTimeout(() => {
+        setShowTowerVisible(true);
+        setShowDust(true);
+        setTimeout(() => setShowDust(false), 500);
+      }, 400); // Kule düşme animasyonu süresi
+    }
+    prevTower.current = slot.tower;
+  }, [slot.tower]);
+
+  // Upgrade animasyonu tetikleme
+  const handleUpgradeWithEffect = React.useCallback((slotIdx: number) => {
+    // handleUpgrade fonksiyonunu çağır ve upgrade başarılıysa efekti tetikle
+    if (canUpgrade && canAffordUpgrade) {
+      handleUpgrade(slotIdx);
+      setShowUpgrade(true);
+      setTimeout(() => setShowUpgrade(false), 600); // animasyon süresiyle uyumlu
+    } else {
+      handleUpgrade(slotIdx);
+    }
+  }, [canUpgrade, canAffordUpgrade, handleUpgrade]);
+
   return (
     <g onContextMenu={handleContextMenu}>
+      {/* --- YENİ: Toz bulutu efekti --- */}
+      {showDust && (
+        <ParticleSystem slot={slot} isUnlocking={false} showDust={true} />
+      )}
+      {/* --- YENİ: Upgrade efekti --- */}
+      {showUpgrade && (
+        <ParticleSystem slot={slot} isUnlocking={false} showUpgrade={true} />
+      )}
       {/* Slot or Tower */}
       {!slot.tower ? (
         <g>
@@ -116,10 +157,13 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           
           {/* Tower with enhanced drag & touch support */}
           <g 
+            className={showUpgrade ? 'tower-upgrade-anim' : ''}
             style={{ 
               cursor: 'grab',
               opacity: draggedTowerSlotIdx === slotIdx ? 0.5 : 1,
               filter: draggedTowerSlotIdx === slotIdx ? 'brightness(0.7)' : 'none',
+              transform: showTowerVisible ? 'translateY(0)' : 'translateY(-5px)',
+              transition: 'transform 0.4s cubic-bezier(0.3,0.7,0.4,1.1)',
               touchAction: 'none' // Prevent default touch behaviors
             }}
             onMouseDown={(e) => {
@@ -153,7 +197,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             upgradeInfo={upgradeInfo}
             upgradeMessage={upgradeMessage}
             canAffordUpgrade={canAffordUpgrade}
-            onUpgrade={handleUpgrade}
+            onUpgrade={handleUpgradeWithEffect}
           />
         </g>
       )}

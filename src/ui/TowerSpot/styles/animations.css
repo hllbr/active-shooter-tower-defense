@@ -205,4 +205,126 @@
     opacity: 0.9; 
     stroke-width: 4; 
   }
+}
+
+@keyframes block-drop-0 {
+  0% { transform: translateY(-32px) scaleY(0.7); opacity: 0; }
+  80% { transform: translateY(0) scaleY(1.1); opacity: 1; }
+  100% { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+@keyframes block-drop-1 {
+  0% { transform: translateY(-36px) scaleY(0.7); opacity: 0; }
+  80% { transform: translateY(0) scaleY(1.1); opacity: 1; }
+  100% { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+@keyframes block-drop-2 {
+  0% { transform: translateY(-28px) scaleY(0.7); opacity: 0; }
+  80% { transform: translateY(0) scaleY(1.1); opacity: 1; }
+  100% { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+@keyframes block-drop-3 {
+  0% { transform: translateY(-40px) scaleY(0.7); opacity: 0; }
+  80% { transform: translateY(0) scaleY(1.1); opacity: 1; }
+  100% { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+@keyframes scaffold-fade {
+  0% { opacity: 0; }
+  20% { opacity: 0.7; }
+  80% { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+@keyframes dust-puff {
+  0% { opacity: 0; transform: scale(0.7); }
+  30% { opacity: 0.38; transform: scale(1.05); }
+  80% { opacity: 0.22; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+@keyframes upgrade-wave {
+  0% { r: 12; opacity: 0.7; stroke-width: 6; }
+  70% { r: 28; opacity: 0.5; stroke-width: 3; }
+  100% { r: 38; opacity: 0; stroke-width: 1; }
+}
+@keyframes upgrade-glow {
+  0% { opacity: 0.18; }
+  50% { opacity: 0.32; }
+  100% { opacity: 0; }
+}
+@keyframes upgrade-wave-strong {
+  0% { r: 18; opacity: 0.95; stroke-width: 10; }
+  60% { r: 32; opacity: 0.5; stroke-width: 4; }
+  100% { r: 44; opacity: 0; stroke-width: 2; }
+}
+@keyframes upgrade-glow-strong {
+  0% { opacity: 0.35; }
+  40% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+@keyframes upgrade-wave-outer {
+  0% { r: 38; opacity: 0.85; stroke-width: 7; }
+  60% { r: 52; opacity: 0.5; stroke-width: 4; }
+  100% { r: 60; opacity: 0; stroke-width: 2; }
+}
+@keyframes upgrade-glow-outer {
+  0% { r: 28; opacity: 0.22; }
+  60% { r: 36; opacity: 0.18; }
+  100% { r: 44; opacity: 0; }
+}
+@keyframes upgrade-wave-expand {
+  0% { r: 38; opacity: 0.85; stroke-width: 7; }
+  60% { r: 56; opacity: 0.35; stroke-width: 3; }
+  100% { r: 72; opacity: 0; stroke-width: 1; }
+}
+@keyframes upgrade-glow-expand {
+  0% { r: 28; opacity: 0.22; }
+  60% { r: 40; opacity: 0.13; }
+  100% { r: 54; opacity: 0; }
+}
+@keyframes upgrade-wave-scale {
+  0% { transform: scale(1); opacity: 0.85; }
+  80% { transform: scale(1.5); opacity: 0.3; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes upgrade-wave-scale-blue {
+  0% { transform: scale(1); opacity: 0.35; }
+  80% { transform: scale(1.5); opacity: 0.13; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes upgrade-glow-scale {
+  0% { transform: scale(1); opacity: 0.22; }
+  80% { transform: scale(1.4); opacity: 0.09; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+@keyframes upgrade-wave-scale-pro {
+  0% { transform: scale(1); opacity: 0.85; }
+  80% { transform: scale(1.5); opacity: 0.3; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes upgrade-wave-scale-blue-pro {
+  0% { transform: scale(1); opacity: 0.35; }
+  80% { transform: scale(1.5); opacity: 0.13; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes upgrade-glow-scale-pro {
+  0% { transform: scale(1); opacity: 0.22; }
+  80% { transform: scale(1.4); opacity: 0.09; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+.upgrade-effect-anim {
+  transform-origin: var(--cx, 0px) var(--cy, 0px);
+}
+
+.tower-upgrade-anim {
+  animation: tower-upgrade-shake-bounce 0.7s cubic-bezier(0.4,0.2,0.2,1);
+}
+@keyframes tower-upgrade-shake-bounce {
+  0% { transform: translateY(0) scale(1); }
+  10% { transform: translateX(-8px) scale(1.05); }
+  20% { transform: translateX(8px) scale(1.05); }
+  30% { transform: translateX(-6px) scale(1.08); }
+  40% { transform: translateX(6px) scale(1.08); }
+  50% { transform: translateX(0) scale(1.18) translateY(-12px); }
+  60% { transform: translateX(0) scale(1.12) translateY(-6px); }
+  80% { transform: translateX(0) scale(1.04) translateY(-2px); }
+  100% { transform: translateX(0) scale(1) translateY(0); }
 } 

@@ -143,6 +143,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
 
   const { width, height } = dimensions;
 
+  // --- Mobil algılama ---
+  const isMobile = typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || /Mobi|Android/i.test(navigator.userAgent));
+
   return (
     <div style={{ 
       ...containerStyle,
@@ -183,6 +186,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onTowerDragStart={handleTowerDragStart}
+        timeOfDay={'day'}
+        isMobile={isMobile}
       />
     </div>
   );

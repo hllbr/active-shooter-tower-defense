@@ -17,6 +17,8 @@ interface GameAreaProps {
   onTouchMove: (event: React.TouchEvent) => void;
   onTouchEnd: (event: React.TouchEvent) => void;
   onTowerDragStart: (slotIdx: number, event: React.MouseEvent | React.TouchEvent) => void;
+  timeOfDay?: 'dawn' | 'day' | 'dusk' | 'night';
+  isMobile?: boolean;
 }
 
 export const GameArea: React.FC<GameAreaProps> = ({
@@ -30,8 +32,22 @@ export const GameArea: React.FC<GameAreaProps> = ({
   onMouseUp,
   onTouchMove,
   onTouchEnd,
-  onTowerDragStart
+  onTowerDragStart,
+  timeOfDay = 'day',
+  isMobile = false,
 }) => {
+  const ambientColors: Record<string, string> = {
+    dawn: '#FFE4B5',
+    day: '#FFFFFF',
+    dusk: '#FF6347',
+    night: '#191970',
+  };
+  const ambientColor = ambientColors[timeOfDay] || '#FFFFFF';
+  const overlayOpacity = isMobile ? 0.09 : 0.18;
+  const saturation = isMobile ? 1.0 : 1.1;
+  const contrast = isMobile ? 1.0 : 1.08;
+  const brightness = isMobile ? 1.0 : 1.04;
+
   return (
     <svg 
       width={width} 
@@ -42,6 +58,22 @@ export const GameArea: React.FC<GameAreaProps> = ({
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
+      <rect x={0} y={0} width={width} height={height} fill={ambientColor} opacity={overlayOpacity} />
+
+      <filter id="postprocess-filter">
+        <feColorMatrix type="saturate" values={saturation.toString()} />
+        <feComponentTransfer>
+          <feFuncR type="linear" slope={contrast.toString()} intercept={(contrast > 1 ? 0.02 : 0).toString()} />
+          <feFuncG type="linear" slope={contrast.toString()} intercept={(contrast > 1 ? 0.02 : 0).toString()} />
+          <feFuncB type="linear" slope={contrast.toString()} intercept={(contrast > 1 ? 0.02 : 0).toString()} />
+        </feComponentTransfer>
+        <feComponentTransfer>
+          <feFuncR type="linear" slope={brightness.toString()} />
+          <feFuncG type="linear" slope={brightness.toString()} />
+          <feFuncB type="linear" slope={brightness.toString()} />
+        </feComponentTransfer>
+      </filter>
+      <g filter="url(#postprocess-filter)">
       {/* Tower Slots with Enhanced Drag Support */}
       {towerSlots.map((slot: TowerSlot, i: number) => (
         <TowerSpot 
@@ -70,6 +102,7 @@ export const GameArea: React.FC<GameAreaProps> = ({
 
       {/* SVG Effects (Enemies, Bullets, Effects, Mines) */}
       <SVGEffectsRenderer />
+      </g>
     </svg>
   );
 }; 
