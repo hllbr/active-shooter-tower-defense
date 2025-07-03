@@ -156,9 +156,9 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           <WallRenderer slot={slot} wallLevel={wallLevel} />
           
           {/* Tower with enhanced drag & touch support */}
-          <g 
-            className={showUpgrade ? 'tower-upgrade-anim' : ''}
-            style={{ 
+          <g
+            className={showUpgrade ? 'tower-upgrade-fall-anim' : ''}
+            style={{
               cursor: 'grab',
               opacity: draggedTowerSlotIdx === slotIdx ? 0.5 : 1,
               filter: draggedTowerSlotIdx === slotIdx ? 'brightness(0.7)' : 'none',

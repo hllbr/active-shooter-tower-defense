@@ -327,4 +327,17 @@
   60% { transform: translateX(0) scale(1.12) translateY(-6px); }
   80% { transform: translateX(0) scale(1.04) translateY(-2px); }
   100% { transform: translateX(0) scale(1) translateY(0); }
-} 
+}
+
+.tower-upgrade-fall-anim {
+  animation: tower-upgrade-shake-drop 0.9s cubic-bezier(0.4,0.2,0.2,1);
+}
+@keyframes tower-upgrade-shake-drop {
+  0% { transform: translateX(0) translateY(-16px) scale(1); }
+  15% { transform: translateX(-6px) translateY(-16px) scale(1); }
+  30% { transform: translateX(6px) translateY(-16px) scale(1); }
+  45% { transform: translateX(-6px) translateY(-16px) scale(1); }
+  60% { transform: translateX(6px) translateY(-16px) scale(1); }
+  80% { transform: translateX(0) translateY(0) scale(1.05); }
+  100% { transform: translateX(0) translateY(0) scale(1); }
+}
