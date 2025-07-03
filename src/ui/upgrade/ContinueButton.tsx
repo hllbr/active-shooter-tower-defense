@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { useGameStore } from '../../models/store';
 import type { Store } from '../../models/store';
-import { footerStyles, getContinueButtonStyle } from './Footer/footerStyles';
+import { getContinueButtonStyle } from './Footer/footerStyles';
+import { validateStateChange } from '../../security/SecurityEnhancements';
 
 interface ContinueButtonProps {
   onContinueCallback?: () => void;
@@ -18,7 +19,14 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   const isPreparing = useGameStore((s: Store) => s.isPreparing);
 
   const handleContinue = useCallback(() => {
-    console.log('🚀 UpgradeScreen: handleContinue started');
+    console.log('🔒 Secure UpgradeScreen: handleContinue started');
+    
+    // Security validation before proceeding
+    const validation = validateStateChange('continueWave', {}, {});
+    if (!validation.valid) {
+      console.warn('🔒 Continue action blocked:', validation.reason);
+      return;
+    }
     
     try {
       console.log('📈 Calling nextWave...');

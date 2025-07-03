@@ -16,6 +16,7 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
 
   if (!isOpen) return null;
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _handleComplete = (id: number) => {
     completeChallenge(id);
     toast.success('Görev tamamlandı!', { position: 'bottom-center' });

@@ -65,7 +65,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
 
   // Düşman öldürme event listener
   React.useEffect(() => {
-    const handleEnemyKill = (isSpecial?: boolean, enemyType?: string) => {
+    const handleEnemyKill = (_isSpecial?: boolean, enemyType?: string) => {
       incrementChallenge('enemy');
       // Boss düşmanlar için
       if (enemyType && (enemyType.toLowerCase().includes('boss') || enemyType.toLowerCase().includes('king') || enemyType.toLowerCase().includes('lord') || enemyType.toLowerCase().includes('god'))) {

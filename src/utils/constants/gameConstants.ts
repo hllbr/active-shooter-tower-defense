@@ -1,5 +1,5 @@
 import type { TowerVisual } from '../../models/gameTypes';
-import type { BulletTypeData } from '../../components/game/upgrades/types';
+import type { BulletTypeData } from '../../ui/game/upgrades/types';
 import { waveCompositions } from '../../config/waves';
 
 const generateCircularTowerSlots = (count: number, centerX: number, centerY: number, radius: number) => {
