@@ -16,6 +16,7 @@ export const upgradeScreenStyles = {
     justifyContent: 'center',
     zIndex: 5,
     backdropFilter: 'blur(6px)',
+    animation: 'fadeInOverlay 0.7s ease',
   } as CSSProperties,
 
   mainContainer: {
@@ -30,7 +31,13 @@ export const upgradeScreenStyles = {
     flexDirection: 'column',
     gap: 12,
     border: `3px solid ${GAME_CONSTANTS.GOLD_COLOR}`,
-    boxShadow: '0 20px 60px rgba(0,0,0,0.9)',
+    boxShadow: '0 0 32px 8px #4ade80, 0 20px 60px rgba(0,0,0,0.9)',
+    transition: 'box-shadow 0.3s, transform 0.2s',
+  } as CSSProperties,
+
+  mainContainerHover: {
+    transform: 'scale(1.015)',
+    boxShadow: '0 0 48px 16px #22c55e, 0 32px 80px rgba(0,0,0,0.95)',
   } as CSSProperties,
 
   categoryCard: {
@@ -60,3 +67,13 @@ export const upgradeScreenStyles = {
     marginTop: 16,
   } as CSSProperties,
 }; 
+
+// --- Animasyonlar için CSS keyframes ---
+const styleSheet = document.createElement('style');
+styleSheet.innerHTML = `
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+`;
+document.head.appendChild(styleSheet); 

@@ -1,6 +1,5 @@
 import { useGameStore } from '../models/store';
 import { GAME_CONSTANTS } from '../utils/constants';
-import type { TowerUpgradeListener } from '../models/gameTypes';
 
 // CRITICAL FIX: Real Fire Upgrade Effects System
 export class UpgradeEffectsManager {
@@ -97,19 +96,20 @@ export const upgradeEffectsManager = UpgradeEffectsManager.getInstance();
 
 // Original visual effects system (keep for backward compatibility)
 export function initUpgradeEffects() {
-  const { addTowerUpgradeListener, addEffect } = useGameStore.getState();
-  const listener: TowerUpgradeListener = (tower, _oldLevel, newLevel) => {
-    const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === newLevel);
-    if (visual?.effect) {
-      addEffect({
-        id: `${Date.now()}-${Math.random()}`,
-        position: tower.position,
-        radius: 40,
-        color: '#88f',
-        life: 600,
-        maxLife: 600,
-      });
-    }
-  };
-  addTowerUpgradeListener(listener);
+  // Kule yükseltme efektleri devre dışı bırakıldı
+  // const { addTowerUpgradeListener, addEffect } = useGameStore.getState();
+  // const listener: TowerUpgradeListener = (tower, _oldLevel, newLevel) => {
+  //   const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === newLevel);
+  //   if (visual?.effect) {
+  //     addEffect({
+  //       id: `${Date.now()}-${Math.random()}`,
+  //       position: tower.position,
+  //       radius: 40,
+  //       color: '#88f',
+  //       life: 600,
+  //       maxLife: 600,
+  //     });
+  //   }
+  // };
+  // addTowerUpgradeListener(listener);
 }
