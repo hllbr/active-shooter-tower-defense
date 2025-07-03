@@ -55,7 +55,7 @@ button:focus-visible {
 }
 
 /* Import TowerSpot animations */
-@import url('./components/TowerSpot/styles/animations.css');
+@import url('./ui/TowerSpot/styles/animations.css');
 
 @keyframes fadeIn {
   from { opacity: 0; }
