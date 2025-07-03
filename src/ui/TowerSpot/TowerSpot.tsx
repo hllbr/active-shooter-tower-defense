@@ -68,16 +68,20 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
   }, [slot.tower]);
 
   // Upgrade animasyonu tetikleme
-  const handleUpgradeWithEffect = React.useCallback((slotIdx: number) => {
-    // handleUpgrade fonksiyonunu çağır ve upgrade başarılıysa efekti tetikle
-    if (canUpgrade && canAffordUpgrade) {
-      handleUpgrade(slotIdx);
-      setShowUpgrade(true);
-      setTimeout(() => setShowUpgrade(false), 600); // animasyon süresiyle uyumlu
-    } else {
-      handleUpgrade(slotIdx);
-    }
-  }, [canUpgrade, canAffordUpgrade, handleUpgrade]);
+  const handleUpgradeWithEffect = React.useCallback(
+    (slotIdx: number) => {
+      if (canUpgrade && canAffordUpgrade) {
+        setShowUpgrade(true);
+        setTimeout(() => {
+          handleUpgrade(slotIdx);
+          setShowUpgrade(false);
+        }, 400); // animasyon süresiyle uyumlu
+      } else {
+        handleUpgrade(slotIdx);
+      }
+    },
+    [canUpgrade, canAffordUpgrade, handleUpgrade]
+  );
 
   return (
     <g onContextMenu={handleContextMenu}>
@@ -157,7 +161,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           
           {/* Tower with enhanced drag & touch support */}
           <g
-            className={showUpgrade ? 'tower-upgrade-fall-anim' : ''}
+            className={showUpgrade ? 'tower-upgrade-shake-anim' : ''}
             style={{
               cursor: 'grab',
               opacity: draggedTowerSlotIdx === slotIdx ? 0.5 : 1,
