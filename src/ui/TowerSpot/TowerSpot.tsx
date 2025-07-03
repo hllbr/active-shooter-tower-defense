@@ -50,7 +50,6 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
   // --- YENİ: Build animasyonu için state ---
   const [showTowerVisible, setShowTowerVisible] = React.useState(true); // Kule görünür mü
   const [showDust, setShowDust] = React.useState(false); // Toz bulutu animasyonu
-  const [showUpgrade, setShowUpgrade] = React.useState(false); // Upgrade efekti
   const prevTower = React.useRef(slot.tower);
 
   React.useEffect(() => {
@@ -64,30 +63,38 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
         setTimeout(() => setShowDust(false), 500);
       }, 400); // Kule düşme animasyonu süresi
     }
+    // Kule yükseltildiyse de aynı animasyonu tetikle
+    if (
+      prevTower.current &&
+      slot.tower &&
+      prevTower.current.id === slot.tower.id &&
+      prevTower.current.level !== slot.tower.level
+    ) {
+      setShowTowerVisible(false);
+      setShowDust(false);
+      setTimeout(() => {
+        setShowTowerVisible(true);
+        setShowDust(true);
+        setTimeout(() => setShowDust(false), 500);
+      }, 400);
+    }
     prevTower.current = slot.tower;
   }, [slot.tower]);
 
-  // Upgrade animasyonu tetikleme
-  const handleUpgradeWithEffect = React.useCallback((slotIdx: number) => {
-    // handleUpgrade fonksiyonunu çağır ve upgrade başarılıysa efekti tetikle
-    if (canUpgrade && canAffordUpgrade) {
+  // Yükseltme animasyonu ile ilgili tüm state ve kodları kaldırıyorum
+  // handleUpgradeWithEffect fonksiyonu doğrudan handleUpgrade'i çağıracak
+  const handleUpgradeWithEffect = React.useCallback(
+    (slotIdx: number) => {
       handleUpgrade(slotIdx);
-      setShowUpgrade(true);
-      setTimeout(() => setShowUpgrade(false), 600); // animasyon süresiyle uyumlu
-    } else {
-      handleUpgrade(slotIdx);
-    }
-  }, [canUpgrade, canAffordUpgrade, handleUpgrade]);
+    },
+    [handleUpgrade]
+  );
 
   return (
     <g onContextMenu={handleContextMenu}>
       {/* --- YENİ: Toz bulutu efekti --- */}
       {showDust && (
         <ParticleSystem slot={slot} isUnlocking={false} showDust={true} />
-      )}
-      {/* --- YENİ: Upgrade efekti --- */}
-      {showUpgrade && (
-        <ParticleSystem slot={slot} isUnlocking={false} showUpgrade={true} />
       )}
       {/* Slot or Tower */}
       {!slot.tower ? (
@@ -156,15 +163,14 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           <WallRenderer slot={slot} wallLevel={wallLevel} />
           
           {/* Tower with enhanced drag & touch support */}
-          <g 
-            className={showUpgrade ? 'tower-upgrade-anim' : ''}
-            style={{ 
+          <g
+            style={{
               cursor: 'grab',
-              opacity: draggedTowerSlotIdx === slotIdx ? 0.5 : 1,
+              opacity: showTowerVisible ? 1 : 0,
               filter: draggedTowerSlotIdx === slotIdx ? 'brightness(0.7)' : 'none',
-              transform: showTowerVisible ? 'translateY(0)' : 'translateY(-5px)',
-              transition: 'transform 0.4s cubic-bezier(0.3,0.7,0.4,1.1)',
-              touchAction: 'none' // Prevent default touch behaviors
+              transform: showTowerVisible ? 'translateY(0)' : 'translateY(-40px)',
+              transition: 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s',
+              touchAction: 'none'
             }}
             onMouseDown={(e) => {
               if (onTowerDragStart) {
@@ -173,7 +179,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             }}
             onTouchStart={(e) => {
               if (onTowerDragStart) {
-                e.preventDefault(); // Prevent default touch behaviors
+                e.preventDefault();
                 onTowerDragStart(slotIdx, e);
               }
             }}
@@ -213,4 +219,15 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
       />
     </g>
   );
-}; 
+};
+
+<style>{`
+@keyframes tower-upgrade-rotate {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(30deg); }
+  40% { transform: rotate(0deg); }
+  60% { transform: rotate(-30deg); }
+  80% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+`}</style> 
