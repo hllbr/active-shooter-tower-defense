@@ -205,4 +205,42 @@
     opacity: 0.9; 
     stroke-width: 4; 
   }
-} 
+}
+
+@keyframes block-drop-0 {
+  0% { transform: translateY(-32px) scaleY(0.7); opacity: 0; }
+  80% { transform: translateY(0) scaleY(1.1); opacity: 1; }
+  100% { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+@keyframes block-drop-1 {
+  0% { transform: translateY(-36px) scaleY(0.7); opacity: 0; }
+  80% { transform: translateY(0) scaleY(1.1); opacity: 1; }
+  100% { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+@keyframes block-drop-2 {
+  0% { transform: translateY(-28px) scaleY(0.7); opacity: 0; }
+  80% { transform: translateY(0) scaleY(1.1); opacity: 1; }
+  100% { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+@keyframes block-drop-3 {
+  0% { transform: translateY(-40px) scaleY(0.7); opacity: 0; }
+  80% { transform: translateY(0) scaleY(1.1); opacity: 1; }
+  100% { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+@keyframes scaffold-fade {
+  0% { opacity: 0; }
+  20% { opacity: 0.7; }
+  80% { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+@keyframes dust-puff {
+  0% { opacity: 0; transform: scale(0.7); }
+  30% { opacity: 0.38; transform: scale(1.05); }
+  80% { opacity: 0.22; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+
+.upgrade-effect-anim {
+  transform-origin: var(--cx, 0px) var(--cy, 0px);
+}
+

@@ -2,7 +2,7 @@ import React from 'react';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { TowerInfoPanelProps } from '../types';
 
-export const TowerInfoPanel: React.FC<TowerInfoPanelProps> = ({
+export const TowerInfoPanel: React.FC<TowerInfoPanelProps & { upgradeAnim?: boolean }> = ({
   slot,
   slotIdx,
   currentTowerInfo,
@@ -11,7 +11,8 @@ export const TowerInfoPanel: React.FC<TowerInfoPanelProps> = ({
   upgradeInfo,
   upgradeMessage,
   canAffordUpgrade,
-  onUpgrade
+  onUpgrade,
+  upgradeAnim = false
 }) => {
   if (!slot.tower) return null;
 
@@ -65,8 +66,14 @@ export const TowerInfoPanel: React.FC<TowerInfoPanelProps> = ({
           fontSize={14}
           fontWeight="bold"
           textAnchor="middle"
-          style={{ cursor: canAffordUpgrade ? 'pointer' : 'not-allowed' }}
-          onClick={() => canAffordUpgrade && onUpgrade(slotIdx)}
+          style={{
+            cursor: canAffordUpgrade && !upgradeAnim ? 'pointer' : 'not-allowed',
+            opacity: upgradeAnim ? 0.6 : 1,
+            userSelect: 'none'
+          }}
+          onClick={() => {
+            if (canAffordUpgrade && !upgradeAnim) onUpgrade(slotIdx);
+          }}
         >
           {upgradeMessage}
         </text>
