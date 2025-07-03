@@ -50,7 +50,6 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
   // --- YENİ: Build animasyonu için state ---
   const [showTowerVisible, setShowTowerVisible] = React.useState(true); // Kule görünür mü
   const [showDust, setShowDust] = React.useState(false); // Toz bulutu animasyonu
-  const [showUpgrade, setShowUpgrade] = React.useState(false); // Upgrade efekti
   const prevTower = React.useRef(slot.tower);
 
   React.useEffect(() => {
@@ -67,20 +66,12 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
     prevTower.current = slot.tower;
   }, [slot.tower]);
 
-  // Upgrade animasyonu tetikleme
+  // Upgrade işlemine doğrudan devam et
   const handleUpgradeWithEffect = React.useCallback(
     (slotIdx: number) => {
-      if (canUpgrade && canAffordUpgrade) {
-        setShowUpgrade(true);
-        setTimeout(() => {
-          handleUpgrade(slotIdx);
-          setShowUpgrade(false);
-        }, 800); // animasyon süresiyle uyumlu
-      } else {
-        handleUpgrade(slotIdx);
-      }
+      handleUpgrade(slotIdx);
     },
-    [canUpgrade, canAffordUpgrade, handleUpgrade]
+    [handleUpgrade]
   );
 
   return (
@@ -88,10 +79,6 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
       {/* --- YENİ: Toz bulutu efekti --- */}
       {showDust && (
         <ParticleSystem slot={slot} isUnlocking={false} showDust={true} />
-      )}
-      {/* --- YENİ: Upgrade efekti --- */}
-      {showUpgrade && (
-        <ParticleSystem slot={slot} isUnlocking={false} showUpgrade={true} />
       )}
       {/* Slot or Tower */}
       {!slot.tower ? (
@@ -161,7 +148,6 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           
           {/* Tower with enhanced drag & touch support */}
           <g
-            className={showUpgrade ? 'tower-upgrade-anim' : ''}
             style={{
               cursor: 'grab',
               opacity: draggedTowerSlotIdx === slotIdx ? 0.5 : 1,
