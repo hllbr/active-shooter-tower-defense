@@ -75,7 +75,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
         setTimeout(() => {
           handleUpgrade(slotIdx);
           setShowUpgrade(false);
-        }, 400); // animasyon süresiyle uyumlu
+        }, 800); // animasyon süresiyle uyumlu
       } else {
         handleUpgrade(slotIdx);
       }
@@ -161,7 +161,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           
           {/* Tower with enhanced drag & touch support */}
           <g
-            className={showUpgrade ? 'tower-upgrade-shake-anim' : ''}
+            className={showUpgrade ? 'tower-upgrade-anim' : ''}
             style={{
               cursor: 'grab',
               opacity: draggedTowerSlotIdx === slotIdx ? 0.5 : 1,
