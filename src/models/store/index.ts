@@ -631,12 +631,16 @@ export const useGameStore = create<Store>((set, get): Store => ({
   setStarted: (started: boolean) => set(() => ({ isStarted: started })),
 
   // ✅ CRITICAL FIX: UpgradeScreen trigger implementation  
-  setRefreshing: (refreshing: boolean) => set(() => ({ 
-    isRefreshing: refreshing,
-    // Clear any preparation state when entering upgrade screen
-    isPreparing: false,
-    isPaused: false,
-  })),
+  setRefreshing: (refreshing: boolean) => set((state) => {
+    console.log(`🔄 setRefreshing called with: ${refreshing}, current state: ${state.isRefreshing}`);
+    
+    return {
+      isRefreshing: refreshing,
+      // Clear any preparation state when entering upgrade screen
+      isPreparing: false,
+      isPaused: false,
+    };
+  }),
 
   upgradeBullet: (free?: boolean) => set((state) => {
     const cost = free ? 0 : GAME_CONSTANTS.BULLET_UPGRADE_COST;

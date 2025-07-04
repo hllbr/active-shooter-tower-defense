@@ -362,7 +362,8 @@ export class SecurityManager {
   private isExpectedStateChange(action: string): boolean {
     const expectedActions = [
       'addGold', 'spendGold', 'buildTower', 'upgradeTower',
-      'addEnergy', 'consumeEnergy', 'addAction', 'purchasePackage'
+      'addEnergy', 'consumeEnergy', 'addAction', 'purchasePackage',
+      'continueWave'
     ];
     return expectedActions.some(expected => action.includes(expected));
   }

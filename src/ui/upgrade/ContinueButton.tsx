@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useGameStore } from '../../models/store';
 import type { Store } from '../../models/store';
 import { getContinueButtonStyle } from './Footer/footerStyles';
@@ -18,13 +18,22 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   const isRefreshing = useGameStore((s: Store) => s.isRefreshing);
   const isPreparing = useGameStore((s: Store) => s.isPreparing);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    if (!isRefreshing && isProcessing) {
+      console.log('🔄 isRefreshing changed to false, resetting processing state');
+      setIsProcessing(false);
+    }
+  }, [isRefreshing, isProcessing]);
+
   const handleContinue = useCallback(() => {
     console.log('🔒 Secure UpgradeScreen: handleContinue started');
     
-    // Security validation before proceeding
     const validation = validateStateChange('continueWave', {}, {});
     if (!validation.valid) {
       console.warn('🔒 Continue action blocked:', validation.reason);
+      setIsProcessing(false);
       return;
     }
     
@@ -42,18 +51,19 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       console.log('✅ resetDice completed');
       
       console.log('🔄 Setting refreshing to false...');
-      setTimeout(() => {
-        setRefreshing(false);
-        console.log('✅ setRefreshing(false) completed');
-        console.log('🎉 handleContinue completed successfully!');
-        
-        if (onContinueCallback) {
-          onContinueCallback();
-        }
-      }, 50);
+      setRefreshing(false);
+      console.log('✅ setRefreshing(false) completed');
+      console.log('🎉 handleContinue completed successfully!');
+      
+      if (onContinueCallback) {
+        onContinueCallback();
+      }
       
     } catch (error) {
       console.error('❌ Error in handleContinue:', error);
+      setRefreshing(false);
+    } finally {
+      setIsProcessing(false);
     }
   }, [nextWave, startPreparation, resetDice, setRefreshing, onContinueCallback]);
 
@@ -72,8 +82,22 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     console.log('📊 Current state:', {
       currentWave,
       isRefreshing,
-      isPreparing
+      isPreparing,
+      isProcessing
     });
+    
+    if (isProcessing || !isRefreshing) {
+      console.log('⚠️ Button already processed or not in refreshing state, ignoring click');
+      console.log('🔍 Debug info:', {
+        isProcessing,
+        isRefreshing,
+        shouldDisable: isProcessing || !isRefreshing
+      });
+      return;
+    }
+    
+    console.log('✅ Setting processing state to true');
+    setIsProcessing(true);
     
     try {
       console.log('🔄 Calling handleContinue...');
@@ -81,8 +105,25 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       console.log('✅ handleContinue called successfully');
     } catch (error) {
       console.error('❌ Error in handleContinue:', error);
+      setRefreshing(false);
+      setIsProcessing(false);
     }
   };
+
+  const isDisabled = isProcessing || !isRefreshing;
+
+  // ✅ DEBUG: Global debug function for testing
+  useEffect(() => {
+    (window as unknown as { debugContinueButton: () => void }).debugContinueButton = () => {
+      console.log('🔍 ContinueButton Debug Info:', {
+        isRefreshing,
+        isProcessing,
+        isDisabled,
+        currentWave,
+        isPreparing
+      });
+    };
+  }, [isRefreshing, isProcessing, isDisabled, currentWave, isPreparing]);
 
   return (
     <button
@@ -90,8 +131,9 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       style={getContinueButtonStyle(hovered)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      disabled={isDisabled}
     >
-      🚀 Savaşa Devam
+      {isProcessing ? '🔄 İşleniyor...' : '🚀 Savaşa Devam'}
     </button>
   );
 }; 

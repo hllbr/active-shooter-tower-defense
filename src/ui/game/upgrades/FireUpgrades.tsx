@@ -14,8 +14,7 @@ export const FireUpgrades: React.FC = () => {
     discountMultiplier, 
     diceResult 
   } = useGameStore();
-
-
+  const setRefreshing = useGameStore((s) => s.setRefreshing);
 
   return (
     <div style={{ 
@@ -59,6 +58,7 @@ export const FireUpgrades: React.FC = () => {
               
               spendGold(discountedCost);
               upgradeBullet(false);
+              setRefreshing(true); // Satın alma sonrası upgrade ekranı açık kalsın
             }
           },
           icon: "🔥",
