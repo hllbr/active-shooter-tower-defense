@@ -223,7 +223,7 @@ export class LootManager {
    * Create and manage loot item
    */
   private static createLootItem(lootItem: LootItem): void {
-    const { addEffect, showNotification } = useGameStore.getState();
+    const { addEffect } = useGameStore.getState();
     
     // Add to active loot items
     this.activeLootItems.set(lootItem.id, lootItem);
@@ -249,13 +249,7 @@ export class LootManager {
     } else {
       // Show notification for valuable items
       if (lootItem.rarity !== 'common') {
-        showNotification?.({
-          id: `loot_notification_${lootItem.id}`,
-          type: 'info',
-          message: `${lootItem.name} dropped!`,
-          timestamp: Date.now(),
-          duration: 3000,
-        });
+        console.log(`Loot dropped: ${lootItem.name}`);
       }
     }
     
@@ -277,7 +271,7 @@ export class LootManager {
     const lootItem = this.activeLootItems.get(lootId);
     if (!lootItem) return false;
     
-    const { addGold, addEffect, showNotification } = useGameStore.getState();
+    const { addGold, addEffect } = useGameStore.getState();
     
     // Apply loot effects
     switch (lootItem.type) {
@@ -318,13 +312,7 @@ export class LootManager {
     });
     
     // Show pickup notification
-    showNotification?.({
-      id: `pickup_${lootId}`,
-      type: 'success',
-      message: `+${lootItem.amount} ${lootItem.name}`,
-      timestamp: Date.now(),
-      duration: 2000,
-    });
+    console.log(`Loot picked up: +${lootItem.amount} ${lootItem.name}`);
     
     // Play pickup sound
     this.playLootPickupSound(lootItem.rarity);

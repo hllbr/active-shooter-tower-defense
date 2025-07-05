@@ -100,19 +100,13 @@ export class BossManager {
    * Start boss entrance cinematic
    */
   private static startEntranceCinematic(boss: Enemy, definition: BossDefinition) {
-    const { addEffect, showNotification } = useGameStore.getState();
+    const { addEffect } = useGameStore.getState();
     
     // Play entrance sound
     soundEffects.playSound('boss-entrance');
     
     // Show entrance message
-    showNotification?.({
-      id: `boss_entrance_${boss.id}`,
-      type: 'warning',
-      message: definition.cinematicData.entranceText,
-      timestamp: Date.now(),
-      duration: definition.cinematicData.entranceDuration,
-    });
+    console.log(`Boss Entrance: ${definition.cinematicData.entranceText}`);
 
     // Create entrance visual effects
     addEffect({
@@ -428,7 +422,7 @@ export class BossManager {
    * Start boss defeat cinematic
    */
   private static startDefeatCinematic(boss: Enemy, definition: BossDefinition) {
-    const { addEffect, showNotification } = useGameStore.getState();
+    const { addEffect } = useGameStore.getState();
     
     boss.cinematicState = 'defeat';
     boss.cinematicStartTime = performance.now();
@@ -437,13 +431,7 @@ export class BossManager {
     soundEffects.playSound('boss-defeat');
     
     // Show defeat message
-    showNotification?.({
-      id: `boss_defeat_${boss.id}`,
-      type: 'success',
-      message: definition.cinematicData.defeatText,
-      timestamp: Date.now(),
-      duration: definition.cinematicData.defeatDuration,
-    });
+    console.log(`Boss Defeated: ${definition.cinematicData.defeatText}`);
 
     // Create defeat effect
     addEffect({
@@ -476,7 +464,7 @@ export class BossManager {
    * Distribute individual loot item
    */
   private static distributeLootItem(boss: Enemy, lootEntry: BossLootEntry, index: number) {
-    const { addGold, addEffect, showNotification } = useGameStore.getState();
+    const { addGold, addEffect } = useGameStore.getState();
     
     switch (lootEntry.itemType) {
       case 'gold':
@@ -508,13 +496,7 @@ export class BossManager {
     });
 
     // Show loot notification
-    showNotification?.({
-      id: `loot_${boss.id}_${index}`,
-      type: 'success',
-      message: `${lootEntry.itemName} acquired!`,
-      timestamp: Date.now(),
-      duration: 3000,
-    });
+    console.log(`Boss loot acquired: ${lootEntry.itemName}`);
   }
 
   /**
