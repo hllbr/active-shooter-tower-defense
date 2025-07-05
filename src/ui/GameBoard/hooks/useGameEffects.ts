@@ -56,7 +56,7 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
       }, 600);
     };
     
-    window.addEventListener('screenShake', onScreenShake);
+    window.addEventListener('screenShake', onScreenShake, { passive: true });
     return () => {
       window.removeEventListener('screenShake', onScreenShake);
       if (legacyShakeTimerRef.current) {
@@ -65,7 +65,7 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
     };
   }, []);
 
-  // Viewport dimensions management
+  // Viewport dimensions management with passive listeners
   useEffect(() => {
     const updateDimensions = () => {
       setDimensions({
@@ -74,8 +74,14 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
       });
     };
 
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    // Use passive listeners for better performance
+    window.addEventListener('resize', updateDimensions, { passive: true });
+    window.addEventListener('orientationchange', updateDimensions, { passive: true });
+    
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener('orientationchange', updateDimensions);
+    };
   }, []);
 
   // Global memory cleanup

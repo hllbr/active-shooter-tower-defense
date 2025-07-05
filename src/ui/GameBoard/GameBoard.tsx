@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { initUpgradeEffects } from '../../game-systems/UpgradeEffects';
-import { UpgradeScreen } from '../game/UpgradeScreen';
 import { useChallenge } from '../challenge/ChallengeContext';
+
+// Lazy load heavy components for code splitting
+const UpgradeScreen = lazy(() => import('../game/UpgradeScreen').then(module => ({ default: module.UpgradeScreen })));
 
 // Import modular components
 import {
@@ -30,6 +32,22 @@ import {
 // Import styles and types
 import { containerStyle, keyframeStyles } from './styles';
 import type { GameBoardProps } from './types';
+
+// Loading fallback component
+const LoadingFallback: React.FC = () => (
+  <div style={{
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    color: '#ffffff',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    textShadow: '0 0 10px rgba(0, 207, 255, 0.8)'
+  }}>
+    ⚡ Yükleniyor...
+  </div>
+);
 
 export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
   const {
@@ -165,7 +183,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       <GameOverScreen />
       <FrostOverlay />
 
-      {isRefreshing && <UpgradeScreen />}
+      {/* Lazy loaded UpgradeScreen with Suspense */}
+      {isRefreshing && (
+        <Suspense fallback={<LoadingFallback />}>
+          <UpgradeScreen />
+        </Suspense>
+      )}
       
       {/* Command Center (S Key) */}
       <CommandCenter 
