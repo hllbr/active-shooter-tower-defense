@@ -19,7 +19,7 @@ export const DiscountStatusSection: React.FC<DiscountStatusSectionProps> = ({ di
     {
       name: '🎁 Kombo Paketler',
       color: '#fbbf24',
-      description: 'Wave-özel kombolar'
+      description: 'Dalga-özel kombolar'
     },
     {
       name: '⚡ Elite Sistemler',

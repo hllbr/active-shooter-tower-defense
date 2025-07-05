@@ -1,24 +1,30 @@
 import React from 'react';
 import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, getUnifiedStatusDisplay } from '../../../utils/formatters';
 import { playSound } from '../../../utils/sound/soundEffects';
+import { GAME_CONSTANTS } from '../../../utils/constants/gameConstants';
+import { UI_TEXTS } from '../../../utils/constants';
 
 interface PackageCardProps {
   packageId: string;
   name: string;
   description: string;
-  cost: number;
+  baseCost: number;
   waveRequirement: { min: number; max?: number };
-  icon: string;
-  color: string;
-  onPurchase: () => void;
+  maxAllowed: number;
+  purchaseCount: number;
+  canPurchase: boolean;
+  isMaxed: boolean;
+  currentWave: number;
+  gold: number;
+  diceResult: number;
+  discountMultiplier: number;
+  diceUsed: boolean;
+  onPurchase: (packageId: string, cost: number) => void;
+  color?: string;
+  icon?: string;
   benefits: string[];
   isElite?: boolean;
   purchaseLimit?: number;
-  // Game state props
-  gold: number;
-  currentWave: number;
-  diceResult: number | null;
-  discountMultiplier: number;
   getPackageInfo: (packageId: string, purchaseLimit: number) => { isMaxed: boolean; purchaseCount: number };
   purchasePackage: (packageId: string, cost: number, purchaseLimit: number) => boolean;
 }
@@ -27,48 +33,45 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   packageId,
   name,
   description,
-  cost,
+  baseCost,
   waveRequirement,
-  icon,
-  color,
+  maxAllowed,
+  purchaseCount,
+  canPurchase,
+  isMaxed,
+  currentWave,
+  gold,
+  diceResult,
+  discountMultiplier,
+  diceUsed,
   onPurchase,
+  color = '#4ade80',
+  icon = '📦',
   benefits,
   isElite = false,
   purchaseLimit = 1,
-  gold,
-  currentWave,
-  diceResult,
-  discountMultiplier,
   getPackageInfo,
   purchasePackage
 }) => {
   const packageInfo = getPackageInfo(packageId, purchaseLimit);
-  const isMaxed = packageInfo.isMaxed;
+  const isMaxedPackage = packageInfo.isMaxed;
   const currentPurchases = packageInfo.purchaseCount;
   
   const isWaveValid = currentWave >= waveRequirement.min && 
                     (!waveRequirement.max || currentWave <= waveRequirement.max);
   
-  let finalCost = cost;
-  if (diceResult && diceResult === 6) {
-    finalCost = Math.floor(cost * 0.5);
-  } else if (diceResult && diceResult === 5) {
-    finalCost = Math.floor(cost * 0.7);
-  } else if (diceResult && diceResult === 4) {
-    finalCost = Math.floor(cost * 0.85);
-  }
+  // Discount calculation
+  const discount = diceUsed ? discountMultiplier : 0;
+  const discountedCost = Math.floor(baseCost * (1 - discount));
+  const finalCost = Math.max(1, discountedCost);
   
-  if (discountMultiplier !== 1) {
-    finalCost = Math.floor(finalCost / discountMultiplier);
-  }
-  
-  const canAfford = gold >= finalCost && !isMaxed && isWaveValid;
+  const canAfford = gold >= finalCost && !isMaxedPackage && isWaveValid;
   
   const handlePurchase = () => {
     if (canAfford) {
       const success = purchasePackage(packageId, finalCost, purchaseLimit);
       if (success) {
-        onPurchase();
+        onPurchase(packageId, finalCost);
         playSound('upgrade-purchase');
       }
     }
@@ -77,22 +80,17 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6))',
-        border: `3px solid ${isMaxed ? '#666' : canAfford ? color : !isWaveValid ? '#444' : 'rgba(255,255,255,0.2)'}`,
-        borderRadius: 16,
-        padding: 20,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
-        minHeight: 200,
+        background: `linear-gradient(145deg, ${color}22, ${color}11)`,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 12,
+        border: `3px solid ${isMaxedPackage ? '#666' : canAfford ? color : !isWaveValid ? '#444' : 'rgba(255,255,255,0.2)'}`,
+        boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
         position: 'relative',
         transition: 'all 0.3s ease',
-        cursor: canAfford ? 'pointer' : 'not-allowed',
-        opacity: !isWaveValid ? 0.5 : isMaxed ? 0.7 : 1,
-        boxShadow: canAfford ? `0 8px 24px ${color}40` : 'none',
-        transform: canAfford ? 'translateY(-2px)' : 'none',
+        transform: canAfford && !isMaxedPackage ? 'scale(1.02)' : 'scale(1)',
+        opacity: !isWaveValid ? 0.5 : isMaxedPackage ? 0.7 : 1,
       }}
-      onClick={canAfford ? handlePurchase : undefined}
     >
       {isElite && (
         <div style={{
@@ -124,7 +122,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         borderRadius: 12,
         border: '2px solid #fff',
       }}>
-        Wave {waveRequirement.min}{waveRequirement.max ? `-${waveRequirement.max}` : '+'}
+        Dalga {waveRequirement.min}{waveRequirement.max ? `-${waveRequirement.max}` : '+'}
       </div>
 
       {(diceResult && diceResult >= 4) && (
@@ -145,42 +143,139 @@ export const PackageCard: React.FC<PackageCardProps> = ({
         </div>
       )}
 
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 12,
-        borderBottom: `2px solid ${color}30`,
-        paddingBottom: 12,
-        marginTop: 12
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 12
       }}>
-        <div style={{ fontSize: 32 }}>{icon}</div>
-        <div>
-          <div style={{ 
-            fontSize: 18, 
-            fontWeight: 'bold', 
-            color: color,
-            textShadow: `0 0 10px ${color}50`
+        <div style={{ flex: 1 }}>
+          <h4 style={{
+            color: '#fff',
+            fontSize: 16,
+            fontWeight: 'bold',
+            margin: '0 0 8px 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
           }}>
-            {name}
+            {icon} {name}
+          </h4>
+          <p style={{
+            color: '#d1d5db',
+            fontSize: 13,
+            lineHeight: 1.4,
+            margin: '0 0 8px 0'
+          }}>
+            {description}
+          </p>
+        </div>
+        
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 4
+        }}>
+          <div style={{
+            background: !isWaveValid ? '#666' : '#4ade80',
+            color: '#000',
+            padding: '2px 6px',
+            borderRadius: 4,
+            fontSize: 10,
+            fontWeight: 'bold'
+          }}>
+            {UI_TEXTS.WAVE.RANGE(waveRequirement.min, waveRequirement.max || currentWave)}
           </div>
-          <div style={{ 
-            fontSize: 12, 
-            color: isMaxed ? '#4ade80' : '#ccc',
-            opacity: 0.9,
-            fontWeight: isMaxed ? 'bold' : 'normal'
+          <div style={{
+            fontSize: 12,
+            fontWeight: 'bold',
+            color: isMaxedPackage ? '#4ade80' : '#fbbf24'
           }}>
-            {getUnifiedStatusDisplay(currentPurchases, purchaseLimit, isMaxed)}
+            {purchaseCount}/{maxAllowed}
           </div>
         </div>
       </div>
 
-      <div style={{ 
-        fontSize: 13, 
-        color: '#ddd', 
-        lineHeight: 1.4,
-        flex: 1
+      {diceUsed && discount > 0 && !isMaxedPackage && (
+        <div style={{
+          background: 'rgba(74, 222, 128, 0.2)',
+          border: '1px solid #4ade80',
+          borderRadius: 6,
+          padding: '6px 10px',
+          marginBottom: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }}>
+          <span style={{ fontSize: 12, color: '#4ade80' }}>
+            🎲 İndirim: %{Math.round(discount * 100)} • Zar: {diceResult}
+          </span>
+        </div>
+      )}
+
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
-        {description}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8
+        }}>
+          {!isMaxedPackage && (
+            <>
+              <span style={{
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: canAfford ? '#fff' : !isWaveValid ? '#666' : '#ef4444'
+              }}>
+                {formatCurrency(finalCost)} 💰
+              </span>
+              {diceUsed && discount > 0 && (
+                <span style={{
+                  fontSize: 12,
+                  color: '#888',
+                  textDecoration: 'line-through'
+                }}>
+                  {formatCurrency(baseCost)} 💰
+                </span>
+              )}
+            </>
+          )}
+        </div>
+
+        <button
+          onClick={handlePurchase}
+          disabled={!canAfford || isMaxedPackage}
+          style={{
+            background: isMaxedPackage 
+              ? '#4ade80' 
+              : canAfford 
+                ? color 
+                : !isWaveValid 
+                  ? '#666' 
+                  : '#ef4444',
+            color: canAfford ? '#fff' : !isWaveValid ? '#666' : '#666',
+            border: 'none',
+            borderRadius: 6,
+            padding: '8px 16px',
+            fontSize: 12,
+            fontWeight: 'bold',
+            cursor: canAfford && !isMaxedPackage ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s',
+            opacity: canAfford && !isMaxedPackage ? 1 : 0.8
+          }}
+          aria-label={isMaxedPackage 
+            ? UI_TEXTS.ARIA_LABELS.MAX_LEVEL(name)
+            : !isWaveValid
+              ? UI_TEXTS.ARIA_LABELS.LOCKED(`Dalga ${waveRequirement.min} gerekli`)
+              : UI_TEXTS.ARIA_LABELS.PURCHASE_BUTTON(name, finalCost)
+          }
+        >
+          {isMaxedPackage ? UI_TEXTS.BUTTONS.MAXED : getUnifiedButtonText(isMaxedPackage, canAfford, !isWaveValid, 'package')}
+        </button>
       </div>
 
       <div style={{
@@ -204,56 +299,6 @@ export const PackageCard: React.FC<PackageCardProps> = ({
             <span style={{ color: '#4ade80' }}>✓</span> {benefit}
           </div>
         ))}
-      </div>
-
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        borderTop: `2px solid ${color}30`,
-        paddingTop: 12
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          gap: 4
-        }}>
-          {cost !== finalCost && (
-            <div style={{ 
-              fontSize: 12, 
-              color: '#999', 
-              textDecoration: 'line-through'
-            }}>
-              {formatCurrency(cost)} 💰
-            </div>
-          )}
-          <div style={{ 
-            fontSize: 16, 
-            fontWeight: 'bold',
-            color: isMaxed ? '#4ade80' : getAffordabilityColor(finalCost, gold)
-          }}>
-            {isMaxed ? '✅ TAMAMLANDI' : `${formatCurrency(finalCost)} 💰`}
-          </div>
-        </div>
-        
-        {!isMaxed && (
-          <div style={{
-            padding: '8px 16px',
-            borderRadius: 10,
-            background: canAfford 
-              ? `linear-gradient(135deg, ${color}, ${color}cc)` 
-              : !isWaveValid 
-                ? 'rgba(255,255,255,0.05)' 
-                : 'rgba(255,255,255,0.1)',
-            color: canAfford ? '#fff' : !isWaveValid ? '#666' : '#666',
-            fontSize: 14,
-            fontWeight: 'bold',
-            border: `2px solid ${canAfford ? color : '#666'}`,
-            textShadow: canAfford ? '0 1px 2px rgba(0,0,0,0.5)' : 'none',
-          }}>
-            {getUnifiedButtonText(isMaxed, canAfford, !isWaveValid, 'package')}
-          </div>
-        )}
       </div>
     </div>
   );

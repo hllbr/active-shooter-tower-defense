@@ -41,7 +41,7 @@ export const TowerMenu: React.FC<TowerMenuProps> = ({
               onClose(); 
             }}
           >
-            Build Extractor
+            Çıkarıcı Kur
           </div>
         )}
         <div 
@@ -55,7 +55,7 @@ export const TowerMenu: React.FC<TowerMenuProps> = ({
             onClose(); 
           }}
         >
-          Build Wall
+          Duvar Kur
         </div>
         <div 
           style={{ 
@@ -68,7 +68,7 @@ export const TowerMenu: React.FC<TowerMenuProps> = ({
             onClose(); 
           }}
         >
-          Dig Trench
+          Siper Kaz
         </div>
         <div 
           style={{ 
@@ -80,7 +80,7 @@ export const TowerMenu: React.FC<TowerMenuProps> = ({
             onClose(); 
           }}
         >
-          Buff Tile
+          Güçlendirici Kur
         </div>
       </div>
     </foreignObject>

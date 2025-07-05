@@ -34,6 +34,14 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ upgrade, gold, diceRes
 
   return (
     <div
+      role="button"
+      aria-label={`${name} yükseltmesi. Seviye: ${currentLevel}/${maxLevel}. Maliyet: ${finalCost} altın. ${isMaxed ? 'Maksimum seviye.' : canAfford ? 'Yükseltme yapılabilir.' : 'Yetersiz altın.'}`}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && canAfford) {
+          handleUpgrade();
+        }
+      }}
       style={{
         background: 'linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6))',
         border: `3px solid ${isMaxed ? '#4ade80' : canAfford ? color : 'rgba(255,255,255,0.2)'}`,

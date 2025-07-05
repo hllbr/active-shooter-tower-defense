@@ -1,37 +1,49 @@
 import React from 'react';
-import { GAME_CONSTANTS } from '../../../utils/constants';
-import { formatProfessional } from '../../../utils/formatters';
+import { UI_TEXTS, formatCurrency } from '../../../utils/constants';
 
 interface UnlockButtonProps {
-  slot: { x: number; y: number };
   slotIdx: number;
   unlockCost: number;
   canUnlock: boolean;
-  onUnlock: (slotIdx: number) => void;
+  onClick: () => void;
 }
 
-export const UnlockButton: React.FC<UnlockButtonProps> = ({
-  slot,
-  slotIdx,
-  unlockCost,
-  canUnlock,
-  onUnlock
-}) => {
+export const UnlockButton: React.FC<UnlockButtonProps> = ({ unlockCost, canUnlock, onClick }) => {
   return (
-    <>
-      {/* Unlock button text */}
-      <text
-        x={slot.x}
-        y={slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 25}
-        fill={canUnlock ? "#FFD700" : "#888888"}
-        fontSize={12}
-        fontWeight="bold"
-        textAnchor="middle"
-        style={{ cursor: canUnlock ? 'pointer' : 'not-allowed' }}
-        onClick={() => canUnlock && onUnlock(slotIdx)}
-      >
-        {canUnlock ? `Aç (${formatProfessional(unlockCost, 'currency')}💰)` : `Yetersiz Altın (${formatProfessional(unlockCost, 'currency')}💰)`}
-      </text>
-    </>
+    <button
+      onClick={onClick}
+      disabled={!canUnlock}
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: canUnlock 
+          ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' 
+          : 'linear-gradient(135deg, #6b7280, #4b5563)',
+        color: '#fff',
+        border: 'none',
+        borderRadius: 8,
+        padding: '8px 12px',
+        fontSize: 12,
+        fontWeight: 'bold',
+        cursor: canUnlock ? 'pointer' : 'not-allowed',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+        transition: 'all 0.2s',
+        zIndex: 10,
+        minWidth: 80,
+        textAlign: 'center',
+        opacity: canUnlock ? 1 : 0.7
+      }}
+      aria-label={canUnlock 
+        ? UI_TEXTS.ARIA_LABELS.PURCHASE_BUTTON('Slot', unlockCost)
+        : UI_TEXTS.ARIA_LABELS.LOCKED(`${formatCurrency(unlockCost)} gerekli`)
+      }
+    >
+      {canUnlock 
+        ? `${UI_TEXTS.BUTTONS.UNLOCK} (${formatCurrency(unlockCost)})` 
+        : `${UI_TEXTS.BUTTONS.INSUFFICIENT} (${formatCurrency(unlockCost)})`
+      }
+    </button>
   );
 }; 

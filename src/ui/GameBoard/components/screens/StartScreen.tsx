@@ -15,6 +15,14 @@ export const StartScreen: React.FC = () => {
   return (
     <div
       onClick={handleStartGame}
+      role="button"
+      aria-label="Oyunu başlat"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleStartGame();
+        }
+      }}
       style={{
         position: 'absolute',
         top: 0,
@@ -46,7 +54,7 @@ export const StartScreen: React.FC = () => {
         padding: '24px 48px', 
         borderRadius: 16 
       }}>
-        Tap to Start
+        Başlamak İçin Tıkla
       </span>
     </div>
   );

@@ -127,6 +127,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   return (
     <button
       onClick={handleContinueClick}
+      aria-label={isProcessing ? 'İşleniyor, lütfen bekleyin' : 'Savaşa devam et'}
       style={getContinueButtonStyle(hovered)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

@@ -1,111 +1,161 @@
 import React from 'react';
-import { useGameStore } from '../../../models/store';
 import type { Store } from '../../../models/store';
-import { GAME_CONSTANTS } from '../../../utils/constants';
-import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, formatSmartPercentage, formatProfessional } from '../../../utils/formatters';
-import { playSound } from '../../../utils/sound/soundEffects';
+import { useGameStore } from '../../../models/store';
+import { GAME_CONSTANTS } from '../../../utils/constants/gameConstants';
+import { formatCurrency } from '../../../utils/formatters';
+import { UI_TEXTS, getUnifiedButtonText, getAffordabilityColor } from '../../../utils/constants';
 
 export const WallUpgrade: React.FC = () => {
   const gold = useGameStore((s: Store) => s.gold);
   const wallLevel = useGameStore((s: Store) => s.wallLevel);
   const defenseUpgradeLimits = useGameStore((s: Store) => s.defenseUpgradeLimits);
   const upgradeWall = useGameStore((s: Store) => s.upgradeWall);
+  const discountMultiplier = useGameStore((s: Store) => s.discountMultiplier);
+  const diceUsed = useGameStore((s: Store) => s.diceUsed);
 
   const maxWallLevel = GAME_CONSTANTS.WALL_SYSTEM.WALL_LEVELS.length;
-  
   const isMaxWallLevel = wallLevel >= maxWallLevel;
   const isMaxWallPurchases = defenseUpgradeLimits.walls.purchaseCount >= GAME_CONSTANTS.DEFENSE_UPGRADE_LIMITS.WALLS.MAX_PURCHASES;
   const isWallUpgradeBlocked = isMaxWallLevel || isMaxWallPurchases;
-  
+
   const wallUpgrade = isWallUpgradeBlocked ? null : GAME_CONSTANTS.WALL_SYSTEM.WALL_LEVELS[wallLevel];
-  const canAffordWall = wallUpgrade && gold >= wallUpgrade.cost;
+  const baseCost = wallUpgrade?.cost || 0;
+  const discountedCost = diceUsed && discountMultiplier > 0 
+    ? Math.floor(baseCost * (1 - discountMultiplier))
+    : baseCost;
+  const finalCost = Math.max(1, discountedCost);
+  const canAffordWall = !!(wallUpgrade && gold >= finalCost);
 
   const handleWallUpgrade = () => {
     if (canAffordWall && !isWallUpgradeBlocked) {
       upgradeWall();
-      playSound('upgrade-purchase');
     }
   };
 
   return (
     <div style={{
-      background: 'rgba(0, 150, 255, 0.1)',
-      padding: '20px',
-      borderRadius: '12px',
-      border: '2px solid #0096ff',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '20px',
+      background: 'linear-gradient(145deg, #1e293b 0%, #334155 100%)',
+      borderRadius: 12,
+      padding: 20,
+      marginBottom: 16,
+      border: '2px solid #64748b',
+      boxShadow: '0 8px 16px rgba(0,0,0,0.3)'
     }}>
-      <div>
-        <h4 style={{ margin: 0, color: '#0096ff', fontSize: '18px' }}>Global Savunma Sistemi</h4>
-        <p style={{ margin: '8px 0 0', color: '#ccc', fontSize: '14px' }}>
-          {isWallUpgradeBlocked
-            ? isMaxWallPurchases
-              ? `Sur limiti doldu! (${defenseUpgradeLimits.walls.purchaseCount}/${GAME_CONSTANTS.DEFENSE_UPGRADE_LIMITS.WALLS.MAX_PURCHASES})`
-              : 'Sur sistemi tamamen geliştirildi!'
-            : `${wallUpgrade?.name} - Güç: ${wallUpgrade?.strength}, 
-               Yenilenme: ${formatProfessional((wallUpgrade?.regenTime || 0)/1000, 'stats')}s, 
-               Ateş Hızı: ${formatSmartPercentage(((wallUpgrade?.fireRateBonus || 1) - 1), 'effectiveness')} artış`
-          }
-        </p>
-        <p style={{ margin: '4px 0 0', color: '#ff6b6b', fontSize: '12px' }}>
-          ⚠️ Sur yokken düşmanlar yavaşlar ve zaman donar! Surlar otomatik yenilenir.
-        </p>
-        {/* Limit information display */}
-        <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>
-          Kalan hak: {GAME_CONSTANTS.DEFENSE_UPGRADE_LIMITS.WALLS.MAX_PURCHASES - defenseUpgradeLimits.walls.purchaseCount}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12
+      }}>
+        <h3 style={{
+          color: '#64748b',
+          fontSize: 20,
+          fontWeight: 'bold',
+          margin: 0,
+          textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+        }}>
+          🛡️ {UI_TEXTS.UPGRADES.WALL}
+        </h3>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8
+        }}>
+          <span style={{
+            background: isWallUpgradeBlocked ? '#4ade80' : '#1f2937',
+            color: isWallUpgradeBlocked ? '#000' : '#fff',
+            padding: '4px 8px',
+            borderRadius: 6,
+            fontSize: 12,
+            fontWeight: 'bold'
+          }}>
+            {isWallUpgradeBlocked ? UI_TEXTS.STATUS.COMPLETED : `Seviye ${wallLevel + 1}`}
+          </span>
         </div>
       </div>
-      
+
+      <p style={{
+        color: '#d1d5db',
+        fontSize: 14,
+        lineHeight: 1.5,
+        margin: '0 0 16px 0'
+      }}>
+        {isWallUpgradeBlocked
+          ? isMaxWallPurchases
+            ? `Duvar limiti doldu! (${defenseUpgradeLimits.walls.purchaseCount}/${GAME_CONSTANTS.DEFENSE_UPGRADE_LIMITS.WALLS.MAX_PURCHASES})`
+            : 'Duvar sistemi tamamen geliştirildi!'
+          : `Seviye ${wallLevel + 1} - ${wallUpgrade?.name} - Güç: ${wallUpgrade?.strength}, Yenilenme: ${((wallUpgrade?.regenTime || 0)/1000)}s`
+        }
+      </p>
+
       {!isWallUpgradeBlocked && (
         <div style={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '8px',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
-          <div style={{ 
-            fontSize: '16px', 
-            fontWeight: 'bold',
-            color: getAffordabilityColor(wallUpgrade?.cost || 0, gold)
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
           }}>
-            {formatCurrency(wallUpgrade?.cost || 0)} 💰
+            <span style={{
+              fontSize: 18,
+              fontWeight: 'bold',
+              color: getAffordabilityColor(finalCost, gold)
+            }}>
+              {formatCurrency(finalCost)} 💰
+            </span>
+            {diceUsed && discountMultiplier > 0 && (
+              <span style={{
+                fontSize: 12,
+                color: '#4ade80',
+                textDecoration: 'line-through'
+              }}>
+                {formatCurrency(baseCost)} 💰
+              </span>
+            )}
           </div>
-          <button 
+
+          <button
             onClick={handleWallUpgrade}
             disabled={!canAffordWall}
             style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
+              background: canAffordWall ? '#16a34a' : '#ef4444',
+              color: '#fff',
               border: 'none',
-              background: canAffordWall 
-                ? 'linear-gradient(135deg, #0096ff, #47a3ff)' 
-                : 'rgba(255,255,255,0.1)',
-              color: canAffordWall ? '#fff' : '#666',
-              fontSize: '14px',
+              borderRadius: 8,
+              padding: '10px 20px',
+              fontSize: 14,
               fontWeight: 'bold',
               cursor: canAffordWall ? 'pointer' : 'not-allowed',
-              textShadow: canAffordWall ? '0 1px 2px rgba(0,0,0,0.5)' : 'none',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+              opacity: canAffordWall ? 1 : 0.7
             }}
           >
-            {canAffordWall ? '🛡️ Yükselt' : '❌ Yetersiz'}
+            {getUnifiedButtonText(false, canAffordWall, false, 'upgrade')}
           </button>
         </div>
       )}
       
       {isWallUpgradeBlocked && (
         <div style={{
-          padding: '8px 16px',
-          borderRadius: '8px',
-          background: 'rgba(255,255,255,0.05)',
-          color: '#4ade80',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          border: '2px solid #4ade80',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
         }}>
-          {getUnifiedButtonText(true, false, false, 'upgrade')}
+          <div style={{
+            padding: '10px 20px',
+            borderRadius: 8,
+            background: '#4ade80',
+            color: '#000',
+            fontSize: 14,
+            fontWeight: 'bold',
+            border: '2px solid #4ade80'
+          }}>
+            {UI_TEXTS.BUTTONS.MAXED}
+          </div>
         </div>
       )}
     </div>

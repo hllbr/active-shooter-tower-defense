@@ -107,7 +107,7 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterO
             📊 Oyun İstatistikleri
           </div>
 
-          {/* Wave Progress Section */}
+          {/* Dalga Progress Section */}
           <div style={{
             background: 'rgba(0, 207, 255, 0.1)',
             border: '1px solid rgba(0, 207, 255, 0.3)',
@@ -123,7 +123,7 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterO
               marginBottom: 8,
               textShadow: '0 0 10px rgba(0, 207, 255, 0.5)'
             }}>
-              🌊 Wave {currentWave}/100
+              🌊 Dalga {currentWave}/100
             </div>
             
             <div style={{
@@ -204,8 +204,8 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterO
               borderRadius: 6,
               border: '1px solid rgba(255, 215, 0, 0.2)'
             }}>
-              <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>💰 Altın</span>
-              <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>{gold.toLocaleString()}</span>
+              <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>Altın</span>
+              <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>{gold.toLocaleString()} 💰</span>
             </div>
 
             {/* Tower Info */}

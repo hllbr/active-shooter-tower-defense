@@ -23,7 +23,7 @@ export const PreparationScreen: React.FC = () => {
       color: '#fff',
     }}>
       <div style={{ marginBottom: 4 }}>
-        Next wave in {Math.ceil(prepRemaining / 1000)}s{isPaused ? ' (paused)' : ''}
+                  Sonraki dalga {Math.ceil(prepRemaining / 1000)}s{isPaused ? ' (duraklatıldı)' : ''}
       </div>
       <div style={{ width: 200, height: 8, background: '#333', borderRadius: 4, overflow: 'hidden' }}>
         <div style={{
@@ -35,6 +35,7 @@ export const PreparationScreen: React.FC = () => {
       </div>
       <button 
         onClick={() => speedUpPreparation(GAME_CONSTANTS.PREP_TIME)} 
+        aria-label="Dalga başlat"
         style={{ 
           marginTop: 8, 
           padding: '4px 12px', 
@@ -47,7 +48,7 @@ export const PreparationScreen: React.FC = () => {
           fontWeight: 'bold'
         }}
       >
-        Start Wave
+                  Dalgayı Başlat
       </button>
     </div>
   );
