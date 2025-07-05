@@ -9,6 +9,8 @@ import { waveManager } from '../../game-systems/WaveManager';
 import { upgradeEffectsManager } from '../../game-systems/UpgradeEffects';
 import { initialState } from './initialState';
 import { securityManager } from '../../security/SecurityManager';
+import { buildTowerAction } from './actions/buildTower';
+import { unlockSlotAction } from './actions/unlockSlot';
 
 const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   let position: Position;
@@ -170,164 +172,11 @@ export type Store = GameState & {
 export const useGameStore = create<Store>((set, get): Store => ({
   ...initialState,
 
-  buildTower: (slotIdx, free = false, towerType: 'attack' | 'economy' = 'attack', towerClass?: string) => set((state) => {
-    const slot = state.towerSlots[slotIdx];
-    if (!slot || slot.tower) return {};
+  buildTower: (slotIdx, free = false, towerType: 'attack' | 'economy' = 'attack', towerClass?: string) =>
+    set(state => buildTowerAction(state, slotIdx, free, towerType, towerClass)),
 
-    const cost = free ? 0 : GAME_CONSTANTS.TOWER_COST;
-    if (!free && state.gold < cost) return {};
-
-    const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[0]; // Level 1
-    
-    // ✅ NEW: Handle specialized tower creation
-    let specializedTowerData = null;
-    if (towerClass && GAME_CONSTANTS.SPECIALIZED_TOWERS[towerClass as keyof typeof GAME_CONSTANTS.SPECIALIZED_TOWERS]) {
-      specializedTowerData = GAME_CONSTANTS.SPECIALIZED_TOWERS[towerClass as keyof typeof GAME_CONSTANTS.SPECIALIZED_TOWERS];
-      
-      // Check if player can afford specialized tower
-      if (!free && state.gold < specializedTowerData.cost) return {};
-    }
-
-    const finalCost = free ? 0 : (specializedTowerData?.cost || cost);
-
-    // Level 1
-    const newTower: Tower = {
-      id: `${Date.now()}-${Math.random()}`,
-      position: { x: slot.x, y: slot.y },
-      size: GAME_CONSTANTS.TOWER_SIZE,
-      isActive: true,
-      level: 1,
-      range: towerType === 'economy' ? 0 : (specializedTowerData?.baseRange || GAME_CONSTANTS.TOWER_RANGE),
-      damage: towerType === 'economy' ? 0 : (specializedTowerData?.baseDamage || upgrade.damage),
-      fireRate: towerType === 'economy' ? 0 : (specializedTowerData?.baseFireRate || upgrade.fireRate),
-      lastFired: 0,
-      health: upgrade.health,
-      maxHealth: upgrade.health,
-      wallStrength: upgradeEffectsManager.applyShieldUpgrades(state.globalWallStrength),
-      specialAbility: upgrade.special,
-      healthRegenRate: 0,
-      lastHealthRegen: 0,
-      specialCooldown: 5000,
-      lastSpecialUse: 0,
-      multiShotCount: 3,
-      chainLightningJumps: 5,
-      freezeDuration: 2000,
-      burnDuration: 3000,
-      acidStack: 0,
-      quantumState: false,
-      nanoSwarmCount: 5,
-      psiRange: 150,
-      timeWarpSlow: 0.3,
-      spaceGravity: 0.5,
-      legendaryAura: false,
-      divineProtection: false,
-      cosmicEnergy: 100,
-      infinityLoop: false,
-      godModeActive: false,
-      attackSound: towerType === 'economy' ? undefined : GAME_CONSTANTS.TOWER_ATTACK_SOUNDS[0],
-      visual: GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === 1),
-      rangeMultiplier: slot.modifier?.type === 'buff'
-        ? GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER
-        : 1,
-      towerType,
-      
-      // ✅ NEW: Add specialized tower properties with safe defaults
-      towerCategory: specializedTowerData?.category as 'assault' | 'area_control' | 'support' | 'defensive' | 'specialist' | undefined,
-      towerClass: towerClass as 'sniper' | 'gatling' | 'laser' | 'mortar' | 'flamethrower' | 'radar' | 'supply_depot' | 'shield_generator' | 'repair_station' | 'emp' | 'stealth_detector' | 'air_defense' | undefined,
-      criticalChance: specializedTowerData && 'criticalChance' in specializedTowerData ? specializedTowerData.criticalChance : 0,
-      criticalDamage: specializedTowerData && 'criticalDamage' in specializedTowerData ? specializedTowerData.criticalDamage : 1,
-      armorPenetration: specializedTowerData && 'armorPenetration' in specializedTowerData ? specializedTowerData.armorPenetration : 0,
-      areaOfEffect: specializedTowerData && 'areaOfEffect' in specializedTowerData ? specializedTowerData.areaOfEffect : 0,
-      projectilePenetration: specializedTowerData && 'projectilePenetration' in specializedTowerData ? specializedTowerData.projectilePenetration : 0,
-      spinUpLevel: specializedTowerData && 'spinUpLevel' in specializedTowerData ? specializedTowerData.spinUpLevel : 0,
-      maxSpinUpLevel: specializedTowerData && 'maxSpinUpLevel' in specializedTowerData ? specializedTowerData.maxSpinUpLevel : 0,
-      beamFocusMultiplier: specializedTowerData && 'beamFocusMultiplier' in specializedTowerData ? specializedTowerData.beamFocusMultiplier : 1,
-      beamLockTime: specializedTowerData && 'beamLockTime' in specializedTowerData ? specializedTowerData.beamLockTime : 0,
-      supportRadius: specializedTowerData && 'supportRadius' in specializedTowerData ? specializedTowerData.supportRadius : 0,
-      supportIntensity: specializedTowerData && 'supportIntensity' in specializedTowerData ? specializedTowerData.supportIntensity : 1,
-      shieldStrength: specializedTowerData && 'shieldStrength' in specializedTowerData ? specializedTowerData.shieldStrength : 0,
-      shieldRegenRate: specializedTowerData && 'shieldRegenRate' in specializedTowerData ? specializedTowerData.shieldRegenRate : 0,
-      repairRate: specializedTowerData && 'repairRate' in specializedTowerData ? specializedTowerData.repairRate : 0,
-      empDuration: specializedTowerData && 'empDuration' in specializedTowerData ? specializedTowerData.empDuration : 0,
-      stealthDetectionRange: specializedTowerData && 'stealthDetectionRange' in specializedTowerData ? specializedTowerData.stealthDetectionRange : 0,
-      manualTargeting: false,
-      upgradePath: '',
-      synergyBonuses: { damage: 0, range: 0, fireRate: 0 }
-    };
-    const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
-    state.towerUpgradeListeners.forEach(fn => fn(newTower, 0, 1));
-    
-    // ✅ SOUND FIX: Play tower build sound effect
-    setTimeout(() => {
-      import('../../utils/sound').then(({ playContextualSound }) => {
-        playContextualSound('tower-build'); // Kule inşa sesi
-      });
-    }, 50);
-
-    return {
-      towerSlots: newSlots,
-      towers: [...state.towers, newTower],
-      gold: state.gold - finalCost,
-      totalGoldSpent: state.totalGoldSpent + finalCost,
-    };
-  }),
-
-  unlockSlot: (slotIdx: number) => set((state) => {
-    const slot = state.towerSlots[slotIdx];
-    
-    if (slot.unlocked) {
-      console.log(`❌ Slot ${slotIdx} already unlocked`);
-      return {}; // Already unlocked
-    }
-    
-    const cost = GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] ?? 2400;
-    if (state.gold < cost) {
-      console.log(`❌ Not enough gold: need ${cost}, have ${state.gold}`);
-      return {}; // Not enough gold
-    }
-    
-    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower; // Same as building
-    if (!energyManager.consume(energyCost, 'unlockSlot')) {
-      console.log(`❌ Not enough energy: need ${energyCost}`);
-      return {};
-    }
-    
-    const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = { ...slot, unlocked: true };
-    
-    console.log(`✅ Slot ${slotIdx} unlocked! Cost: ${cost}💰, New tower limit: ${state.maxTowers + 1}`);
-    
-    // ✅ CRITICAL FIX: Unlock animasyon süresi kısaltıldı - oyun akıcılığı için
-    setTimeout(() => {
-      // Play unlock sound effect
-      import('../../utils/sound').then(({ playContextualSound }) => {
-        playContextualSound('unlock'); // Kilit açma sesi
-      });
-      
-      // Start unlock animation sequence
-      const { startSlotUnlockAnimation, finishSlotUnlockAnimation } = useGameStore.getState();
-      startSlotUnlockAnimation(slotIdx);
-      
-      // CRITICAL FIX: Animasyon süresi 800ms → 200ms
-      setTimeout(() => {
-        finishSlotUnlockAnimation(slotIdx);
-        
-        // CRITICAL FIX: Celebration süresi 3000ms → 500ms
-        setTimeout(() => {
-          const { clearRecentlyUnlockedSlots } = useGameStore.getState();
-          clearRecentlyUnlockedSlots();
-        }, 500); // Kısa celebration - oyun akıcılığı için
-      }, 200); // Hızlı animasyon
-    }, 25); // Daha hızlı başlama
-    
-    return {
-      towerSlots: newSlots,
-      gold: state.gold - cost,
-      maxTowers: state.maxTowers + 1, // ← CRITICAL FIX: Increase tower limit!
-      totalGoldSpent: state.totalGoldSpent + cost,
-    };
-  }),
+  unlockSlot: (slotIdx: number) =>
+    set(state => unlockSlotAction(state, slotIdx)),
 
   addGold: (amount: number) => {
     // Security validation
