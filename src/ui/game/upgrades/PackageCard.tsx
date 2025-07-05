@@ -1,7 +1,7 @@
 import React from 'react';
-import { formatCurrency, getAffordabilityColor, getUnifiedButtonText, getUnifiedStatusDisplay } from '../../../utils/formatters';
+import { formatCurrency, getUnifiedButtonText } from '../../../utils/formatters';
 import { playSound } from '../../../utils/sound/soundEffects';
-import { GAME_CONSTANTS } from '../../../utils/constants/gameConstants';
+
 import { UI_TEXTS } from '../../../utils/constants';
 
 interface PackageCardProps {
@@ -37,8 +37,8 @@ export const PackageCard: React.FC<PackageCardProps> = ({
   waveRequirement,
   maxAllowed,
   purchaseCount,
-  canPurchase,
-  isMaxed,
+  canPurchase: _canPurchase,
+  isMaxed: _isMaxed,
   currentWave,
   gold,
   diceResult,
@@ -55,7 +55,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({
 }) => {
   const packageInfo = getPackageInfo(packageId, purchaseLimit);
   const isMaxedPackage = packageInfo.isMaxed;
-  const currentPurchases = packageInfo.purchaseCount;
+  const _currentPurchases = packageInfo.purchaseCount;
   
   const isWaveValid = currentWave >= waveRequirement.min && 
                     (!waveRequirement.max || currentWave <= waveRequirement.max);
