@@ -1,5 +1,20 @@
 import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Enemy, Position, Tower } from '../../models/gameTypes';
+import {
+  filterCandidates,
+  selectNearest,
+  selectLowestHP,
+  selectHighestHP,
+  selectFastest,
+  selectSlowest,
+  selectHighestValue,
+  selectStrongest,
+  selectFirst,
+  selectLast,
+  selectByThreat,
+  calculateDistance,
+  getDirection as utilGetDirection
+} from './helpers/selection';
 
 /**
  * Advanced targeting modes for strategic gameplay
@@ -69,7 +84,7 @@ export class EliteTargetingStrategy implements ITargetingStrategy {
     };
 
     // Filter enemies by range and type restrictions
-    const candidates = this.filterCandidates(enemies, tower, config);
+    const candidates = filterCandidates(enemies, tower, config);
     
     if (candidates.length === 0) return null;
     if (candidates.length === 1) return candidates[0];
@@ -77,37 +92,37 @@ export class EliteTargetingStrategy implements ITargetingStrategy {
     // Apply targeting mode strategy
     switch (config.mode) {
       case TargetingMode.NEAREST:
-        return this.selectNearest(candidates, tower);
+        return selectNearest(candidates, tower);
       
       case TargetingMode.LOWEST_HP:
-        return this.selectLowestHP(candidates);
+        return selectLowestHP(candidates);
       
       case TargetingMode.HIGHEST_HP:
-        return this.selectHighestHP(candidates);
+        return selectHighestHP(candidates);
       
       case TargetingMode.FASTEST:
-        return this.selectFastest(candidates);
+        return selectFastest(candidates);
       
       case TargetingMode.SLOWEST:
-        return this.selectSlowest(candidates);
+        return selectSlowest(candidates);
       
       case TargetingMode.HIGHEST_VALUE:
-        return this.selectHighestValue(candidates);
+        return selectHighestValue(candidates);
       
       case TargetingMode.STRONGEST:
-        return this.selectStrongest(candidates);
+        return selectStrongest(candidates);
       
       case TargetingMode.FIRST:
-        return this.selectFirst(candidates, tower);
+        return selectFirst(candidates);
       
       case TargetingMode.LAST:
-        return this.selectLast(candidates, tower);
+        return selectLast(candidates);
       
       case TargetingMode.THREAT_ASSESSMENT:
-        return this.selectByThreat(candidates, tower);
+        return selectByThreat(candidates, tower, this.assessThreat.bind(this));
       
       default:
-        return this.selectNearest(candidates, tower);
+        return selectNearest(candidates, tower);
     }
   }
 
@@ -115,7 +130,7 @@ export class EliteTargetingStrategy implements ITargetingStrategy {
    * Comprehensive threat assessment algorithm
    */
   assessThreat(enemy: Enemy, tower: Tower): ThreatAssessment {
-    const distance = this.calculateDistance(enemy.position, tower.position);
+    const distance = calculateDistance(enemy.position, tower.position);
     
     // Calculate time to reach tower (accounting for movement)
     const timeToReach = enemy.speed > 0 ? (distance / enemy.speed) * 1000 : Infinity;
@@ -182,7 +197,7 @@ export class EliteTargetingStrategy implements ITargetingStrategy {
     const nearestSlot = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     
     // Calculate movement direction
-    const direction = this.getDirection(enemy.position, nearestSlot);
+    const direction = utilGetDirection(enemy.position, nearestSlot);
     
     // Predict future position
     const distance = enemy.speed * (timeOffset / 1000);
@@ -195,126 +210,6 @@ export class EliteTargetingStrategy implements ITargetingStrategy {
 
   // =================== PRIVATE TARGETING METHODS ===================
 
-  private filterCandidates(enemies: Enemy[], tower: Tower, config: TargetingOptions): Enemy[] {
-    return enemies.filter(enemy => {
-      // Range check
-      const distance = this.calculateDistance(enemy.position, tower.position);
-      if (distance > config.range) return false;
-      
-      // Type restrictions
-      if (config.priorityTypes && enemy.type && !config.priorityTypes.includes(enemy.type as keyof typeof GAME_CONSTANTS.ENEMY_TYPES)) return false;
-      if (config.excludeTypes && enemy.type && config.excludeTypes.includes(enemy.type as keyof typeof GAME_CONSTANTS.ENEMY_TYPES)) return false;
-      
-      // Health thresholds
-      if (config.minHealthThreshold && enemy.health < config.minHealthThreshold) return false;
-      if (config.maxHealthThreshold && enemy.health > config.maxHealthThreshold) return false;
-      
-      // Special targeting for ghost enemies
-      if (enemy.behaviorTag === 'ghost' && tower.specialAbility !== 'psi') {
-        return false; // Only psi towers can target ghosts
-      }
-      
-      return enemy.isActive;
-    });
-  }
-
-  private selectNearest(enemies: Enemy[], tower: Tower): Enemy | null {
-    let minDistance = Infinity;
-    let nearest: Enemy | null = null;
-    
-    enemies.forEach(enemy => {
-      const distance = this.calculateDistance(enemy.position, tower.position);
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearest = enemy;
-      }
-    });
-    
-    return nearest;
-  }
-
-  private selectLowestHP(enemies: Enemy[]): Enemy | null {
-    return enemies.reduce((lowest, enemy) => 
-      !lowest || enemy.health < lowest.health ? enemy : lowest, 
-      null as Enemy | null
-    );
-  }
-
-  private selectHighestHP(enemies: Enemy[]): Enemy | null {
-    return enemies.reduce((highest, enemy) => 
-      !highest || enemy.health > highest.health ? enemy : highest, 
-      null as Enemy | null
-    );
-  }
-
-  private selectFastest(enemies: Enemy[]): Enemy | null {
-    return enemies.reduce((fastest, enemy) => 
-      !fastest || enemy.speed > fastest.speed ? enemy : fastest, 
-      null as Enemy | null
-    );
-  }
-
-  private selectSlowest(enemies: Enemy[]): Enemy | null {
-    return enemies.reduce((slowest, enemy) => 
-      !slowest || enemy.speed < slowest.speed ? enemy : slowest, 
-      null as Enemy | null
-    );
-  }
-
-  private selectHighestValue(enemies: Enemy[]): Enemy | null {
-    return enemies.reduce((valuable, enemy) => 
-      !valuable || enemy.goldValue > valuable.goldValue ? enemy : valuable, 
-      null as Enemy | null
-    );
-  }
-
-  private selectStrongest(enemies: Enemy[]): Enemy | null {
-    return enemies.reduce((strongest, enemy) => 
-      !strongest || enemy.damage > strongest.damage ? enemy : strongest, 
-      null as Enemy | null
-    );
-  }
-
-  private selectFirst(enemies: Enemy[], _tower: Tower): Enemy | null {
-    // Select enemy that appeared first (oldest ID)
-    return enemies.reduce((first, enemy) => 
-      !first || enemy.id < first.id ? enemy : first, 
-      null as Enemy | null
-    );
-  }
-
-  private selectLast(enemies: Enemy[], _tower: Tower): Enemy | null {
-    // Select enemy that appeared last (newest ID)
-    return enemies.reduce((last, enemy) => 
-      !last || enemy.id > last.id ? enemy : last, 
-      null as Enemy | null
-    );
-  }
-
-  private selectByThreat(enemies: Enemy[], tower: Tower): Enemy | null {
-    if (enemies.length === 0) return null;
-    
-    let highestThreat: ThreatAssessment | null = null;
-    
-    for (const enemy of enemies) {
-      const threat = this.assessThreat(enemy, tower);
-      if (!highestThreat || threat.threatScore > highestThreat.threatScore) {
-        highestThreat = threat;
-      }
-    }
-    
-    return highestThreat ? highestThreat.enemy : null;
-  }
-
-  // =================== UTILITY METHODS ===================
-
-  private calculateDistance(pos1: Position, pos2: Position): number {
-    const dx = pos2.x - pos1.x;
-    const dy = pos2.y - pos1.y;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  private getDirection(from: Position, to: Position): { x: number, y: number } {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -329,10 +224,7 @@ export const eliteTargeting = new EliteTargetingStrategy();
 // =================== PUBLIC UTILITY FUNCTIONS ===================
 
 export function getDirection(from: Position, to: Position) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const len = Math.sqrt(dx * dx + dy * dy) || 1;
-  return { x: dx / len, y: dy / len };
+  return utilGetDirection(from, to);
 }
 
 /**

@@ -31,6 +31,16 @@ const SECURITY_CONFIG = {
   AUDIT_RETENTION_DAYS: 30,
 } as const;
 
+import {
+  sanitizeInput,
+  sanitizeCSSValue,
+  validateComponentImport,
+  generateStateChecksum,
+  sanitizeState,
+  isExpectedStateChange,
+  isExpectedGoldIncrease
+} from './helpers/securityUtils';
+
 // Security Event Types
 export type SecurityEventType = 
   | 'state_manipulation_attempt'
@@ -113,8 +123,8 @@ export class SecurityManager {
         this.logSecurityEvent('state_manipulation_attempt', {
           action,
           reason: 'System locked due to suspicious activity',
-          oldState: this.sanitizeState(oldState),
-          newState: this.sanitizeState(newState)
+          oldState: sanitizeState(oldState),
+          newState: sanitizeState(newState)
         }, 'critical');
         return { valid: false, reason: 'System temporarily locked' };
       }
@@ -135,10 +145,10 @@ export class SecurityManager {
       }
 
       // Generate and verify checksum
-      const newChecksum = this.generateStateChecksum(newState);
+      const newChecksum = generateStateChecksum(newState, SECURITY_CONFIG.CHECKSUM_SALT);
       if (this.lastStateChecksum && newChecksum !== this.lastStateChecksum) {
         // Check if this is an expected change
-        if (!this.isExpectedStateChange(action)) {
+        if (!isExpectedStateChange(action)) {
           this.logSecurityEvent('checksum_mismatch', {
             action,
             expectedChecksum: this.lastStateChecksum,
@@ -155,8 +165,8 @@ export class SecurityManager {
       this.logSecurityEvent('state_manipulation_attempt', {
         action,
         error: error instanceof Error ? error.message : 'Unknown error',
-        oldState: this.sanitizeState(oldState),
-        newState: this.sanitizeState(newState)
+        oldState: sanitizeState(oldState),
+        newState: sanitizeState(newState)
       }, 'critical');
       return { valid: false, reason: 'Security validation error' };
     }
@@ -187,7 +197,7 @@ export class SecurityManager {
 
       // Check for unrealistic gold increases
       const goldIncrease = newGold - oldGold;
-      if (goldIncrease > 1000 && !this.isExpectedGoldIncrease(action)) {
+      if (goldIncrease > 1000 && !isExpectedGoldIncrease(action)) {
         this.logSecurityEvent('suspicious_activity', {
           action,
           goldIncrease,
@@ -221,69 +231,22 @@ export class SecurityManager {
    * Sanitize input to prevent XSS and injection attacks
    */
   public sanitizeInput(input: string): string {
-    if (typeof input !== 'string') {
-      return '';
-    }
-
-    // Remove potentially dangerous characters and patterns
-    return input
-      .replace(/[<>]/g, '') // Remove < and >
-      .replace(/javascript:/gi, '') // Remove javascript: protocol
-      .replace(/on\w+=/gi, '') // Remove event handlers
-      .replace(/data:/gi, '') // Remove data: protocol
-      .replace(/vbscript:/gi, '') // Remove vbscript: protocol
-      .replace(/expression\(/gi, '') // Remove CSS expressions
-      .trim();
+    return sanitizeInput(input);
   }
 
   /**
    * Sanitize CSS values to prevent injection
    */
   public sanitizeCSSValue(value: string): string {
-    if (typeof value !== 'string') {
-      return '';
-    }
-
-    // Only allow safe CSS values
-    const safeCSSPattern = /^[a-zA-Z0-9#\s\-.(),%]+$/;
-    if (!safeCSSPattern.test(value)) {
-      this.logSecurityEvent('invalid_input', {
-        type: 'css_injection_attempt',
-        value: this.sanitizeInput(value)
-      }, 'high');
-      return '';
-    }
-
-    return value;
+    return sanitizeCSSValue(value, () => this.logSecurityEvent('invalid_input', { type: 'css_injection_attempt', value: sanitizeInput(value) }, 'high'));
   }
 
   /**
    * Validate component imports to prevent malicious code injection
    */
   public validateComponentImport(componentPath: string): boolean {
-    // Check for suspicious patterns in import paths
-    const suspiciousPatterns = [
-      /\.\.\/\.\.\/\.\./, // Too many parent directories
-      /http[s]?:\/\//, // External URLs
-      /data:/, // Data URLs
-      /javascript:/, // JavaScript protocol
-      /eval\(/, // Eval function
-      /Function\(/, // Function constructor
-    ];
-
-    for (const pattern of suspiciousPatterns) {
-      if (pattern.test(componentPath)) {
-        this.logSecurityEvent('suspicious_activity', {
-          type: 'malicious_import_attempt',
-          componentPath: this.sanitizeInput(componentPath)
-        }, 'critical');
-        return false;
-      }
-    }
-
-    return true;
+    return validateComponentImport(componentPath, msg => this.logSecurityEvent('suspicious_activity', { type: msg, componentPath: sanitizeInput(componentPath) }, 'critical'));
   }
-
   /**
    * Rate limiting implementation
    */
@@ -325,163 +288,31 @@ export class SecurityManager {
    * Generate checksum for state integrity
    */
   private generateStateChecksum(state: Record<string, unknown>): string {
-    const sanitizedState = this.sanitizeState(state);
-    const stateString = JSON.stringify(sanitizedState) + SECURITY_CONFIG.CHECKSUM_SALT;
-    
-    // Simple hash function (in production, use a proper crypto library)
-    let hash = 0;
-    for (let i = 0; i < stateString.length; i++) {
-      const char = stateString.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    
-    return hash.toString(16);
+    const sanitizedState = sanitizeState(state);
+    return generateStateChecksum(sanitizedState, SECURITY_CONFIG.CHECKSUM_SALT);
   }
 
   /**
    * Sanitize state for logging (remove sensitive data)
    */
   private sanitizeState(state: Record<string, unknown>): Record<string, unknown> {
-    const sanitized = { ...state };
-    
-    // Remove or mask sensitive fields
-    const sensitiveFields = ['password', 'token', 'secret', 'key'];
-    for (const field of sensitiveFields) {
-      if (field in sanitized) {
-        sanitized[field] = '[REDACTED]';
-      }
-    }
-
-    return sanitized;
+    return sanitizeState(state);
   }
 
   /**
    * Check if state change is expected
    */
   private isExpectedStateChange(action: string): boolean {
-    const expectedActions = [
-      'addGold', 'spendGold', 'buildTower', 'upgradeTower',
-      'addEnergy', 'consumeEnergy', 'addAction', 'purchasePackage',
-      'continueWave'
-    ];
-    return expectedActions.some(expected => action.includes(expected));
+    return isExpectedStateChange(action);
   }
 
   /**
    * Check if gold increase is expected
    */
   private isExpectedGoldIncrease(action: string): boolean {
-    const expectedActions = ['enemyKill', 'waveComplete', 'achievementReward'];
-    return expectedActions.some(expected => action.includes(expected));
+    return isExpectedGoldIncrease(action);
   }
 
   /**
-   * Log security events
+   * Generate checksum for state integrity
    */
-  public logSecurityEvent(
-    type: SecurityEventType,
-    details: Record<string, unknown>,
-    severity: 'low' | 'medium' | 'high' | 'critical'
-  ): void {
-    if (!SECURITY_CONFIG.AUDIT_ENABLED) {
-      return;
-    }
-
-    const event: SecurityEvent = {
-      timestamp: Date.now(),
-      type,
-      action: details.action as string || 'unknown',
-      details: this.sanitizeState(details),
-      severity,
-      userAgent: navigator.userAgent,
-    };
-
-    this.auditLog.push(event);
-
-    // Increment suspicious activity counter
-    if (severity === 'high' || severity === 'critical') {
-      this.suspiciousActivityCount++;
-      
-      // Lock system if too many suspicious activities
-      if (this.suspiciousActivityCount >= 5) {
-        this.isLocked = true;
-        console.warn('🔒 System locked due to suspicious activity');
-        
-        // Auto-unlock after 5 minutes
-        setTimeout(() => {
-          this.isLocked = false;
-          this.suspiciousActivityCount = 0;
-          console.log('🔓 System unlocked');
-        }, 300000);
-      }
-    }
-
-    // Log to console in development
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.warn(`🔒 Security Event [${severity.toUpperCase()}]:`, event);
-    }
-  }
-
-  /**
-   * Perform periodic security audit
-   */
-  private performSecurityAudit(): void {
-    // Clean up old audit logs
-    const cutoffTime = Date.now() - (SECURITY_CONFIG.AUDIT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-    this.auditLog = this.auditLog.filter(event => event.timestamp > cutoffTime);
-
-    // Check for patterns of suspicious activity
-    const recentEvents = this.auditLog.filter(
-      event => event.timestamp > Date.now() - 300000 // Last 5 minutes
-    );
-
-    const criticalEvents = recentEvents.filter(event => event.severity === 'critical');
-    if (criticalEvents.length > 3) {
-      this.logSecurityEvent('suspicious_activity', {
-        type: 'multiple_critical_events',
-        count: criticalEvents.length,
-        timeWindow: '5 minutes'
-      }, 'critical');
-    }
-  }
-
-  /**
-   * Clean up expired rate limiters
-   */
-  private cleanupRateLimiters(): void {
-    const now = Date.now();
-    Object.keys(this.rateLimiters).forEach(key => {
-      if (now > this.rateLimiters[key].resetTime) {
-        delete this.rateLimiters[key];
-      }
-    });
-  }
-
-  /**
-   * Get security statistics
-   */
-  public getSecurityStats(): Record<string, unknown> {
-    return {
-      totalEvents: this.auditLog.length,
-      suspiciousActivityCount: this.suspiciousActivityCount,
-      isLocked: this.isLocked,
-      lastStateChecksum: this.lastStateChecksum,
-      rateLimitersCount: Object.keys(this.rateLimiters).length
-    };
-  }
-
-  /**
-   * Reset security state (for testing purposes)
-   */
-  public reset(): void {
-    this.auditLog = [];
-    this.rateLimiters = {};
-    this.lastStateChecksum = '';
-    this.suspiciousActivityCount = 0;
-    this.isLocked = false;
-  }
-}
-
-// Export singleton instance
-export const securityManager = SecurityManager.getInstance(); 

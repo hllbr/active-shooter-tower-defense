@@ -1,6 +1,18 @@
 import type { Enemy, Effect, BossLootEntry } from '../models/gameTypes';
 import { useGameStore } from '../models/store';
 import { soundEffects } from '../utils/sound';
+import {
+  determineRarity,
+  determineLootType,
+  calculateLootAmount,
+  getLootName,
+  getLootDescription,
+  getRarityColor,
+  getRarityScale,
+  getPickupRadius,
+  calculateLootValue,
+  getLootVisualEffect
+} from './loot/helpers/lootCalculations';
 
 /**
  * Loot item interface for advanced loot system
@@ -163,26 +175,26 @@ export class LootManager {
    * Drop special loot items
    */
   private static dropSpecialLoot(enemy: Enemy): void {
-    const rarity = this.determineRarity();
-    const lootType = this.determineLootType(rarity);
-    const amount = this.calculateLootAmount(lootType, rarity);
+    const rarity = determineRarity(this.lootConfig.rarityWeights);
+    const lootType = determineLootType(rarity);
+    const amount = calculateLootAmount(lootType, rarity);
     
     const lootItem: LootItem = {
       id: `loot_${Date.now()}_${Math.random()}`,
       type: lootType,
-      name: this.getLootName(lootType, rarity),
+      name: getLootName(lootType, rarity),
       amount,
       rarity,
-      description: this.getLootDescription(lootType, rarity),
-      visualEffect: this.getLootVisualEffect(rarity),
+      description: getLootDescription(lootType, rarity),
+      visualEffect: getLootVisualEffect(rarity),
       position: {
         x: enemy.position.x + (Math.random() - 0.5) * 50,
         y: enemy.position.y + (Math.random() - 0.5) * 50,
       },
       dropTime: performance.now(),
       autoPickup: rarity === 'common',
-      pickupRadius: this.getPickupRadius(rarity),
-      value: this.calculateLootValue(lootType, amount, rarity),
+      pickupRadius: getPickupRadius(rarity),
+      value: calculateLootValue(lootType, amount),
     };
     
     this.createLootItem(lootItem);
@@ -203,15 +215,15 @@ export class LootManager {
           amount: lootEntry.amount,
           rarity: lootEntry.rarity,
           description: lootEntry.description,
-          visualEffect: lootEntry.visualEffect || this.getLootVisualEffect(lootEntry.rarity),
+          visualEffect: lootEntry.visualEffect || getLootVisualEffect(lootEntry.rarity),
           position: {
             x: enemy.position.x + (Math.random() - 0.5) * 100,
             y: enemy.position.y + (Math.random() - 0.5) * 100,
           },
           dropTime: performance.now(),
           autoPickup: false, // Boss loot requires manual pickup
-          pickupRadius: this.getPickupRadius(lootEntry.rarity),
-          value: this.calculateLootValue(lootEntry.itemType, lootEntry.amount, lootEntry.rarity),
+          pickupRadius: getPickupRadius(lootEntry.rarity),
+          value: calculateLootValue(lootEntry.itemType, lootEntry.amount),
         };
         
         this.createLootItem(lootItem);
@@ -233,12 +245,12 @@ export class LootManager {
       id: `loot_effect_${lootItem.id}`,
       position: lootItem.position,
       radius: lootItem.pickupRadius || 20,
-      color: this.getRarityColor(lootItem.rarity),
+      color: getRarityColor(lootItem.rarity),
       life: 10000, // 10 seconds visibility
       maxLife: 10000,
       type: 'loot_item',
       opacity: 0.9,
-      scale: this.getRarityScale(lootItem.rarity),
+      scale: getRarityScale(lootItem.rarity),
     });
     
     // Auto-pickup for common items
@@ -303,7 +315,7 @@ export class LootManager {
       id: `pickup_effect_${lootId}`,
       position: lootItem.position,
       radius: lootItem.pickupRadius! * 2,
-      color: this.getRarityColor(lootItem.rarity),
+      color: getRarityColor(lootItem.rarity),
       life: 800,
       maxLife: 800,
       type: 'loot_pickup',
@@ -352,215 +364,6 @@ export class LootManager {
   /**
    * Determine loot rarity based on weights
    */
-  private static determineRarity(): 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' {
-    const random = Math.random() * 100;
-    let cumulative = 0;
-    
-    for (const [rarity, weight] of Object.entries(this.lootConfig.rarityWeights)) {
-      cumulative += weight;
-      if (random <= cumulative) {
-        return rarity as 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-      }
-    }
-    
-    return 'common';
-  }
-
-  /**
-   * Determine loot type based on rarity
-   */
-  private static determineLootType(rarity: string): LootItem['type'] {
-    const typesByRarity: Record<string, LootItem['type'][]> = {
-      common: ['gold', 'experience'],
-      uncommon: ['research_points', 'upgrade_materials'],
-      rare: ['rare_components', 'upgrade_materials'],
-      epic: ['rare_components', 'legendary_items'],
-      legendary: ['legendary_items', 'cosmetics']
-    };
-    
-    const availableTypes = typesByRarity[rarity] || ['gold'];
-    return availableTypes[Math.floor(Math.random() * availableTypes.length)];
-  }
-
-  /**
-   * Calculate loot amount based on type and rarity
-   */
-  private static calculateLootAmount(type: LootItem['type'], rarity: string): number {
-    const baseAmounts: Record<LootItem['type'], number> = {
-      gold: 50,
-      research_points: 10,
-      upgrade_materials: 1,
-      rare_components: 1,
-      legendary_items: 1,
-      achievements: 1,
-      cosmetics: 1,
-      experience: 25
-    };
-    
-    const rarityMultipliers: Record<string, number> = {
-      common: 1,
-      uncommon: 2,
-      rare: 4,
-      epic: 8,
-      legendary: 15
-    };
-    
-    const baseAmount = baseAmounts[type] || 1;
-    const multiplier = rarityMultipliers[rarity] || 1;
-    
-    return Math.floor(baseAmount * multiplier);
-  }
-
-  /**
-   * Get loot name based on type and rarity
-   */
-  private static getLootName(type: LootItem['type'], rarity: string): string {
-    const names: Record<LootItem['type'], Record<string, string>> = {
-      gold: {
-        common: 'Gold Coins',
-        uncommon: 'Gold Purse',
-        rare: 'Gold Chest',
-        epic: 'Gold Treasury',
-        legendary: 'Gold Vault'
-      },
-      research_points: {
-        common: 'Research Notes',
-        uncommon: 'Research Data',
-        rare: 'Advanced Research',
-        epic: 'Breakthrough Research',
-        legendary: 'Revolutionary Discovery'
-      },
-      upgrade_materials: {
-        common: 'Basic Materials',
-        uncommon: 'Quality Materials',
-        rare: 'Advanced Materials',
-        epic: 'Master Materials',
-        legendary: 'Legendary Materials'
-      },
-      rare_components: {
-        common: 'Component',
-        uncommon: 'Quality Component',
-        rare: 'Rare Component',
-        epic: 'Epic Component',
-        legendary: 'Legendary Component'
-      },
-      legendary_items: {
-        common: 'Item',
-        uncommon: 'Quality Item',
-        rare: 'Rare Item',
-        epic: 'Epic Item',
-        legendary: 'Legendary Artifact'
-      },
-      achievements: {
-        common: 'Achievement',
-        uncommon: 'Achievement',
-        rare: 'Achievement',
-        epic: 'Achievement',
-        legendary: 'Legendary Achievement'
-      },
-      cosmetics: {
-        common: 'Cosmetic',
-        uncommon: 'Quality Cosmetic',
-        rare: 'Rare Cosmetic',
-        epic: 'Epic Cosmetic',
-        legendary: 'Legendary Cosmetic'
-      },
-      experience: {
-        common: 'Experience',
-        uncommon: 'Bonus Experience',
-        rare: 'Major Experience',
-        epic: 'Massive Experience',
-        legendary: 'Ultimate Experience'
-      }
-    };
-    
-    return names[type]?.[rarity] || 'Unknown Item';
-  }
-
-  /**
-   * Get loot description
-   */
-  private static getLootDescription(type: LootItem['type'], rarity: string): string {
-    return `${rarity.charAt(0).toUpperCase() + rarity.slice(1)} ${type.replace('_', ' ')}`;
-  }
-
-  /**
-   * Get rarity color
-   */
-  private static getRarityColor(rarity: string): string {
-    const colors: Record<string, string> = {
-      common: '#ffffff',
-      uncommon: '#00ff00',
-      rare: '#0080ff',
-      epic: '#9933ff',
-      legendary: '#ff8000'
-    };
-    
-    return colors[rarity] || '#ffffff';
-  }
-
-  /**
-   * Get rarity scale for visual effects
-   */
-  private static getRarityScale(rarity: string): number {
-    const scales: Record<string, number> = {
-      common: 1.0,
-      uncommon: 1.2,
-      rare: 1.4,
-      epic: 1.6,
-      legendary: 2.0
-    };
-    
-    return scales[rarity] || 1.0;
-  }
-
-  /**
-   * Get pickup radius based on rarity
-   */
-  private static getPickupRadius(rarity: string): number {
-    const radii: Record<string, number> = {
-      common: 40,
-      uncommon: 50,
-      rare: 60,
-      epic: 70,
-      legendary: 80
-    };
-    
-    return radii[rarity] || 40;
-  }
-
-  /**
-   * Calculate loot value (gold equivalent)
-   */
-  private static calculateLootValue(type: LootItem['type'], amount: number, _rarity: string): number {
-    const typeValues: Record<LootItem['type'], number> = {
-      gold: 1,
-      research_points: 5,
-      upgrade_materials: 20,
-      rare_components: 50,
-      legendary_items: 200,
-      achievements: 0,
-      cosmetics: 0,
-      experience: 2
-    };
-    
-    return (typeValues[type] || 0) * amount;
-  }
-
-  /**
-   * Get visual effect name
-   */
-  private static getLootVisualEffect(rarity: string): string {
-    const effects: Record<string, string> = {
-      common: 'simple_glow',
-      uncommon: 'green_sparkle',
-      rare: 'blue_aura',
-      epic: 'purple_energy',
-      legendary: 'golden_explosion'
-    };
-    
-    return effects[rarity] || 'simple_glow';
-  }
 
   /**
    * Play loot drop sound
