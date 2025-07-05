@@ -347,50 +347,265 @@ export const GAME_CONSTANTS = {
       name: 'Asit Kulesi', special: 'acid'
     },
     
-    // Level 16-20: Hybrid Focus (Late game power with reasonable costs)
+    // Level 16-20: Special Abilities (Late game complexity)
     { 
-      level: 16, damage: 775, fireRate: 120, health: 2600, cost: 1550,
+      level: 16, damage: 775, fireRate: 130, health: 2500, cost: 1550,
       name: 'Kuantum Kulesi', special: 'quantum'
     },
     { 
-      level: 17, damage: 865, fireRate: 100, health: 2900, cost: 1730,
+      level: 17, damage: 865, fireRate: 120, health: 2700, cost: 1730,
       name: 'Nano Kulesi', special: 'nano'
     },
     { 
-      level: 18, damage: 960, fireRate: 80, health: 3200, cost: 1920,
+      level: 18, damage: 960, fireRate: 110, health: 2900, cost: 1920,
       name: 'Psi Kulesi', special: 'psi'
     },
     { 
-      level: 19, damage: 1060, fireRate: 60, health: 3500, cost: 2120,
+      level: 19, damage: 1060, fireRate: 100, health: 3100, cost: 2120,
       name: 'Zaman Kulesi', special: 'time_warp'
     },
     { 
-      level: 20, damage: 1165, fireRate: 40, health: 3800, cost: 2330,
+      level: 20, damage: 1165, fireRate: 90, health: 3300, cost: 2330,
       name: 'Uzay Kulesi', special: 'space'
     },
     
-    // Level 21-25: Ultimate Focus (End-game progression with reasonable scaling)
+    // Level 21-25: God-tier (End game power)
     { 
-      level: 21, damage: 1275, fireRate: 30, health: 4200, cost: 2550,
+      level: 21, damage: 1275, fireRate: 80, health: 3500, cost: 2550,
       name: 'Efsanevi Kule', special: 'legendary'
     },
     { 
-      level: 22, damage: 1390, fireRate: 25, health: 4600, cost: 2780,
-      name: 'Kutsal Kule', special: 'divine'
+      level: 22, damage: 1390, fireRate: 70, health: 3700, cost: 2780,
+      name: 'Tanrısal Kule', special: 'divine'
     },
     { 
-      level: 23, damage: 1510, fireRate: 20, health: 5000, cost: 3020,
+      level: 23, damage: 1510, fireRate: 60, health: 3900, cost: 3020,
       name: 'Kozmik Kule', special: 'cosmic'
     },
     { 
-      level: 24, damage: 1635, fireRate: 15, health: 5500, cost: 3270,
+      level: 24, damage: 1635, fireRate: 50, health: 4100, cost: 3270,
       name: 'Sonsuzluk Kulesi', special: 'infinity'
     },
     { 
-      level: 25, damage: 1765, fireRate: 10, health: 6000, cost: 3530,
-      name: 'Tanrı Kulesi', special: 'god_mode'
-    }
+      level: 25, damage: 1765, fireRate: 40, health: 4300, cost: 3530,
+      name: 'Tanrı Modu', special: 'god_mode'
+    },
   ],
+
+  // ✅ NEW: Specialized Tower Types for Issue #54
+  SPECIALIZED_TOWERS: {
+    // ASSAULT CATEGORY
+    sniper: {
+      name: 'Sniper Tower',
+      category: 'assault',
+      baseDamage: 200,
+      baseRange: 400,
+      baseFireRate: 2000, // Slow but powerful
+      criticalChance: 0.2,
+      criticalDamage: 3.0,
+      armorPenetration: 50,
+      cost: 300,
+      description: 'High damage, long range, critical hits',
+      upgradePaths: {
+        marksman: { criticalChance: 0.4, criticalDamage: 4.0 },
+        penetrator: { projectilePenetration: 3, armorPenetration: 100 },
+        spotter: { supportRadius: 200, supportIntensity: 1.5 }
+      }
+    },
+    
+    gatling: {
+      name: 'Gatling Gun',
+      category: 'assault',
+      baseDamage: 25,
+      baseRange: 250,
+      baseFireRate: 200, // Very fast
+      spinUpLevel: 0,
+      maxSpinUpLevel: 5,
+      cost: 200,
+      description: 'Fast attack speed, spin-up mechanic',
+      upgradePaths: {
+        suppressor: { empDuration: 1000, areaOfEffect: 50 },
+        incendiary: { burnDuration: 3000, damage: 35 },
+        overcharge: { maxSpinUpLevel: 8, fireRate: 100 }
+      }
+    },
+    
+    laser: {
+      name: 'Laser Cannon',
+      category: 'assault',
+      baseDamage: 150,
+      baseRange: 350,
+      baseFireRate: 500,
+      beamFocusMultiplier: 1.0,
+      beamLockTime: 0,
+      armorPenetration: 75,
+      cost: 400,
+      description: 'Beam focus damage, armor penetration',
+      upgradePaths: {
+        prism: { projectilePenetration: 2, areaOfEffect: 75 },
+        overload: { criticalChance: 0.15, criticalDamage: 2.5 },
+        precision: { armorPenetration: 150, beamFocusMultiplier: 2.0 }
+      }
+    },
+    
+    // AREA CONTROL CATEGORY
+    mortar: {
+      name: 'Mortar Tower',
+      category: 'area_control',
+      baseDamage: 100,
+      baseRange: 500,
+      baseFireRate: 1000,
+      areaOfEffect: 150,
+      cost: 350,
+      description: 'Long-range area damage',
+      upgradePaths: {
+        cluster: { areaOfEffect: 200, multiShotCount: 3 },
+        incendiary: { burnDuration: 5000, areaOfEffect: 180 },
+        guided: { range: 600, manualTargeting: true }
+      }
+    },
+    
+    flamethrower: {
+      name: 'Flamethrower',
+      category: 'area_control',
+      baseDamage: 50,
+      baseRange: 150,
+      baseFireRate: 125, // 8 times per second
+      areaOfEffect: 90, // Cone area
+      burnDuration: 2000,
+      cost: 250,
+      description: 'Close-range area control, burning',
+      upgradePaths: {
+        napalm: { burnDuration: 4000, areaOfEffect: 120 },
+        pressure: { range: 200, empDuration: 500 }, // Knockback
+        chemical: { armorPenetration: 25, acidStack: 3 }
+      }
+    },
+    
+    // SUPPORT CATEGORY
+    radar: {
+      name: 'Radar Tower',
+      category: 'support',
+      baseDamage: 0,
+      baseRange: 300,
+      baseFireRate: 0,
+      supportRadius: 200,
+      supportIntensity: 1.3, // 30% accuracy bonus
+      stealthDetectionRange: 400,
+      cost: 150,
+      description: 'Increases nearby tower accuracy, reveals stealth',
+      upgradePaths: {
+        surveillance: { stealthDetectionRange: 600, supportRadius: 250 },
+        coordination: { supportIntensity: 1.5, supportRadius: 300 },
+        countermeasures: { empDuration: 2000, supportRadius: 200 }
+      }
+    },
+    
+    supply_depot: {
+      name: 'Supply Depot',
+      category: 'support',
+      baseDamage: 0,
+      baseRange: 0,
+      baseFireRate: 0,
+      supportRadius: 250,
+      supportIntensity: 1.2, // 20% reload speed bonus
+      cost: 200,
+      description: 'Enhances nearby towers, provides resources',
+      upgradePaths: {
+        logistics: { supportIntensity: 1.4, repairRate: 10 },
+        armory: { supportIntensity: 1.3, supportRadius: 300 },
+        command: { manualTargeting: true, supportRadius: 200 }
+      }
+    },
+    
+    // DEFENSIVE CATEGORY
+    shield_generator: {
+      name: 'Shield Generator',
+      category: 'defensive',
+      baseDamage: 0,
+      baseRange: 0,
+      baseFireRate: 0,
+      shieldStrength: 500,
+      shieldRegenRate: 10,
+      supportRadius: 150,
+      cost: 250,
+      description: 'Provides shield protection to nearby towers',
+      upgradePaths: {
+        personal: { shieldStrength: 800, shieldRegenRate: 15 },
+        area: { supportRadius: 200, shieldStrength: 1000 },
+        adaptive: { shieldRegenRate: 20, supportIntensity: 1.2 }
+      }
+    },
+    
+    repair_station: {
+      name: 'Repair Station',
+      category: 'defensive',
+      baseDamage: 0,
+      baseRange: 0,
+      baseFireRate: 0,
+      repairRate: 50,
+      supportRadius: 200,
+      cost: 180,
+      description: 'Repairs damaged towers automatically',
+      upgradePaths: {
+        drone: { repairRate: 75, supportRadius: 250 },
+        nanobots: { repairRate: 25, supportRadius: 400 }, // Continuous repair
+        emergency: { repairRate: 200, supportRadius: 150 } // Burst repair
+      }
+    },
+    
+    // SPECIALIST CATEGORY
+    emp: {
+      name: 'EMP Tower',
+      category: 'specialist',
+      baseDamage: 50,
+      baseRange: 200,
+      baseFireRate: 3000,
+      empDuration: 3000,
+      areaOfEffect: 100,
+      cost: 300,
+      description: 'Disables enemy electronics',
+      upgradePaths: {
+        pulse: { empDuration: 5000, areaOfEffect: 150 },
+        overload: { damage: 100, empDuration: 4000 },
+        cascade: { projectilePenetration: 5, empDuration: 2000 }
+      }
+    },
+    
+    stealth_detector: {
+      name: 'Stealth Detector',
+      category: 'specialist',
+      baseDamage: 0,
+      baseRange: 0,
+      baseFireRate: 0,
+      stealthDetectionRange: 300,
+      supportRadius: 250,
+      supportIntensity: 1.4, // Bonus damage to revealed enemies
+      cost: 200,
+      description: 'Reveals stealth enemies, marks targets',
+      upgradePaths: {
+        scanner: { stealthDetectionRange: 500, supportRadius: 350 },
+        tracker: { supportIntensity: 1.8, stealthDetectionRange: 400 },
+        disruptor: { empDuration: 1500, stealthDetectionRange: 300 }
+      }
+    },
+    
+    air_defense: {
+      name: 'Air Defense',
+      category: 'specialist',
+      baseDamage: 120,
+      baseRange: 400,
+      baseFireRate: 800,
+      projectilePenetration: 1,
+      cost: 320,
+      description: 'Specialized against flying enemies',
+      upgradePaths: {
+        interceptor: { projectilePenetration: 3, range: 500 },
+        flak: { areaOfEffect: 80, damage: 150 },
+        guided: { criticalChance: 0.3, manualTargeting: true }
+      }
+    }
+  },
 
   // Tower Slots - New circular layout
   TOWER_SLOTS: generateCircularTowerSlots(8, 1920 / 2 - 100, 1080 / 2 - 100, 300),
@@ -762,5 +977,109 @@ export const GAME_CONSTANTS = {
       MAX_PURCHASES: 5, // Maximum wall upgrades per game
       MAX_LEVEL: 8,     // Maximum level per upgrade
     },
+  },
+
+  // ✅ NEW: Mine Variety System for Issue #54
+  MINE_TYPES: {
+    explosive: {
+      standard: {
+        name: 'Standard Mine',
+        description: 'Basic explosive mine with area damage',
+        damage: 100,
+        radius: 50,
+        cost: 150,
+        triggerCondition: 'contact' as const,
+        icon: '💣'
+      },
+      cluster: {
+        name: 'Cluster Mine',
+        description: 'Creates multiple smaller explosions',
+        damage: 60,
+        radius: 80,
+        cost: 200,
+        triggerCondition: 'contact' as const,
+        subExplosions: 3,
+        icon: '🎆'
+      }
+    },
+    utility: {
+      emp: {
+        name: 'EMP Mine',
+        description: 'Disables enemy electronics and shields',
+        damage: 50,
+        radius: 100,
+        cost: 180,
+        triggerCondition: 'proximity' as const,
+        empDuration: 3000,
+        effects: ['disable_electronics', 'disable_shields'],
+        icon: '⚡'
+      },
+      smoke: {
+        name: 'Smoke Mine',
+        description: 'Creates smoke cloud reducing tower accuracy',
+        damage: 0,
+        radius: 120,
+        cost: 120,
+        triggerCondition: 'proximity' as const,
+        smokeDuration: 5000,
+        effects: ['reduce_accuracy', 'concealment'],
+        icon: '💨'
+      }
+    },
+    area_denial: {
+      caltrops: {
+        name: 'Caltrops',
+        description: 'Slows enemies passing through area',
+        damage: 20,
+        radius: 60,
+        cost: 100,
+        triggerCondition: 'contact' as const,
+        duration: 8000,
+        slowMultiplier: 0.5,
+        effects: ['slow_movement'],
+        icon: '🗡️'
+      },
+      tar: {
+        name: 'Tar Mine',
+        description: 'Creates sticky tar pit slowing enemies',
+        damage: 10,
+        radius: 80,
+        cost: 140,
+        triggerCondition: 'proximity' as const,
+        duration: 10000,
+        slowMultiplier: 0.3,
+        effects: ['slow_movement', 'damage_over_time'],
+        icon: '🖤'
+      },
+      freeze: {
+        name: 'Freeze Mine',
+        description: 'Freezes enemies in place temporarily',
+        damage: 0,
+        radius: 70,
+        cost: 160,
+        triggerCondition: 'proximity' as const,
+        freezeDuration: 2000,
+        effects: ['freeze', 'vulnerable_to_fire'],
+        icon: '❄️'
+      }
+    }
+  },
+
+  // ✅ NEW: Mine Placement Limits for Issue #54
+  MINE_PLACEMENT_LIMITS: {
+    MAX_MINES_PER_WAVE: 8, // Maximum total mines that can be placed per wave
+    MAX_MINES_PER_TYPE: {
+      explosive: 3,
+      utility: 2,
+      area_denial: 4
+    },
+    MIN_DISTANCE_BETWEEN_MINES: 100, // Minimum distance between mines
+    PLACEMENT_COOLDOWN: 2000, // Cooldown between mine placements (ms)
+    STRATEGIC_ZONES: {
+      // Different zones have different placement rules
+      chokepoint: { maxMines: 2, bonusDamage: 1.5 },
+      open_area: { maxMines: 4, bonusDamage: 1.0 },
+      tower_vicinity: { maxMines: 1, bonusDamage: 1.2 }
+    }
   },
 } as const; 

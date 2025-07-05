@@ -54,7 +54,7 @@ export interface TowerMenuProps {
   slot: TowerSlot;
   slotIdx: number;
   onClose: () => void;
-  onBuildTower: (slotIdx: number, type: 'attack' | 'economy') => void;
+  onBuildTower: (slotIdx: number, type: 'attack' | 'economy', towerClass?: string) => void;
   onPerformTileAction: (slotIdx: number, action: 'wall' | 'trench' | 'buff') => void;
 }
 

@@ -1,2 +1,3 @@
-export { SpecialAbilitiesManager, specialAbilitiesManager } from './SpecialAbilities';
-export { TowerFiringSystem, towerFiringSystem } from './TowerFiring'; 
+export * from './TowerFiring';
+export * from './SpecialAbilities';
+export * from './TowerSynergyManager'; 

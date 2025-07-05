@@ -47,6 +47,52 @@ export interface Tower {
   rangeMultiplier?: number;
   /** 'attack' towers shoot enemies, 'economy' towers generate gold */
   towerType?: 'attack' | 'economy';
+  
+  // ✅ NEW: Specialized Tower Types for Issue #54
+  /** Specialized tower category for advanced mechanics */
+  towerCategory?: 'assault' | 'area_control' | 'support' | 'defensive' | 'specialist';
+  /** Specific tower class for unique behaviors */
+  towerClass?: 'sniper' | 'gatling' | 'laser' | 'mortar' | 'flamethrower' | 'radar' | 'supply_depot' | 'shield_generator' | 'repair_station' | 'emp' | 'stealth_detector' | 'air_defense';
+  
+  // ✅ NEW: Advanced Tower Properties
+  /** Critical hit chance (0-1) */
+  criticalChance?: number;
+  /** Critical hit damage multiplier */
+  criticalDamage?: number;
+  /** Armor penetration value */
+  armorPenetration?: number;
+  /** Area of effect radius */
+  areaOfEffect?: number;
+  /** Projectile penetration count */
+  projectilePenetration?: number;
+  /** Spin-up mechanic current level */
+  spinUpLevel?: number;
+  /** Maximum spin-up level */
+  maxSpinUpLevel?: number;
+  /** Beam focus damage multiplier */
+  beamFocusMultiplier?: number;
+  /** Target lock time for beam weapons */
+  beamLockTime?: number;
+  /** Support buff radius */
+  supportRadius?: number;
+  /** Support buff intensity */
+  supportIntensity?: number;
+  /** Shield strength for defensive towers */
+  shieldStrength?: number;
+  /** Shield regeneration rate */
+  shieldRegenRate?: number;
+  /** Repair rate for repair towers */
+  repairRate?: number;
+  /** EMP disable duration */
+  empDuration?: number;
+  /** Stealth detection range */
+  stealthDetectionRange?: number;
+  /** Manual targeting enabled */
+  manualTargeting?: boolean;
+  /** Upgrade path chosen */
+  upgradePath?: string;
+  /** Synergy bonuses from nearby towers */
+  synergyBonuses?: { damage?: number; range?: number; fireRate?: number; };
 }
 
 export interface TowerSlot {
@@ -120,6 +166,34 @@ export interface Mine {
   size: number;
   damage: number;
   radius: number;
+  
+  // ✅ NEW: Mine Variety System for Issue #54
+  /** Mine type for different behaviors */
+  mineType: 'explosive' | 'utility' | 'area_denial';
+  /** Mine subtype for specialized behaviors */
+  mineSubtype?: 'standard' | 'cluster' | 'emp' | 'smoke' | 'caltrops' | 'tar' | 'freeze';
+  
+  // ✅ NEW: Advanced Mine Properties
+  /** Duration for utility/area denial mines */
+  duration?: number;
+  /** Remaining duration for active mines */
+  remainingDuration?: number;
+  /** Slow effect multiplier for area denial mines */
+  slowMultiplier?: number;
+  /** Additional effects applied by the mine */
+  effects?: string[];
+  /** Mine trigger condition */
+  triggerCondition?: 'contact' | 'proximity' | 'remote' | 'timer';
+  /** Mine activation state */
+  isActive?: boolean;
+  /** Mine placement timestamp */
+  placedAt?: number;
+  /** EMP disable duration for EMP mines */
+  empDuration?: number;
+  /** Smoke cloud duration for smoke mines */
+  smokeDuration?: number;
+  /** Freeze duration for freeze mines */
+  freezeDuration?: number;
 }
 
 export interface WaveModifier {
