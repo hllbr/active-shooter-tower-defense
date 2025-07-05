@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { sanitizeColor } from '../../utils/styleUtils';
 
 export const tabStyles = {
   tabNavigation: {
@@ -25,26 +26,31 @@ export const tabStyles = {
 };
 
 export const getTabButtonStyle = (
-  isActive: boolean, 
-  color: string, 
-  isDiceTab: boolean = false
-): CSSProperties => ({
-  padding: isDiceTab ? '14px 16px' : '12px 14px',
-  borderRadius: 10,
-  border: `2px solid ${isActive ? color : 'rgba(255,255,255,0.1)'}`,
-  background: isActive 
-    ? `linear-gradient(135deg, ${color}40, ${color}20)` 
-    : 'rgba(0,0,0,0.3)',
-  color: isActive ? color : '#ccc',
-  cursor: 'pointer',
-  fontSize: isDiceTab ? 14 : 13,
-  fontWeight: 'bold',
-  transition: 'all 0.3s ease',
-  textAlign: 'center',
-  position: 'relative',
-  transform: isActive ? 'translateY(-1px)' : 'none',
-  boxShadow: isActive ? `0 4px 16px ${color}40` : 'none',
-});
+  isActive: boolean,
+  color: string,
+  isDiceTab: boolean = false,
+  isHovered: boolean = false
+): CSSProperties => {
+  const safeColor = sanitizeColor(color, '#ffffff');
+  const activeOrHover = isActive || isHovered;
+  return {
+    padding: isDiceTab ? '14px 16px' : '12px 14px',
+    borderRadius: 10,
+    border: `2px solid ${isActive ? safeColor : 'rgba(255,255,255,0.1)'}`,
+    background: isActive
+      ? `linear-gradient(135deg, ${safeColor}40, ${safeColor}20)`
+      : 'rgba(0,0,0,0.3)',
+    color: isActive ? safeColor : '#ccc',
+    cursor: 'pointer',
+    fontSize: isDiceTab ? 14 : 13,
+    fontWeight: 'bold',
+    transition: 'all 0.3s ease',
+    textAlign: 'center',
+    position: 'relative',
+    transform: activeOrHover ? 'translateY(-1px)' : 'none',
+    boxShadow: activeOrHover ? `0 4px 16px ${safeColor}40` : 'none',
+  };
+};
 
 export const getPriorityBadgeStyle = (): CSSProperties => ({
   position: 'absolute',

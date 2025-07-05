@@ -8,6 +8,7 @@ import { energyManager } from '../../game-systems/EnergyManager';
 import { waveManager } from '../../game-systems/WaveManager';
 import { upgradeEffectsManager } from '../../game-systems/UpgradeEffects';
 import { initialState } from './initialState';
+import { securityManager } from '../../security/SecurityManager';
 
 const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   let position: Position;
@@ -291,11 +292,40 @@ export const useGameStore = create<Store>((set, get): Store => ({
     };
   }),
 
-  addGold: (amount: number) => set((state) => ({ gold: state.gold + amount })),
-  spendGold: (amount: number) => set((state) => ({
-    gold: state.gold - amount,
-    totalGoldSpent: state.totalGoldSpent + amount,
-  })),
+  addGold: (amount: number) => {
+    // Security validation
+    const validation = securityManager.validateStateChange('addGold', {}, { gold: amount });
+    if (!validation.valid) {
+      console.warn('🔒 Security: addGold blocked:', validation.reason);
+      securityManager.logSecurityEvent('state_manipulation_attempt', {
+        action: 'addGold',
+        amount,
+        reason: validation.reason
+      }, 'high');
+      return;
+    }
+    
+    set((state) => ({ gold: state.gold + amount }));
+  },
+  
+  spendGold: (amount: number) => {
+    // Security validation
+    const validation = securityManager.validateStateChange('spendGold', {}, { gold: amount });
+    if (!validation.valid) {
+      console.warn('🔒 Security: spendGold blocked:', validation.reason);
+      securityManager.logSecurityEvent('state_manipulation_attempt', {
+        action: 'spendGold',
+        amount,
+        reason: validation.reason
+      }, 'high');
+      return;
+    }
+    
+    set((state) => ({
+      gold: state.gold - amount,
+      totalGoldSpent: state.totalGoldSpent + amount,
+    }));
+  },
   
   removeEnemy: (enemyId: string) => set((state) => {
     const enemy = state.enemies.find(e => e.id === enemyId);
@@ -601,12 +631,16 @@ export const useGameStore = create<Store>((set, get): Store => ({
   setStarted: (started: boolean) => set(() => ({ isStarted: started })),
 
   // ✅ CRITICAL FIX: UpgradeScreen trigger implementation  
-  setRefreshing: (refreshing: boolean) => set(() => ({ 
-    isRefreshing: refreshing,
-    // Clear any preparation state when entering upgrade screen
-    isPreparing: false,
-    isPaused: false,
-  })),
+  setRefreshing: (refreshing: boolean) => set((state) => {
+    console.log(`🔄 setRefreshing called with: ${refreshing}, current state: ${state.isRefreshing}`);
+    
+    return {
+      isRefreshing: refreshing,
+      // Clear any preparation state when entering upgrade screen
+      isPreparing: false,
+      isPaused: false,
+    };
+  }),
 
   upgradeBullet: (free?: boolean) => set((state) => {
     const cost = free ? 0 : GAME_CONSTANTS.BULLET_UPGRADE_COST;
@@ -854,6 +888,19 @@ export const useGameStore = create<Store>((set, get): Store => ({
   },
   
   addEnergy: (amount: number, action?: string) => {
+    // Security validation for energy addition
+    const validation = securityManager.validateStateChange('addEnergy', {}, { energy: amount });
+    if (!validation.valid) {
+      console.warn('🔒 Security: addEnergy blocked:', validation.reason);
+      securityManager.logSecurityEvent('state_manipulation_attempt', {
+        action: 'addEnergy',
+        amount,
+        actionType: action || 'manual',
+        reason: validation.reason
+      }, 'high');
+      return;
+    }
+    
     energyManager.add(amount, action || 'manual');
   },
   
@@ -960,12 +1007,40 @@ export const useGameStore = create<Store>((set, get): Store => ({
     return {};
   }),
 
-  addAction: (amount: number) => set((state) => ({
-    actionsRemaining: Math.min(state.getMaxActions(), state.actionsRemaining + amount)
-  })),
+  addAction: (amount: number) => {
+    // Security validation for action addition
+    const validation = securityManager.validateStateChange('addAction', {}, { actions: amount });
+    if (!validation.valid) {
+      console.warn('🔒 Security: addAction blocked:', validation.reason);
+      securityManager.logSecurityEvent('state_manipulation_attempt', {
+        action: 'addAction',
+        amount,
+        reason: validation.reason
+      }, 'high');
+      return;
+    }
+    
+    set((state) => ({
+      actionsRemaining: Math.min(state.getMaxActions(), state.actionsRemaining + amount)
+    }));
+  },
 
   // ✅ POWER MARKET Implementation
-  setGold: (amount: number) => set(() => ({ gold: amount })),
+  setGold: (amount: number) => {
+    // Security validation
+    const validation = securityManager.validateStateChange('setGold', {}, { gold: amount });
+    if (!validation.valid) {
+      console.warn('🔒 Security: setGold blocked:', validation.reason);
+      securityManager.logSecurityEvent('state_manipulation_attempt', {
+        action: 'setGold',
+        amount,
+        reason: validation.reason
+      }, 'critical');
+      return;
+    }
+    
+    set(() => ({ gold: amount }));
+  },
   
   setEnergyBoostLevel: (level: number) => set(() => ({ energyBoostLevel: level })),
   
@@ -996,12 +1071,60 @@ export const useGameStore = create<Store>((set, get): Store => ({
 
   // ✅ PACKAGE TRACKING System
   purchasePackage: (packageId: string, cost: number, maxAllowed: number) => {
+    // Security validation for package purchase
+    const validation = securityManager.validateStateChange('purchasePackage', {}, { 
+      packageId, 
+      cost, 
+      maxAllowed 
+    });
+    
+    if (!validation.valid) {
+      console.warn('🔒 Security: purchasePackage blocked:', validation.reason);
+      securityManager.logSecurityEvent('state_manipulation_attempt', {
+        action: 'purchasePackage',
+        packageId,
+        cost,
+        maxAllowed,
+        reason: validation.reason
+      }, 'high');
+      return false;
+    }
+    
+    // Additional package-specific validation
+    if (!packageId || typeof packageId !== 'string') {
+      securityManager.logSecurityEvent('invalid_input', {
+        action: 'purchasePackage',
+        packageId,
+        reason: 'Invalid package ID'
+      }, 'high');
+      return false;
+    }
+    
+    if (cost <= 0 || cost > 10000) {
+      securityManager.logSecurityEvent('suspicious_activity', {
+        action: 'purchasePackage',
+        cost,
+        reason: 'Invalid package cost'
+      }, 'high');
+      return false;
+    }
+    
     const state = useGameStore.getState();
     const tracker = state.packageTracker[packageId] || { purchaseCount: 0, lastPurchased: 0, maxAllowed };
     const current = tracker.purchaseCount;
+    
     if (current >= maxAllowed || state.gold < cost) {
       return false;
     }
+    
+    // Log successful purchase
+    securityManager.logSecurityEvent('upgrade_purchase', {
+      action: 'purchasePackage',
+      packageId,
+      cost,
+      maxAllowed
+    }, 'low');
+    
     useGameStore.setState({
       packageTracker: {
         ...state.packageTracker,

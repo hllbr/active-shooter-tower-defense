@@ -1,7 +1,8 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useGameStore } from '../../models/store';
 import type { Store } from '../../models/store';
-import { footerStyles } from './Footer/footerStyles';
+import { getContinueButtonStyle } from './Footer/footerStyles';
+import { validateStateChange } from '../../security/SecurityEnhancements';
 
 interface ContinueButtonProps {
   onContinueCallback?: () => void;
@@ -17,8 +18,24 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   const isRefreshing = useGameStore((s: Store) => s.isRefreshing);
   const isPreparing = useGameStore((s: Store) => s.isPreparing);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    if (!isRefreshing && isProcessing) {
+      console.log('🔄 isRefreshing changed to false, resetting processing state');
+      setIsProcessing(false);
+    }
+  }, [isRefreshing, isProcessing]);
+
   const handleContinue = useCallback(() => {
-    console.log('🚀 UpgradeScreen: handleContinue started');
+    console.log('🔒 Secure UpgradeScreen: handleContinue started');
+    
+    const validation = validateStateChange('continueWave', {}, {});
+    if (!validation.valid) {
+      console.warn('🔒 Continue action blocked:', validation.reason);
+      setIsProcessing(false);
+      return;
+    }
     
     try {
       console.log('📈 Calling nextWave...');
@@ -34,29 +51,30 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       console.log('✅ resetDice completed');
       
       console.log('🔄 Setting refreshing to false...');
-      setTimeout(() => {
-        setRefreshing(false);
-        console.log('✅ setRefreshing(false) completed');
-        console.log('🎉 handleContinue completed successfully!');
-        
-        if (onContinueCallback) {
-          onContinueCallback();
-        }
-      }, 50);
+      setRefreshing(false);
+      console.log('✅ setRefreshing(false) completed');
+      console.log('🎉 handleContinue completed successfully!');
+      
+      if (onContinueCallback) {
+        onContinueCallback();
+      }
       
     } catch (error) {
       console.error('❌ Error in handleContinue:', error);
+      setRefreshing(false);
+    } finally {
+      setIsProcessing(false);
     }
   }, [nextWave, startPreparation, resetDice, setRefreshing, onContinueCallback]);
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = 'translateY(-2px)';
-    e.currentTarget.style.boxShadow = '0 8px 24px rgba(74, 222, 128, 0.6)';
+  const [hovered, setHovered] = useState(false);
+
+  const handleMouseEnter = () => {
+    setHovered(true);
   };
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = 'translateY(0)';
-    e.currentTarget.style.boxShadow = '0 6px 18px rgba(74, 222, 128, 0.4)';
+  const handleMouseLeave = () => {
+    setHovered(false);
   };
 
   const handleContinueClick = () => {
@@ -64,8 +82,22 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     console.log('📊 Current state:', {
       currentWave,
       isRefreshing,
-      isPreparing
+      isPreparing,
+      isProcessing
     });
+    
+    if (isProcessing || !isRefreshing) {
+      console.log('⚠️ Button already processed or not in refreshing state, ignoring click');
+      console.log('🔍 Debug info:', {
+        isProcessing,
+        isRefreshing,
+        shouldDisable: isProcessing || !isRefreshing
+      });
+      return;
+    }
+    
+    console.log('✅ Setting processing state to true');
+    setIsProcessing(true);
     
     try {
       console.log('🔄 Calling handleContinue...');
@@ -73,17 +105,35 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       console.log('✅ handleContinue called successfully');
     } catch (error) {
       console.error('❌ Error in handleContinue:', error);
+      setRefreshing(false);
+      setIsProcessing(false);
     }
   };
+
+  const isDisabled = isProcessing || !isRefreshing;
+
+  // ✅ DEBUG: Global debug function for testing
+  useEffect(() => {
+    (window as unknown as { debugContinueButton: () => void }).debugContinueButton = () => {
+      console.log('🔍 ContinueButton Debug Info:', {
+        isRefreshing,
+        isProcessing,
+        isDisabled,
+        currentWave,
+        isPreparing
+      });
+    };
+  }, [isRefreshing, isProcessing, isDisabled, currentWave, isPreparing]);
 
   return (
     <button
       onClick={handleContinueClick}
-      style={footerStyles.continueButton}
+      style={getContinueButtonStyle(hovered)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      disabled={isDisabled}
     >
-      🚀 Savaşa Devam
+      {isProcessing ? '🔄 İşleniyor...' : '🚀 Savaşa Devam'}
     </button>
   );
 }; 

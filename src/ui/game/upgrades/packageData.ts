@@ -1,3 +1,5 @@
+import { validatePackagePurchase } from '../../../security/SecurityEnhancements';
+
 export interface PackageDefinition {
   id: string;
   name: string;
@@ -11,6 +13,25 @@ export interface PackageDefinition {
   isElite?: boolean;
   purchaseLimit?: number;
 }
+
+// Secure package purchase wrapper
+export const securePackagePurchase = (
+  packageId: string,
+  cost: number,
+  maxAllowed: number,
+  onPurchase: () => void
+): boolean => {
+  // Validate package purchase
+  const validation = validatePackagePurchase(packageId, cost, maxAllowed);
+  if (!validation.valid) {
+    console.warn('🔒 Security: Package purchase blocked:', validation.reason);
+    return false;
+  }
+  
+  // Execute purchase
+  onPurchase();
+  return true;
+};
 
 export const PACKAGE_DEFINITIONS: PackageDefinition[] = [
   {

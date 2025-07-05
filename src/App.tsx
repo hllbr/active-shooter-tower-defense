@@ -1,11 +1,12 @@
 import './App.css';
 import { GameBoard } from './ui/GameBoard';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { SettingsPanel } from './ui/settings/SettingsPanel';
 import { ChallengePanel } from './ui/challenge/ChallengePanel';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ChallengeProvider } from './ui/challenge/ChallengeContext';
+import { MiniSecurityIndicator } from './ui/common/SecurityStatusIndicator';
 
 function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -33,6 +34,7 @@ function App() {
         </div>
         <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         <ChallengePanel isOpen={challengeOpen} onClose={() => setChallengeOpen(false)} />
+        <MiniSecurityIndicator />
         <h1>Shooter Tower Defense</h1>
         <GameBoard />
       </div>
