@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { useGameStore } from '../../../../models/store';
 import { GAME_CONSTANTS } from '../../../../utils/constants';
 import type { Enemy, Bullet, Effect, Mine } from '../../../../models/gameTypes';
@@ -9,6 +9,9 @@ export const SVGEffectsRenderer: React.FC = () => {
   const { enemies, bullets, effects, mines } = useGameStore();
   const animationElementsRef = useRef<Set<Element>>(new Set());
   const componentMountedRef = useRef(true);
+  const viewportRef = useRef<{ x: number; y: number; width: number; height: number }>({
+    x: 0, y: 0, width: window.innerWidth, height: window.innerHeight
+  });
 
   // Track animation elements for cleanup
   const trackAnimationElement = (element: Element) => {
@@ -16,6 +19,58 @@ export const SVGEffectsRenderer: React.FC = () => {
       animationElementsRef.current.add(element);
     }
   };
+
+  // Optimized visibility check with viewport culling
+  const isInViewport = (x: number, y: number, radius: number = 50): boolean => {
+    const margin = radius + 100; // Extra margin for smooth transitions
+    return (
+      x >= viewportRef.current.x - margin &&
+      x <= viewportRef.current.x + viewportRef.current.width + margin &&
+      y >= viewportRef.current.y - margin &&
+      y <= viewportRef.current.y + viewportRef.current.height + margin
+    );
+  };
+
+  // Memoized filtered arrays for performance
+  const visibleEnemies = useMemo(() => 
+    enemies.filter(enemy => isInViewport(enemy.position.x, enemy.position.y, enemy.size / 2)),
+    [enemies]
+  );
+
+  const visibleBullets = useMemo(() => 
+    bullets.filter(bullet => isInViewport(bullet.position.x, bullet.position.y, bullet.size)),
+    [bullets]
+  );
+
+  const visibleEffects = useMemo(() => 
+    effects.filter(effect => isInViewport(effect.position.x, effect.position.y, effect.radius)),
+    [effects]
+  );
+
+  const visibleMines = useMemo(() => 
+    mines.filter(mine => isInViewport(mine.position.x, mine.position.y, mine.size)),
+    [mines]
+  );
+
+  // Update viewport on scroll/resize
+  useEffect(() => {
+    const updateViewport = () => {
+      viewportRef.current = {
+        x: window.scrollX,
+        y: window.scrollY,
+        width: window.innerWidth,
+        height: window.innerHeight
+      };
+    };
+
+    window.addEventListener('scroll', updateViewport, { passive: true });
+    window.addEventListener('resize', updateViewport, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', updateViewport);
+      window.removeEventListener('resize', updateViewport);
+    };
+  }, []);
 
   // Cleanup animations on unmount
   useEffect(() => {
@@ -105,8 +160,8 @@ export const SVGEffectsRenderer: React.FC = () => {
 
   return (
     <>
-      {/* Enemies */}
-      {enemies.map((enemy: Enemy) => (
+      {/* Enemies - Only render visible ones */}
+      {visibleEnemies.map((enemy: Enemy) => (
         <g key={enemy.id}>
           {/* Health bar */}
           <rect
@@ -171,8 +226,8 @@ export const SVGEffectsRenderer: React.FC = () => {
         </g>
       ))}
 
-      {/* Bullets */}
-      {bullets.map((bullet: Bullet) => (
+      {/* Bullets - Only render visible ones */}
+      {visibleBullets.map((bullet: Bullet) => (
         <line
           key={bullet.id}
           x1={bullet.position.x - bullet.direction.x * bullet.size}
@@ -184,8 +239,8 @@ export const SVGEffectsRenderer: React.FC = () => {
         />
       ))}
 
-      {/* Effects */}
-      {effects.map((effect: Effect) => (
+      {/* Effects - Only render visible ones */}
+      {visibleEffects.map((effect: Effect) => (
         <circle
           key={effect.id}
           cx={effect.position.x}
@@ -197,8 +252,8 @@ export const SVGEffectsRenderer: React.FC = () => {
         />
       ))}
 
-      {/* Mines with managed animations */}
-      {mines.map((mine: Mine) => (
+      {/* Mines with managed animations - Only render visible ones */}
+      {visibleMines.map((mine: Mine) => (
         <g key={mine.id} transform={`translate(${mine.position.x}, ${mine.position.y})`} style={{ pointerEvents: 'none' }}>
           {/* The horns of the mine */}
           {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
