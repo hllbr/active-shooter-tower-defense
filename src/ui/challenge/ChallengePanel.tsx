@@ -25,7 +25,7 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
   const handleClaim = (id: number, reward: Reward) => {
     claimReward(id);
     let msg = 'Ödül alındı!';
-    if (reward.type === 'gold') msg = `${reward.amount} altın kazandın!`;
+    if (reward.type === 'gold') msg = `${reward.amount} 💰 kazandın!`;
     if (reward.type === 'skin') msg = `Yeni skin açıldı: ${reward.name}`;
     if (reward.type === 'tower') msg = `Yeni kule açıldı: ${reward.towerType}`;
     toast.success(msg, { position: 'bottom-center' });
@@ -54,7 +54,7 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
                 <span style={{ textDecoration: isCompleted ? 'line-through' : 'none', flex: 1 }}>
                   {c.text} <span className="progress">({c.progress}/{c.target})</span>
                 </span>
-                <span className="reward">Ödül: {c.reward.type === 'gold' ? `${c.reward.amount} altın` : c.reward.type === 'skin' ? `Skin: ${c.reward.name}` : `Kule: ${c.reward.towerType}`}</span>
+                <span className="reward">Ödül: {c.reward.type === 'gold' ? `${c.reward.amount} 💰` : c.reward.type === 'skin' ? `Skin: ${c.reward.name}` : `Kule: ${c.reward.towerType}`}</span>
               </li>
             );
           })}
@@ -79,7 +79,7 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
                 <span style={{ textDecoration: isCompleted ? 'line-through' : 'none', flex: 1 }}>
                   {c.text} <span className="progress">({c.progress}/{c.target})</span>
                 </span>
-                <span className="reward">Ödül: {c.reward.type === 'gold' ? `${c.reward.amount} altın` : c.reward.type === 'skin' ? `Skin: ${c.reward.name}` : `Kule: ${c.reward.towerType}`}</span>
+                <span className="reward">Ödül: {c.reward.type === 'gold' ? `${c.reward.amount} 💰` : c.reward.type === 'skin' ? `Skin: ${c.reward.name}` : `Kule: ${c.reward.towerType}`}</span>
               </li>
             );
           })}
@@ -90,12 +90,12 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
             {claimedRewardHistory.slice(-10).reverse().map((item, _i) => (
               <li key={item.id + '-' + item.date}>
                 <span>{format(new Date(item.date), 'dd.MM.yyyy HH:mm')}</span> - 
-                <span>{item.reward.type === 'gold' ? `${item.reward.amount} altın` : item.reward.type === 'skin' ? `Skin: ${item.reward.name}` : `Kule: ${item.reward.towerType}`}</span>
+                <span>{item.reward.type === 'gold' ? `${item.reward.amount} 💰` : item.reward.type === 'skin' ? `Skin: ${item.reward.name}` : `Kule: ${item.reward.towerType}`}</span>
               </li>
             ))}
           </ul>
         </div>
-        <button className="close-btn" onClick={onClose}>Kapat</button>
+        <button className="close-btn" onClick={onClose} aria-label="Görev panelini kapat">Kapat</button>
       </div>
       <ToastContainer position="bottom-center" autoClose={3000} hideProgressBar newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </div>

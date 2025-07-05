@@ -8,13 +8,13 @@ import { getUpgradeColor } from './utils';
 export const FireUpgrades: React.FC = () => {
   const { 
     gold, 
-    spendGold, 
-    bulletLevel, 
     upgradeBullet, 
     discountMultiplier, 
-    diceResult 
+    diceResult,
+    purchaseIndividualFireUpgrade,
+    getIndividualFireUpgradeInfo
   } = useGameStore();
-  const setRefreshing = useGameStore((s) => s.setRefreshing);
+  // CRITICAL FIX: setRefreshing kaldırıldı - lock problemini çözmek için
 
   return (
     <div style={{ 
@@ -25,16 +25,27 @@ export const FireUpgrades: React.FC = () => {
     }}>
       {GAME_CONSTANTS.BULLET_TYPES.map((bulletType: BulletTypeData, index: number) => {
         const level = index + 1;
-        const isUnlocked = bulletLevel >= level;
-        const isNext = bulletLevel === level - 1;
+        const upgradeId = `fire_${level}`; // CRITICAL FIX: Her fire upgrade için benzersiz ID
         const cost = GAME_CONSTANTS.BULLET_COST * Math.pow(GAME_CONSTANTS.BULLET_COST_MULTIPLIER, index);
         
-        // Seviye gösterimini düzelt: bulletLevel bu mermi tipine sahipse 2/2, hazırsa 1/2, değilse 0/2
-        let currentLevel = 0;
-        if (isUnlocked) {
-          currentLevel = 2; // Sahip olunan upgrade'ler maksimum seviyede
-        } else if (isNext) {
-          currentLevel = 1; // Bir sonraki upgrade satın alınabilir durumda
+        // CRITICAL FIX: Individual tracking sistemini kullan
+        const upgradeInfo = getIndividualFireUpgradeInfo(upgradeId, 2);
+        const currentLevel = upgradeInfo.currentLevel;
+        const isMaxed = upgradeInfo.isMaxed;
+        const canUpgrade = upgradeInfo.canUpgrade && gold >= cost;
+        
+        // DEBUG: Only log if there's an issue
+        if (currentLevel === 1 && bulletType.name.includes('Kraliçe')) {
+          console.log(`🔍 ${bulletType.name} Debug:`, {
+            upgradeId,
+            currentLevel,
+            isMaxed,
+            canUpgrade: upgradeInfo.canUpgrade,
+            hasGold: gold >= cost,
+            finalCanUpgrade: canUpgrade,
+            gold,
+            cost
+          });
         }
         
         const upgradeData = {
@@ -44,26 +55,36 @@ export const FireUpgrades: React.FC = () => {
           baseCost: cost,
           maxLevel: 2,
           onUpgrade: () => {
-            if (isNext) {
-              const finalCost = cost;
-              let discountedCost = finalCost;
-              
-              if (diceResult && diceResult === 6) discountedCost = Math.floor(finalCost * 0.5);
-              else if (diceResult && diceResult === 5) discountedCost = Math.floor(finalCost * 0.7);
-              else if (diceResult && diceResult === 4) discountedCost = Math.floor(finalCost * 0.85);
-              
-              if (discountMultiplier !== 1) {
-                discountedCost = Math.floor(discountedCost / discountMultiplier);
-              }
-              
-              spendGold(discountedCost);
-              upgradeBullet(false);
-              setRefreshing(true); // Satın alma sonrası upgrade ekranı açık kalsın
+            console.log(`🚀 ${bulletType.name} onUpgrade clicked!`);
+            
+            // CRITICAL FIX: Basit ve direkt satın alma - store kendi kontrollerini yapacak
+            let discountedCost = cost;
+            
+            // Zar indirimleri
+            if (diceResult && diceResult === 6) discountedCost = Math.floor(cost * 0.5);
+            else if (diceResult && diceResult === 5) discountedCost = Math.floor(cost * 0.7);
+            else if (diceResult && diceResult === 4) discountedCost = Math.floor(cost * 0.85);
+            
+            // Discount multiplier
+            if (discountMultiplier !== 1) {
+              discountedCost = Math.floor(discountedCost / discountMultiplier);
+            }
+            
+            console.log(`💰 Attempting purchase: ${upgradeId} for ${discountedCost} gold`);
+            
+            // CRITICAL FIX: Individual tracking ile satın alma
+            const success = purchaseIndividualFireUpgrade(upgradeId, discountedCost, 2);
+            
+            if (success) {
+              upgradeBullet(false); // Backward compatibility için
+              console.log(`✅ ${bulletType.name} upgrade successful!`);
+            } else {
+              console.log(`❌ ${bulletType.name} upgrade failed!`);
             }
           },
           icon: "🔥",
-          color: getUpgradeColor(isUnlocked, isNext, currentLevel >= 2),
-          additionalInfo: `Hasar Çarpanı: x${bulletType.damageMultiplier} | Hız: x${bulletType.speedMultiplier || 1}`
+          color: getUpgradeColor(currentLevel > 0, canUpgrade, isMaxed),
+          additionalInfo: `Hasar Çarpanı: x${bulletType.damageMultiplier} | Hız: x${bulletType.speedMultiplier || 1} | Seviye: ${currentLevel}/2`
         };
 
         return (

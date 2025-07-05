@@ -5,6 +5,8 @@ import { upgradeEffectsManager } from '../UpgradeEffects';
 import { bulletPool } from '../bullet-system/BulletPool';
 import { getDirection, getTargetEnemy, TargetingMode } from '../targeting-system/TargetingSystem';
 import { specialAbilitiesManager } from './SpecialAbilities';
+import { towerSynergyManager } from './TowerSynergyManager';
+import { defenseSystemManager } from '../defense-systems';
 
 /**
  * Tower firing system
@@ -82,6 +84,12 @@ export class TowerFiringSystem {
     const modifier = currentWaveModifier;
     const now = performance.now();
     
+    // ✅ NEW: Update synergy bonuses for all towers
+    towerSynergyManager.updateAllSynergyBonuses(towerSlots);
+    
+    // ✅ NEW: Update defense systems (shields, repair stations)
+    defenseSystemManager.updateDefenseSystems(towerSlots, enemies, addEffect, now);
+    
     // Sur yenileme kontrolü
     if (!globalWallActive && !wallRegenerationActive) {
       regenerateWalls();
@@ -111,9 +119,18 @@ export class TowerFiringSystem {
 
       const bulletType = GAME_CONSTANTS.BULLET_TYPES[bulletLevel - 1];
       
+      // ✅ NEW: Apply synergy bonuses to tower stats
+      const synergyBonuses = tower.synergyBonuses || { damage: 0, range: 0, fireRate: 0 };
+      const positioningBonuses = towerSynergyManager.getPositioningBonus(tower, tower.position, towerSlots);
+      
+      // Calculate enhanced stats with bonuses
+      const enhancedRange = tower.range * (1 + (synergyBonuses.range || 0) + positioningBonuses.range);
+      const enhancedDamage = tower.damage * (1 + (synergyBonuses.damage || 0) + positioningBonuses.damage);
+      const enhancedFireRate = tower.fireRate * (1 - ((synergyBonuses.fireRate || 0) + positioningBonuses.fireRate)); // Lower is better for fire rate
+      
       // Sur durumuna göre ateş hızı ve hasar hesaplama
       let fireRateMultiplier = bulletType.fireRateMultiplier;
-      const damageMultiplier = bulletType.damageMultiplier;
+      const damageMultiplier = bulletType.damageMultiplier * (enhancedDamage / tower.damage); // Use enhanced damage ratio
       
       if (wallLevel > 0) {
         // Sur seviyesine göre bonus
@@ -123,7 +140,7 @@ export class TowerFiringSystem {
         }
       }
       
-      const finalFireRate = tower.fireRate * fireRateMultiplier;
+      const finalFireRate = enhancedFireRate * fireRateMultiplier;
       if (now - tower.lastFired < finalFireRate) return;
 
       const visibleEnemies = enemies.filter(e => {
@@ -137,13 +154,49 @@ export class TowerFiringSystem {
       let targetingMode = TargetingMode.NEAREST;
       const options: Record<string, unknown> = {};
       
-      // Advanced towers get smarter targeting
-      if (tower.level >= 15) {
-        targetingMode = TargetingMode.THREAT_ASSESSMENT; // Elite towers use AI
-      } else if (tower.level >= 10) {
-        targetingMode = TargetingMode.LOWEST_HP; // High level towers finish enemies
-      } else if (tower.level >= 5) {
-        targetingMode = TargetingMode.FASTEST; // Mid level towers focus on fast enemies
+      // ✅ NEW: Specialized tower targeting based on tower class
+      if (tower.towerClass) {
+        switch (tower.towerClass) {
+          case 'sniper':
+            targetingMode = TargetingMode.HIGHEST_HP; // Sniper targets high HP enemies
+            options.priorityTypes = ['Tank', 'Boss'];
+            break;
+          case 'gatling':
+            targetingMode = TargetingMode.FASTEST; // Gatling targets fast enemies
+            break;
+          case 'laser':
+            targetingMode = TargetingMode.THREAT_ASSESSMENT; // Laser uses smart targeting
+            break;
+          case 'mortar':
+            targetingMode = TargetingMode.LOWEST_HP; // Mortar finishes off weakened enemies with AoE
+            break;
+          case 'flamethrower':
+            targetingMode = TargetingMode.NEAREST; // Flamethrower targets nearest due to short range
+            break;
+          case 'radar':
+          case 'supply_depot':
+          case 'shield_generator':
+          case 'repair_station':
+            return; // Support towers don't fire
+          case 'emp':
+            options.priorityTypes = ['Electronics', 'Robot']; // EMP targets electronic enemies
+            break;
+          case 'stealth_detector':
+            options.priorityTypes = ['Ghost', 'Stealth']; // Detector targets stealth enemies
+            break;
+          case 'air_defense':
+            options.priorityTypes = ['Flying', 'Air']; // Air defense targets flying enemies
+            break;
+        }
+      } else {
+        // Advanced towers get smarter targeting
+        if (tower.level >= 15) {
+          targetingMode = TargetingMode.THREAT_ASSESSMENT; // Elite towers use AI
+        } else if (tower.level >= 10) {
+          targetingMode = TargetingMode.LOWEST_HP; // High level towers finish enemies
+        } else if (tower.level >= 5) {
+          targetingMode = TargetingMode.FASTEST; // Mid level towers focus on fast enemies
+        }
       }
       
       // Special targeting for economic towers
@@ -170,8 +223,8 @@ export class TowerFiringSystem {
           break;
       }
       
-      const rangeMult = (modifier?.towerRangeReduced ? 0.5 : 1) * (tower.rangeMultiplier ?? 1);
-      options.range = tower.range * rangeMult;
+      const rangeMult = (modifier?.towerRangeReduced ? 0.5 : 1) * (tower.rangeMultiplier ?? 1) * (1 + (synergyBonuses.range || 0) + positioningBonuses.range);
+      options.range = enhancedRange * rangeMult;
       
       // Use enhanced targeting system
       const { enemy, threatScore } = getTargetEnemy(tower, visibleEnemies, targetingMode, options);
@@ -184,7 +237,7 @@ export class TowerFiringSystem {
 
       this.fireTower(tower, enemy, {
         speedMultiplier: bulletType.speedMultiplier,
-        damageMultiplier,
+        damageMultiplier: damageMultiplier,
         color: bulletType.color,
       }, addBullet);
     });

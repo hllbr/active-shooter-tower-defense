@@ -1,0 +1,279 @@
+import type { Tower, TowerSlot, Position } from '../../models/gameTypes';
+
+/**
+ * Tower Synergy Manager
+ * Manages tower combinations, synergy bonuses, and strategic positioning
+ * Implements Issue #54 tower synergy requirements
+ */
+export class TowerSynergyManager {
+  private static instance: TowerSynergyManager;
+  
+  public static getInstance(): TowerSynergyManager {
+    if (!TowerSynergyManager.instance) {
+      TowerSynergyManager.instance = new TowerSynergyManager();
+    }
+    return TowerSynergyManager.instance;
+  }
+
+  /**
+   * Calculate synergy bonuses for a tower based on nearby towers
+   */
+  public calculateSynergyBonuses(
+    tower: Tower, 
+    allTowerSlots: TowerSlot[]
+  ): { damage: number; range: number; fireRate: number } {
+    const bonuses = { damage: 0, range: 0, fireRate: 0 };
+    
+    if (!tower.towerClass) return bonuses;
+    
+    const nearbyTowers = this.getNearbyTowers(tower, allTowerSlots, 200);
+    
+    // Apply synergy combinations
+    for (const nearbyTower of nearbyTowers) {
+      if (!nearbyTower.towerClass) continue;
+      
+      const synergyBonus = this.getSynergyBonus(tower.towerClass, nearbyTower.towerClass);
+      if (synergyBonus) {
+        bonuses.damage += synergyBonus.damage || 0;
+        bonuses.range += synergyBonus.range || 0;
+        bonuses.fireRate += synergyBonus.fireRate || 0;
+      }
+    }
+    
+    return bonuses;
+  }
+
+  /**
+   * Get nearby towers within specified radius
+   */
+  private getNearbyTowers(
+    tower: Tower, 
+    allTowerSlots: TowerSlot[], 
+    radius: number
+  ): Tower[] {
+    const nearbyTowers: Tower[] = [];
+    
+    for (const slot of allTowerSlots) {
+      if (!slot.tower || slot.tower.id === tower.id) continue;
+      
+      const distance = this.getDistance(tower.position, slot.tower.position);
+      if (distance <= radius) {
+        nearbyTowers.push(slot.tower);
+      }
+    }
+    
+    return nearbyTowers;
+  }
+
+  /**
+   * Get synergy bonus between two tower types
+   */
+  private getSynergyBonus(
+    towerClass1: string, 
+    towerClass2: string
+  ): { damage?: number; range?: number; fireRate?: number } | null {
+    const synergyCombinations = {
+      // ASSAULT COMBINATIONS
+      'sniper_radar': { damage: 0.5, range: 0.2 }, // Spotter-Sniper combo
+      'gatling_supply_depot': { damage: 0.3, fireRate: 0.25 }, // Supply-Artillery combo
+      'laser_shield_generator': { damage: 0.2, range: 0.15 }, // Defensive support
+      
+      // AREA CONTROL COMBINATIONS
+      'mortar_radar': { damage: 0.4, range: 0.3 }, // Guided mortars
+      'flamethrower_supply_depot': { fireRate: 0.3, damage: 0.2 }, // Fuel supply
+      'mortar_stealth_detector': { damage: 0.3, range: 0.2 }, // Target marking
+      
+      // SUPPORT COMBINATIONS
+      'radar_sniper': { damage: 0.5, range: 0.2 }, // Enhanced targeting
+      'supply_depot_gatling': { damage: 0.3, fireRate: 0.25 }, // Ammo supply
+      'shield_generator_repair_station': { fireRate: 0.2, range: 0.1 }, // Defense network
+      
+      // DEFENSIVE COMBINATIONS
+      'shield_generator_shield_generator': { damage: 0.1, range: 0.2 }, // Shield network
+      'repair_station_repair_station': { fireRate: 0.15, range: 0.15 }, // Repair network
+      'shield_generator_laser': { damage: 0.2, range: 0.15 }, // Protected firepower
+      
+      // SPECIALIST COMBINATIONS
+      'emp_stealth_detector': { damage: 0.4, range: 0.25 }, // Electronic warfare
+      'stealth_detector_sniper': { damage: 0.6, range: 0.3 }, // Target acquisition
+      'air_defense_radar': { damage: 0.3, range: 0.4 }, // Air superiority
+      
+      // CROSS-CATEGORY COMBOS
+      'sniper_supply_depot': { damage: 0.25, range: 0.1 }, // Precision support
+      'mortar_shield_generator': { damage: 0.2, fireRate: 0.1 }, // Protected artillery
+      'gatling_repair_station': { fireRate: 0.2, damage: 0.1 }, // Sustained fire
+      'flamethrower_emp': { damage: 0.3, fireRate: 0.15 }, // Disruption combo
+    };
+    
+    // Check both directions
+    const key1 = `${towerClass1}_${towerClass2}`;
+    const key2 = `${towerClass2}_${towerClass1}`;
+    
+    return synergyCombinations[key1 as keyof typeof synergyCombinations] || 
+           synergyCombinations[key2 as keyof typeof synergyCombinations] || 
+           null;
+  }
+
+  /**
+   * Calculate distance between two positions
+   */
+  private getDistance(pos1: Position, pos2: Position): number {
+    return Math.sqrt(
+      Math.pow(pos1.x - pos2.x, 2) + 
+      Math.pow(pos1.y - pos2.y, 2)
+    );
+  }
+
+  /**
+   * Update synergy bonuses for all towers
+   */
+  public updateAllSynergyBonuses(towerSlots: TowerSlot[]): void {
+    for (const slot of towerSlots) {
+      if (!slot.tower) continue;
+      
+      const bonuses = this.calculateSynergyBonuses(slot.tower, towerSlots);
+      slot.tower.synergyBonuses = bonuses;
+    }
+  }
+
+  /**
+   * Get strategic positioning bonuses
+   */
+  public getPositioningBonus(
+    tower: Tower,
+    position: Position,
+    allTowerSlots: TowerSlot[]
+  ): { damage: number; range: number; fireRate: number } {
+    const bonuses = { damage: 0, range: 0, fireRate: 0 };
+    
+    // High ground bonus (simulated - could be based on actual terrain)
+    if (this.isHighGround(position)) {
+      bonuses.range += 0.25; // +25% range on high ground
+    }
+    
+    // Chokepoint bonus (simulated - could be based on enemy path analysis)
+    if (this.isChokepoint(position)) {
+      if (tower.areaOfEffect && tower.areaOfEffect > 0) {
+        bonuses.damage += 0.5; // +50% damage for AoE weapons in chokepoints
+      }
+    }
+    
+    // Overlapping fields bonus
+    const overlappingTowers = this.getOverlappingTowers(tower, allTowerSlots);
+    if (overlappingTowers.length > 0) {
+      bonuses.damage += overlappingTowers.length * 0.1; // +10% per overlapping tower
+    }
+    
+    return bonuses;
+  }
+
+  /**
+   * Check if position is high ground (placeholder implementation)
+   */
+  private isHighGround(position: Position): boolean {
+    // Simplified: top 20% of screen is considered high ground
+    return position.y < window.innerHeight * 0.2;
+  }
+
+  /**
+   * Check if position is a chokepoint (placeholder implementation)
+   */
+  private isChokepoint(position: Position): boolean {
+    // Simplified: center areas are considered chokepoints
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const distance = Math.sqrt(
+      Math.pow(position.x - centerX, 2) + 
+      Math.pow(position.y - centerY, 2)
+    );
+    return distance < 150; // Within 150px of center
+  }
+
+  /**
+   * Get towers with overlapping range
+   */
+  private getOverlappingTowers(tower: Tower, allTowerSlots: TowerSlot[]): Tower[] {
+    const overlapping: Tower[] = [];
+    
+    for (const slot of allTowerSlots) {
+      if (!slot.tower || slot.tower.id === tower.id) continue;
+      
+      const distance = this.getDistance(tower.position, slot.tower.position);
+      const rangeOverlap = tower.range + slot.tower.range;
+      
+      if (distance < rangeOverlap * 0.5) { // 50% range overlap required
+        overlapping.push(slot.tower);
+      }
+    }
+    
+    return overlapping;
+  }
+
+  /**
+   * Get recommended tower combinations
+   */
+  public getRecommendedCombinations(
+    existingTowers: Tower[]
+  ): Array<{ towerClass: string; reason: string; bonus: string }> {
+    const recommendations: Array<{ towerClass: string; reason: string; bonus: string }> = [];
+    
+    for (const tower of existingTowers) {
+      if (!tower.towerClass) continue;
+      
+      const synergies = this.getAvailableSynergies(tower.towerClass);
+      for (const synergy of synergies) {
+        // Check if we don't already have this combination
+        const hasCombo = existingTowers.some(t => t.towerClass === synergy.towerClass);
+        if (!hasCombo) {
+          recommendations.push({
+            towerClass: synergy.towerClass,
+            reason: `Synergy with ${tower.towerClass}`,
+            bonus: synergy.bonusDescription
+          });
+        }
+      }
+    }
+    
+    return recommendations.slice(0, 3); // Return top 3 recommendations
+  }
+
+  /**
+   * Get available synergies for a tower class
+   */
+  private getAvailableSynergies(towerClass: string): Array<{ towerClass: string; bonusDescription: string }> {
+    const synergies: Record<string, Array<{ towerClass: string; bonusDescription: string }>> = {
+      sniper: [
+        { towerClass: 'radar', bonusDescription: '+50% damage, +20% range' },
+        { towerClass: 'supply_depot', bonusDescription: '+25% damage, +10% range' }
+      ],
+      gatling: [
+        { towerClass: 'supply_depot', bonusDescription: '+30% damage, +25% fire rate' },
+        { towerClass: 'repair_station', bonusDescription: '+20% fire rate, +10% damage' }
+      ],
+      laser: [
+        { towerClass: 'shield_generator', bonusDescription: '+20% damage, +15% range' }
+      ],
+      mortar: [
+        { towerClass: 'radar', bonusDescription: '+40% damage, +30% range' },
+        { towerClass: 'stealth_detector', bonusDescription: '+30% damage, +20% range' }
+      ],
+      flamethrower: [
+        { towerClass: 'supply_depot', bonusDescription: '+30% fire rate, +20% damage' },
+        { towerClass: 'emp', bonusDescription: '+30% damage, +15% fire rate' }
+      ],
+      radar: [
+        { towerClass: 'sniper', bonusDescription: 'Enables sniper critical hits' },
+        { towerClass: 'air_defense', bonusDescription: '+30% damage, +40% range' }
+      ],
+      supply_depot: [
+        { towerClass: 'gatling', bonusDescription: 'Sustains gatling fire rate' },
+        { towerClass: 'mortar', bonusDescription: 'Faster reload times' }
+      ]
+    };
+    
+    return synergies[towerClass] || [];
+  }
+}
+
+// Export singleton instance
+export const towerSynergyManager = TowerSynergyManager.getInstance(); 

@@ -54,7 +54,6 @@ export function getEnemiesInRange(pos: Position, range: number, enemies: Enemy[]
   return targetingGetEnemiesInRange(pos, range, enemies);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function _fireTower(
   tower: Tower,
   enemy: Enemy,
@@ -72,7 +71,6 @@ function _fireTower(
 }
 
 // Special ability functions
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function _handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect: Effect) => void, damageEnemy: (id: string, damage: number) => void) {
   // Use the new special abilities system
   return specialAbilitiesManager.handleSpecialAbility(tower, enemies, addEffect, damageEnemy);

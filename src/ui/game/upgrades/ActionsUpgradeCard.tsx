@@ -16,7 +16,7 @@ export const ActionsUpgradeCard: React.FC = () => {
 
   const actionsUpgrade: UpgradeData = {
     name: 'Aksiyon Sistemi',
-    description: 'Wave başına maksimum aksiyon sayısını artırır ve daha fazla harita değişikliği yapma imkanı sağlar.',
+    description: 'Dalga başına maksimum aksiyon sayısını artırır ve daha fazla harita değişikliği yapma imkanı sağlar.',
     currentLevel: maxActionsLevel,
     baseCost: GAME_CONSTANTS.MAX_ACTIONS_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, maxActionsLevel),
     maxLevel: GAME_CONSTANTS.MAX_MAX_ACTIONS_LEVEL,

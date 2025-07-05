@@ -1,1 +1,2 @@
-export { GAME_CONSTANTS } from './gameConstants';
+export * from './gameConstants';
+export * from './uiTexts';

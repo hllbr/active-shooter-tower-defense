@@ -3,6 +3,7 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Enemy, WaveModifier } from '../../models/gameTypes';
 import { spawnStrategy } from '../spawn-system';
 import { getRandomSpawnPosition } from './index';
+import BossManager from './BossManager';
 
 /**
  * Factory class responsible for creating different types of enemies
@@ -19,7 +20,17 @@ export class EnemyFactory {
     const dynamicType = spawnStrategy.selectEnemyType(wave, enemies);
     const finalType = type === 'Basic' ? dynamicType : type;
     
-    // Check for boss spawn
+    // Check for advanced boss spawn (new system)
+    const shouldSpawnAdvancedBoss = BossManager.shouldSpawnBoss(wave);
+    if (shouldSpawnAdvancedBoss) {
+      const position = getRandomSpawnPosition();
+      const advancedBoss = BossManager.createBoss(wave, position);
+      if (advancedBoss) {
+        return advancedBoss;
+      }
+    }
+    
+    // Check for basic boss spawn (legacy system)
     const shouldBeBoss = spawnStrategy.shouldSpawnBoss(wave, enemies.length);
     
     // Special enemy spawn logic for waves 10+

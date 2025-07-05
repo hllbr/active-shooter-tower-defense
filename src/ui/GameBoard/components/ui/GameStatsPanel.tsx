@@ -107,7 +107,7 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterO
             📊 Oyun İstatistikleri
           </div>
 
-          {/* Wave Progress Section */}
+          {/* Dalga Progress Section */}
           <div style={{
             background: 'rgba(0, 207, 255, 0.1)',
             border: '1px solid rgba(0, 207, 255, 0.3)',
@@ -123,7 +123,7 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterO
               marginBottom: 8,
               textShadow: '0 0 10px rgba(0, 207, 255, 0.5)'
             }}>
-              🌊 Wave {currentWave}/100
+              🌊 Dalga {currentWave}/100
             </div>
             
             <div style={{
@@ -147,31 +147,40 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterO
               position: 'relative',
               marginBottom: 6
             }}>
-              <div style={{
-                width: `${Math.min(100, (enemiesKilled / enemiesRequired) * 100)}%`,
-                height: '100%',
-                background: (() => {
-                  const progress = (enemiesKilled / enemiesRequired) * 100;
-                  if (progress < 25) return 'linear-gradient(90deg, #ef4444, #f87171)';
-                  if (progress < 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24)';
-                  if (progress < 75) return 'linear-gradient(90deg, #eab308, #facc15)';
-                  if (progress < 95) return 'linear-gradient(90deg, #22c55e, #4ade80)';
+              {(() => {
+                const progressPercentage = Math.min(100, (enemiesKilled / enemiesRequired) * 100);
+                const progressWidth = `${progressPercentage}%`;
+                const progressBackground = (() => {
+                  if (progressPercentage < 25) return 'linear-gradient(90deg, #ef4444, #f87171)';
+                  if (progressPercentage < 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+                  if (progressPercentage < 75) return 'linear-gradient(90deg, #eab308, #facc15)';
+                  if (progressPercentage < 95) return 'linear-gradient(90deg, #22c55e, #4ade80)';
                   return 'linear-gradient(90deg, #06b6d4, #0891b2)';
-                })(),
-                transition: 'all 0.4s ease'
-              }} />
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                fontSize: 9,
-                fontWeight: 'bold',
-                color: '#ffffff',
-                textShadow: '0 0 4px rgba(0, 0, 0, 0.8)'
-              }}>
-                {Math.round((enemiesKilled / enemiesRequired) * 100)}%
-              </div>
+                })();
+                
+                return (
+                  <>
+                    <div style={{
+                      width: progressWidth,
+                      height: '100%',
+                      background: progressBackground,
+                      transition: 'all 0.4s ease'
+                    }} />
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      fontSize: 9,
+                      fontWeight: 'bold',
+                      color: '#ffffff',
+                      textShadow: '0 0 4px rgba(0, 0, 0, 0.8)'
+                    }}>
+                      {Math.round(progressPercentage)}%
+                    </div>
+                  </>
+                );
+              })()}
             </div>
             
             <div style={{
@@ -195,8 +204,8 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterO
               borderRadius: 6,
               border: '1px solid rgba(255, 215, 0, 0.2)'
             }}>
-              <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>💰 Altın</span>
-              <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>{gold.toLocaleString()}</span>
+              <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>Altın</span>
+              <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: 12 }}>{gold.toLocaleString()} 💰</span>
             </div>
 
             {/* Tower Info */}

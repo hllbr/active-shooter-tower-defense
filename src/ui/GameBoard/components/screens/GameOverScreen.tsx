@@ -150,6 +150,7 @@ export const GameOverScreen: React.FC = () => {
         
         <button
           onClick={handleRestart}
+          aria-label={isVictory ? 'Oyunu tekrar oyna' : 'Oyunu tekrar dene'}
           style={{
             fontSize: 24,
             padding: '16px 48px',

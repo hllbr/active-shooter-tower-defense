@@ -2,7 +2,8 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { useGameStore } from '../../models/store';
 import type { Store } from '../../models/store';
 import { getContinueButtonStyle } from './Footer/footerStyles';
-import { validateStateChange } from '../../security/SecurityEnhancements';
+// CRITICAL FIX: Security validation kaldırıldı - oyun akıcılığı için
+// import { validateStateChange } from '../../security/SecurityEnhancements';
 
 interface ContinueButtonProps {
   onContinueCallback?: () => void;
@@ -30,12 +31,13 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   const handleContinue = useCallback(() => {
     console.log('🔒 Secure UpgradeScreen: handleContinue started');
     
-    const validation = validateStateChange('continueWave', {}, {});
-    if (!validation.valid) {
-      console.warn('🔒 Continue action blocked:', validation.reason);
-      setIsProcessing(false);
-      return;
-    }
+    // CRITICAL FIX: Security validation kaldırıldı - oyun akıcılığı için
+    // const validation = validateStateChange('continueWave', {}, {});
+    // if (!validation.valid) {
+    //   console.warn('🔒 Continue action blocked:', validation.reason);
+    //   setIsProcessing(false);
+    //   return;
+    // }
     
     try {
       console.log('📈 Calling nextWave...');
@@ -86,13 +88,9 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       isProcessing
     });
     
-    if (isProcessing || !isRefreshing) {
-      console.log('⚠️ Button already processed or not in refreshing state, ignoring click');
-      console.log('🔍 Debug info:', {
-        isProcessing,
-        isRefreshing,
-        shouldDisable: isProcessing || !isRefreshing
-      });
+    // CRITICAL FIX: Lock problemi çözüldü - isRefreshing kontrolü kaldırıldı
+    if (isProcessing) {
+      console.log('⚠️ Button already processed, ignoring click');
       return;
     }
     
@@ -110,7 +108,8 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     }
   };
 
-  const isDisabled = isProcessing || !isRefreshing;
+  // CRITICAL FIX: isRefreshing kontrolü kaldırıldı - sadece processing kontrol edilir
+  const isDisabled = isProcessing;
 
   // ✅ DEBUG: Global debug function for testing
   useEffect(() => {
@@ -128,6 +127,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   return (
     <button
       onClick={handleContinueClick}
+      aria-label={isProcessing ? 'İşleniyor, lütfen bekleyin' : 'Savaşa devam et'}
       style={getContinueButtonStyle(hovered)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

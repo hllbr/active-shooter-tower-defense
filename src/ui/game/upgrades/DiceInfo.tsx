@@ -13,7 +13,7 @@ export const DiceInfo: React.FC<DiceInfoProps> = ({ show }) => {
       <div style={{ fontSize: 12, marginTop: 4 }}>
         • 1-3: Normal indirimler (%10-30)<br />
         • 4-6: Süper indirimler (%30-50)<br />
-        • <strong>Her wave'de sadece 1 hakkın var!</strong>
+        • <strong>Her dalgada sadece 1 hakkın var!</strong>
       </div>
     </div>
   );

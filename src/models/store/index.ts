@@ -44,7 +44,7 @@ const removeEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) =
 };
 
 export type Store = GameState & {
-  buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy') => void;
+  buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy', towerClass?: string) => void;
   upgradeTower: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
   removeTower: (slotIdx: number) => void;
@@ -74,6 +74,7 @@ export type Store = GameState & {
   setDiceResult: (roll: number, multiplier: number) => void;
   upgradeMines: () => void;
   deployMines: () => void;
+  deploySpecializedMine: (mineType: 'explosive' | 'utility' | 'area_denial', mineSubtype: string, position?: Position) => void;
   triggerMine: (mineId: string) => void;
   upgradeWall: () => void;
   damageWall: (slotIdx: number) => void;
@@ -132,6 +133,29 @@ export type Store = GameState & {
     isMaxed: boolean;
   };
   
+  // CRITICAL FIX: Individual Upgrade Tracking Functions (fixes sayaç problemi)
+  purchaseIndividualFireUpgrade: (upgradeId: string, cost: number, maxLevel: number) => boolean;
+  getIndividualFireUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    currentLevel: number;
+    maxLevel: number;
+    canUpgrade: boolean;
+    isMaxed: boolean;
+  };
+  purchaseIndividualShieldUpgrade: (upgradeId: string, cost: number, maxLevel: number) => boolean;
+  getIndividualShieldUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    currentLevel: number;
+    maxLevel: number;
+    canUpgrade: boolean;
+    isMaxed: boolean;
+  };
+  purchaseIndividualDefenseUpgrade: (upgradeId: string, cost: number, maxLevel: number) => boolean;
+  getIndividualDefenseUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    currentLevel: number;
+    maxLevel: number;
+    canUpgrade: boolean;
+    isMaxed: boolean;
+  };
+  
   // Achievement System Functions (Faz 1: Temel Mekanikler)
   initializeAchievements: () => void;
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
@@ -146,46 +170,36 @@ export type Store = GameState & {
 export const useGameStore = create<Store>((set, get): Store => ({
   ...initialState,
 
-  buildTower: (slotIdx, free = false, towerType: 'attack' | 'economy' = 'attack') => set((state) => {
+  buildTower: (slotIdx, free = false, towerType: 'attack' | 'economy' = 'attack', towerClass?: string) => set((state) => {
     const slot = state.towerSlots[slotIdx];
+    if (!slot || slot.tower) return {};
+
     const cost = free ? 0 : GAME_CONSTANTS.TOWER_COST;
-    
-    // Enhanced validation with proper checks
-    if (!slot.unlocked) {
-      console.log(`❌ Cannot build tower: Slot ${slotIdx} is locked`);
-      return {};
-    }
-    if (slot.tower) {
-      console.log(`❌ Cannot build tower: Slot ${slotIdx} already has a tower`);
-      return {};
-    }
-    if (state.gold < cost) {
-      console.log(`❌ Cannot build tower: Need ${cost} gold, have ${state.gold}`);
-      return {};
-    }
-    if (state.towers.length >= state.maxTowers) {
-      console.log(`❌ Cannot build tower: Tower limit reached (${state.towers.length}/${state.maxTowers})`);
-      return {};
-    }
-    
-    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower;
-    if (!energyManager.consume(energyCost, 'buildTower')) {
-      console.log(`❌ Cannot build tower: Not enough energy (need ${energyCost})`);
-      return {};
-    }
-    
-    console.log(`✅ Building ${towerType} tower at slot ${slotIdx}. Towers: ${state.towers.length + 1}/${state.maxTowers}`);
-    
+    if (!free && state.gold < cost) return {};
+
     const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[0]; // Level 1
+    
+    // ✅ NEW: Handle specialized tower creation
+    let specializedTowerData = null;
+    if (towerClass && GAME_CONSTANTS.SPECIALIZED_TOWERS[towerClass as keyof typeof GAME_CONSTANTS.SPECIALIZED_TOWERS]) {
+      specializedTowerData = GAME_CONSTANTS.SPECIALIZED_TOWERS[towerClass as keyof typeof GAME_CONSTANTS.SPECIALIZED_TOWERS];
+      
+      // Check if player can afford specialized tower
+      if (!free && state.gold < specializedTowerData.cost) return {};
+    }
+
+    const finalCost = free ? 0 : (specializedTowerData?.cost || cost);
+
+    // Level 1
     const newTower: Tower = {
       id: `${Date.now()}-${Math.random()}`,
       position: { x: slot.x, y: slot.y },
       size: GAME_CONSTANTS.TOWER_SIZE,
       isActive: true,
       level: 1,
-      range: towerType === 'economy' ? 0 : GAME_CONSTANTS.TOWER_RANGE,
-      damage: towerType === 'economy' ? 0 : upgrade.damage,
-      fireRate: towerType === 'economy' ? 0 : upgrade.fireRate,
+      range: towerType === 'economy' ? 0 : (specializedTowerData?.baseRange || GAME_CONSTANTS.TOWER_RANGE),
+      damage: towerType === 'economy' ? 0 : (specializedTowerData?.baseDamage || upgrade.damage),
+      fireRate: towerType === 'economy' ? 0 : (specializedTowerData?.baseFireRate || upgrade.fireRate),
       lastFired: 0,
       health: upgrade.health,
       maxHealth: upgrade.health,
@@ -216,6 +230,29 @@ export const useGameStore = create<Store>((set, get): Store => ({
         ? GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER
         : 1,
       towerType,
+      
+      // ✅ NEW: Add specialized tower properties with safe defaults
+      towerCategory: specializedTowerData?.category as 'assault' | 'area_control' | 'support' | 'defensive' | 'specialist' | undefined,
+      towerClass: towerClass as 'sniper' | 'gatling' | 'laser' | 'mortar' | 'flamethrower' | 'radar' | 'supply_depot' | 'shield_generator' | 'repair_station' | 'emp' | 'stealth_detector' | 'air_defense' | undefined,
+      criticalChance: specializedTowerData && 'criticalChance' in specializedTowerData ? specializedTowerData.criticalChance : 0,
+      criticalDamage: specializedTowerData && 'criticalDamage' in specializedTowerData ? specializedTowerData.criticalDamage : 1,
+      armorPenetration: specializedTowerData && 'armorPenetration' in specializedTowerData ? specializedTowerData.armorPenetration : 0,
+      areaOfEffect: specializedTowerData && 'areaOfEffect' in specializedTowerData ? specializedTowerData.areaOfEffect : 0,
+      projectilePenetration: specializedTowerData && 'projectilePenetration' in specializedTowerData ? specializedTowerData.projectilePenetration : 0,
+      spinUpLevel: specializedTowerData && 'spinUpLevel' in specializedTowerData ? specializedTowerData.spinUpLevel : 0,
+      maxSpinUpLevel: specializedTowerData && 'maxSpinUpLevel' in specializedTowerData ? specializedTowerData.maxSpinUpLevel : 0,
+      beamFocusMultiplier: specializedTowerData && 'beamFocusMultiplier' in specializedTowerData ? specializedTowerData.beamFocusMultiplier : 1,
+      beamLockTime: specializedTowerData && 'beamLockTime' in specializedTowerData ? specializedTowerData.beamLockTime : 0,
+      supportRadius: specializedTowerData && 'supportRadius' in specializedTowerData ? specializedTowerData.supportRadius : 0,
+      supportIntensity: specializedTowerData && 'supportIntensity' in specializedTowerData ? specializedTowerData.supportIntensity : 1,
+      shieldStrength: specializedTowerData && 'shieldStrength' in specializedTowerData ? specializedTowerData.shieldStrength : 0,
+      shieldRegenRate: specializedTowerData && 'shieldRegenRate' in specializedTowerData ? specializedTowerData.shieldRegenRate : 0,
+      repairRate: specializedTowerData && 'repairRate' in specializedTowerData ? specializedTowerData.repairRate : 0,
+      empDuration: specializedTowerData && 'empDuration' in specializedTowerData ? specializedTowerData.empDuration : 0,
+      stealthDetectionRange: specializedTowerData && 'stealthDetectionRange' in specializedTowerData ? specializedTowerData.stealthDetectionRange : 0,
+      manualTargeting: false,
+      upgradePath: '',
+      synergyBonuses: { damage: 0, range: 0, fireRate: 0 }
     };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
@@ -227,12 +264,12 @@ export const useGameStore = create<Store>((set, get): Store => ({
         playContextualSound('tower-build'); // Kule inşa sesi
       });
     }, 50);
-    
+
     return {
-      towers: [...state.towers, newTower],
       towerSlots: newSlots,
-      gold: state.gold - cost,
-      totalGoldSpent: state.totalGoldSpent + cost,
+      towers: [...state.towers, newTower],
+      gold: state.gold - finalCost,
+      totalGoldSpent: state.totalGoldSpent + finalCost,
     };
   }),
 
@@ -261,7 +298,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     console.log(`✅ Slot ${slotIdx} unlocked! Cost: ${cost}💰, New tower limit: ${state.maxTowers + 1}`);
     
-    // ✅ SOUND & ANIMATION FIX: Play unlock sound and trigger animations
+    // ✅ CRITICAL FIX: Unlock animasyon süresi kısaltıldı - oyun akıcılığı için
     setTimeout(() => {
       // Play unlock sound effect
       import('../../utils/sound').then(({ playContextualSound }) => {
@@ -272,17 +309,17 @@ export const useGameStore = create<Store>((set, get): Store => ({
       const { startSlotUnlockAnimation, finishSlotUnlockAnimation } = useGameStore.getState();
       startSlotUnlockAnimation(slotIdx);
       
-      // Finish unlock animation after delay
+      // CRITICAL FIX: Animasyon süresi 800ms → 200ms
       setTimeout(() => {
         finishSlotUnlockAnimation(slotIdx);
         
-        // Clear recently unlocked after full animation sequence
+        // CRITICAL FIX: Celebration süresi 3000ms → 500ms
         setTimeout(() => {
           const { clearRecentlyUnlockedSlots } = useGameStore.getState();
           clearRecentlyUnlockedSlots();
-        }, 3000); // Keep celebration visible for 3 seconds
-      }, 800); // First animation phase duration
-    }, 50);
+        }, 500); // Kısa celebration - oyun akıcılığı için
+      }, 200); // Hızlı animasyon
+    }, 25); // Daha hızlı başlama
     
     return {
       towerSlots: newSlots,
@@ -331,6 +368,16 @@ export const useGameStore = create<Store>((set, get): Store => ({
     const enemy = state.enemies.find(e => e.id === enemyId);
     if (!enemy) return {};
     
+    // Handle boss defeat if this is a boss
+    if (enemy.bossType) {
+      // Import boss manager and handle boss defeat
+      setTimeout(() => {
+        import('../../game-systems/enemy/BossManager').then(({ default: BossManager }) => {
+          BossManager.handleBossDefeat(enemy);
+        });
+      }, 0);
+    }
+    
     // ✅ CRITICAL FIX: ALL enemies count toward wave completion, not just non-special ones
     // This was the main bug preventing wave progression
     const newKillCount = state.enemiesKilled + 1;
@@ -339,6 +386,13 @@ export const useGameStore = create<Store>((set, get): Store => ({
     if (state.currentWave === 1) {
       console.log(`💀 Enemy killed! Wave ${state.currentWave}: ${newKillCount}/${state.enemiesRequired} (${enemy.type}, special: ${enemy.isSpecial})`);
     }
+    
+    // Handle advanced loot system
+    setTimeout(() => {
+      import('../../game-systems/LootManager').then(({ default: LootManager }) => {
+        LootManager.handleEnemyDeath(enemy);
+      });
+    }, 0);
     
     // Energy bonus for enemy kill (delayed to avoid state conflicts)
     setTimeout(() => get().onEnemyKilled(enemy.isSpecial, enemy.type), 0);
@@ -366,6 +420,16 @@ export const useGameStore = create<Store>((set, get): Store => ({
       if (!enemy) return {};
       const newHealth = enemy.health - dmg;
       if (newHealth <= 0) {
+        // Handle boss defeat if this is a boss
+        if (enemy.bossType) {
+          // Import boss manager and handle boss defeat
+          setTimeout(() => {
+            import('../../game-systems/enemy/BossManager').then(({ default: BossManager }) => {
+              BossManager.handleBossDefeat(enemy);
+            });
+          }, 0);
+        }
+        
         // ✅ CRITICAL FIX: ALL enemies count toward wave completion, not just non-special ones
         // This was also causing wave progression issues in damageEnemy path
         const newKillCount = state.enemiesKilled + 1;
@@ -374,6 +438,13 @@ export const useGameStore = create<Store>((set, get): Store => ({
         if (state.currentWave === 1) {
           console.log(`💀 Enemy killed! Wave ${state.currentWave}: ${newKillCount}/${state.enemiesRequired} (${enemy.type}, special: ${enemy.isSpecial})`);
         }
+        
+        // Handle advanced loot system
+        setTimeout(() => {
+          import('../../game-systems/LootManager').then(({ default: LootManager }) => {
+            LootManager.handleEnemyDeath(enemy);
+          });
+        }, 0);
         
         // Enerji sistemi: Düşman öldürme bonusu
         setTimeout(() => get().onEnemyKilled(enemy.isSpecial, enemy.type), 0);
@@ -733,10 +804,87 @@ export const useGameStore = create<Store>((set, get): Store => ({
         damage: 50 + (state.mineLevel * 10), // ✅ FIX: Use hardcoded damage formula
         size: 20, // ✅ FIX: Add missing size property
         radius: 50, // ✅ FIX: Add missing radius property
+        // ✅ NEW: Default mine properties for backward compatibility
+        mineType: 'explosive',
+        mineSubtype: 'standard',
+        triggerCondition: 'contact',
+        isActive: true,
+        placedAt: Date.now(),
       });
     }
     
     return { mines: newMines };
+  }),
+
+  // ✅ NEW: Enhanced Mine Deployment with Type Support
+  deploySpecializedMine: (mineType: 'explosive' | 'utility' | 'area_denial', mineSubtype: string, position?: Position) => set((state) => {
+    // Get mine configuration with proper type handling
+    const mineTypeConfig = GAME_CONSTANTS.MINE_TYPES[mineType];
+    if (!mineTypeConfig) return {};
+    
+    const mineConfig = mineTypeConfig[mineSubtype as keyof typeof mineTypeConfig] as {
+      damage: number;
+      radius: number;
+      cost: number;
+      triggerCondition: 'contact' | 'proximity' | 'remote' | 'timer';
+      duration?: number;
+      slowMultiplier?: number;
+      effects?: string[];
+      empDuration?: number;
+      smokeDuration?: number;
+      freezeDuration?: number;
+    };
+    if (!mineConfig) return {};
+    
+    // Check placement limits
+    const typeCount = state.mines.filter(m => m.mineType === mineType).length;
+    const maxForType = GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MAX_MINES_PER_TYPE[mineType];
+    const totalMines = state.mines.length;
+    
+    if (typeCount >= maxForType || totalMines >= GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MAX_MINES_PER_WAVE) {
+      return {};
+    }
+    
+    if (state.gold < mineConfig.cost) return {};
+    
+    const minePosition = position || getValidMinePosition(state.towerSlots);
+    
+    // Check minimum distance between mines
+    const tooCloseToExisting = state.mines.some(existing => {
+      const distance = Math.hypot(
+        minePosition.x - existing.position.x,
+        minePosition.y - existing.position.y
+      );
+      return distance < GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MIN_DISTANCE_BETWEEN_MINES;
+    });
+    
+    if (tooCloseToExisting) return {};
+    
+    const newMine: Mine = {
+      id: `mine-${Date.now()}-${mineType}-${mineSubtype}`,
+      position: minePosition,
+      damage: mineConfig.damage || 0,
+      size: 20,
+      radius: mineConfig.radius || 50,
+      mineType,
+      mineSubtype: mineSubtype as 'standard' | 'cluster' | 'emp' | 'smoke' | 'caltrops' | 'tar' | 'freeze',
+      triggerCondition: mineConfig.triggerCondition || 'contact',
+      isActive: true,
+      placedAt: Date.now(),
+      duration: mineConfig.duration,
+      remainingDuration: mineConfig.duration,
+      slowMultiplier: mineConfig.slowMultiplier,
+      effects: mineConfig.effects,
+      empDuration: mineConfig.empDuration,
+      smokeDuration: mineConfig.smokeDuration,
+      freezeDuration: mineConfig.freezeDuration,
+    };
+    
+    return {
+      mines: [...state.mines, newMine],
+      gold: state.gold - mineConfig.cost,
+      totalGoldSpent: state.totalGoldSpent + mineConfig.cost,
+    };
   }),
 
   triggerMine: (mineId: string) => set((state) => ({
@@ -1182,6 +1330,122 @@ export const useGameStore = create<Store>((set, get): Store => ({
       }
     };
   }),
+
+  // ✅ INDIVIDUAL FIRE UPGRADE TRACKING System (fixes sayaç problemi)
+  purchaseIndividualFireUpgrade: (upgradeId: string, cost: number, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualFireUpgrades[upgradeId] || 0;
+    
+    console.log(`🛒 purchaseIndividualFireUpgrade called:`, {
+      upgradeId,
+      cost,
+      maxLevel,
+      currentLevel,
+      gold: state.gold,
+      hasEnoughGold: state.gold >= cost,
+      notMaxLevel: currentLevel < maxLevel
+    });
+    
+    if (currentLevel >= maxLevel) {
+      console.log(`❌ Purchase failed: Already at max level (${currentLevel}/${maxLevel})`);
+      return false;
+    }
+    
+    if (state.gold < cost) {
+      console.log(`❌ Purchase failed: Not enough gold (need ${cost}, have ${state.gold})`);
+      return false;
+    }
+    
+    console.log(`✅ Purchase approved: ${upgradeId} ${currentLevel} → ${currentLevel + 1}`);
+    
+    useGameStore.setState({
+      individualFireUpgrades: {
+        ...state.individualFireUpgrades,
+        [upgradeId]: currentLevel + 1,
+      },
+      gold: state.gold - cost,
+      fireUpgradesPurchased: state.fireUpgradesPurchased + 1, // Global sayaç için
+      totalGoldSpent: state.totalGoldSpent + cost,
+    });
+    
+    console.log(`💾 State updated: ${upgradeId} level ${currentLevel + 1}, gold ${state.gold - cost}`);
+    return true;
+  },
+
+  getIndividualFireUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualFireUpgrades[upgradeId] || 0;
+    return {
+      currentLevel,
+      maxLevel,
+      canUpgrade: currentLevel < maxLevel, // CRITICAL FIX: Cost kontrolü UI'da yapılacak
+      isMaxed: currentLevel >= maxLevel,
+    };
+  },
+
+  // ✅ INDIVIDUAL SHIELD UPGRADE TRACKING System
+  purchaseIndividualShieldUpgrade: (upgradeId: string, cost: number, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualShieldUpgrades[upgradeId] || 0;
+    
+    if (currentLevel >= maxLevel || state.gold < cost) {
+      return false;
+    }
+    
+    useGameStore.setState({
+      individualShieldUpgrades: {
+        ...state.individualShieldUpgrades,
+        [upgradeId]: currentLevel + 1,
+      },
+      gold: state.gold - cost,
+      shieldUpgradesPurchased: state.shieldUpgradesPurchased + 1, // Global sayaç için
+      totalGoldSpent: state.totalGoldSpent + cost,
+    });
+    return true;
+  },
+
+  getIndividualShieldUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualShieldUpgrades[upgradeId] || 0;
+    return {
+      currentLevel,
+      maxLevel,
+      canUpgrade: currentLevel < maxLevel, // CRITICAL FIX: Cost kontrolü UI'da yapılacak
+      isMaxed: currentLevel >= maxLevel,
+    };
+  },
+
+  // ✅ INDIVIDUAL DEFENSE UPGRADE TRACKING System
+  purchaseIndividualDefenseUpgrade: (upgradeId: string, cost: number, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualDefenseUpgrades[upgradeId] || 0;
+    
+    if (currentLevel >= maxLevel || state.gold < cost) {
+      return false;
+    }
+    
+    useGameStore.setState({
+      individualDefenseUpgrades: {
+        ...state.individualDefenseUpgrades,
+        [upgradeId]: currentLevel + 1,
+      },
+      gold: state.gold - cost,
+      defenseUpgradesPurchased: state.defenseUpgradesPurchased + 1, // Global sayaç için
+      totalGoldSpent: state.totalGoldSpent + cost,
+    });
+    return true;
+  },
+
+  getIndividualDefenseUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualDefenseUpgrades[upgradeId] || 0;
+    return {
+      currentLevel,
+      maxLevel,
+      canUpgrade: currentLevel < maxLevel, // CRITICAL FIX: Cost kontrolü UI'da yapılacak
+      isMaxed: currentLevel >= maxLevel,
+    };
+  },
 }));
 
 // CRITICAL FIX: Initialize energy manager with proper error handling

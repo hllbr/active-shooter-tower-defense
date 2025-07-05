@@ -47,6 +47,52 @@ export interface Tower {
   rangeMultiplier?: number;
   /** 'attack' towers shoot enemies, 'economy' towers generate gold */
   towerType?: 'attack' | 'economy';
+  
+  // ✅ NEW: Specialized Tower Types for Issue #54
+  /** Specialized tower category for advanced mechanics */
+  towerCategory?: 'assault' | 'area_control' | 'support' | 'defensive' | 'specialist';
+  /** Specific tower class for unique behaviors */
+  towerClass?: 'sniper' | 'gatling' | 'laser' | 'mortar' | 'flamethrower' | 'radar' | 'supply_depot' | 'shield_generator' | 'repair_station' | 'emp' | 'stealth_detector' | 'air_defense';
+  
+  // ✅ NEW: Advanced Tower Properties
+  /** Critical hit chance (0-1) */
+  criticalChance?: number;
+  /** Critical hit damage multiplier */
+  criticalDamage?: number;
+  /** Armor penetration value */
+  armorPenetration?: number;
+  /** Area of effect radius */
+  areaOfEffect?: number;
+  /** Projectile penetration count */
+  projectilePenetration?: number;
+  /** Spin-up mechanic current level */
+  spinUpLevel?: number;
+  /** Maximum spin-up level */
+  maxSpinUpLevel?: number;
+  /** Beam focus damage multiplier */
+  beamFocusMultiplier?: number;
+  /** Target lock time for beam weapons */
+  beamLockTime?: number;
+  /** Support buff radius */
+  supportRadius?: number;
+  /** Support buff intensity */
+  supportIntensity?: number;
+  /** Shield strength for defensive towers */
+  shieldStrength?: number;
+  /** Shield regeneration rate */
+  shieldRegenRate?: number;
+  /** Repair rate for repair towers */
+  repairRate?: number;
+  /** EMP disable duration */
+  empDuration?: number;
+  /** Stealth detection range */
+  stealthDetectionRange?: number;
+  /** Manual targeting enabled */
+  manualTargeting?: boolean;
+  /** Upgrade path chosen */
+  upgradePath?: string;
+  /** Synergy bonuses from nearby towers */
+  synergyBonuses?: { damage?: number; range?: number; fireRate?: number; };
 }
 
 export interface TowerSlot {
@@ -84,6 +130,50 @@ export interface Enemy {
   behaviorTag?: string;
   /** Enemy type name */
   type?: string;
+  
+  // ✅ NEW: Advanced Boss System for Issue #56
+  /** Boss type for multi-phase boss mechanics */
+  bossType?: 'mini' | 'major' | 'legendary';
+  /** Current boss phase (0 = normal enemy, 1+ = boss phases) */
+  bossPhase?: number;
+  /** Maximum boss phases */
+  maxBossPhases?: number;
+  /** Boss phase transition health thresholds */
+  phaseTransitionThresholds?: number[];
+  /** Boss special abilities */
+  bossAbilities?: string[];
+  /** Last ability use timestamp */
+  lastAbilityUse?: number;
+  /** Boss ability cooldowns */
+  abilityCooldowns?: Record<string, number>;
+  /** Cinematic state for boss encounters */
+  cinematicState?: 'entrance' | 'phase_transition' | 'defeat' | 'normal';
+  /** Cinematic start time */
+  cinematicStartTime?: number;
+  /** Boss-specific loot table */
+  bossLootTable?: BossLootEntry[];
+  /** Temporary invulnerability during phase transitions */
+  isInvulnerable?: boolean;
+  /** Boss entrance animation completed */
+  entranceComplete?: boolean;
+  /** Boss special effects */
+  bossSpecialEffects?: string[];
+  /** Boss spawn minions ability */
+  canSpawnMinions?: boolean;
+  /** Last minion spawn time */
+  lastMinionSpawn?: number;
+  /** Boss environmental effects */
+  environmentalEffects?: string[];
+  /** Boss shield strength (for shielded bosses) */
+  shieldStrength?: number;
+  /** Boss shield regeneration rate */
+  shieldRegenRate?: number;
+  /** Boss rage mode (increased damage/speed when low health) */
+  rageMode?: boolean;
+  /** Boss flee threshold (bosses that flee at low health) */
+  fleeThreshold?: number;
+  /** Boss is fleeing */
+  isFleeing?: boolean;
 }
 
 export interface Bullet {
@@ -120,6 +210,34 @@ export interface Mine {
   size: number;
   damage: number;
   radius: number;
+  
+  // ✅ NEW: Mine Variety System for Issue #54
+  /** Mine type for different behaviors */
+  mineType: 'explosive' | 'utility' | 'area_denial';
+  /** Mine subtype for specialized behaviors */
+  mineSubtype?: 'standard' | 'cluster' | 'emp' | 'smoke' | 'caltrops' | 'tar' | 'freeze';
+  
+  // ✅ NEW: Advanced Mine Properties
+  /** Duration for utility/area denial mines */
+  duration?: number;
+  /** Remaining duration for active mines */
+  remainingDuration?: number;
+  /** Slow effect multiplier for area denial mines */
+  slowMultiplier?: number;
+  /** Additional effects applied by the mine */
+  effects?: string[];
+  /** Mine trigger condition */
+  triggerCondition?: 'contact' | 'proximity' | 'remote' | 'timer';
+  /** Mine activation state */
+  isActive?: boolean;
+  /** Mine placement timestamp */
+  placedAt?: number;
+  /** EMP disable duration for EMP mines */
+  empDuration?: number;
+  /** Smoke cloud duration for smoke mines */
+  smokeDuration?: number;
+  /** Freeze duration for freeze mines */
+  freezeDuration?: number;
 }
 
 export interface WaveModifier {
@@ -167,6 +285,11 @@ export interface GameState {
   shieldUpgradesPurchased: number;
   packagesPurchased: number;
   defenseUpgradesPurchased: number;
+  
+  // CRITICAL FIX: Individual Fire Upgrade Tracking System (fixes sayaç problemi)
+  individualFireUpgrades: Record<string, number>; // bulletType -> upgrade count (e.g., "fire_1": 2, "fire_2": 1)
+  individualShieldUpgrades: Record<string, number>; // shieldType -> upgrade count
+  individualDefenseUpgrades: Record<string, number>; // defenseType -> upgrade count
   mineLevel: number;
   mineRegeneration: boolean;
   mines: Mine[];
@@ -409,4 +532,37 @@ export interface MissionReward {
   amount: number;
   description: string;
   special?: string; // Special rewards like unlocks
+}
+
+// ✅ NEW: Boss Loot System for Issue #56
+export interface BossLootEntry {
+  itemType: 'gold' | 'research_points' | 'upgrade_materials' | 'rare_components' | 'legendary_items' | 'achievements' | 'cosmetics';
+  itemName: string;
+  amount: number;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  dropChance: number; // 0-1
+  description: string;
+  visualEffect?: string; // Special visual effect when dropped
+  unlockCondition?: string; // Condition to unlock this drop
+}
+
+export interface BossPhaseData {
+  phase: number;
+  name: string;
+  healthThreshold: number; // Percentage (0-1)
+  abilities: string[];
+  behaviorChanges?: {
+    speedMultiplier?: number;
+    damageMultiplier?: number;
+    specialAbilityCooldownMultiplier?: number;
+    newBehaviorTag?: string;
+  };
+  phaseTransitionEffect?: string;
+  environmentalEffects?: string[];
+  spawnMinions?: {
+    enabled: boolean;
+    minionTypes: string[];
+    spawnRate: number;
+    maxMinions: number;
+  };
 }
