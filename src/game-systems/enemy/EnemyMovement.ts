@@ -2,6 +2,7 @@ import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Enemy, TowerSlot } from '../../models/gameTypes';
 import { TargetFinder } from './TargetFinder';
+import BossManager from './BossManager';
 
 /**
  * Movement class responsible for handling enemy movement and collision logic
@@ -44,6 +45,16 @@ export class EnemyMovement {
     // Check if enemy is frozen
     if (enemy.frozenUntil && enemy.frozenUntil > performance.now()) {
       return;
+    }
+
+    // Handle boss-specific updates
+    if (enemy.bossType) {
+      BossManager.updateBoss(enemy);
+      
+      // Skip normal movement if boss is in cinematic state
+      if (enemy.cinematicState && enemy.cinematicState !== 'normal') {
+        return;
+      }
     }
 
     // Handle continuous gold drops for special enemies

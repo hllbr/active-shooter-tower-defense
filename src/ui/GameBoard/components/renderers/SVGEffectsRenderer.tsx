@@ -160,29 +160,138 @@ export const SVGEffectsRenderer: React.FC = () => {
 
   return (
     <>
-      {/* Enemies - Only render visible ones */}
-      {visibleEnemies.map((enemy: Enemy) => (
-        <g key={enemy.id}>
-          {/* Health bar */}
-          <rect
-            x={enemy.position.x - enemy.size / 2}
-            y={enemy.position.y - enemy.size / 2 - 10}
-            width={enemy.size}
-            height={GAME_CONSTANTS.ENEMY_HEALTHBAR_HEIGHT}
-            fill={GAME_CONSTANTS.HEALTHBAR_BG}
-            rx={3}
-          />
-          <rect
-            x={enemy.position.x - enemy.size / 2}
-            y={enemy.position.y - enemy.size / 2 - 10}
-            width={enemy.size * (enemy.health / enemy.maxHealth)}
-            height={GAME_CONSTANTS.ENEMY_HEALTHBAR_HEIGHT}
-            fill={enemy.health > enemy.maxHealth * 0.3 ? GAME_CONSTANTS.HEALTHBAR_GOOD : GAME_CONSTANTS.HEALTHBAR_BAD}
-            rx={3}
-          />
-          {enemy.isSpecial ? (
-            // Special microbe enemy with managed pulsing effect
-            <>
+      {/* Enemies - Enhanced visual rendering */}
+      {visibleEnemies.map((enemy: Enemy) => {
+        // Enhanced enemy visuals with type-specific rendering
+        if (enemy.bossType) {
+          // Boss enemies with advanced visual effects
+          return (
+            <g key={enemy.id}>
+              {/* Enhanced health bar for bosses */}
+              <rect
+                x={enemy.position.x - enemy.size * 0.75}
+                y={enemy.position.y - enemy.size / 2 - 15}
+                width={enemy.size * 1.5}
+                height={8}
+                fill={GAME_CONSTANTS.HEALTHBAR_BG}
+                stroke="#000"
+                strokeWidth={1}
+                rx={3}
+              />
+              <rect
+                x={enemy.position.x - enemy.size * 0.75}
+                y={enemy.position.y - enemy.size / 2 - 15}
+                width={enemy.size * 1.5 * (enemy.health / enemy.maxHealth)}
+                height={8}
+                fill={enemy.health > enemy.maxHealth * 0.3 ? "#ff4444" : "#ff0000"}
+                rx={3}
+              />
+              
+              {/* Boss visual with glow effect */}
+              <defs>
+                <radialGradient id={`boss-gradient-${enemy.id}`} cx="0.3" cy="0.3">
+                  <stop offset="0%" stopColor="#fff" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor={enemy.color} />
+                </radialGradient>
+              </defs>
+              
+              {/* Boss outer glow */}
+              <AnimatedPulseCircle
+                cx={enemy.position.x}
+                cy={enemy.position.y}
+                r={enemy.size / 2 + 10}
+                fill={enemy.color}
+                stroke="none"
+                strokeWidth={0}
+                opacity={0.3}
+              />
+              
+              {/* Boss main body */}
+              <circle
+                cx={enemy.position.x}
+                cy={enemy.position.y}
+                r={enemy.size / 2}
+                fill={`url(#boss-gradient-${enemy.id})`}
+                stroke="#000"
+                strokeWidth={4}
+              />
+              
+              {/* Boss decorative elements */}
+              {[0, 60, 120, 180, 240, 300].map((angle, index) => (
+                <circle
+                  key={index}
+                  cx={enemy.position.x + (enemy.size / 3) * Math.cos(angle * Math.PI / 180)}
+                  cy={enemy.position.y + (enemy.size / 3) * Math.sin(angle * Math.PI / 180)}
+                  r={enemy.size / 8}
+                  fill={enemy.color}
+                  stroke="#000"
+                  strokeWidth={2}
+                />
+              ))}
+              
+              {/* Boss center core with pulse */}
+              <AnimatedPulseCircle
+                cx={enemy.position.x}
+                cy={enemy.position.y}
+                r={enemy.size / 4}
+                fill="#fff"
+                stroke="none"
+                strokeWidth={0}
+                opacity={0.8}
+              />
+              
+              {/* Boss type indicator */}
+              <text
+                x={enemy.position.x}
+                y={enemy.position.y + enemy.size / 2 + 25}
+                textAnchor="middle"
+                fill="#fff"
+                fontSize="16"
+                fontWeight="bold"
+                stroke="#000"
+                strokeWidth={1}
+              >
+                {enemy.bossType === 'legendary' ? '👑' : enemy.bossType === 'major' ? '⚔️' : '🛡️'}
+              </text>
+              
+              {/* Boss phase indicator */}
+              {enemy.bossPhase && (
+                <text
+                  x={enemy.position.x - enemy.size / 2}
+                  y={enemy.position.y - enemy.size / 2 - 20}
+                  textAnchor="middle"
+                  fill="#ff6b35"
+                  fontSize="12"
+                  fontWeight="bold"
+                >
+                  Phase {enemy.bossPhase}
+                </text>
+              )}
+            </g>
+          );
+        } else if (enemy.isSpecial) {
+          // Special enemies with enhanced effects
+          return (
+            <g key={enemy.id}>
+              {/* Health bar */}
+              <rect
+                x={enemy.position.x - enemy.size / 2}
+                y={enemy.position.y - enemy.size / 2 - 10}
+                width={enemy.size}
+                height={GAME_CONSTANTS.ENEMY_HEALTHBAR_HEIGHT}
+                fill={GAME_CONSTANTS.HEALTHBAR_BG}
+                rx={3}
+              />
+              <rect
+                x={enemy.position.x - enemy.size / 2}
+                y={enemy.position.y - enemy.size / 2 - 10}
+                width={enemy.size * (enemy.health / enemy.maxHealth)}
+                height={GAME_CONSTANTS.ENEMY_HEALTHBAR_HEIGHT}
+                fill={enemy.health > enemy.maxHealth * 0.3 ? GAME_CONSTANTS.HEALTHBAR_GOOD : GAME_CONSTANTS.HEALTHBAR_BAD}
+                rx={3}
+              />
+              
+              {/* Enhanced special enemy with pulsing effect */}
               <AnimatedPulseCircle
                 cx={enemy.position.x}
                 cy={enemy.position.y}
@@ -200,7 +309,17 @@ export const SVGEffectsRenderer: React.FC = () => {
                 stroke={GAME_CONSTANTS.MICROBE_ENEMY.borderColor}
                 strokeWidth={3}
               />
-              {/* Microbe indicator */}
+              
+              {/* Inner details */}
+              <circle
+                cx={enemy.position.x}
+                cy={enemy.position.y}
+                r={enemy.size / 4}
+                fill="#fff"
+                opacity={0.4}
+              />
+              
+              {/* Special enemy indicator */}
               <text
                 x={enemy.position.x}
                 y={enemy.position.y + enemy.size / 2 + 15}
@@ -211,20 +330,147 @@ export const SVGEffectsRenderer: React.FC = () => {
               >
                 💰
               </text>
-            </>
-          ) : (
-            // Normal enemy
-            <circle
-              cx={enemy.position.x}
-              cy={enemy.position.y}
-              r={enemy.size / 2}
-              fill={enemy.color}
-              stroke="#b30000"
-              strokeWidth={4}
-            />
-          )}
-        </g>
-      ))}
+            </g>
+          );
+        } else {
+          // Standard enemies with type-specific visuals
+          const enemyType = enemy.type || 'Basic';
+          return (
+            <g key={enemy.id}>
+              {/* Health bar */}
+              <rect
+                x={enemy.position.x - enemy.size / 2}
+                y={enemy.position.y - enemy.size / 2 - 10}
+                width={enemy.size}
+                height={GAME_CONSTANTS.ENEMY_HEALTHBAR_HEIGHT}
+                fill={GAME_CONSTANTS.HEALTHBAR_BG}
+                rx={3}
+              />
+              <rect
+                x={enemy.position.x - enemy.size / 2}
+                y={enemy.position.y - enemy.size / 2 - 10}
+                width={enemy.size * (enemy.health / enemy.maxHealth)}
+                height={GAME_CONSTANTS.ENEMY_HEALTHBAR_HEIGHT}
+                fill={enemy.health > enemy.maxHealth * 0.3 ? GAME_CONSTANTS.HEALTHBAR_GOOD : GAME_CONSTANTS.HEALTHBAR_BAD}
+                rx={3}
+              />
+              
+              {/* Type-specific visual elements */}
+              {enemyType === 'Tank' && (
+                <>
+                  {/* Tank tracks */}
+                  <rect
+                    x={enemy.position.x - enemy.size / 2}
+                    y={enemy.position.y - enemy.size / 4}
+                    width={enemy.size}
+                    height={enemy.size / 2}
+                    fill="#4a5568"
+                    stroke="#000"
+                    strokeWidth={2}
+                    rx={4}
+                  />
+                  {/* Tank cannon */}
+                  <rect
+                    x={enemy.position.x + enemy.size / 4}
+                    y={enemy.position.y - 2}
+                    width={enemy.size / 2}
+                    height={4}
+                    fill="#2d3748"
+                    stroke="#000"
+                    strokeWidth={1}
+                  />
+                </>
+              )}
+              
+              {enemyType === 'Scout' && (
+                <>
+                  {/* Scout speed lines */}
+                  {[0, 1, 2].map(i => (
+                    <line
+                      key={i}
+                      x1={enemy.position.x - enemy.size / 2 - 5 - i * 3}
+                      y1={enemy.position.y - 4 + i * 4}
+                      x2={enemy.position.x - enemy.size / 2 + 2 - i * 3}
+                      y2={enemy.position.y - 4 + i * 4}
+                      stroke="#6ee7b7"
+                      strokeWidth={2}
+                      opacity={0.7 - i * 0.2}
+                    />
+                  ))}
+                </>
+              )}
+              
+              {enemyType === 'Ghost' && (
+                <AnimatedPulseCircle
+                  cx={enemy.position.x}
+                  cy={enemy.position.y}
+                  r={enemy.size / 2 + 3}
+                  fill={enemy.color}
+                  stroke="none"
+                  strokeWidth={0}
+                  opacity={0.3}
+                />
+              )}
+              
+              {/* Main enemy body */}
+              <circle
+                cx={enemy.position.x}
+                cy={enemy.position.y}
+                r={enemy.size / 2}
+                fill={enemy.color}
+                stroke="#b30000"
+                strokeWidth={enemyType === 'Ghost' ? 2 : 4}
+                opacity={enemyType === 'Ghost' ? 0.7 : 1}
+              />
+              
+              {/* Type-specific overlays */}
+              {enemyType === 'Assassin' && (
+                <circle
+                  cx={enemy.position.x}
+                  cy={enemy.position.y}
+                  r={enemy.size / 3}
+                  fill="#000"
+                  opacity={0.5}
+                />
+              )}
+              
+              {/* Type indicator emoji */}
+              {(() => {
+                let indicator = '';
+                switch (enemyType) {
+                  case 'Tank': indicator = '🛡️'; break;
+                  case 'Scout': indicator = '⚡'; break;
+                  case 'Ghost': indicator = '👻'; break;
+                  case 'Assassin': indicator = '🗡️'; break;
+                  case 'Berserker': indicator = '🔥'; break;
+                  case 'Shaman': indicator = '🔮'; break;
+                  case 'Archer': indicator = '🏹'; break;
+                  case 'Demon': indicator = '😈'; break;
+                  case 'Wraith': indicator = '💜'; break;
+                  case 'Golem': indicator = '🗿'; break;
+                  case 'Phoenix': indicator = '🔥'; break;
+                  default: indicator = '';
+                }
+                
+                return indicator ? (
+                  <text
+                    x={enemy.position.x}
+                    y={enemy.position.y + enemy.size / 2 + 18}
+                    textAnchor="middle"
+                    fill="#fff"
+                    fontSize="12"
+                    fontWeight="bold"
+                    stroke="#000"
+                    strokeWidth={0.5}
+                  >
+                    {indicator}
+                  </text>
+                ) : null;
+              })()}
+            </g>
+          );
+        }
+      })}
 
       {/* Bullets - Only render visible ones */}
       {visibleBullets.map((bullet: Bullet) => (

@@ -130,6 +130,50 @@ export interface Enemy {
   behaviorTag?: string;
   /** Enemy type name */
   type?: string;
+  
+  // ✅ NEW: Advanced Boss System for Issue #56
+  /** Boss type for multi-phase boss mechanics */
+  bossType?: 'mini' | 'major' | 'legendary';
+  /** Current boss phase (0 = normal enemy, 1+ = boss phases) */
+  bossPhase?: number;
+  /** Maximum boss phases */
+  maxBossPhases?: number;
+  /** Boss phase transition health thresholds */
+  phaseTransitionThresholds?: number[];
+  /** Boss special abilities */
+  bossAbilities?: string[];
+  /** Last ability use timestamp */
+  lastAbilityUse?: number;
+  /** Boss ability cooldowns */
+  abilityCooldowns?: Record<string, number>;
+  /** Cinematic state for boss encounters */
+  cinematicState?: 'entrance' | 'phase_transition' | 'defeat' | 'normal';
+  /** Cinematic start time */
+  cinematicStartTime?: number;
+  /** Boss-specific loot table */
+  bossLootTable?: BossLootEntry[];
+  /** Temporary invulnerability during phase transitions */
+  isInvulnerable?: boolean;
+  /** Boss entrance animation completed */
+  entranceComplete?: boolean;
+  /** Boss special effects */
+  bossSpecialEffects?: string[];
+  /** Boss spawn minions ability */
+  canSpawnMinions?: boolean;
+  /** Last minion spawn time */
+  lastMinionSpawn?: number;
+  /** Boss environmental effects */
+  environmentalEffects?: string[];
+  /** Boss shield strength (for shielded bosses) */
+  shieldStrength?: number;
+  /** Boss shield regeneration rate */
+  shieldRegenRate?: number;
+  /** Boss rage mode (increased damage/speed when low health) */
+  rageMode?: boolean;
+  /** Boss flee threshold (bosses that flee at low health) */
+  fleeThreshold?: number;
+  /** Boss is fleeing */
+  isFleeing?: boolean;
 }
 
 export interface Bullet {
@@ -488,4 +532,37 @@ export interface MissionReward {
   amount: number;
   description: string;
   special?: string; // Special rewards like unlocks
+}
+
+// ✅ NEW: Boss Loot System for Issue #56
+export interface BossLootEntry {
+  itemType: 'gold' | 'research_points' | 'upgrade_materials' | 'rare_components' | 'legendary_items' | 'achievements' | 'cosmetics';
+  itemName: string;
+  amount: number;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  dropChance: number; // 0-1
+  description: string;
+  visualEffect?: string; // Special visual effect when dropped
+  unlockCondition?: string; // Condition to unlock this drop
+}
+
+export interface BossPhaseData {
+  phase: number;
+  name: string;
+  healthThreshold: number; // Percentage (0-1)
+  abilities: string[];
+  behaviorChanges?: {
+    speedMultiplier?: number;
+    damageMultiplier?: number;
+    specialAbilityCooldownMultiplier?: number;
+    newBehaviorTag?: string;
+  };
+  phaseTransitionEffect?: string;
+  environmentalEffects?: string[];
+  spawnMinions?: {
+    enabled: boolean;
+    minionTypes: string[];
+    spawnRate: number;
+    maxMinions: number;
+  };
 }

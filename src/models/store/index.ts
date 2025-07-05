@@ -368,6 +368,16 @@ export const useGameStore = create<Store>((set, get): Store => ({
     const enemy = state.enemies.find(e => e.id === enemyId);
     if (!enemy) return {};
     
+    // Handle boss defeat if this is a boss
+    if (enemy.bossType) {
+      // Import boss manager and handle boss defeat
+      setTimeout(() => {
+        import('../../game-systems/enemy/BossManager').then(({ default: BossManager }) => {
+          BossManager.handleBossDefeat(enemy);
+        });
+      }, 0);
+    }
+    
     // ✅ CRITICAL FIX: ALL enemies count toward wave completion, not just non-special ones
     // This was the main bug preventing wave progression
     const newKillCount = state.enemiesKilled + 1;
@@ -376,6 +386,13 @@ export const useGameStore = create<Store>((set, get): Store => ({
     if (state.currentWave === 1) {
       console.log(`💀 Enemy killed! Wave ${state.currentWave}: ${newKillCount}/${state.enemiesRequired} (${enemy.type}, special: ${enemy.isSpecial})`);
     }
+    
+    // Handle advanced loot system
+    setTimeout(() => {
+      import('../../game-systems/LootManager').then(({ default: LootManager }) => {
+        LootManager.handleEnemyDeath(enemy);
+      });
+    }, 0);
     
     // Energy bonus for enemy kill (delayed to avoid state conflicts)
     setTimeout(() => get().onEnemyKilled(enemy.isSpecial, enemy.type), 0);
@@ -403,6 +420,16 @@ export const useGameStore = create<Store>((set, get): Store => ({
       if (!enemy) return {};
       const newHealth = enemy.health - dmg;
       if (newHealth <= 0) {
+        // Handle boss defeat if this is a boss
+        if (enemy.bossType) {
+          // Import boss manager and handle boss defeat
+          setTimeout(() => {
+            import('../../game-systems/enemy/BossManager').then(({ default: BossManager }) => {
+              BossManager.handleBossDefeat(enemy);
+            });
+          }, 0);
+        }
+        
         // ✅ CRITICAL FIX: ALL enemies count toward wave completion, not just non-special ones
         // This was also causing wave progression issues in damageEnemy path
         const newKillCount = state.enemiesKilled + 1;
@@ -411,6 +438,13 @@ export const useGameStore = create<Store>((set, get): Store => ({
         if (state.currentWave === 1) {
           console.log(`💀 Enemy killed! Wave ${state.currentWave}: ${newKillCount}/${state.enemiesRequired} (${enemy.type}, special: ${enemy.isSpecial})`);
         }
+        
+        // Handle advanced loot system
+        setTimeout(() => {
+          import('../../game-systems/LootManager').then(({ default: LootManager }) => {
+            LootManager.handleEnemyDeath(enemy);
+          });
+        }, 0);
         
         // Enerji sistemi: Düşman öldürme bonusu
         setTimeout(() => get().onEnemyKilled(enemy.isSpecial, enemy.type), 0);
