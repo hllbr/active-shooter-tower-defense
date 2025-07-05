@@ -22,6 +22,11 @@ export const initialState: GameState = {
   shieldUpgradesPurchased: 0,
   packagesPurchased: 0,
   defenseUpgradesPurchased: 0,
+  
+  // CRITICAL FIX: Individual Upgrade Tracking (fixes sayaç problemi)
+  individualFireUpgrades: {}, // Her fire upgrade tipi için ayrı sayaç
+  individualShieldUpgrades: {}, // Her shield upgrade tipi için ayrı sayaç
+  individualDefenseUpgrades: {}, // Her defense upgrade tipi için ayrı sayaç
   mineLevel: 0,
   mineRegeneration: false,
   mines: [],

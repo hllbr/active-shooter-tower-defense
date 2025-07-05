@@ -167,6 +167,11 @@ export interface GameState {
   shieldUpgradesPurchased: number;
   packagesPurchased: number;
   defenseUpgradesPurchased: number;
+  
+  // CRITICAL FIX: Individual Fire Upgrade Tracking System (fixes sayaç problemi)
+  individualFireUpgrades: Record<string, number>; // bulletType -> upgrade count (e.g., "fire_1": 2, "fire_2": 1)
+  individualShieldUpgrades: Record<string, number>; // shieldType -> upgrade count
+  individualDefenseUpgrades: Record<string, number>; // defenseType -> upgrade count
   mineLevel: number;
   mineRegeneration: boolean;
   mines: Mine[];

@@ -132,6 +132,29 @@ export type Store = GameState & {
     isMaxed: boolean;
   };
   
+  // CRITICAL FIX: Individual Upgrade Tracking Functions (fixes sayaç problemi)
+  purchaseIndividualFireUpgrade: (upgradeId: string, cost: number, maxLevel: number) => boolean;
+  getIndividualFireUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    currentLevel: number;
+    maxLevel: number;
+    canUpgrade: boolean;
+    isMaxed: boolean;
+  };
+  purchaseIndividualShieldUpgrade: (upgradeId: string, cost: number, maxLevel: number) => boolean;
+  getIndividualShieldUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    currentLevel: number;
+    maxLevel: number;
+    canUpgrade: boolean;
+    isMaxed: boolean;
+  };
+  purchaseIndividualDefenseUpgrade: (upgradeId: string, cost: number, maxLevel: number) => boolean;
+  getIndividualDefenseUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    currentLevel: number;
+    maxLevel: number;
+    canUpgrade: boolean;
+    isMaxed: boolean;
+  };
+  
   // Achievement System Functions (Faz 1: Temel Mekanikler)
   initializeAchievements: () => void;
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
@@ -261,7 +284,7 @@ export const useGameStore = create<Store>((set, get): Store => ({
     
     console.log(`✅ Slot ${slotIdx} unlocked! Cost: ${cost}💰, New tower limit: ${state.maxTowers + 1}`);
     
-    // ✅ SOUND & ANIMATION FIX: Play unlock sound and trigger animations
+    // ✅ CRITICAL FIX: Unlock animasyon süresi kısaltıldı - oyun akıcılığı için
     setTimeout(() => {
       // Play unlock sound effect
       import('../../utils/sound').then(({ playContextualSound }) => {
@@ -272,17 +295,17 @@ export const useGameStore = create<Store>((set, get): Store => ({
       const { startSlotUnlockAnimation, finishSlotUnlockAnimation } = useGameStore.getState();
       startSlotUnlockAnimation(slotIdx);
       
-      // Finish unlock animation after delay
+      // CRITICAL FIX: Animasyon süresi 800ms → 200ms
       setTimeout(() => {
         finishSlotUnlockAnimation(slotIdx);
         
-        // Clear recently unlocked after full animation sequence
+        // CRITICAL FIX: Celebration süresi 3000ms → 500ms
         setTimeout(() => {
           const { clearRecentlyUnlockedSlots } = useGameStore.getState();
           clearRecentlyUnlockedSlots();
-        }, 3000); // Keep celebration visible for 3 seconds
-      }, 800); // First animation phase duration
-    }, 50);
+        }, 500); // Kısa celebration - oyun akıcılığı için
+      }, 200); // Hızlı animasyon
+    }, 25); // Daha hızlı başlama
     
     return {
       towerSlots: newSlots,
@@ -1182,6 +1205,122 @@ export const useGameStore = create<Store>((set, get): Store => ({
       }
     };
   }),
+
+  // ✅ INDIVIDUAL FIRE UPGRADE TRACKING System (fixes sayaç problemi)
+  purchaseIndividualFireUpgrade: (upgradeId: string, cost: number, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualFireUpgrades[upgradeId] || 0;
+    
+    console.log(`🛒 purchaseIndividualFireUpgrade called:`, {
+      upgradeId,
+      cost,
+      maxLevel,
+      currentLevel,
+      gold: state.gold,
+      hasEnoughGold: state.gold >= cost,
+      notMaxLevel: currentLevel < maxLevel
+    });
+    
+    if (currentLevel >= maxLevel) {
+      console.log(`❌ Purchase failed: Already at max level (${currentLevel}/${maxLevel})`);
+      return false;
+    }
+    
+    if (state.gold < cost) {
+      console.log(`❌ Purchase failed: Not enough gold (need ${cost}, have ${state.gold})`);
+      return false;
+    }
+    
+    console.log(`✅ Purchase approved: ${upgradeId} ${currentLevel} → ${currentLevel + 1}`);
+    
+    useGameStore.setState({
+      individualFireUpgrades: {
+        ...state.individualFireUpgrades,
+        [upgradeId]: currentLevel + 1,
+      },
+      gold: state.gold - cost,
+      fireUpgradesPurchased: state.fireUpgradesPurchased + 1, // Global sayaç için
+      totalGoldSpent: state.totalGoldSpent + cost,
+    });
+    
+    console.log(`💾 State updated: ${upgradeId} level ${currentLevel + 1}, gold ${state.gold - cost}`);
+    return true;
+  },
+
+  getIndividualFireUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualFireUpgrades[upgradeId] || 0;
+    return {
+      currentLevel,
+      maxLevel,
+      canUpgrade: currentLevel < maxLevel, // CRITICAL FIX: Cost kontrolü UI'da yapılacak
+      isMaxed: currentLevel >= maxLevel,
+    };
+  },
+
+  // ✅ INDIVIDUAL SHIELD UPGRADE TRACKING System
+  purchaseIndividualShieldUpgrade: (upgradeId: string, cost: number, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualShieldUpgrades[upgradeId] || 0;
+    
+    if (currentLevel >= maxLevel || state.gold < cost) {
+      return false;
+    }
+    
+    useGameStore.setState({
+      individualShieldUpgrades: {
+        ...state.individualShieldUpgrades,
+        [upgradeId]: currentLevel + 1,
+      },
+      gold: state.gold - cost,
+      shieldUpgradesPurchased: state.shieldUpgradesPurchased + 1, // Global sayaç için
+      totalGoldSpent: state.totalGoldSpent + cost,
+    });
+    return true;
+  },
+
+  getIndividualShieldUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualShieldUpgrades[upgradeId] || 0;
+    return {
+      currentLevel,
+      maxLevel,
+      canUpgrade: currentLevel < maxLevel, // CRITICAL FIX: Cost kontrolü UI'da yapılacak
+      isMaxed: currentLevel >= maxLevel,
+    };
+  },
+
+  // ✅ INDIVIDUAL DEFENSE UPGRADE TRACKING System
+  purchaseIndividualDefenseUpgrade: (upgradeId: string, cost: number, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualDefenseUpgrades[upgradeId] || 0;
+    
+    if (currentLevel >= maxLevel || state.gold < cost) {
+      return false;
+    }
+    
+    useGameStore.setState({
+      individualDefenseUpgrades: {
+        ...state.individualDefenseUpgrades,
+        [upgradeId]: currentLevel + 1,
+      },
+      gold: state.gold - cost,
+      defenseUpgradesPurchased: state.defenseUpgradesPurchased + 1, // Global sayaç için
+      totalGoldSpent: state.totalGoldSpent + cost,
+    });
+    return true;
+  },
+
+  getIndividualDefenseUpgradeInfo: (upgradeId: string, maxLevel: number) => {
+    const state = useGameStore.getState();
+    const currentLevel = state.individualDefenseUpgrades[upgradeId] || 0;
+    return {
+      currentLevel,
+      maxLevel,
+      canUpgrade: currentLevel < maxLevel, // CRITICAL FIX: Cost kontrolü UI'da yapılacak
+      isMaxed: currentLevel >= maxLevel,
+    };
+  },
 }));
 
 // CRITICAL FIX: Initialize energy manager with proper error handling
