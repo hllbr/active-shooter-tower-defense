@@ -2,7 +2,7 @@
  * 📊 Memory Tester - Core memory sampling and analysis functionality
  */
 
-import type { MemoryMetrics, MemoryTrendAnalysis } from './types';
+import type { MemoryMetrics, MemoryTrendAnalysis, ExtendedPerformance, ExtendedWindow } from './types';
 
 export class MemoryTester {
   private samples: MemoryMetrics[] = [];
@@ -12,9 +12,10 @@ export class MemoryTester {
    * Take a memory sample
    */
   sample(): MemoryMetrics | null {
-    if ('memory' in performance) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const memory = (performance as any).memory;
+    const extendedPerformance = performance as ExtendedPerformance;
+    
+    if (extendedPerformance.memory) {
+      const memory = extendedPerformance.memory;
       
       const metrics: MemoryMetrics = {
         timestamp: performance.now(),
@@ -82,8 +83,9 @@ export class MemoryTester {
    * Force garbage collection if available
    */
   forceGC(): boolean {
-    if ('gc' in window && typeof (window as Record<string, unknown>).gc === 'function') {
-      ((window as Record<string, unknown>).gc as () => void)();
+    const extendedWindow = window as ExtendedWindow;
+    if (extendedWindow.gc && typeof extendedWindow.gc === 'function') {
+      extendedWindow.gc();
       return true;
     }
     return false;

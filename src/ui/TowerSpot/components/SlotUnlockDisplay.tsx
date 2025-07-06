@@ -58,11 +58,10 @@ export const SlotUnlockDisplay: React.FC<SlotUnlockProps> = ({
       
       {/* Unlock button text */}
       <UnlockButton
-        slot={slot}
         slotIdx={slotIdx}
         unlockCost={unlockCost}
         canUnlock={canUnlock}
-        onUnlock={onUnlock}
+        onClick={() => onUnlock(slotIdx)}
       />
     </g>
   );

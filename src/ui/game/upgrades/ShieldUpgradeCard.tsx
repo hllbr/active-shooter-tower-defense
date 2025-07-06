@@ -7,11 +7,16 @@ interface ShieldUpgradeCardProps {
     name: string;
     cost: number;
     strength: number;
+    purchaseLimit: number;
   };
   index: number;
   gold: number;
   globalWallStrength: number;
   discountMultiplier: number;
+  diceUsed: boolean;
+  purchaseCount: number;
+  maxAllowed: number;
+  isMaxed: boolean;
   onPurchase: (index: number, finalCost: number) => void;
 }
 
@@ -21,24 +26,24 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
   gold,
   globalWallStrength,
   discountMultiplier,
+  diceUsed,
+  purchaseCount,
+  maxAllowed,
+  isMaxed,
   onPurchase,
 }) => {
   // Zar sistemine göre dinamik fiyat hesaplama
-  let finalCost = shield.cost;
-  if (discountMultiplier === 0) {
-    // İndirimler iptal edildi - normal fiyat
-    finalCost = shield.cost;
-  } else if (discountMultiplier > 1) {
-    // Ek indirim uygulandı
-    finalCost = Math.max(25, Math.round(shield.cost * (2 - discountMultiplier)));
-  }
+  const discount = diceUsed ? discountMultiplier : 0;
+  const discountedCost = Math.floor(shield.cost * (1 - discount));
+  const finalCost = Math.max(1, discountedCost);
   
-  const isDisabled = gold < finalCost;
-  const shieldColor = isDisabled ? '#444' : '#aa00ff';
+  const canAfford = gold >= finalCost && !isMaxed;
+  const isDisabled = !canAfford || isMaxed;
+  const shieldColor = isMaxed ? '#4ade80' : isDisabled ? '#444' : '#aa00ff';
   const newShieldStrength = (globalWallStrength + shield.strength) * 10;
 
   const handleClick = () => {
-    if (!isDisabled) {
+    if (canAfford && !isMaxed) {
       onPurchase(index, finalCost);
       playSound('upgrade-purchase');
     }
@@ -50,14 +55,41 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
         padding: 12,
         borderRadius: 8,
         border: `2px solid ${shieldColor}`,
-        background: isDisabled ? '#1a1a1a' : 'rgba(170, 0, 255, 0.1)',
-        opacity: isDisabled ? 0.6 : 1,
+        background: isMaxed 
+          ? 'rgba(74, 222, 128, 0.1)' 
+          : isDisabled 
+            ? '#1a1a1a' 
+            : 'rgba(170, 0, 255, 0.1)',
+        opacity: isDisabled && !isMaxed ? 0.6 : 1,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
         transition: 'all 0.2s ease',
-        boxShadow: isDisabled ? 'none' : '0 2px 8px rgba(170, 0, 255, 0.2)',
+        boxShadow: isMaxed 
+          ? '0 2px 8px rgba(74, 222, 128, 0.2)' 
+          : isDisabled 
+            ? 'none' 
+            : '0 2px 8px rgba(170, 0, 255, 0.2)',
+        position: 'relative',
       }}
       onClick={handleClick}
     >
+      {diceUsed && discount > 0 && !isMaxed && (
+        <div style={{
+          position: 'absolute',
+          top: -8,
+          right: -8,
+          background: '#ef4444',
+          color: 'white',
+          fontSize: 11,
+          fontWeight: 'bold',
+          padding: '4px 8px',
+          borderRadius: 12,
+          border: '2px solid #fff',
+          animation: 'pulse 2s infinite'
+        }}>
+          🎯 İNDİRİM
+        </div>
+      )}
+      
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <span style={{
           fontWeight: 'bold',
@@ -66,18 +98,27 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
         }}>
           {shield.name}
         </span>
-        <span style={{
-          fontWeight: 'bold',
-          fontSize: 14,
-          color: isDisabled ? '#888' : GAME_CONSTANTS.GOLD_COLOR
-        }}>
-          {finalCost} 💰
-          {discountMultiplier !== 1 && (
-            <div style={{ fontSize: 10, color: '#888', textDecoration: 'line-through' }}>
-              {shield.cost}
-            </div>
-          )}
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <span style={{
+            fontWeight: 'bold',
+            fontSize: 14,
+            color: isDisabled ? '#888' : GAME_CONSTANTS.GOLD_COLOR
+          }}>
+            {isMaxed ? 'MAX' : `${finalCost} 💰`}
+            {diceUsed && discount > 0 && !isMaxed && (
+              <div style={{ fontSize: 10, color: '#888', textDecoration: 'line-through' }}>
+                {shield.cost}
+              </div>
+            )}
+          </span>
+          <span style={{
+            fontSize: 12,
+            fontWeight: 'bold',
+            color: isMaxed ? '#4ade80' : '#fbbf24'
+          }}>
+            {purchaseCount}/{maxAllowed}
+          </span>
+        </div>
       </div>
       <div style={{
         fontSize: 12,

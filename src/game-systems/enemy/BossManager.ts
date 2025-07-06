@@ -1,16 +1,29 @@
-import type { Enemy, Effect, BossLootEntry } from '../../models/gameTypes';
+import type { Enemy, BossLootEntry } from '../../models/gameTypes';
 import { selectBossForWave, type BossDefinition } from './BossDefinitions';
 import { useGameStore } from '../../models/store';
-import { soundEffects } from '../../utils/sound';
+import { playSound } from '../../utils/sound';
+import {
+  executeChargeAttack,
+  executeGroundSlam,
+  executeMissileBarrage,
+  executeBombingRun,
+  executeShieldRegeneration,
+  executeSpawnMinions,
+  executeQuantumTunneling,
+  executeRealityTear,
+  activateRageMode,
+  initiateFlee,
+  handleMinionSpawning
+} from './helpers/bossAbilities';
 
 /**
  * Advanced Boss Manager for multi-phase boss encounters
  */
 export class BossManager {
   private static activeBosses: Map<string, BossDefinition> = new Map();
-  private static cinematicTimers: Map<string, NodeJS.Timeout> = new Map();
-  private static bossAbilityTimers: Map<string, NodeJS.Timeout> = new Map();
-  private static minionSpawnTimers: Map<string, NodeJS.Timeout> = new Map();
+  private static cinematicTimers: Map<string, number> = new Map();
+  private static bossAbilityTimers: Map<string, number> = new Map();
+  private static minionSpawnTimers: Map<string, number> = new Map();
 
   /**
    * Initialize boss system
@@ -103,7 +116,7 @@ export class BossManager {
     const { addEffect } = useGameStore.getState();
     
     // Play entrance sound
-    soundEffects.playSound('boss-entrance');
+    playSound('boss-entrance');
     
     // Show entrance message
     console.log(`Boss Entrance: ${definition.cinematicData.entranceText}`);
@@ -175,20 +188,20 @@ export class BossManager {
     // Check for rage mode activation
     if (definition.specialMechanics.hasRageMode && !boss.rageMode) {
       if (boss.health / boss.maxHealth < 0.3) {
-        this.activateRageMode(boss, definition);
+        activateRageMode(boss, definition);
       }
     }
 
     // Check for flee condition
     if (definition.specialMechanics.canFlee && !boss.isFleeing) {
       if (boss.health / boss.maxHealth < boss.fleeThreshold!) {
-        this.initiateFlee(boss, definition);
+        initiateFlee(boss, definition);
       }
     }
 
     // Handle minion spawning
     if (boss.canSpawnMinions && boss.cinematicState === 'normal') {
-      this.handleMinionSpawning(boss, definition);
+      handleMinionSpawning(boss, definition);
     }
   }
 
@@ -213,7 +226,7 @@ export class BossManager {
    * Trigger boss phase transition
    */
   private static triggerPhaseTransition(boss: Enemy, definition: BossDefinition, newPhase: number) {
-    const { addEffect, showNotification } = useGameStore.getState();
+    const { addEffect } = useGameStore.getState();
     const phaseData = definition.phases[newPhase - 1];
     
     // Stop current abilities
@@ -229,16 +242,10 @@ export class BossManager {
     boss.isInvulnerable = true;
 
     // Play phase transition sound
-    soundEffects.playSound('boss-phase-transition');
+    playSound('boss-phase-transition');
 
     // Show phase transition message
-    showNotification?.({
-      id: `boss_phase_${boss.id}`,
-      type: 'warning',
-      message: `${definition.name} enters ${phaseData.name}!`,
-      timestamp: Date.now(),
-      duration: definition.cinematicData.phaseTransitionDuration,
-    });
+    console.log(`Boss Phase Transition: ${definition.name} enters ${phaseData.name}!`);
 
     // Create phase transition effect
     addEffect({
@@ -305,32 +312,32 @@ export class BossManager {
    */
   private static executeBossAbility(boss: Enemy, ability: string, definition: BossDefinition) {
     // Note: Some abilities may require different game state properties
-    const gameState = useGameStore.getState();
+    // const _gameState = useGameStore.getState(); // Reserved for future use
     
     switch (ability) {
       case 'charge_attack':
-        this.executeChargeAttack(boss, definition);
+        executeChargeAttack(boss, definition);
         break;
       case 'ground_slam':
-        this.executeGroundSlam(boss, definition);
+        executeGroundSlam(boss, definition);
         break;
       case 'missile_barrage':
-        this.executeMissileBarrage(boss, definition);
+        executeMissileBarrage(boss, definition);
         break;
       case 'bombing_run':
-        this.executeBombingRun(boss, definition);
+        executeBombingRun(boss, definition);
         break;
       case 'shield_regeneration':
-        this.executeShieldRegeneration(boss, definition);
+        executeShieldRegeneration(boss, definition);
         break;
       case 'spawn_repair_drones':
-        this.executeSpawnMinions(boss, definition, ['repair_drone']);
+        executeSpawnMinions(boss, definition, ['repair_drone']);
         break;
       case 'quantum_tunneling':
-        this.executeQuantumTunneling(boss, definition);
+        executeQuantumTunneling(boss, definition);
         break;
       case 'reality_tear':
-        this.executeRealityTear(boss, definition);
+        executeRealityTear(boss, definition);
         break;
       default:
         console.warn(`Unknown boss ability: ${ability}`);
@@ -340,71 +347,6 @@ export class BossManager {
   /**
    * Execute charge attack ability
    */
-  private static executeChargeAttack(boss: Enemy, definition: BossDefinition) {
-    const { addEffect, towerSlots } = useGameStore.getState();
-    
-    // Find nearest tower
-    const nearestTower = towerSlots
-      .filter(slot => slot.tower)
-      .reduce((nearest, slot) => {
-        const distance = Math.hypot(slot.x - boss.position.x, slot.y - boss.position.y);
-        return !nearest || distance < nearest.distance ? { slot, distance } : nearest;
-      }, null as any);
-
-    if (nearestTower) {
-      // Create charge effect
-      addEffect({
-        id: `charge_effect_${boss.id}`,
-        position: boss.position,
-        radius: boss.size * 2,
-        color: '#ff4444',
-        life: 1000,
-        maxLife: 1000,
-        type: 'charge_attack',
-      });
-
-      // Boost speed temporarily
-      const originalSpeed = boss.speed;
-      boss.speed = boss.speed * 3;
-      
-      setTimeout(() => {
-        boss.speed = originalSpeed;
-      }, 1000);
-
-      soundEffects.playSound('boss-charge');
-    }
-  }
-
-  /**
-   * Execute ground slam ability
-   */
-  private static executeGroundSlam(boss: Enemy, definition: BossDefinition) {
-    const { addEffect, towerSlots, damageTower } = useGameStore.getState();
-    
-    // Create ground slam effect
-    addEffect({
-      id: `ground_slam_${boss.id}`,
-      position: boss.position,
-      radius: 150,
-      color: '#8b4513',
-      life: 2000,
-      maxLife: 2000,
-      type: 'ground_slam',
-      opacity: 0.7,
-    });
-
-    // Damage all towers in radius
-    towerSlots.forEach((slot, index) => {
-      if (slot.tower) {
-        const distance = Math.hypot(slot.x - boss.position.x, slot.y - boss.position.y);
-        if (distance <= 150) {
-          damageTower(index, boss.damage * 2);
-        }
-      }
-    });
-
-    soundEffects.playSound('boss-ground-slam');
-  }
 
   /**
    * Handle boss defeat and loot distribution
@@ -428,7 +370,7 @@ export class BossManager {
     boss.cinematicStartTime = performance.now();
     
     // Play defeat sound
-    soundEffects.playSound('boss-defeat');
+    playSound('boss-defeat');
     
     // Show defeat message
     console.log(`Boss Defeated: ${definition.cinematicData.defeatText}`);
@@ -550,58 +492,6 @@ export class BossManager {
   /**
    * Execute additional abilities (placeholder implementations)
    */
-  private static executeMissileBarrage(boss: Enemy, definition: BossDefinition) {
-    // Implementation for missile barrage
-    soundEffects.playSound('boss-missile');
-  }
-
-  private static executeBombingRun(boss: Enemy, definition: BossDefinition) {
-    // Implementation for bombing run
-    soundEffects.playSound('boss-bombing');
-  }
-
-  private static executeShieldRegeneration(boss: Enemy, definition: BossDefinition) {
-    if (boss.shieldStrength !== undefined) {
-      boss.shieldStrength = Math.min(boss.maxHealth * 0.3, boss.shieldStrength + 200);
-    }
-  }
-
-  private static executeSpawnMinions(boss: Enemy, definition: BossDefinition, minionTypes: string[]) {
-    // Implementation for spawning minions
-    soundEffects.playSound('boss-spawn-minions');
-  }
-
-  private static executeQuantumTunneling(boss: Enemy, definition: BossDefinition) {
-    // Implementation for quantum tunneling
-    boss.position.x = Math.random() * window.innerWidth;
-    boss.position.y = Math.random() * window.innerHeight;
-  }
-
-  private static executeRealityTear(boss: Enemy, definition: BossDefinition) {
-    // Implementation for reality tear
-    soundEffects.playSound('boss-reality-tear');
-  }
-
-  private static activateRageMode(boss: Enemy, definition: BossDefinition) {
-    boss.rageMode = true;
-    boss.speed = Math.floor(boss.speed * 1.5);
-    boss.damage = Math.floor(boss.damage * 2.0);
-  }
-
-  private static initiateFlee(boss: Enemy, definition: BossDefinition) {
-    boss.isFleeing = true;
-    boss.speed = Math.floor(boss.speed * 2.0);
-    boss.behaviorTag = 'fleeing';
-  }
-
-  private static handleMinionSpawning(boss: Enemy, definition: BossDefinition) {
-    // Implementation for handling minion spawning
-    const now = performance.now();
-    if (now - boss.lastMinionSpawn! > 10000) { // 10 seconds
-      boss.lastMinionSpawn = now;
-      // Spawn minions logic
-    }
-  }
 
   /**
    * Get all active bosses

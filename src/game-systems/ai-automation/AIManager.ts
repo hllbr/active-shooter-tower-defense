@@ -3,6 +3,7 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import { towerSynergyManager } from '../tower-system/TowerSynergyManager';
 import { defenseSystemManager } from '../defense-systems';
 
+import { analyzeThreatLevel, calculateCoverageScore, calculateDefensiveValue, generatePlacementReason, calculatePriority, ThreatAnalysis } from "./helpers/analysisHelpers";
 interface PlacementSuggestion {
   slotIndex: number;
   towerClass: string;
@@ -18,12 +19,6 @@ interface TargetingRecommendation {
   reason: string;
 }
 
-interface ThreatAnalysis {
-  threatLevel: number;
-  primaryThreats: string[];
-  recommendedCounters: string[];
-  weakestPoint: Position;
-}
 
 interface DefenseSuggestion {
   type: string;
@@ -58,7 +53,7 @@ export class AIManager {
     const suggestions: PlacementSuggestion[] = [];
     
     // Analyze threats and determine counter strategies
-    const threatAnalysis = this.analyzeThreatLevel(enemies, currentWave);
+    const threatAnalysis = analyzeThreatLevel(enemies, currentWave);
     
     // Find available slots
     const availableSlots = towerSlots.filter(slot => slot.unlocked && !slot.tower);
@@ -121,8 +116,8 @@ export class AIManager {
         suggestions.push({
           slotIndex,
           towerClass,
-          reason: this.generatePlacementReason(towerClass, effectiveness, synergyAnalysis, strategicValue),
-          priority: this.calculatePriority(towerClass, threatAnalysis, effectiveness),
+          reason: generatePlacementReason(towerClass, effectiveness, synergyAnalysis, strategicValue),
+          priority: calculatePriority(towerClass, threatAnalysis, effectiveness),
           expectedEffectiveness: effectiveness
         });
       }
@@ -134,32 +129,6 @@ export class AIManager {
   /**
    * Analyze threat level and enemy composition
    */
-  private analyzeThreatLevel(enemies: Enemy[], currentWave: number): ThreatAnalysis {
-    const enemyTypes = enemies.map(e => e.type).filter(type => type !== undefined);
-    const enemyCounts = this.countEnemyTypes(enemyTypes);
-    
-    // Determine primary threats
-    const primaryThreats = Object.entries(enemyCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3)
-      .map(([type]) => type);
-    
-    // Calculate overall threat level
-    const threatLevel = Math.min(1.0, (enemies.length / (currentWave * 5)) + (currentWave / 50));
-    
-    // Find weakest defensive point
-    const weakestPoint = this.findWeakestDefensePoint(enemies);
-    
-    // Recommend counters based on enemy types
-    const recommendedCounters = this.getCounterStrategies(primaryThreats);
-    
-    return {
-      threatLevel,
-      primaryThreats,
-      recommendedCounters,
-      weakestPoint
-    };
-  }
 
   /**
    * Analyze synergy potential for a position
@@ -226,10 +195,10 @@ export class AIManager {
     const isHighGround = position.y < window.innerHeight * 0.3;
     
     // Coverage score (how well this position covers approaches)
-    const coverageScore = this.calculateCoverageScore(position, allSlots);
+    const coverageScore = calculateCoverageScore(position, allSlots);
     
     // Defensive value (how well protected this position is)
-    const defensiveValue = this.calculateDefensiveValue(position, allSlots);
+    const defensiveValue = calculateDefensiveValue(position, allSlots);
     
     return {
       isChokepoint,
@@ -286,7 +255,7 @@ export class AIManager {
     enemies: Enemy[]
   ): TargetingRecommendation[] {
     const recommendations: TargetingRecommendation[] = [];
-    const threatAnalysis = this.analyzeThreatLevel(enemies, 1);
+    const threatAnalysis = analyzeThreatLevel(enemies, 1);
     
     for (const slot of towerSlots) {
       if (!slot.tower) continue;
@@ -377,7 +346,7 @@ export class AIManager {
     const defenseSuggestions = defenseSystemManager.getDefenseRecommendations(towerSlots, enemies);
     
     // Determine overall strategy priority
-    const threatAnalysis = this.analyzeThreatLevel(enemies, currentWave);
+    const threatAnalysis = analyzeThreatLevel(enemies, currentWave);
     let priority = 'BALANCED';
     
     if (threatAnalysis.threatLevel > 0.7) {
@@ -396,117 +365,6 @@ export class AIManager {
     };
   }
 
-  // Helper methods
-  private countEnemyTypes(enemyTypes: string[]): Record<string, number> {
-    return enemyTypes.reduce((acc, type) => {
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }
-
-  private findWeakestDefensePoint(enemies: Enemy[]): Position {
-    // Find the point with highest enemy concentration
-    const centerX = enemies.reduce((sum, e) => sum + e.position.x, 0) / enemies.length || 0;
-    const centerY = enemies.reduce((sum, e) => sum + e.position.y, 0) / enemies.length || 0;
-    
-    return { x: centerX, y: centerY };
-  }
-
-  private getCounterStrategies(primaryThreats: string[]): string[] {
-    const counters: string[] = [];
-    
-    for (const threat of primaryThreats) {
-      switch (threat) {
-        case 'Tank':
-          counters.push('sniper', 'laser');
-          break;
-        case 'Scout':
-          counters.push('gatling', 'flamethrower');
-          break;
-        case 'Flying':
-          counters.push('air_defense');
-          break;
-        case 'Group':
-          counters.push('mortar', 'flamethrower');
-          break;
-        default:
-          counters.push('gatling'); // Default to versatile option
-      }
-    }
-    
-    return [...new Set(counters)]; // Remove duplicates
-  }
-
-  private calculateCoverageScore(position: Position, allSlots: TowerSlot[]): number {
-    // Simple coverage calculation based on distance to existing towers
-    const nearbyTowers = allSlots.filter(slot => slot.tower).length;
-    const avgDistance = allSlots
-      .filter(slot => slot.tower)
-      .reduce((sum, slot) => {
-        const distance = Math.hypot(position.x - slot.x, position.y - slot.y);
-        return sum + distance;
-      }, 0) / (nearbyTowers || 1);
-    
-    return Math.max(0, 1 - (avgDistance / 300)); // Normalize to 0-1
-  }
-
-  private calculateDefensiveValue(position: Position, allSlots: TowerSlot[]): number {
-    // Check for nearby defensive towers
-    const nearbyDefenses = allSlots.filter(slot => {
-      if (!slot.tower) return false;
-      const distance = Math.hypot(position.x - slot.x, position.y - slot.y);
-      return distance <= 150 && 
-             (slot.tower.towerClass === 'shield_generator' || 
-              slot.tower.towerClass === 'repair_station');
-    });
-    
-    return Math.min(1.0, nearbyDefenses.length * 0.3);
-  }
-
-  private generatePlacementReason(
-    towerClass: string,
-    effectiveness: number,
-    synergyAnalysis: { synergyScore: number },
-    strategicValue: { isChokepoint: boolean; isHighGround: boolean; coverageScore: number; defensiveValue: number }
-  ): string {
-    const reasons: string[] = [];
-    
-    if (effectiveness > 0.8) {
-      reasons.push('Highly effective placement');
-    }
-    
-    if (synergyAnalysis.synergyScore > 0.3) {
-      reasons.push(`Good synergy with nearby towers`);
-    }
-    
-    if (strategicValue.isChokepoint) {
-      reasons.push('Strategic chokepoint control');
-    }
-    
-    if (strategicValue.isHighGround) {
-      reasons.push('Advantageous high ground position');
-    }
-    
-    return reasons.join(', ') || 'Recommended placement';
-  }
-
-  private calculatePriority(
-    towerClass: string,
-    threatAnalysis: ThreatAnalysis,
-    effectiveness: number
-  ): number {
-    let priority = effectiveness * 10;
-    
-    if (threatAnalysis.recommendedCounters.includes(towerClass)) {
-      priority += 5;
-    }
-    
-    if (threatAnalysis.threatLevel > 0.7) {
-      priority += 3;
-    }
-    
-    return Math.round(priority);
-  }
 }
 
 // Global AI manager instance

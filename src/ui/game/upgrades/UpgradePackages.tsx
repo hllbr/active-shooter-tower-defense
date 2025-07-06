@@ -9,6 +9,7 @@ export const UpgradePackages: React.FC = () => {
     currentWave, 
     discountMultiplier, 
     diceResult,
+    diceUsed,
     addEnergy,
     addAction,
     purchasePackage,
@@ -23,28 +24,40 @@ export const UpgradePackages: React.FC = () => {
         gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
         gap: 20
       }}>
-        {PACKAGE_DEFINITIONS.map((packageDef) => (
-          <PackageCard
-            key={packageDef.id}
-            packageId={packageDef.id}
-            name={packageDef.name}
-            description={packageDef.description}
-            cost={packageDef.cost}
-            waveRequirement={packageDef.waveRequirement}
-            icon={packageDef.icon}
-            color={packageDef.color}
-            onPurchase={() => packageDef.onPurchase(addEnergy, addAction)}
-            benefits={packageDef.benefits}
-            isElite={packageDef.isElite}
-            purchaseLimit={packageDef.purchaseLimit}
-            gold={gold}
-            currentWave={currentWave}
-            diceResult={diceResult}
-            discountMultiplier={discountMultiplier}
-            getPackageInfo={getPackageInfo}
-            purchasePackage={purchasePackage}
-          />
-        ))}
+        {PACKAGE_DEFINITIONS.map((packageDef) => {
+          const packageInfo = getPackageInfo(packageDef.id, packageDef.purchaseLimit || 1);
+          
+          return (
+            <PackageCard
+              key={packageDef.id}
+              packageId={packageDef.id}
+              name={packageDef.name}
+              description={packageDef.description}
+              baseCost={packageDef.cost}
+              waveRequirement={packageDef.waveRequirement}
+              maxAllowed={packageDef.purchaseLimit || 1}
+              purchaseCount={packageInfo.purchaseCount}
+              canPurchase={packageInfo.canPurchase}
+              isMaxed={packageInfo.isMaxed}
+              currentWave={currentWave}
+              gold={gold}
+              diceResult={diceResult || 0}
+              discountMultiplier={discountMultiplier}
+              diceUsed={diceUsed}
+              onPurchase={(packageId, finalCost) => {
+                console.log(`Package purchased: ${packageId} for ${finalCost} gold`);
+                packageDef.onPurchase(addEnergy, addAction);
+              }}
+              color={packageDef.color}
+              icon={packageDef.icon}
+              benefits={packageDef.benefits}
+              isElite={packageDef.isElite}
+              purchaseLimit={packageDef.purchaseLimit}
+              getPackageInfo={getPackageInfo}
+              purchasePackage={purchasePackage}
+            />
+          );
+        })}
       </div>
 
       <style>
