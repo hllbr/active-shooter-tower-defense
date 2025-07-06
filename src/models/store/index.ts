@@ -11,21 +11,13 @@ import { initialState } from './initialState';
 import { securityManager } from '../../security/SecurityManager';
 import { buildTowerAction } from './actions/buildTower';
 import { unlockSlotAction } from './actions/unlockSlot';
-import { createEnemySlice } from './slices/enemySlice';
-import { createTowerSlice } from './slices/towerSlice';
+import { createEnemySlice, EnemySlice } from './slices/enemySlice';
+import { createTowerSlice, TowerSlice } from './slices/towerSlice';
+import { createDiceSlice, DiceSlice } from './slices/diceSlice';
+import { createMineSlice, MineSlice } from './slices/mineSlice';
+import { createWaveSlice, WaveSlice } from './slices/waveSlice';
+import { createEnergySlice, EnergySlice, addEnemyKillListener, removeEnemyKillListener } from './slices/energySlice';
 
-const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
-  let position: Position;
-  let isTooClose;
-  const { MINE_MIN_DISTANCE_FROM_TOWER } = GAME_CONSTANTS;
-  
-  // Kullanıcının gerçek ekran boyutlarını kullan (görünür alan)
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  const margin = 80; // Kenar boşluğu (mayın boyutu + güvenlik)
-
-  do {
-    position = {
       x: Math.random() * (viewportWidth - margin * 2) + margin,
       y: Math.random() * (viewportHeight - margin * 2) + margin,
     };
@@ -37,17 +29,14 @@ const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   return position;
 };
 
-// Listener tipi
-let enemyKillListeners: ((isSpecial?: boolean, enemyType?: string) => void)[] = [];
 
-const addEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) => void) => {
-  enemyKillListeners.push(fn);
-};
-const removeEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) => void) => {
-  enemyKillListeners = enemyKillListeners.filter(l => l !== fn);
-};
-
-export type Store = GameState & {
+export type Store = GameState &
+  DiceSlice &
+  MineSlice &
+  WaveSlice &
+  EnergySlice &
+  EnemySlice &
+  TowerSlice & {
   buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy', towerClass?: string) => void;
   upgradeTower: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
@@ -164,8 +153,6 @@ export type Store = GameState & {
   initializeAchievements: () => void;
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
 
-  addEnemyKillListener: (fn: (isSpecial?: boolean, enemyType?: string) => void) => void;
-  removeEnemyKillListener: (fn: (isSpecial?: boolean, enemyType?: string) => void) => void;
 
   unlockTowerType: (towerType: string) => void;
   unlockSkin: (skinName: string) => void;
@@ -359,30 +346,10 @@ export const useGameStore = create<Store>((set, get): Store => ({
   
   ...createTowerSlice(set, get),
   ...createEnemySlice(set, get),
-
-  // ✅ CRITICAL FIX: Wave progression implementation
-  nextWave: () => set((state) => {
-    const newWave = state.currentWave + 1;
-    const newEnemiesRequired = GAME_CONSTANTS.getWaveEnemiesRequired(newWave);
-    
-    // ✅ FIX: Simple wave income calculation to avoid dependency issues
-    const waveIncome = Math.floor(50 + (state.currentWave * 10)); // Basic wave income formula
-    
-    console.log(`📈 Wave ${state.currentWave} → ${newWave}: Income +${waveIncome} gold`);
-    
-    // Reset wave-specific counters
-    return {
-      currentWave: newWave,
-      enemiesKilled: 0, // ✅ CRITICAL: Reset kill counter for new wave
-      enemiesRequired: newEnemiesRequired, // ✅ CRITICAL: Update required enemies
-      gold: state.gold + waveIncome, // Passive income from wave completion
-      lostTowerThisWave: false,
-      waveStartTime: performance.now(),
-      currentWaveModifier: waveRules[newWave] || null,
-      // Update tile configurations for new wave
-      towerSlots: updateWaveTiles(newWave, state.towerSlots),
-    };
-  }),
+  ...createDiceSlice(set, get),
+  ...createMineSlice(set, get),
+  ...createWaveSlice(set, get),
+  ...createEnergySlice(set, get),
 
   resetGame: () => set(() => ({
     ...initialState,
@@ -433,154 +400,6 @@ export const useGameStore = create<Store>((set, get): Store => ({
     };
   }),
 
-  rollDice: () => set((state) => {
-    if (state.diceUsed) return {};
-    
-    // ✅ CRITICAL FIX: Start dice rolling animation first
-    useGameStore.setState({ isDiceRolling: true });
-    
-    // Wait for animation, then set result
-    setTimeout(() => {
-      const roll = Math.floor(Math.random() * 6) + 1;
-      const multiplier = roll >= 4 ? (roll === 6 ? 0.5 : roll === 5 ? 0.6 : 0.7) : 
-                        roll === 3 ? 0.8 : roll === 2 ? 0.9 : 1.0;
-      
-      useGameStore.setState({
-        diceRoll: roll, // ✅ FIX: Store just the number, not object
-        discountMultiplier: multiplier,
-        diceUsed: true,
-        isDiceRolling: false,
-      });
-      
-      console.log(`🎲 Dice rolled: ${roll}, Multiplier: ${multiplier.toFixed(1)}`);
-    }, 2000); // 2 second animation
-    
-    return {}; // Return empty to avoid immediate state update
-  }),
-
-  resetDice: () => set(() => ({
-    diceRoll: null,
-    diceUsed: false,
-    discountMultiplier: 1,
-    isDiceRolling: false,
-  })),
-
-  setDiceResult: (roll: number, _multiplier: number) => set(() => ({
-    diceResult: roll // ✅ FIX: Just store the roll number 
-  })),
-
-  // ✅ MINING SYSTEM Implementation
-  upgradeMines: () => set((state) => {
-    const cost = 100; // ✅ FIX: Use hardcoded cost instead of missing constant
-    if (state.gold < cost) return {};
-    
-    return {
-      mineLevel: state.mineLevel + 1,
-      gold: state.gold - cost,
-      defenseUpgradesPurchased: state.defenseUpgradesPurchased + 1,
-      totalGoldSpent: state.totalGoldSpent + cost,
-    };
-  }),
-
-  deployMines: () => set((state) => {
-    if (state.mineLevel === 0) return {};
-    
-    const newMines: Mine[] = [];
-    const mineCount = Math.min(state.mineLevel, 5); // Max 5 mines
-    
-    for (let i = 0; i < mineCount; i++) {
-      newMines.push({
-        id: `mine-${Date.now()}-${i}`,
-        position: getValidMinePosition(state.towerSlots),
-        damage: 50 + (state.mineLevel * 10), // ✅ FIX: Use hardcoded damage formula
-        size: 20, // ✅ FIX: Add missing size property
-        radius: 50, // ✅ FIX: Add missing radius property
-        // ✅ NEW: Default mine properties for backward compatibility
-        mineType: 'explosive',
-        mineSubtype: 'standard',
-        triggerCondition: 'contact',
-        isActive: true,
-        placedAt: Date.now(),
-      });
-    }
-    
-    return { mines: newMines };
-  }),
-
-  // ✅ NEW: Enhanced Mine Deployment with Type Support
-  deploySpecializedMine: (mineType: 'explosive' | 'utility' | 'area_denial', mineSubtype: string, position?: Position) => set((state) => {
-    // Get mine configuration with proper type handling
-    const mineTypeConfig = GAME_CONSTANTS.MINE_TYPES[mineType];
-    if (!mineTypeConfig) return {};
-    
-    const mineConfig = mineTypeConfig[mineSubtype as keyof typeof mineTypeConfig] as {
-      damage: number;
-      radius: number;
-      cost: number;
-      triggerCondition: 'contact' | 'proximity' | 'remote' | 'timer';
-      duration?: number;
-      slowMultiplier?: number;
-      effects?: string[];
-      empDuration?: number;
-      smokeDuration?: number;
-      freezeDuration?: number;
-    };
-    if (!mineConfig) return {};
-    
-    // Check placement limits
-    const typeCount = state.mines.filter(m => m.mineType === mineType).length;
-    const maxForType = GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MAX_MINES_PER_TYPE[mineType];
-    const totalMines = state.mines.length;
-    
-    if (typeCount >= maxForType || totalMines >= GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MAX_MINES_PER_WAVE) {
-      return {};
-    }
-    
-    if (state.gold < mineConfig.cost) return {};
-    
-    const minePosition = position || getValidMinePosition(state.towerSlots);
-    
-    // Check minimum distance between mines
-    const tooCloseToExisting = state.mines.some(existing => {
-      const distance = Math.hypot(
-        minePosition.x - existing.position.x,
-        minePosition.y - existing.position.y
-      );
-      return distance < GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MIN_DISTANCE_BETWEEN_MINES;
-    });
-    
-    if (tooCloseToExisting) return {};
-    
-    const newMine: Mine = {
-      id: `mine-${Date.now()}-${mineType}-${mineSubtype}`,
-      position: minePosition,
-      damage: mineConfig.damage || 0,
-      size: 20,
-      radius: mineConfig.radius || 50,
-      mineType,
-      mineSubtype: mineSubtype as 'standard' | 'cluster' | 'emp' | 'smoke' | 'caltrops' | 'tar' | 'freeze',
-      triggerCondition: mineConfig.triggerCondition || 'contact',
-      isActive: true,
-      placedAt: Date.now(),
-      duration: mineConfig.duration,
-      remainingDuration: mineConfig.duration,
-      slowMultiplier: mineConfig.slowMultiplier,
-      effects: mineConfig.effects,
-      empDuration: mineConfig.empDuration,
-      smokeDuration: mineConfig.smokeDuration,
-      freezeDuration: mineConfig.freezeDuration,
-    };
-    
-    return {
-      mines: [...state.mines, newMine],
-      gold: state.gold - mineConfig.cost,
-      totalGoldSpent: state.totalGoldSpent + mineConfig.cost,
-    };
-  }),
-
-  triggerMine: (mineId: string) => set((state) => ({
-    mines: state.mines.filter(m => m.id !== mineId)
-  })),
 
   // ✅ WALL SYSTEM Implementation
   upgradeWall: () => set((state) => {
@@ -670,199 +489,6 @@ export const useGameStore = create<Store>((set, get): Store => ({
   })),
 
   // ✅ CRITICAL FIX: Wave and Preparation System
-  startPreparation: () => set(() => ({
-    isPreparing: true,
-    isPaused: false,
-    prepRemaining: GAME_CONSTANTS.PREP_TIME,
-  })),
-
-  tickPreparation: (delta: number) => set((state) => {
-    if (!state.isPreparing || state.isPaused) return {};
-    
-    const newRemaining = Math.max(0, state.prepRemaining - delta);
-    
-    return {
-      prepRemaining: newRemaining,
-      isPreparing: newRemaining > 0,
-    };
-  }),
-
-  pausePreparation: () => set((state) => 
-    state.isPreparing ? { isPaused: true } : {}
-  ),
-
-  resumePreparation: () => set((state) => 
-    state.isPreparing ? { isPaused: false } : {}
-  ),
-
-  speedUpPreparation: (amount: number) => set((state) => ({
-    prepRemaining: Math.max(0, state.prepRemaining - amount)
-  })),
-
-  // ✅ CRITICAL FIX: Wave Start Implementation
-  startWave: () => set((state) => {
-    console.log(`🚀 Starting Wave ${state.currentWave}!`);
-    
-    // ✅ ENHANCED: Start enemy spawning when wave begins
-    setTimeout(() => {
-      import('../../game-systems/EnemySpawner').then(({ startEnemyWave }) => {
-        startEnemyWave(state.currentWave);
-      });
-    }, 100); // Small delay to ensure state is updated
-    
-    return {
-      isPreparing: false,
-      isPaused: false,
-      isStarted: true,
-      waveStartTime: performance.now(),
-      lostTowerThisWave: false,
-      // Reset preparation timer for next wave
-      prepRemaining: GAME_CONSTANTS.PREP_TIME,
-    };
-  }),
-
-  consumeEnergy: (amount: number, action: string) => {
-    const success = energyManager.consume(amount, action);
-    return success;
-  },
-  
-  addEnergy: (amount: number, action?: string) => {
-    // Security validation for energy addition
-    const validation = securityManager.validateStateChange('addEnergy', {}, { energy: amount });
-    if (!validation.valid) {
-      console.warn('🔒 Security: addEnergy blocked:', validation.reason);
-      securityManager.logSecurityEvent('state_manipulation_attempt', {
-        action: 'addEnergy',
-        amount,
-        actionType: action || 'manual',
-        reason: validation.reason
-      }, 'high');
-      return;
-    }
-    
-    energyManager.add(amount, action || 'manual');
-  },
-  
-  clearEnergyWarning: () => set(() => ({
-    energyWarning: null
-  })),
-  
-  // ✅ ENERGY SYSTEM Implementation
-  upgradeEnergySystem: (upgradeId: string) => set((state) => {
-    const upgrade = GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES?.find(u => u.id === upgradeId);
-    if (!upgrade) return {};
-    
-    const currentLevel = state.energyUpgrades[upgradeId] || 0;
-    const cost = upgrade.cost * Math.pow(1.5, currentLevel); // Standard cost scaling
-    
-    if (state.gold < cost) return {};
-    
-    return {
-      energyUpgrades: {
-        ...state.energyUpgrades,
-        [upgradeId]: currentLevel + 1
-      },
-      gold: state.gold - cost,
-      totalGoldSpent: state.totalGoldSpent + cost,
-    };
-  }),
-
-  onEnemyKilled: (isSpecial?: boolean, enemyType?: string) => set((state) => {
-    const now = performance.now();
-    const timeSinceLastKill = now - state.lastKillTime;
-    
-    // Combo system: kills within 3 seconds maintain combo
-    const newCombo = timeSinceLastKill < 3000 ? state.killCombo + 1 : 1;
-    
-    // Energy bonus calculation - CRITICAL FIX: Add null checks
-    let energyBonus = GAME_CONSTANTS.ENERGY_REGEN_KILL || 2;
-    if (isSpecial) energyBonus *= 2; // Special enemies give double energy
-    if (newCombo > 5) energyBonus += Math.floor(newCombo / 5); // Combo bonus
-    
-    // CRITICAL FIX: Only add energy if it's a valid number
-    if (!isNaN(energyBonus) && energyBonus > 0) {
-      energyManager.add(energyBonus, 'enemyKill');
-    }
-    
-    // Challenge event listener tetikleme
-    setTimeout(() => {
-      enemyKillListeners.forEach(fn => fn(isSpecial, enemyType));
-    }, 0);
-    
-    return {
-      killCombo: newCombo,
-      lastKillTime: now,
-      totalKills: state.totalKills + 1,
-    };
-  }),
-
-  tickEnergyRegen: (_deltaTime: number) => {
-    energyManager.tick(_deltaTime);
-  },
-
-  calculateEnergyStats: () => {
-    const state = useGameStore.getState();
-    const baseRegen = GAME_CONSTANTS.ENERGY_REGEN_PASSIVE || 0.5;
-    const upgradeMultiplier = 1 + (state.energyUpgrades['passiveRegen'] || 0) * 0.1;
-    
-    return {
-      passiveRegen: baseRegen * upgradeMultiplier,
-      maxEnergy: state.getMaxEnergy(),
-      killBonus: GAME_CONSTANTS.ENERGY_REGEN_KILL || 2,
-      efficiency: state.energyEfficiency || 0,
-    };
-  },
-
-  // ✅ DYNAMIC CALCULATIONS
-  getMaxEnergy: () => {
-    const state = useGameStore.getState();
-    const baseMax = GAME_CONSTANTS.ENERGY_SYSTEM.MAX_ENERGY_BASE;
-    const upgradeBonus = (state.energyUpgrades['maxEnergy'] || 0) * 20;
-    return baseMax + upgradeBonus;
-  },
-
-  getMaxActions: () => {
-    const state = useGameStore.getState();
-    const baseActions = GAME_CONSTANTS.ACTION_SYSTEM.BASE_ACTIONS;
-    const upgradeBonus = state.maxActionsLevel * 2;
-    return baseActions + upgradeBonus;
-  },
-
-  // ✅ ACTION SYSTEM Implementation
-  tickActionRegen: (_deltaTime: number) => set((state) => {
-    const now = performance.now();
-    const timeSinceLastRegen = now - state.lastActionRegen;
-    
-    if (timeSinceLastRegen >= state.actionRegenTime) {
-      const maxActions = state.getMaxActions();
-      if (state.actionsRemaining < maxActions) {
-        return {
-          actionsRemaining: Math.min(maxActions, state.actionsRemaining + 1),
-          lastActionRegen: now,
-        };
-      }
-    }
-    
-    return {};
-  }),
-
-  addAction: (amount: number) => {
-    // Security validation for action addition
-    const validation = securityManager.validateStateChange('addAction', {}, { actions: amount });
-    if (!validation.valid) {
-      console.warn('🔒 Security: addAction blocked:', validation.reason);
-      securityManager.logSecurityEvent('state_manipulation_attempt', {
-        action: 'addAction',
-        amount,
-        reason: validation.reason
-      }, 'high');
-      return;
-    }
-    
-    set((state) => ({
-      actionsRemaining: Math.min(state.getMaxActions(), state.actionsRemaining + amount)
-    }));
-  },
 
   // ✅ POWER MARKET Implementation
   setGold: (amount: number) => {
@@ -1019,8 +645,6 @@ export const useGameStore = create<Store>((set, get): Store => ({
     console.log(`Achievement event: ${eventType}`, eventData);
   },
 
-  addEnemyKillListener,
-  removeEnemyKillListener,
 
   unlockTowerType: (towerType: string) => set((state) => {
     if (state.unlockedTowerTypes && state.unlockedTowerTypes.includes(towerType)) return {};
@@ -1187,4 +811,6 @@ waveManager.on('complete', () => {
   if (!lostTowerThisWave) bonus += 5;
   if (performance.now() - waveStartTime < 60000) bonus += 5;
   energyManager.add(bonus, 'waveComplete');
-}); 
+});
+
+export { addEnemyKillListener, removeEnemyKillListener };
