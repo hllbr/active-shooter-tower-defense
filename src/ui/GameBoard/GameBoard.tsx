@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { initUpgradeEffects } from '../../game-systems/UpgradeEffects';
-import { useChallenge } from '../challenge/ChallengeContext';
+import { useChallenge } from '../challenge/hooks/useChallenge';
 
 // Lazy load heavy components for code splitting
 const UpgradeScreen = lazy(() => import('../game/UpgradeScreen').then(module => ({ default: module.UpgradeScreen })));

@@ -5,7 +5,7 @@ import { SettingsPanel } from './ui/settings/SettingsPanel';
 import { ChallengePanel } from './ui/challenge/ChallengePanel';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { ChallengeProvider } from './ui/challenge/ChallengeContext';
+import { ChallengeProvider } from './ui/challenge/ChallengeProvider';
 import { MiniSecurityIndicator } from './ui/common/SecurityStatusIndicator';
 
 function App() {
