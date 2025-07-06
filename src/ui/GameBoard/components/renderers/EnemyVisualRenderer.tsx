@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import type { Enemy } from '../../../../models/gameTypes';
-import { GAME_CONSTANTS } from '../../../../utils/constants';
+// import { GAME_CONSTANTS } from '../../../../utils/constants'; // Unused but may be needed later
 import {
   HealthBar,
   StatusIndicators,
@@ -28,6 +28,7 @@ export const EnemyVisualRenderer: React.FC<EnemyVisualRendererProps> = ({ enemy,
 
     // Boss entrance animation
     if (enemy.bossType && enemy.cinematicState === 'entrance') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       startEntranceAnimation();
     }
 
@@ -46,6 +47,8 @@ export const EnemyVisualRenderer: React.FC<EnemyVisualRendererProps> = ({ enemy,
         cancelAnimationFrame(animationRef.current);
       }
     };
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enemy.cinematicState, enemy.bossType, isVisible]);
 
   const startEntranceAnimation = () => {

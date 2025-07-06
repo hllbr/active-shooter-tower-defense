@@ -210,6 +210,7 @@ export class EliteTargetingStrategy implements ITargetingStrategy {
 
   // =================== PRIVATE TARGETING METHODS ===================
 
+  private utilGetDirection(from: Position, to: Position): Position {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;

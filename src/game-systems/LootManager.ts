@@ -1,6 +1,6 @@
-import type { Enemy, Effect, BossLootEntry } from '../models/gameTypes';
+import type { Enemy } from '../models/gameTypes';
 import { useGameStore } from '../models/store';
-import { soundEffects } from '../utils/sound';
+import { playSound } from '../utils/sound/soundEffects';
 import {
   determineRarity,
   determineLootType,
@@ -48,7 +48,7 @@ interface LootDropConfig {
  */
 export class LootManager {
   private static activeLootItems: Map<string, LootItem> = new Map();
-  private static lootAnimationTimers: Map<string, NodeJS.Timeout> = new Map();
+  private static lootAnimationTimers: Map<string, number> = new Map();
   private static pickupRadius = 80;
   private static magnetRadius = 120;
 
@@ -118,7 +118,7 @@ export class LootManager {
     });
     
     // Play gold drop sound
-    soundEffects.playSound('gold-drop');
+    playSound('gold-drop');
   }
 
   /**
@@ -377,7 +377,7 @@ export class LootManager {
       legendary: 'loot-legendary'
     };
     
-    soundEffects.playSound(sounds[rarity] || 'loot-common');
+    playSound(sounds[rarity] || 'loot-common');
   }
 
   /**
@@ -392,7 +392,7 @@ export class LootManager {
       legendary: 'pickup-legendary'
     };
     
-    soundEffects.playSound(sounds[rarity] || 'pickup-common');
+    playSound(sounds[rarity] || 'pickup-common');
   }
 
   /**

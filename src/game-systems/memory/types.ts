@@ -2,6 +2,23 @@
  * 📊 Memory Testing Types
  */
 
+// ✅ Browser Performance API Memory Interface
+export interface PerformanceMemory {
+  readonly usedJSHeapSize: number;
+  readonly totalJSHeapSize: number;
+  readonly jsHeapSizeLimit: number;
+}
+
+// ✅ Extended Performance interface for browser support
+export interface ExtendedPerformance extends Performance {
+  readonly memory?: PerformanceMemory;
+}
+
+// ✅ Window interface extension for garbage collection
+export interface ExtendedWindow extends Window {
+  gc?: () => void;
+}
+
 export interface MemoryMetrics {
   timestamp: number;
   heapUsed: number;

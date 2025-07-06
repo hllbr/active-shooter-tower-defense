@@ -1,16 +1,14 @@
 import type { Store } from '../index';
-import type { Tower } from '../../gameTypes';
+import type { Tower, TowerClass, SpecializedTowerConfig } from '../../gameTypes';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { upgradeEffectsManager } from '../../../game-systems/UpgradeEffects';
-import { energyManager } from '../../../game-systems/EnergyManager';
-import { useGameStore } from '../index';
 
 export function buildTowerAction(
   state: Store,
   slotIdx: number,
   free = false,
   towerType: 'attack' | 'economy' = 'attack',
-  towerClass?: string
+  towerClass?: TowerClass
 ): Partial<Store> {
   const slot = state.towerSlots[slotIdx];
   if (!slot || slot.tower) return {};
@@ -20,9 +18,9 @@ export function buildTowerAction(
 
   const upgrade = GAME_CONSTANTS.TOWER_UPGRADES[0];
 
-  let specializedTowerData = null as any;
-  if (towerClass && GAME_CONSTANTS.SPECIALIZED_TOWERS[towerClass as keyof typeof GAME_CONSTANTS.SPECIALIZED_TOWERS]) {
-    specializedTowerData = GAME_CONSTANTS.SPECIALIZED_TOWERS[towerClass as keyof typeof GAME_CONSTANTS.SPECIALIZED_TOWERS];
+  let specializedTowerData: SpecializedTowerConfig | null = null;
+  if (towerClass && GAME_CONSTANTS.SPECIALIZED_TOWERS[towerClass]) {
+    specializedTowerData = GAME_CONSTANTS.SPECIALIZED_TOWERS[towerClass];
     if (!free && state.gold < specializedTowerData.cost) return {};
   }
 
@@ -66,7 +64,7 @@ export function buildTowerAction(
     rangeMultiplier: slot.modifier?.type === 'buff' ? GAME_CONSTANTS.BUFF_RANGE_MULTIPLIER : 1,
     towerType,
     towerCategory: specializedTowerData?.category,
-    towerClass: towerClass as any,
+    towerClass,
     criticalChance: specializedTowerData?.criticalChance ?? 0,
     criticalDamage: specializedTowerData?.criticalDamage ?? 1,
     armorPenetration: specializedTowerData?.armorPenetration ?? 0,

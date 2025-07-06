@@ -2,11 +2,10 @@ export interface ThreatAnalysis {
   threatLevel: number;
   primaryThreats: string[];
   recommendedCounters: string[];
-  weakestPoint: import('../../models/gameTypes').Position;
+  weakestPoint: import('../../../models/gameTypes').Position;
 }
 
-import type { Position, Enemy, TowerSlot } from '../../models/gameTypes';
-import { GAME_CONSTANTS } from '../../utils/constants';
+import type { Position, Enemy, TowerSlot } from '../../../models/gameTypes';
 
 function countEnemyTypes(enemyTypes: string[]): Record<string, number> {
   return enemyTypes.reduce((acc, type) => {

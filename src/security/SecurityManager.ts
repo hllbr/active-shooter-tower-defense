@@ -314,5 +314,84 @@ export class SecurityManager {
   }
 
   /**
-   * Generate checksum for state integrity
+   * Log security event
    */
+  private logSecurityEvent(
+    type: SecurityEventType,
+    details: Record<string, unknown>,
+    severity: 'low' | 'medium' | 'high' | 'critical'
+  ): void {
+    const event: SecurityEvent = {
+      timestamp: Date.now(),
+      type,
+      action: String(details.action || 'unknown'),
+      details,
+      severity
+    };
+
+    this.auditLog.push(event);
+    
+    // Keep only last 1000 events
+    if (this.auditLog.length > 1000) {
+      this.auditLog.shift();
+    }
+
+    // Log to console for debugging
+    console.warn(`[Security] ${severity.toUpperCase()}: ${type}`, details);
+  }
+
+  /**
+   * Perform security audit
+   */
+  private performSecurityAudit(): void {
+    // Clean up old rate limiters
+    this.cleanupRateLimiters();
+    
+    // Check for suspicious activity patterns
+    const recentEvents = this.auditLog.filter(event => 
+      Date.now() - event.timestamp < 60000 && 
+      event.severity === 'critical'
+    );
+    
+    if (recentEvents.length > 5) {
+      this.isLocked = true;
+      setTimeout(() => {
+        this.isLocked = false;
+      }, 300000); // 5 minutes lockout
+      
+      console.warn('[Security] System temporarily locked due to suspicious activity');
+    }
+  }
+
+  /**
+   * Clean up expired rate limiters
+   */
+  private cleanupRateLimiters(): void {
+    const now = Date.now();
+    Object.keys(this.rateLimiters).forEach(key => {
+      if (now > this.rateLimiters[key].resetTime) {
+        delete this.rateLimiters[key];
+      }
+    });
+  }
+
+  /**
+   * Get security statistics for monitoring
+   */
+  public getSecurityStats(): Record<string, unknown> {
+    return {
+      totalEvents: this.auditLog.length,
+      suspiciousActivityCount: this.suspiciousActivityCount,
+      isLocked: this.isLocked,
+      lastStateChecksum: this.lastStateChecksum,
+      rateLimitersCount: Object.keys(this.rateLimiters).length,
+      recentCriticalEvents: this.auditLog.filter(event => 
+        Date.now() - event.timestamp < 60000 && 
+        event.severity === 'critical'
+      ).length
+    };
+  }
+}
+
+// Export singleton instance
+export const securityManager = SecurityManager.getInstance();

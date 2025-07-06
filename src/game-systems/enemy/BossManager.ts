@@ -1,7 +1,7 @@
-import type { Enemy, Effect, BossLootEntry } from '../../models/gameTypes';
+import type { Enemy, BossLootEntry } from '../../models/gameTypes';
 import { selectBossForWave, type BossDefinition } from './BossDefinitions';
 import { useGameStore } from '../../models/store';
-import { soundEffects } from '../../utils/sound';
+import { playSound } from '../../utils/sound';
 import {
   executeChargeAttack,
   executeGroundSlam,
@@ -21,9 +21,9 @@ import {
  */
 export class BossManager {
   private static activeBosses: Map<string, BossDefinition> = new Map();
-  private static cinematicTimers: Map<string, NodeJS.Timeout> = new Map();
-  private static bossAbilityTimers: Map<string, NodeJS.Timeout> = new Map();
-  private static minionSpawnTimers: Map<string, NodeJS.Timeout> = new Map();
+  private static cinematicTimers: Map<string, number> = new Map();
+  private static bossAbilityTimers: Map<string, number> = new Map();
+  private static minionSpawnTimers: Map<string, number> = new Map();
 
   /**
    * Initialize boss system
@@ -116,7 +116,7 @@ export class BossManager {
     const { addEffect } = useGameStore.getState();
     
     // Play entrance sound
-    soundEffects.playSound('boss-entrance');
+    playSound('boss-entrance');
     
     // Show entrance message
     console.log(`Boss Entrance: ${definition.cinematicData.entranceText}`);
@@ -226,7 +226,7 @@ export class BossManager {
    * Trigger boss phase transition
    */
   private static triggerPhaseTransition(boss: Enemy, definition: BossDefinition, newPhase: number) {
-    const { addEffect, showNotification } = useGameStore.getState();
+    const { addEffect } = useGameStore.getState();
     const phaseData = definition.phases[newPhase - 1];
     
     // Stop current abilities
@@ -242,16 +242,10 @@ export class BossManager {
     boss.isInvulnerable = true;
 
     // Play phase transition sound
-    soundEffects.playSound('boss-phase-transition');
+    playSound('boss-phase-transition');
 
     // Show phase transition message
-    showNotification?.({
-      id: `boss_phase_${boss.id}`,
-      type: 'warning',
-      message: `${definition.name} enters ${phaseData.name}!`,
-      timestamp: Date.now(),
-      duration: definition.cinematicData.phaseTransitionDuration,
-    });
+    console.log(`Boss Phase Transition: ${definition.name} enters ${phaseData.name}!`);
 
     // Create phase transition effect
     addEffect({
@@ -318,7 +312,7 @@ export class BossManager {
    */
   private static executeBossAbility(boss: Enemy, ability: string, definition: BossDefinition) {
     // Note: Some abilities may require different game state properties
-    const gameState = useGameStore.getState();
+    // const _gameState = useGameStore.getState(); // Reserved for future use
     
     switch (ability) {
       case 'charge_attack':
@@ -376,7 +370,7 @@ export class BossManager {
     boss.cinematicStartTime = performance.now();
     
     // Play defeat sound
-    soundEffects.playSound('boss-defeat');
+    playSound('boss-defeat');
     
     // Show defeat message
     console.log(`Boss Defeated: ${definition.cinematicData.defeatText}`);

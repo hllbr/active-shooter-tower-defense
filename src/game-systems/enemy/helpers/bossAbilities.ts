@@ -1,7 +1,7 @@
-import type { Enemy } from '../../../models/gameTypes';
+import type { Enemy, TowerSlot } from '../../../models/gameTypes';
 import type { BossDefinition } from '../BossDefinitions';
 import { useGameStore } from '../../../models/store';
-import { soundEffects } from '../../../utils/sound';
+import { playSound } from '../../../utils/sound';
 
 export function executeChargeAttack(boss: Enemy, _definition: BossDefinition) {
   const { addEffect, towerSlots } = useGameStore.getState();
@@ -10,7 +10,7 @@ export function executeChargeAttack(boss: Enemy, _definition: BossDefinition) {
     .reduce((nearest, slot) => {
       const distance = Math.hypot(slot.x - boss.position.x, slot.y - boss.position.y);
       return !nearest || distance < nearest.distance ? { slot, distance } : nearest;
-    }, null as any);
+    }, null as { slot: TowerSlot; distance: number } | null);
   if (nearestTower) {
     addEffect({
       id: `charge_effect_${boss.id}`,
@@ -26,7 +26,7 @@ export function executeChargeAttack(boss: Enemy, _definition: BossDefinition) {
     setTimeout(() => {
       boss.speed = originalSpeed;
     }, 1000);
-    soundEffects.playSound('boss-charge');
+    playSound('boss-charge');
   }
 }
 
@@ -50,15 +50,15 @@ export function executeGroundSlam(boss: Enemy, _definition: BossDefinition) {
       }
     }
   });
-  soundEffects.playSound('boss-ground-slam');
+  playSound('boss-ground-slam');
 }
 
 export function executeMissileBarrage(_boss: Enemy, _definition: BossDefinition) {
-  soundEffects.playSound('boss-missile');
+  playSound('boss-missile');
 }
 
 export function executeBombingRun(_boss: Enemy, _definition: BossDefinition) {
-  soundEffects.playSound('boss-bombing');
+  playSound('boss-bombing');
 }
 
 export function executeShieldRegeneration(boss: Enemy, _definition: BossDefinition) {
@@ -68,7 +68,7 @@ export function executeShieldRegeneration(boss: Enemy, _definition: BossDefiniti
 }
 
 export function executeSpawnMinions(_boss: Enemy, _definition: BossDefinition, _minionTypes: string[]) {
-  soundEffects.playSound('boss-spawn-minions');
+  playSound('boss-spawn-minions');
 }
 
 export function executeQuantumTunneling(boss: Enemy, _definition: BossDefinition) {
@@ -77,7 +77,7 @@ export function executeQuantumTunneling(boss: Enemy, _definition: BossDefinition
 }
 
 export function executeRealityTear(_boss: Enemy, _definition: BossDefinition) {
-  soundEffects.playSound('boss-reality-tear');
+  playSound('boss-reality-tear');
 }
 
 export function activateRageMode(boss: Enemy, _definition: BossDefinition) {

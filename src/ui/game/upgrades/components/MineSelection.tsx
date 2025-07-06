@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { GAME_CONSTANTS } from '../../../utils/constants/gameConstants';
-import { formatCurrency } from '../../../utils/formatters';
+import { GAME_CONSTANTS } from '../../../../utils/constants/gameConstants';
+import { formatCurrency } from '../../../../utils/formatters';
 
 interface MineSelectionProps {
   onMineSelect: (mineType: 'explosive' | 'utility' | 'area_denial', mineSubtype: string) => void;

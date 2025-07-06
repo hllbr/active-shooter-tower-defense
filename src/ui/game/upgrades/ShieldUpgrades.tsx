@@ -7,8 +7,11 @@ import { ShieldUpgradeCard } from './ShieldUpgradeCard';
 export const ShieldUpgrades: React.FC = () => {
   const gold = useGameStore((state: Store) => state.gold);
   const globalWallStrength = useGameStore((state: Store) => state.globalWallStrength);
-  const purchaseShield = useGameStore((state: Store) => state.purchaseShield);
+
   const discountMultiplier = useGameStore((state: Store) => state.discountMultiplier);
+  const diceUsed = useGameStore((state: Store) => state.diceUsed);
+  const purchaseIndividualShieldUpgrade = useGameStore((state: Store) => state.purchaseIndividualShieldUpgrade);
+  const getIndividualShieldUpgradeInfo = useGameStore((state: Store) => state.getIndividualShieldUpgradeInfo);
   
   const [prevWallStrength, setPrevWallStrength] = useState(globalWallStrength);
   const [showUpgradeAnimation, setShowUpgradeAnimation] = useState(false);
@@ -37,11 +40,21 @@ export const ShieldUpgrades: React.FC = () => {
   const nextShieldStrength = getNextShieldStrength();
 
   const handlePurchase = (index: number, finalCost: number) => {
-    // Önce özel fiyatla gold'u harca
-    const state = useGameStore.getState();
-    state.spendGold(finalCost);
-    // Sonra upgrade'i ücretsiz gerçekleştir
-    purchaseShield(index, true);
+    const shield = GAME_CONSTANTS.WALL_SHIELDS[index];
+    if (!shield) return;
+    
+    const shieldId = `shield_${index}`;
+    const success = purchaseIndividualShieldUpgrade(shieldId, finalCost, shield.purchaseLimit);
+    
+    if (success) {
+      // Kalkan gücünü artır
+      const state = useGameStore.getState();
+      useGameStore.setState({
+        globalWallStrength: state.globalWallStrength + shield.strength
+      });
+      
+      console.log(`Shield purchased: ${shield.name} (+${shield.strength} strength)`);
+    }
   };
 
   return (
@@ -63,17 +76,26 @@ export const ShieldUpgrades: React.FC = () => {
         gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
         gap: 12
       }}>
-        {GAME_CONSTANTS.WALL_SHIELDS.map((shield, i) => (
-          <ShieldUpgradeCard
-            key={i}
-            shield={shield}
-            index={i}
-            gold={gold}
-            globalWallStrength={globalWallStrength}
-            discountMultiplier={discountMultiplier}
-            onPurchase={handlePurchase}
-          />
-        ))}
+        {GAME_CONSTANTS.WALL_SHIELDS.map((shield, i) => {
+          const shieldId = `shield_${i}`;
+          const shieldInfo = getIndividualShieldUpgradeInfo(shieldId, shield.purchaseLimit);
+          
+          return (
+            <ShieldUpgradeCard
+              key={i}
+              shield={shield}
+              index={i}
+              gold={gold}
+              globalWallStrength={globalWallStrength}
+              discountMultiplier={discountMultiplier}
+              diceUsed={diceUsed}
+              purchaseCount={shieldInfo.currentLevel}
+              maxAllowed={shield.purchaseLimit}
+              isMaxed={shieldInfo.isMaxed}
+              onPurchase={handlePurchase}
+            />
+          );
+        })}
       </div>
     </div>
   );

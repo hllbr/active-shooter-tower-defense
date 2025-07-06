@@ -566,3 +566,65 @@ export interface BossPhaseData {
     maxMinions: number;
   };
 }
+
+// ✅ Specialized Tower System Types
+export interface SpecializedTowerUpgradePath {
+  criticalChance?: number;
+  criticalDamage?: number;
+  projectilePenetration?: number;
+  armorPenetration?: number;
+  supportRadius?: number;
+  supportIntensity?: number;
+  empDuration?: number;
+  areaOfEffect?: number;
+  maxSpinUpLevel?: number;
+  fireRate?: number;
+  burnDuration?: number;
+  damage?: number;
+  range?: number;
+  beamFocusMultiplier?: number;
+  manualTargeting?: boolean;
+  multiShotCount?: number;
+  shieldStrength?: number;
+  shieldRegenRate?: number;
+  repairRate?: number;
+  stealthDetectionRange?: number;
+  acidStack?: number;
+}
+
+export interface SpecializedTowerConfig {
+  name: string;
+  category: 'assault' | 'area_control' | 'support' | 'defensive' | 'specialist';
+  baseDamage: number;
+  baseRange: number;
+  baseFireRate: number;
+  cost: number;
+  description: string;
+  upgradePaths: Record<string, SpecializedTowerUpgradePath>;
+  
+  // Optional specialized properties
+  criticalChance?: number;
+  criticalDamage?: number;
+  armorPenetration?: number;
+  spinUpLevel?: number;
+  maxSpinUpLevel?: number;
+  beamFocusMultiplier?: number;
+  beamLockTime?: number;
+  areaOfEffect?: number;
+  burnDuration?: number;
+  supportRadius?: number;
+  supportIntensity?: number;
+  stealthDetectionRange?: number;
+  empDuration?: number;
+  shieldStrength?: number;
+  shieldRegenRate?: number;
+  repairRate?: number;
+  projectilePenetration?: number;
+  manualTargeting?: boolean;
+  multiShotCount?: number;
+  acidStack?: number;
+}
+
+export type TowerClass = 'sniper' | 'gatling' | 'laser' | 'mortar' | 'flamethrower' | 'radar' | 'supply_depot' | 'shield_generator' | 'repair_station' | 'emp' | 'stealth_detector' | 'air_defense';
+
+export type SpecializedTowersConfig = Record<TowerClass, SpecializedTowerConfig>;

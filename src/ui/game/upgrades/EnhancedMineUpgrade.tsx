@@ -20,7 +20,7 @@ export const EnhancedMineUpgrade: React.FC = () => {
   const diceUsed = useGameStore((s: Store) => s.diceUsed);
 
   const {
-    isMaxMineLevel,
+    isMaxMineLevel: _isMaxMineLevel,
     isMaxMinePurchases,
     isMineUpgradeBlocked,
     mineUpgrade,

@@ -1,5 +1,4 @@
 import type { Tower, TowerSlot, Position, Enemy } from '../../../models/gameTypes';
-import { GAME_CONSTANTS } from '../../../utils/constants';
 
 function getDistance(pos1: Position, pos2: Position): number {
   return Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2));

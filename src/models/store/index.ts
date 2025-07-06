@@ -1,12 +1,12 @@
 import { create } from 'zustand';
-import type { GameState, Tower, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from '../gameTypes';
+import type { GameState, TowerSlot, Enemy, Bullet, Effect, Mine, Position, TowerUpgradeListener } from '../gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
 // import { DailyMissionsManager } from '../../logic/DailyMissionsManager';
 import { updateWaveTiles } from '../../game-systems/TowerPlacementManager';
 import { waveRules } from '../../config/waveRules';
 import { energyManager } from '../../game-systems/EnergyManager';
 import { waveManager } from '../../game-systems/WaveManager';
-import { upgradeEffectsManager } from '../../game-systems/UpgradeEffects';
+// import { upgradeEffectsManager } from '../../game-systems/UpgradeEffects';
 import { initialState } from './initialState';
 import { securityManager } from '../../security/SecurityManager';
 import { buildTowerAction } from './actions/buildTower';
@@ -1110,7 +1110,23 @@ export const useGameStore = create<Store>((set, get): Store => ({
     const tracker = state.packageTracker[packageId] || { purchaseCount: 0, lastPurchased: 0, maxAllowed };
     const current = tracker.purchaseCount;
     
-    if (current >= maxAllowed || state.gold < cost) {
+    console.log(`🛒 purchasePackage attempt:`, {
+      packageId,
+      cost,
+      maxAllowed,
+      current,
+      gold: state.gold,
+      hasEnoughGold: state.gold >= cost,
+      notMaxLevel: current < maxAllowed
+    });
+    
+    if (current >= maxAllowed) {
+      console.log(`❌ Purchase failed: Already at max level (${current}/${maxAllowed})`);
+      return false;
+    }
+    
+    if (state.gold < cost) {
+      console.log(`❌ Purchase failed: Not enough gold (need ${cost}, have ${state.gold})`);
       return false;
     }
     
