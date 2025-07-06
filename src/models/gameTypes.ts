@@ -1,5 +1,23 @@
 export type Position = { x: number; y: number };
 
+export interface MineConfig {
+  name: string;
+  description: string;
+  damage: number;
+  radius: number;
+  cost: number;
+  triggerCondition: 'contact' | 'proximity' | 'remote' | 'timer';
+  icon: string;
+  // Optional properties
+  subExplosions?: number;
+  empDuration?: number;
+  smokeDuration?: number;
+  duration?: number;
+  slowMultiplier?: number;
+  freezeDuration?: number;
+  effects?: string[];
+}
+
 export interface TowerVisual {
   level: number;
   model: string;

@@ -7,11 +7,11 @@ import { ShieldUpgradeCard } from './ShieldUpgradeCard';
 export const ShieldUpgrades: React.FC = () => {
   const gold = useGameStore((state: Store) => state.gold);
   const globalWallStrength = useGameStore((state: Store) => state.globalWallStrength);
+  const upgradeWall = useGameStore((state: Store) => state.upgradeWall);
+  const wallLevel = useGameStore((state: Store) => state.wallLevel);
 
   const discountMultiplier = useGameStore((state: Store) => state.discountMultiplier);
   const diceUsed = useGameStore((state: Store) => state.diceUsed);
-  const purchaseIndividualShieldUpgrade = useGameStore((state: Store) => state.purchaseIndividualShieldUpgrade);
-  const getIndividualShieldUpgradeInfo = useGameStore((state: Store) => state.getIndividualShieldUpgradeInfo);
   
   const [prevWallStrength, setPrevWallStrength] = useState(globalWallStrength);
   const [showUpgradeAnimation, setShowUpgradeAnimation] = useState(false);
@@ -21,10 +21,12 @@ export const ShieldUpgrades: React.FC = () => {
     return globalWallStrength * 10; // Each wall point = 10 shield strength
   };
 
-  // Calculate next shield strength (if purchasing the cheapest shield)
+  // Calculate next shield strength (if purchasing the next available shield)
   const getNextShieldStrength = () => {
-    const cheapestShield = GAME_CONSTANTS.WALL_SHIELDS[0];
-    return (globalWallStrength + cheapestShield.strength) * 10;
+    const currentShieldLevel = wallLevel || 0;
+    const nextShield = GAME_CONSTANTS.WALL_SHIELDS[currentShieldLevel];
+    if (!nextShield) return getCurrentShieldStrength();
+    return (globalWallStrength + nextShield.strength) * 10;
   };
 
   // Detect upgrade and trigger animation
@@ -41,20 +43,25 @@ export const ShieldUpgrades: React.FC = () => {
 
   const handlePurchase = (index: number, finalCost: number) => {
     const shield = GAME_CONSTANTS.WALL_SHIELDS[index];
-    if (!shield) return;
-    
-    const shieldId = `shield_${index}`;
-    const success = purchaseIndividualShieldUpgrade(shieldId, finalCost, shield.purchaseLimit);
-    
-    if (success) {
-      // Kalkan gücünü artır
-      const state = useGameStore.getState();
-      useGameStore.setState({
-        globalWallStrength: state.globalWallStrength + shield.strength
-      });
-      
-      console.log(`Shield purchased: ${shield.name} (+${shield.strength} strength)`);
+    if (!shield) {
+      console.error(`❌ Invalid shield index: ${index}`);
+      return;
     }
+    
+    const currentShieldLevel = wallLevel || 0;
+    if (index !== currentShieldLevel) {
+      console.log(`❌ Shield progression error! Current: ${currentShieldLevel}, Attempted: ${index}`);
+      return;
+    }
+    
+    console.log(`🛡️ Processing shield upgrade:`, {
+      shield: shield.name,
+      cost: finalCost,
+      currentLevel: currentShieldLevel
+    });
+    
+    upgradeWall();
+    console.log(`✅ Shield upgrade successful: ${shield.name} (+${shield.strength} strength)`);
   };
 
   return (
@@ -77,8 +84,26 @@ export const ShieldUpgrades: React.FC = () => {
         gap: 12
       }}>
         {GAME_CONSTANTS.WALL_SHIELDS.map((shield, i) => {
-          const shieldId = `shield_${i}`;
-          const shieldInfo = getIndividualShieldUpgradeInfo(shieldId, shield.purchaseLimit);
+          const currentShieldLevel = wallLevel || 0;
+          const isCurrentLevel = i === currentShieldLevel;
+          const isPastLevel = i < currentShieldLevel;
+          const isFutureLevel = i > currentShieldLevel;
+          
+          const canPurchase = isCurrentLevel && gold >= shield.cost;
+          const isMaxed = isPastLevel;
+          const isLocked = isFutureLevel;
+          
+          if (i <= 3) {
+            console.log(`🔍 ${shield.name} (Level ${i}):`, {
+              currentShieldLevel,
+              isCurrentLevel,
+              isPastLevel,
+              isFutureLevel,
+              canPurchase,
+              isMaxed,
+              isLocked
+            });
+          }
           
           return (
             <ShieldUpgradeCard
@@ -89,9 +114,9 @@ export const ShieldUpgrades: React.FC = () => {
               globalWallStrength={globalWallStrength}
               discountMultiplier={discountMultiplier}
               diceUsed={diceUsed}
-              purchaseCount={shieldInfo.currentLevel}
-              maxAllowed={shield.purchaseLimit}
-              isMaxed={shieldInfo.isMaxed}
+              purchaseCount={isPastLevel ? 1 : 0}
+              maxAllowed={1}
+              isMaxed={isMaxed}
               onPurchase={handlePurchase}
             />
           );

@@ -8,9 +8,7 @@ import type {
 } from './types';
 
 export class AdaptiveSpawnStrategy implements ISpawnStrategy {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private lastSpawnTime = 0;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private spawnAcceleration = 1.0;
 
   constructor(private tracker: IPerformanceTracker) {}

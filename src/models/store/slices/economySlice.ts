@@ -1,3 +1,7 @@
+import { securityManager } from '../../../security/SecurityManager';
+import type { StateCreator } from 'zustand';
+import type { Store } from '../index';
+
 export interface EconomySlice {
   addGold: (amount: number) => void;
   spendGold: (amount: number) => void;
@@ -7,35 +11,23 @@ export interface EconomySlice {
   setEliteModuleLevel: (level: number) => void;
 }
 
-import { securityManager } from '../../../security/SecurityManager';
-
-export const createEconomySlice = (set: any, _get: any): EconomySlice => ({
+export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (set, _get, _api) => ({
   addGold: (amount) => {
     const validation = securityManager.validateStateChange('addGold', {}, { gold: amount });
     if (!validation.valid) {
-      console.warn('\uD83D\uDD12 Security: addGold blocked:', validation.reason);
-      securityManager.logSecurityEvent('state_manipulation_attempt', {
-        action: 'addGold',
-        amount,
-        reason: validation.reason
-      }, 'high');
+      console.warn('🔒 Security: addGold blocked:', validation.reason);
       return;
     }
-    set((state: any) => ({ gold: state.gold + amount }));
+    set((state: Store) => ({ gold: state.gold + amount }));
   },
 
   spendGold: (amount) => {
     const validation = securityManager.validateStateChange('spendGold', {}, { gold: amount });
     if (!validation.valid) {
-      console.warn('\uD83D\uDD12 Security: spendGold blocked:', validation.reason);
-      securityManager.logSecurityEvent('state_manipulation_attempt', {
-        action: 'spendGold',
-        amount,
-        reason: validation.reason
-      }, 'high');
+      console.warn('🔒 Security: spendGold blocked:', validation.reason);
       return;
     }
-    set((state: any) => ({
+    set((state: Store) => ({
       gold: state.gold - amount,
       totalGoldSpent: state.totalGoldSpent + amount,
     }));
@@ -44,12 +36,7 @@ export const createEconomySlice = (set: any, _get: any): EconomySlice => ({
   setGold: (amount) => {
     const validation = securityManager.validateStateChange('setGold', {}, { gold: amount });
     if (!validation.valid) {
-      console.warn('\uD83D\uDD12 Security: setGold blocked:', validation.reason);
-      securityManager.logSecurityEvent('state_manipulation_attempt', {
-        action: 'setGold',
-        amount,
-        reason: validation.reason
-      }, 'critical');
+      console.warn('🔒 Security: setGold blocked:', validation.reason);
       return;
     }
     set(() => ({ gold: amount }));

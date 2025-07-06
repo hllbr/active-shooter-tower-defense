@@ -1,6 +1,8 @@
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { energyManager } from '../../../game-systems/EnergyManager';
 import { securityManager } from '../../../security/SecurityManager';
+import type { StateCreator } from 'zustand';
+import type { Store } from '../index';
 
 let enemyKillListeners: ((isSpecial?: boolean, enemyType?: string) => void)[] = [];
 export const addEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) => void) => {
@@ -16,17 +18,17 @@ export interface EnergySlice {
   clearEnergyWarning: () => void;
   upgradeEnergySystem: (upgradeId: string) => void;
   onEnemyKilled: (isSpecial?: boolean, enemyType?: string) => void;
-  tickEnergyRegen: (deltaTime: number) => void;
+  tickEnergyRegen: (_deltaTime: number) => void;
   calculateEnergyStats: () => { passiveRegen: number; maxEnergy: number; killBonus: number; efficiency: number; };
   getMaxEnergy: () => number;
   getMaxActions: () => number;
-  tickActionRegen: (deltaTime: number) => void;
+  tickActionRegen: (_deltaTime: number) => void;
   addAction: (amount: number) => void;
   addEnemyKillListener: (fn: (isSpecial?: boolean, enemyType?: string) => void) => void;
   removeEnemyKillListener: (fn: (isSpecial?: boolean, enemyType?: string) => void) => void;
 }
 
-export const createEnergySlice = (set: any, get: any): EnergySlice => ({
+export const createEnergySlice: StateCreator<Store, [], [], EnergySlice> = (set, get, _api) => ({
   consumeEnergy: (amount, action) => {
     const success = energyManager.consume(amount, action);
     return success;
@@ -35,13 +37,7 @@ export const createEnergySlice = (set: any, get: any): EnergySlice => ({
   addEnergy: (amount, action) => {
     const validation = securityManager.validateStateChange('addEnergy', {}, { energy: amount });
     if (!validation.valid) {
-      console.warn('\uD83D\uDD12 Security: addEnergy blocked:', validation.reason);
-      securityManager.logSecurityEvent('state_manipulation_attempt', {
-        action: 'addEnergy',
-        amount,
-        actionType: action || 'manual',
-        reason: validation.reason
-      }, 'high');
+      console.warn('🔒 Security: addEnergy blocked:', validation.reason);
       return;
     }
     energyManager.add(amount, action || 'manual');
@@ -51,7 +47,7 @@ export const createEnergySlice = (set: any, get: any): EnergySlice => ({
     energyWarning: null
   })),
 
-  upgradeEnergySystem: (upgradeId) => set((state: any) => {
+  upgradeEnergySystem: (upgradeId) => set((state: Store) => {
     const upgrade = GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES?.find(u => u.id === upgradeId);
     if (!upgrade) return {};
     const currentLevel = state.energyUpgrades[upgradeId] || 0;
@@ -67,7 +63,7 @@ export const createEnergySlice = (set: any, get: any): EnergySlice => ({
     };
   }),
 
-  onEnemyKilled: (isSpecial, enemyType) => set((state: any) => {
+  onEnemyKilled: (isSpecial, enemyType) => set((state: Store) => {
     const now = performance.now();
     const timeSinceLastKill = now - state.lastKillTime;
     const newCombo = timeSinceLastKill < 3000 ? state.killCombo + 1 : 1;
@@ -87,17 +83,20 @@ export const createEnergySlice = (set: any, get: any): EnergySlice => ({
     };
   }),
 
-  tickEnergyRegen: (deltaTime) => {
-    energyManager.tick(deltaTime);
+  tickEnergyRegen: (_deltaTime) => {
+    energyManager.tick(_deltaTime);
   },
 
   calculateEnergyStats: () => {
     const state = get();
     const baseRegen = GAME_CONSTANTS.ENERGY_REGEN_PASSIVE || 0.5;
     const upgradeMultiplier = 1 + (state.energyUpgrades['passiveRegen'] || 0) * 0.1;
+    const baseMax = GAME_CONSTANTS.ENERGY_SYSTEM.MAX_ENERGY_BASE;
+    const upgradeBonus = (state.energyUpgrades['maxEnergy'] || 0) * 20;
+    const maxEnergy = baseMax + upgradeBonus;
     return {
       passiveRegen: baseRegen * upgradeMultiplier,
-      maxEnergy: state.getMaxEnergy(),
+      maxEnergy,
       killBonus: GAME_CONSTANTS.ENERGY_REGEN_KILL || 2,
       efficiency: state.energyEfficiency || 0,
     };
@@ -117,11 +116,13 @@ export const createEnergySlice = (set: any, get: any): EnergySlice => ({
     return baseActions + upgradeBonus;
   },
 
-  tickActionRegen: (deltaTime) => set((state: any) => {
+  tickActionRegen: (_deltaTime) => set((state: Store) => {
     const now = performance.now();
     const timeSinceLastRegen = now - state.lastActionRegen;
     if (timeSinceLastRegen >= state.actionRegenTime) {
-      const maxActions = state.getMaxActions();
+      const baseActions = GAME_CONSTANTS.ACTION_SYSTEM.BASE_ACTIONS;
+      const upgradeBonus = state.maxActionsLevel * 2;
+      const maxActions = baseActions + upgradeBonus;
       if (state.actionsRemaining < maxActions) {
         return {
           actionsRemaining: Math.min(maxActions, state.actionsRemaining + 1),
@@ -135,17 +136,16 @@ export const createEnergySlice = (set: any, get: any): EnergySlice => ({
   addAction: (amount) => {
     const validation = securityManager.validateStateChange('addAction', {}, { actions: amount });
     if (!validation.valid) {
-      console.warn('\uD83D\uDD12 Security: addAction blocked:', validation.reason);
-      securityManager.logSecurityEvent('state_manipulation_attempt', {
-        action: 'addAction',
-        amount,
-        reason: validation.reason
-      }, 'high');
+      console.warn('🔒 Security: addAction blocked:', validation.reason);
       return;
     }
-    set((state: any) => ({
-      actionsRemaining: Math.min(state.getMaxActions(), state.actionsRemaining + amount)
-    }));
+    const state = get();
+    const baseActions = GAME_CONSTANTS.ACTION_SYSTEM.BASE_ACTIONS;
+    const upgradeBonus = state.maxActionsLevel * 2;
+    const maxActions = baseActions + upgradeBonus;
+    set({
+      actionsRemaining: Math.min(maxActions, state.actionsRemaining + amount)
+    });
   },
 
   addEnemyKillListener: (fn) => {

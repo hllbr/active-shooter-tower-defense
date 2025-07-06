@@ -1,5 +1,7 @@
 import { GAME_CONSTANTS } from '../../../utils/constants';
-import type { Mine, Position, TowerSlot } from '../../gameTypes';
+import type { Mine, Position, TowerSlot, MineConfig } from '../../gameTypes';
+import type { StateCreator } from 'zustand';
+import type { Store } from '../index';
 
 export interface MineSlice {
   upgradeMines: () => void;
@@ -27,8 +29,8 @@ const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   return position;
 };
 
-export const createMineSlice = (set: any, get: any): MineSlice => ({
-  upgradeMines: () => set((state: any) => {
+export const createMineSlice: StateCreator<Store, [], [], MineSlice> = (set, _get, _api) => ({
+  upgradeMines: () => set((state: Store) => {
     const cost = 100;
     if (state.gold < cost) return {};
     return {
@@ -39,7 +41,7 @@ export const createMineSlice = (set: any, get: any): MineSlice => ({
     };
   }),
 
-  deployMines: () => set((state: any) => {
+  deployMines: () => set((state: Store) => {
     if (state.mineLevel === 0) return {};
     const newMines: Mine[] = [];
     const mineCount = Math.min(state.mineLevel, 5);
@@ -60,10 +62,10 @@ export const createMineSlice = (set: any, get: any): MineSlice => ({
     return { mines: newMines };
   }),
 
-  deploySpecializedMine: (mineType, mineSubtype, position) => set((state: any) => {
+  deploySpecializedMine: (mineType, mineSubtype, position) => set((state: Store) => {
     const mineTypeConfig = GAME_CONSTANTS.MINE_TYPES[mineType];
     if (!mineTypeConfig) return {};
-    const mineConfig = mineTypeConfig[mineSubtype as keyof typeof mineTypeConfig] as any;
+    const mineConfig = mineTypeConfig[mineSubtype as keyof typeof mineTypeConfig] as MineConfig;
     if (!mineConfig) return {};
     const typeCount = state.mines.filter((m: Mine) => m.mineType === mineType).length;
     const maxForType = GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MAX_MINES_PER_TYPE[mineType];
@@ -88,7 +90,7 @@ export const createMineSlice = (set: any, get: any): MineSlice => ({
       size: 20,
       radius: mineConfig.radius || 50,
       mineType,
-      mineSubtype: mineSubtype as any,
+      mineSubtype: mineSubtype as Mine['mineSubtype'],
       triggerCondition: mineConfig.triggerCondition || 'contact',
       isActive: true,
       placedAt: Date.now(),
@@ -107,7 +109,7 @@ export const createMineSlice = (set: any, get: any): MineSlice => ({
     };
   }),
 
-  triggerMine: (mineId) => set((state: any) => ({
+  triggerMine: (mineId) => set((state: Store) => ({
     mines: state.mines.filter((m: Mine) => m.id !== mineId)
   })),
 });

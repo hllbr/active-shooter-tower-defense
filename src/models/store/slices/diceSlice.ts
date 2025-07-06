@@ -1,10 +1,13 @@
+import type { StateCreator } from 'zustand';
+import type { Store } from '../index';
+
 export interface DiceSlice {
   rollDice: () => void;
   resetDice: () => void;
   setDiceResult: (roll: number, multiplier: number) => void;
 }
 
-export const createDiceSlice = (set: any, get: any): DiceSlice => ({
+export const createDiceSlice: StateCreator<Store, [], [], DiceSlice> = (set, get, _api) => ({
   rollDice: () => {
     if (get().diceUsed) return;
     set({ isDiceRolling: true });
@@ -18,7 +21,7 @@ export const createDiceSlice = (set: any, get: any): DiceSlice => ({
         diceUsed: true,
         isDiceRolling: false,
       });
-      console.log(`\uD83C\uDFB2 Dice rolled: ${roll}, Multiplier: ${multiplier.toFixed(1)}`);
+      console.log(`🎲 Dice rolled: ${roll}, Multiplier: ${multiplier.toFixed(1)}`);
     }, 2000);
   },
 
@@ -29,7 +32,8 @@ export const createDiceSlice = (set: any, get: any): DiceSlice => ({
     isDiceRolling: false,
   })),
 
-  setDiceResult: (roll) => set(() => ({
+  setDiceResult: (roll, multiplier) => set(() => ({
     diceResult: roll,
+    discountMultiplier: multiplier,
   })),
 });

@@ -1,6 +1,8 @@
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { updateWaveTiles } from '../../../game-systems/TowerPlacementManager';
 import { waveRules } from '../../../config/waveRules';
+import type { StateCreator } from 'zustand';
+import type { Store } from '../index';
 
 export interface WaveSlice {
   nextWave: () => void;
@@ -12,12 +14,12 @@ export interface WaveSlice {
   startWave: () => void;
 }
 
-export const createWaveSlice = (set: any, get: any): WaveSlice => ({
-  nextWave: () => set((state: any) => {
+export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _get, _api) => ({
+  nextWave: () => set((state: Store) => {
     const newWave = state.currentWave + 1;
     const newEnemiesRequired = GAME_CONSTANTS.getWaveEnemiesRequired(newWave);
     const waveIncome = Math.floor(50 + (state.currentWave * 10));
-    console.log(`\uD83D\uDCC8 Wave ${state.currentWave} \u2192 ${newWave}: Income +${waveIncome} gold`);
+    console.log(`📈 Wave ${state.currentWave} → ${newWave}: Income +${waveIncome} gold`);
     return {
       currentWave: newWave,
       enemiesKilled: 0,
@@ -36,26 +38,26 @@ export const createWaveSlice = (set: any, get: any): WaveSlice => ({
     prepRemaining: GAME_CONSTANTS.PREP_TIME,
   })),
 
-  tickPreparation: (delta) => set((state: any) => {
+  tickPreparation: (delta) => set((state: Store) => {
     if (!state.isPreparing || state.isPaused) return {};
     const newRemaining = Math.max(0, state.prepRemaining - delta);
     return { prepRemaining: newRemaining, isPreparing: newRemaining > 0 };
   }),
 
-  pausePreparation: () => set((state: any) =>
+  pausePreparation: () => set((state: Store) =>
     state.isPreparing ? { isPaused: true } : {}
   ),
 
-  resumePreparation: () => set((state: any) =>
+  resumePreparation: () => set((state: Store) =>
     state.isPreparing ? { isPaused: false } : {}
   ),
 
-  speedUpPreparation: (amount) => set((state: any) => ({
+  speedUpPreparation: (amount) => set((state: Store) => ({
     prepRemaining: Math.max(0, state.prepRemaining - amount)
   })),
 
-  startWave: () => set((state: any) => {
-    console.log(`\uD83D\uDE80 Starting Wave ${state.currentWave}!`);
+  startWave: () => set((state: Store) => {
+    console.log(`🚀 Starting Wave ${state.currentWave}!`);
     setTimeout(() => {
       import('../../../game-systems/EnemySpawner').then(({ startEnemyWave }) => {
         startEnemyWave(state.currentWave);

@@ -1,7 +1,7 @@
 import React from 'react';
 import './ChallengePanel.css';
-import { useChallenge } from './ChallengeContext';
-import type { Reward } from './ChallengeContext';
+import { useChallenge } from './hooks/useChallenge';
+import type { Reward } from './context/ChallengeContext';
 import { format } from 'date-fns';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -12,15 +12,9 @@ interface ChallengePanelProps {
 }
 
 export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose }) => {
-  const { challenges, completeChallenge, claimReward, claimedRewards, claimedRewardHistory } = useChallenge();
+  const { challenges, claimReward, claimedRewards, claimedRewardHistory } = useChallenge();
 
   if (!isOpen) return null;
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _handleComplete = (id: number) => {
-    completeChallenge(id);
-    toast.success('Görev tamamlandı!', { position: 'bottom-center' });
-  };
 
   const handleClaim = (id: number, reward: Reward) => {
     claimReward(id);
@@ -100,4 +94,4 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
       <ToastContainer position="bottom-center" autoClose={3000} hideProgressBar newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </div>
   );
-}; 
+};

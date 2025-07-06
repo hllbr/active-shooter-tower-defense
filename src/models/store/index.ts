@@ -4,14 +4,14 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import { energyManager } from '../../game-systems/EnergyManager';
 import { waveManager } from '../../game-systems/WaveManager';
 import { initialState } from './initialState';
-import { createEnemySlice, EnemySlice } from './slices/enemySlice';
-import { createTowerSlice, TowerSlice } from './slices/towerSlice';
-import { createDiceSlice, DiceSlice } from './slices/diceSlice';
-import { createMineSlice, MineSlice } from './slices/mineSlice';
-import { createWaveSlice, WaveSlice } from './slices/waveSlice';
-import { createEnergySlice, EnergySlice, addEnemyKillListener, removeEnemyKillListener } from './slices/energySlice';
-import { createEconomySlice, EconomySlice } from './slices/economySlice';
-import { createUpgradeSlice, UpgradeSlice } from './slices/upgradeSlice';
+import { createEnemySlice, type EnemySlice } from './slices/enemySlice';
+import { createTowerSlice, type TowerSlice } from './slices/towerSlice';
+import { createDiceSlice, type DiceSlice } from './slices/diceSlice';
+import { createMineSlice, type MineSlice } from './slices/mineSlice';
+import { createWaveSlice, type WaveSlice } from './slices/waveSlice';
+import { createEnergySlice, type EnergySlice, addEnemyKillListener, removeEnemyKillListener } from './slices/energySlice';
+import { createEconomySlice, type EconomySlice } from './slices/economySlice';
+import { createUpgradeSlice, type UpgradeSlice } from './slices/upgradeSlice';
 
 export type Store = GameState &
   DiceSlice &
@@ -27,16 +27,16 @@ export type Store = GameState &
     setRefreshing: (refreshing: boolean) => void;
   };
 
-export const useGameStore = create<Store>((set, get): Store => ({
+export const useGameStore = create<Store>((set, get, api): Store => ({
   ...initialState,
-  ...createTowerSlice(set, get),
-  ...createEnemySlice(set, get),
-  ...createDiceSlice(set, get),
-  ...createMineSlice(set, get),
-  ...createWaveSlice(set, get),
-  ...createEnergySlice(set, get),
-  ...createEconomySlice(set, get),
-  ...createUpgradeSlice(set, get),
+  ...createTowerSlice(set, get, api),
+  ...createEnemySlice(set, get, api),
+  ...createDiceSlice(set, get, api),
+  ...createMineSlice(set, get, api),
+  ...createWaveSlice(set, get, api),
+  ...createEnergySlice(set, get, api),
+  ...createEconomySlice(set, get, api),
+  ...createUpgradeSlice(set, get, api),
 
   resetGame: () => set(() => ({ ...initialState, gameStartTime: Date.now() })),
 

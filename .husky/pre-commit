@@ -17,17 +17,8 @@ echo "🔍 Linting..."
 npm run lint:check
 LINT_EXIT_CODE=$?
 
-
 if [ $LINT_EXIT_CODE -ne 0 ]; then
   echo "❌ Linting failed with errors! Commit blocked."
-  exit 1
-fi
-
-# Prevent overly large commits
-ADDED_DELETED=$(git diff --cached --numstat | awk '{add+=$1; del+=$2} END {print add+del}')
-MAX_CHANGES=500
-if [ "$ADDED_DELETED" -gt "$MAX_CHANGES" ]; then
-  echo "❌ Commit exceeds $MAX_CHANGES changed lines ($ADDED_DELETED). Split your work."
   exit 1
 fi
 

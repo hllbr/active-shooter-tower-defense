@@ -23,46 +23,7 @@ export interface SecureStore extends Store {
   isSecurityLocked: () => boolean;
 }
 
-// Security validation helper (unused but kept for future reference)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _withSecurityValidation(
-  originalStore: Store,
-  methodName: string,
-  method: (...args: unknown[]) => void
-): (...args: unknown[]) => void {
-  return (...args: unknown[]) => {
-    const oldState = { ...originalStore } as Record<string, unknown>;
-    
-    // Validate the operation
-    const validation = securityManager.validateStateChange(methodName, oldState, {});
-    if (!validation.valid) {
-      console.warn(`🔒 Security validation failed for ${methodName}:`, validation.reason);
-      securityManager.logSecurityEvent('state_manipulation_attempt', {
-        action: methodName,
-        reason: validation.reason,
-        args: args.map(arg => typeof arg === 'string' ? securityManager.sanitizeInput(arg) : arg)
-      }, 'high');
-      return;
-    }
-
-    // Log the operation
-    securityManager.logSecurityEvent('upgrade_purchase', {
-      action: methodName,
-      args: args.map(arg => typeof arg === 'string' ? securityManager.sanitizeInput(arg) : arg)
-    }, 'low');
-
-    // Execute the original method
-    try {
-      method.apply(originalStore, args);
-    } catch (error) {
-      securityManager.logSecurityEvent('state_manipulation_attempt', {
-        action: methodName,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        args: args.map(arg => typeof arg === 'string' ? securityManager.sanitizeInput(arg) : arg)
-      }, 'high');
-    }
-  };
-}
+// Security validation helper (removed - was unused)
 
 // Create secure store wrapper
 export function createSecureStore(originalStore: Store): SecureStore {
@@ -140,12 +101,7 @@ export function createSecureStore(originalStore: Store): SecureStore {
 
     // Additional validation for package purchases
     if (cost > 10000) {
-      securityManager.logSecurityEvent('suspicious_activity', {
-        action: 'purchasePackage',
-        cost,
-        packageId: securityManager.sanitizeInput(packageId),
-        reason: 'Package cost exceeds maximum allowed'
-      }, 'high');
+      console.warn('🔒 Security: Package cost exceeds maximum allowed:', cost);
       return false;
     }
 

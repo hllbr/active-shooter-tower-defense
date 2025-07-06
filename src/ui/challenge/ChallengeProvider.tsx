@@ -1,35 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useGameStore } from '../../models/store';
 import { differenceInDays, differenceInWeeks, startOfDay, startOfWeek } from 'date-fns';
-
-export interface Challenge {
-  id: number;
-  text: string;
-  type: 'build' | 'wave' | 'upgrade' | 'enemy' | 'boss';
-  target: number;
-  progress: number;
-  completed: boolean;
-  reward: Reward;
-  weekly?: boolean;
-}
-
-export type Reward = { type: 'gold'; amount: number } | { type: 'skin'; name: string } | { type: 'tower'; towerType: string };
-
-interface ClaimedRewardHistoryItem {
-  id: number;
-  date: number;
-  reward: Reward;
-}
-
-interface ChallengeContextType {
-  challenges: Challenge[];
-  incrementChallenge: (type: Challenge['type']) => void;
-  completeChallenge: (id: number) => void;
-  claimReward: (id: number) => void;
-  claimedRewards: number[];
-  claimedRewardHistory: ClaimedRewardHistoryItem[];
-}
+import { ChallengeContext, type Challenge, type ClaimedRewardHistoryItem } from './context/ChallengeContext';
 
 // Challenge havuzu (daha fazla görev eklenebilir)
 const challengePool: Challenge[] = [
@@ -77,19 +50,6 @@ function getInitialChallenges() {
     localStorage.setItem('lastChallengeReset', now.toString());
   }
   return [...daily, ...weekly];
-}
-
-const ChallengeContext = createContext<ChallengeContextType>({
-  challenges: [],
-  incrementChallenge: () => {},
-  completeChallenge: () => {},
-  claimReward: () => {},
-  claimedRewards: [],
-  claimedRewardHistory: [],
-});
-
-export function useChallenge() {
-  return useContext(ChallengeContext);
 }
 
 export const ChallengeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

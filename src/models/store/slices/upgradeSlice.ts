@@ -1,6 +1,7 @@
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { securityManager } from '../../../security/SecurityManager';
-import { useGameStore } from '../index';
+import type { StateCreator } from 'zustand';
+import type { Store } from '../index';
 
 export interface UpgradeSlice {
   upgradeBullet: (free?: boolean) => void;
@@ -19,8 +20,8 @@ export interface UpgradeSlice {
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
 }
 
-export const createUpgradeSlice = (set: any, get: any): UpgradeSlice => ({
-  upgradeBullet: (free) => set((state: any) => {
+export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (set, get, _api) => ({
+  upgradeBullet: (free) => set((state: Store) => {
     const cost = free ? 0 : GAME_CONSTANTS.BULLET_UPGRADE_COST;
     if (state.gold < cost) return {};
     return {
@@ -31,7 +32,7 @@ export const createUpgradeSlice = (set: any, get: any): UpgradeSlice => ({
     };
   }),
 
-  refreshBattlefield: (slots) => set((state: any) => {
+  refreshBattlefield: (slots) => set((state: Store) => {
     const newSlots = [...state.towerSlots];
     let unlocked = 0;
     for (let i = 0; i < newSlots.length && unlocked < slots; i++) {
@@ -46,23 +47,22 @@ export const createUpgradeSlice = (set: any, get: any): UpgradeSlice => ({
   purchasePackage: (packageId, cost, maxAllowed) => {
     const validation = securityManager.validateStateChange('purchasePackage', {}, { packageId, cost, maxAllowed });
     if (!validation.valid) {
-      console.warn('\uD83D\uDD12 Security: purchasePackage blocked:', validation.reason);
-      securityManager.logSecurityEvent('state_manipulation_attempt', { action: 'purchasePackage', packageId, cost, maxAllowed, reason: validation.reason }, 'high');
+      console.warn('🔒 Security: purchasePackage blocked:', validation.reason);
       return false;
     }
     if (!packageId || typeof packageId !== 'string') {
-      securityManager.logSecurityEvent('invalid_input', { action: 'purchasePackage', packageId, reason: 'Invalid package ID' }, 'high');
+      console.warn('🔒 Security: Invalid package ID:', packageId);
       return false;
     }
     if (cost <= 0 || cost > 10000) {
-      securityManager.logSecurityEvent('suspicious_activity', { action: 'purchasePackage', cost, reason: 'Invalid package cost' }, 'high');
+      console.warn('🔒 Security: Invalid package cost:', cost);
       return false;
     }
     const state = get();
     const tracker = state.packageTracker[packageId] || { purchaseCount: 0, lastPurchased: 0, maxAllowed };
     const current = tracker.purchaseCount;
     if (current >= maxAllowed || state.gold < cost) return false;
-    useGameStore.setState({
+    set({
       packageTracker: { ...state.packageTracker, [packageId]: { purchaseCount: current + 1, lastPurchased: Date.now(), maxAllowed } },
       gold: state.gold - cost,
       packagesPurchased: state.packagesPurchased + 1,
@@ -86,12 +86,12 @@ export const createUpgradeSlice = (set: any, get: any): UpgradeSlice => ({
     console.log(`Achievement event: ${eventType}`, eventData);
   },
 
-  unlockTowerType: (towerType) => set((state: any) => {
+  unlockTowerType: (towerType) => set((state: Store) => {
     if (state.unlockedTowerTypes && state.unlockedTowerTypes.includes(towerType)) return {};
     return { unlockedTowerTypes: [...(state.unlockedTowerTypes || []), towerType] };
   }),
 
-  unlockSkin: (skinName) => set((state: any) => {
+  unlockSkin: (skinName) => set((state: Store) => {
     if (state.playerProfile.unlockedCosmetics.includes(skinName)) return {};
     return { playerProfile: { ...state.playerProfile, unlockedCosmetics: [...state.playerProfile.unlockedCosmetics, skinName] } };
   }),
@@ -100,7 +100,7 @@ export const createUpgradeSlice = (set: any, get: any): UpgradeSlice => ({
     const state = get();
     const currentLevel = state.individualFireUpgrades[upgradeId] || 0;
     if (currentLevel >= maxLevel || state.gold < cost) return false;
-    useGameStore.setState({
+    set({
       individualFireUpgrades: { ...state.individualFireUpgrades, [upgradeId]: currentLevel + 1 },
       gold: state.gold - cost,
       fireUpgradesPurchased: state.fireUpgradesPurchased + 1,
@@ -119,12 +119,21 @@ export const createUpgradeSlice = (set: any, get: any): UpgradeSlice => ({
     const state = get();
     const currentLevel = state.individualShieldUpgrades[upgradeId] || 0;
     if (currentLevel >= maxLevel || state.gold < cost) return false;
-    useGameStore.setState({
+    
+    // Shield gücünü hesapla (upgradeId'den index çıkar)
+    const shieldIndex = parseInt(upgradeId.replace('shield_', ''), 10);
+    const shield = GAME_CONSTANTS.WALL_SHIELDS[shieldIndex];
+    const strengthBonus = shield ? shield.strength : 0;
+    
+    set({
       individualShieldUpgrades: { ...state.individualShieldUpgrades, [upgradeId]: currentLevel + 1 },
       gold: state.gold - cost,
       shieldUpgradesPurchased: state.shieldUpgradesPurchased + 1,
       totalGoldSpent: state.totalGoldSpent + cost,
+      globalWallStrength: state.globalWallStrength + strengthBonus, // CRITICAL FIX: Shield gücünü de güncelle
     });
+    
+    console.log(`🛡️ Shield upgrade: ${upgradeId} (+${strengthBonus} strength) - Total: ${state.globalWallStrength + strengthBonus}`);
     return true;
   },
 
@@ -138,7 +147,7 @@ export const createUpgradeSlice = (set: any, get: any): UpgradeSlice => ({
     const state = get();
     const currentLevel = state.individualDefenseUpgrades[upgradeId] || 0;
     if (currentLevel >= maxLevel || state.gold < cost) return false;
-    useGameStore.setState({
+    set({
       individualDefenseUpgrades: { ...state.individualDefenseUpgrades, [upgradeId]: currentLevel + 1 },
       gold: state.gold - cost,
       defenseUpgradesPurchased: state.defenseUpgradesPurchased + 1,
