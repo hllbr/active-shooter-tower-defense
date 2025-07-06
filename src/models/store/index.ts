@@ -11,6 +11,8 @@ import { initialState } from './initialState';
 import { securityManager } from '../../security/SecurityManager';
 import { buildTowerAction } from './actions/buildTower';
 import { unlockSlotAction } from './actions/unlockSlot';
+import { createEnemySlice } from './slices/enemySlice';
+import { createTowerSlice } from './slices/towerSlice';
 
 const getValidMinePosition = (towerSlots: TowerSlot[]): Position => {
   let position: Position;
@@ -355,168 +357,8 @@ export const useGameStore = create<Store>((set, get): Store => ({
     };
   }),
   
-  damageTower: (slotIdx: number, dmg: number) => set((state) => {
-    const slot = state.towerSlots[slotIdx];
-    if (!slot.tower) return {};
-    
-    if (slot.tower.wallStrength > 0) {
-      const newWallStrength = Math.max(0, slot.tower.wallStrength - dmg);
-      const newSlots = [...state.towerSlots];
-      newSlots[slotIdx] = {
-        ...slot,
-        tower: { ...slot.tower, wallStrength: newWallStrength }
-      };
-      return { towerSlots: newSlots };
-    } else {
-      const newHealth = slot.tower.health - dmg;
-      if (newHealth <= 0) {
-        const newSlots = [...state.towerSlots];
-        newSlots[slotIdx] = { ...slot, tower: null, wasDestroyed: true };
-        const newTowers = state.towers.filter(t => t.id !== slot.tower!.id);
-        
-        // ✅ CRITICAL FIX: Check if all towers are destroyed - trigger game over
-        const shouldGameOver = newTowers.length === 0 && state.isStarted && !state.isGameOver;
-        
-        if (shouldGameOver) {
-          console.log('💀 Game Over: All towers destroyed!');
-          
-          // ✅ Stop all spawning immediately
-          import('../../game-systems/EnemySpawner').then(({ stopEnemyWave }) => {
-            stopEnemyWave();
-          });
-          
-          setTimeout(() => {
-            // Use playContextualSound from sound.ts
-            import('../../utils/sound').then(({ playContextualSound }) => {
-              playContextualSound('defeat');
-            });
-          }, 100);
-        }
-        
-        return {
-          towerSlots: newSlots,
-          towers: newTowers,
-          lostTowerThisWave: true,
-          isGameOver: shouldGameOver,
-        };
-      } else {
-        const newSlots = [...state.towerSlots];
-        newSlots[slotIdx] = {
-          ...slot,
-          tower: { ...slot.tower, health: newHealth }
-        };
-        return { towerSlots: newSlots };
-      }
-    }
-  }),
-  
-  removeTower: (slotIdx: number) => set((state) => {
-    const slot = state.towerSlots[slotIdx];
-    if (!slot.tower) return {};
-    
-    const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = { ...slot, tower: null };
-    
-    return {
-      towerSlots: newSlots,
-      towers: state.towers.filter(t => t.id !== slot.tower!.id),
-    };
-  }),
-  
-  dismantleTower: (slotIdx: number) => set((state) => {
-    const slot = state.towerSlots[slotIdx];
-    if (!slot.tower) return {};
-    
-    const refund = Math.floor(GAME_CONSTANTS.TOWER_COST * 0.7); // 70% refund
-    const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = { ...slot, tower: null };
-    
-    return {
-      towerSlots: newSlots,
-      towers: state.towers.filter(t => t.id !== slot.tower!.id),
-      gold: state.gold + refund,
-    };
-  }),
-  
-  moveTower: (fromIdx: number, toIdx: number) => set((state) => {
-    const fromSlot = state.towerSlots[fromIdx];
-    const toSlot = state.towerSlots[toIdx];
-    
-    if (!fromSlot.tower || toSlot.tower || !toSlot.unlocked) return {};
-    
-    const newSlots = [...state.towerSlots];
-    newSlots[toIdx] = { ...toSlot, tower: fromSlot.tower };
-    newSlots[fromIdx] = { ...fromSlot, tower: null };
-    
-    return { towerSlots: newSlots };
-  }),
-  
-  addEnemy: (enemy: Enemy) => set((state) => ({
-    enemies: [...state.enemies, enemy]
-  })),
-  
-  addBullet: (bullet: Bullet) => set((state) => ({
-    bullets: [...state.bullets, bullet]
-  })),
-  
-  removeBullet: (bulletId: string) => set((state) => ({
-    bullets: state.bullets.filter(b => b.id !== bulletId)
-  })),
-  
-  addEffect: (effect: Effect) => set((state) => ({
-    effects: [...state.effects, effect]
-  })),
-  
-  removeEffect: (effectId: string) => set((state) => ({
-    effects: state.effects.filter(e => e.id !== effectId)
-  })),
-  
-  buyWall: (slotIdx: number) => set((state) => {
-    const cost = GAME_CONSTANTS.WALL_COST;
-    if (state.gold < cost) return {};
-    
-    const slot = state.towerSlots[slotIdx];
-    if (!slot.tower) return {};
-    
-    const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = {
-      ...slot,
-      tower: { ...slot.tower, wallStrength: 10 }
-    };
-    
-    return {
-      towerSlots: newSlots,
-      gold: state.gold - cost,
-      totalGoldSpent: state.totalGoldSpent + cost,
-    };
-  }),
-  
-  hitWall: (slotIdx: number) => set((state) => {
-    const slot = state.towerSlots[slotIdx];
-    if (!slot.tower || slot.tower.wallStrength <= 0) return {};
-    
-    const newSlots = [...state.towerSlots];
-    newSlots[slotIdx] = {
-      ...slot,
-      tower: { ...slot.tower, wallStrength: slot.tower.wallStrength - 1 }
-    };
-    
-    return { towerSlots: newSlots };
-  }),
-  
-  purchaseShield: (idx: number, free?: boolean) => set((state) => {
-    const shield = GAME_CONSTANTS.WALL_SHIELDS[idx];
-    if (!shield) return {};
-    
-    const cost = free ? 0 : shield.cost;
-    if (state.gold < cost) return {};
-    
-    return {
-      gold: state.gold - cost,
-      shieldUpgradesPurchased: state.shieldUpgradesPurchased + 1,
-      totalGoldSpent: state.totalGoldSpent + cost,
-    };
-  }),
+  ...createTowerSlice(set, get),
+  ...createEnemySlice(set, get),
 
   // ✅ CRITICAL FIX: Wave progression implementation
   nextWave: () => set((state) => {
