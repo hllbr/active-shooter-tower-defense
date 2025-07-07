@@ -11,7 +11,6 @@ import { ThemeProvider } from './ui/theme/ThemeProvider';
 import { MobileOptimizations } from './ui/mobile/MobileOptimizations';
 import { CinematicCameraManager } from './game-systems/cinematic/CinematicCameraManager';
 import { PostProcessingManager } from './game-systems/post-processing/PostProcessingManager';
-import { VisualEffectsDemo } from './ui/theme/VisualEffectsDemo';
 
 function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -39,18 +38,7 @@ function App() {
         enableHapticFeedback={true}
       >
         <ChallengeProvider>
-          <div className="App">
-            <ToastContainer 
-              position="bottom-center" 
-              autoClose={3000} 
-              hideProgressBar 
-              newestOnTop 
-              closeOnClick 
-              rtl={false} 
-              pauseOnFocusLoss 
-              draggable 
-              pauseOnHover 
-            />
+          <>
             <div className="fab-row">
               <button
                 className="settings-fab"
@@ -68,13 +56,27 @@ function App() {
                 <span role="img" aria-label="challenge">🏆</span>
               </button>
             </div>
-            <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
-            <ChallengePanel isOpen={challengeOpen} onClose={() => setChallengeOpen(false)} />
-            <MiniSecurityIndicator />
-            <h1>Shooter Tower Defense</h1>
-            <GameBoard />
-            <VisualEffectsDemo />
-          </div>
+            <div className="App">
+              <ToastContainer 
+                position="bottom-center" 
+                autoClose={3000} 
+                hideProgressBar 
+                newestOnTop 
+                closeOnClick 
+                rtl={false} 
+                pauseOnFocusLoss 
+                draggable 
+                pauseOnHover 
+              />
+              <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+              <ChallengePanel isOpen={challengeOpen} onClose={() => setChallengeOpen(false)} />
+              <MiniSecurityIndicator />
+              <div className="game-container">
+                <h1>Shooter Tower Defense</h1>
+                <GameBoard />
+              </div>
+            </div>
+          </>
         </ChallengeProvider>
       </MobileOptimizations>
     </ThemeProvider>
