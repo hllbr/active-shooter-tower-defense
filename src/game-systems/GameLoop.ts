@@ -21,7 +21,7 @@ let gameLoopMetrics: GameLoopMetrics = {
   avgDelta: 16
 };
 
-export function startGameLoop() {
+export function startGameLoop(existingManager?: EnvironmentManager) {
   let frameId = 0;
   let lastUpdateTime = performance.now();
   const lastStateSnapshot = {
@@ -32,7 +32,7 @@ export function startGameLoop() {
   };
   
   // Initialize environment manager
-  const environmentManager = new EnvironmentManager();
+  const environmentManager = existingManager ?? new EnvironmentManager();
 
   const loop = (currentTime: number) => {
     const deltaTime = currentTime - lastUpdateTime;
