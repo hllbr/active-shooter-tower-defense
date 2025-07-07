@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSettings, saveSettings, type Settings } from '../../utils/settings';
 import { updateMusicSettings } from '../../utils/sound/musicManager';
-import { playSound } from '../../utils/sound/soundEffects';
+import { playSound, updateAllSoundVolumes, testVolumeControls } from '../../utils/sound/soundEffects';
 import { toast } from 'react-toastify';
 import './SettingsPanel.css';
 
@@ -31,7 +31,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     saveSettings(newSettings);
+    
+    // Gerçek zamanlı volume güncellemesi
     updateMusicSettings();
+    updateAllSoundVolumes();
+    
     setChanged(true);
   };
 
@@ -77,6 +81,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
     if (!newMute) {
       setTimeout(() => playSound('levelupwav'), 100);
     }
+  };
+
+  // Volume test fonksiyonu
+  const testVolumeSystem = () => {
+    testVolumeControls();
+    toast('🔊 Ses sistemi test ediliyor...', {
+      position: "top-right",
+      autoClose: 2000,
+    });
   };
 
   if (!isOpen) return null;
@@ -200,6 +213,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
               ⚖️ Dengeli
             </button>
           </div>
+        </div>
+
+        {/* Ses Sistemi Test Butonu */}
+        <div className="audio-test-section">
+          <button 
+            className="volume-test-button"
+            onClick={testVolumeSystem}
+          >
+            🔧 Ses Sistemi Test Et
+          </button>
         </div>
 
         {/* Ses Sistemi Durumu */}

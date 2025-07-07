@@ -9,7 +9,7 @@ class SmartMusicManager {
     if (this.isPlaying && this.currentTrack === track) return;
     this.stop();
     try {
-      this.audio = new Audio(`/sounds/${track}.wav`);
+      this.audio = new Audio(`/assets/sounds/${track}.wav`);
       this.audio.loop = true;
       const settings = getSettings();
       this.audio.volume = settings.mute ? 0 : settings.musicVolume;
@@ -67,7 +67,7 @@ export function stopBackgroundMusic(): void {
 export function transitionMusic(to: 'game' | 'victory' | 'silence'): void {
   const trackMap: Record<string, string | null> = {
     game: 'gamesound',
-    victory: 'victory',
+    victory: 'victory-fanfare',
     silence: null
   };
   const target = trackMap[to];
