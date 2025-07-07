@@ -2,6 +2,8 @@ import React from 'react';
 import { TowerSpot } from '../../../TowerSpot';
 import { TowerDragVisualization } from './TowerDragVisualization';
 import { SVGEffectsRenderer } from './SVGEffectsRenderer';
+import { EnvironmentRenderer } from './EnvironmentRenderer';
+import { useGameStore } from '../../../../models/store';
 import type { TowerSlot } from '../../../../models/gameTypes';
 import type { DragState, DropZoneState, DragFeedback } from '../../types';
 
@@ -36,6 +38,7 @@ export const GameArea: React.FC<GameAreaProps> = ({
   timeOfDay = 'day',
   isMobile = false,
 }) => {
+  const { terrainTiles, weatherState, timeOfDayState, environmentalHazards, interactiveElements } = useGameStore();
   const ambientColors: Record<string, string> = {
     dawn: '#FFE4B5',
     day: '#FFFFFF',
@@ -74,6 +77,17 @@ export const GameArea: React.FC<GameAreaProps> = ({
         </feComponentTransfer>
       </filter>
       <g filter="url(#postprocess-filter)">
+      {/* Environment & Terrain System */}
+      <EnvironmentRenderer 
+        terrainTiles={terrainTiles}
+        weatherState={weatherState}
+        timeOfDayState={timeOfDayState}
+        environmentalHazards={environmentalHazards}
+        interactiveElements={interactiveElements}
+        width={width}
+        height={height}
+      />
+
       {/* Tower Slots with Enhanced Drag Support */}
       {towerSlots.map((slot: TowerSlot, i: number) => (
         <TowerSpot 

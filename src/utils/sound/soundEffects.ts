@@ -7,6 +7,32 @@ export const gameAudio: HTMLAudioElement | null = null;
 const soundCache = new Map<string, HTMLAudioElement>();
 const missingSounds = new Set<string>();
 
+// Volume ayarlarını gerçek zamanlı güncellemek için
+export function updateAllSoundVolumes(): void {
+  const settings = getSettings();
+  const targetVolume = settings.mute ? 0 : settings.sfxVolume;
+  
+  // Cache'deki tüm ses dosyalarının volume'unu güncelle
+  soundCache.forEach(audio => {
+    if (audio) {
+      audio.volume = targetVolume;
+    }
+  });
+}
+
+// Test fonksiyonu - volume ayarlarının çalışıp çalışmadığını kontrol et
+export function testVolumeControls(): void {
+  const settings = getSettings();
+  console.log('🔊 Ses Ayarları Testi:');
+  console.log('Mute:', settings.mute);
+  console.log('Müzik Volume:', settings.musicVolume);
+  console.log('SFX Volume:', settings.sfxVolume);
+  console.log('Cache boyutu:', soundCache.size);
+  
+  // Test sesi çal
+  playSound('dice-roll');
+}
+
 export function playSound(sound: string): void {
   if (missingSounds.has(sound)) return;
   try {
@@ -15,9 +41,12 @@ export function playSound(sound: string): void {
       audio = new Audio(`/assets/sounds/${sound}.wav`);
       soundCache.set(sound, audio);
     }
+    
+    // Her ses çalınırken güncel ayarları al
     const settings = getSettings();
     audio.volume = settings.mute ? 0 : settings.sfxVolume;
     audio.currentTime = 0;
+    
     const playPromise = audio.play();
     if (playPromise) {
       playPromise.catch(() => missingSounds.add(sound));

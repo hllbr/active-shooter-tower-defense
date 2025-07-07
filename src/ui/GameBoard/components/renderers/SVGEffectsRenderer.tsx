@@ -79,8 +79,11 @@ export const SVGEffectsRenderer: React.FC = () => {
     return () => {
       componentMountedRef.current = false;
       
+      // Copy the ref value to avoid stale closure
+      const animationElements = animationElementsRef.current;
+      
       // Stop all CSS animations on tracked elements
-      animationElementsRef.current.forEach(element => {
+      animationElements.forEach(element => {
         if (element && (element as HTMLElement).style) {
           const htmlElement = element as HTMLElement;
           htmlElement.style.animation = 'none';
@@ -89,7 +92,7 @@ export const SVGEffectsRenderer: React.FC = () => {
       });
       
       // Clear the tracking set
-      animationElementsRef.current.clear();
+      animationElements.clear();
       
       if (GAME_CONSTANTS.DEBUG_MODE) {
         console.log('🎨 SVGEffectsRenderer: Animation cleanup completed');

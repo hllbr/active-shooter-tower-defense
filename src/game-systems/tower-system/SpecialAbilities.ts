@@ -97,8 +97,7 @@ export class SpecialAbilitiesManager {
     // Multi-shot: Shoot at multiple enemies using bullet pool
     const targets = enemiesInRange.slice(0, tower.multiShotCount);
     targets.forEach(enemy => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const _bullet = bulletPool.createBullet(
+      bulletPool.createBullet(
         { x: tower.position.x, y: tower.position.y },
         getDirection(tower.position, enemy.position),
         tower.damage,

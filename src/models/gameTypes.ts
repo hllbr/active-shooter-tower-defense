@@ -1,5 +1,23 @@
 export type Position = { x: number; y: number };
 
+export interface MineConfig {
+  name: string;
+  description: string;
+  damage: number;
+  radius: number;
+  cost: number;
+  triggerCondition: 'contact' | 'proximity' | 'remote' | 'timer';
+  icon: string;
+  // Optional properties
+  subExplosions?: number;
+  empDuration?: number;
+  smokeDuration?: number;
+  duration?: number;
+  slowMultiplier?: number;
+  freezeDuration?: number;
+  effects?: string[];
+}
+
 export interface TowerVisual {
   level: number;
   model: string;
@@ -285,6 +303,13 @@ export interface GameState {
   shieldUpgradesPurchased: number;
   packagesPurchased: number;
   defenseUpgradesPurchased: number;
+  
+  // ✅ NEW: Environment & Terrain System for Issue #62
+  terrainTiles: TerrainTile[];
+  weatherState: WeatherState;
+  timeOfDayState: TimeOfDayState;
+  environmentalHazards: EnvironmentalHazard[];
+  interactiveElements: InteractiveElement[];
   
   // CRITICAL FIX: Individual Fire Upgrade Tracking System (fixes sayaç problemi)
   individualFireUpgrades: Record<string, number>; // bulletType -> upgrade count (e.g., "fire_1": 2, "fire_2": 1)
@@ -628,3 +653,517 @@ export interface SpecializedTowerConfig {
 export type TowerClass = 'sniper' | 'gatling' | 'laser' | 'mortar' | 'flamethrower' | 'radar' | 'supply_depot' | 'shield_generator' | 'repair_station' | 'emp' | 'stealth_detector' | 'air_defense';
 
 export type SpecializedTowersConfig = Record<TowerClass, SpecializedTowerConfig>;
+
+export interface TerrainTile {
+  id: string;
+  position: Position;
+  terrainType: 'lowlands' | 'hills' | 'plateaus' | 'valleys';
+  elevation: number;
+  isDestructible: boolean;
+  health?: number;
+  maxHealth?: number;
+  coverBonus?: number;
+  movementPenalty?: number;
+  visibilityBonus?: number;
+  towerBonus?: {
+    damage?: number;
+    range?: number;
+    fireRate?: number;
+  };
+}
+
+export interface WeatherState {
+  currentWeather: 'clear' | 'rain' | 'fog' | 'storm' | 'sandstorm' | 'snow';
+  weatherIntensity: number; // 0-1
+  visibility: number; // 0-1
+  movementPenalty: number; // 0-1
+  damageModifier: number; // 0-1
+  duration: number; // milliseconds
+  startTime: number;
+  transitionTime: number;
+}
+
+export interface TimeOfDayState {
+  currentPhase: 'dawn' | 'day' | 'dusk' | 'night';
+  cycleProgress: number; // 0-1
+  lightingIntensity: number; // 0-1
+  visibilityModifier: number; // 0-1
+  enemyBehaviorModifier: number; // 0-1
+}
+
+export interface EnvironmentalHazard {
+  id: string;
+  type: 'earthquake' | 'volcanic_activity' | 'solar_flare' | 'radioactive_zone' | 'magnetic_anomaly' | 'unstable_ground';
+  position: Position;
+  radius: number;
+  intensity: number; // 0-1
+  duration: number;
+  startTime: number;
+  effects: readonly string[];
+  warningTime?: number;
+}
+
+export interface InteractiveElement {
+  id: string;
+  type: 'tree' | 'rock' | 'building' | 'bridge' | 'gate' | 'switch';
+  position: Position;
+  size: number;
+  health: number;
+  maxHealth: number;
+  isDestructible: boolean;
+  strategicValue: number;
+  effects: readonly string[];
+  isActive?: boolean;
+}
+
+// ✅ NEW: Alliance System Types for Issue #63
+export interface AllianceMember {
+  playerId: string;
+  rank: 'member' | 'officer' | 'leader';
+  contribution: {
+    research: number;
+    resources: number;
+    activity: number;
+  };
+  permissions: AlliancePermission[];
+}
+
+export type AlliancePermission = 
+  | 'view_alliance' 
+  | 'contribute_resources' 
+  | 'start_research' 
+  | 'manage_members' 
+  | 'declare_war' 
+  | 'manage_buildings';
+
+export interface AllianceResearch {
+  id: string;
+  type: string;
+  cost: number;
+  progress: number;
+  maxProgress: number;
+  startTime: number;
+  estimatedCompletion: number;
+  contributors: Array<{
+    playerId: string;
+    amount: number;
+  }>;
+}
+
+export interface AllianceBonus {
+  type: 'damage_multiplier' | 'energy_regen' | 'gold_bonus' | 'experience_multiplier' | 'research_speed' | 'resource_capacity';
+  value: number;
+  description: string;
+}
+
+export interface AllianceBuilding {
+  level: number;
+  bonuses: AllianceBonus[];
+}
+
+export interface AllianceLaboratory {
+  level: number;
+  researchSpeed: number;
+}
+
+export interface AllianceTreasury {
+  level: number;
+  resourceCapacity: number;
+}
+
+export interface AllianceBarracks {
+  level: number;
+  memberBonuses: AllianceBonus[];
+}
+
+export interface AllianceWar {
+  id: string;
+  opponentAllianceId: string;
+  startTime: number;
+  endTime: number;
+  status: 'preparing' | 'active' | 'completed';
+  score: {
+    attacker: number;
+    defender: number;
+  };
+  participants: string[]; // player IDs
+}
+
+export interface CooperativeRaid {
+  id: string;
+  type: 'boss_raid' | 'resource_raid' | 'territory_raid';
+  startTime: number;
+  endTime: number;
+  participants: string[]; // player IDs
+  progress: number;
+  maxProgress: number;
+  rewards: Record<string, number>;
+}
+
+export interface ResourceSharingPool {
+  gold: number;
+  energy: number;
+  researchPoints: number;
+  lastContribution: number;
+}
+
+export interface Alliance {
+  id: string;
+  name: string;
+  tag: string; // [TAG]
+  level: number;
+  members: AllianceMember[];
+  maxMembers: number;
+
+  // Alliance features
+  research: {
+    activeProjects: AllianceResearch[];
+    completedProjects: string[];
+    researchPower: number; // Combined member contribution
+  };
+
+  buildings: {
+    headquarters: AllianceBuilding;
+    laboratory: AllianceLaboratory;
+    treasury: AllianceTreasury;
+    barracks: AllianceBarracks;
+  };
+
+  // Cooperative activities
+  events: {
+    allianceWars: AllianceWar[];
+    cooperativeRaids: CooperativeRaid[];
+    resourceSharing: ResourceSharingPool;
+  };
+}
+
+// ✅ NEW: Competitive System Types for Issue #63
+export interface PlayerRanking {
+  playerId: string;
+  rank: number;
+  score: number;
+  category: 'global' | 'survival' | 'efficiency' | 'speed' | 'innovation';
+  seasonId: string;
+  lastUpdated: number;
+}
+
+export interface AllianceRanking {
+  allianceId: string;
+  allianceName: string;
+  rank: number;
+  totalScore: number;
+  memberCount: number;
+  averageScore: number;
+  seasonId: string;
+  lastUpdated: number;
+}
+
+export interface SeasonInfo {
+  id: string;
+  name: string;
+  startDate: number;
+  endDate: number;
+  status: 'active' | 'completed' | 'upcoming';
+  theme: string;
+  rewards: {
+    gold: number;
+    researchPoints: number;
+    cosmetics: string[];
+    titles: string[];
+  };
+}
+
+export interface SeasonHistory {
+  id: string;
+  name: string;
+  startDate: number;
+  endDate: number;
+  theme: string;
+  winner: {
+    playerId: string;
+    playerName: string;
+    score: number;
+  };
+  totalParticipants: number;
+}
+
+export interface WeeklyReward {
+  id: string;
+  name: string;
+  description: string;
+  rewards: {
+    gold: number;
+    researchPoints: number;
+    cosmetics: string[];
+  };
+  requirements: {
+    minRank?: number;
+    minScore?: number;
+    minGames?: number;
+  };
+}
+
+export interface SeasonalReward {
+  id: string;
+  name: string;
+  description: string;
+  rewards: {
+    gold: number;
+    researchPoints: number;
+    cosmetics: string[];
+    titles: string[];
+  };
+  requirements: {
+    minRank?: number;
+    minScore?: number;
+    minGames?: number;
+  };
+}
+
+export interface LifetimeAchievement {
+  id: string;
+  name: string;
+  description: string;
+  category: 'competitive' | 'social' | 'technical';
+  requirements: {
+    totalSeasons: number;
+    totalWins: number;
+    highestRank: number;
+  };
+  rewards: {
+    gold: number;
+    researchPoints: number;
+    cosmetics: string[];
+    titles: string[];
+  };
+}
+
+// ✅ NEW: Prestige System Types for Issue #63
+export interface PrestigeLevel {
+  level: number;
+  name: string;
+  description: string;
+  requirements: {
+    minWave: number;
+    minPlaytime: number;
+    achievementsRequired: string[];
+  };
+  rewards: {
+    prestigePoints: number;
+    legacyBonuses: LegacyBonus[];
+    specialUnlocks: string[];
+  };
+}
+
+export interface LegacyBonus {
+  type: 'damage_multiplier' | 'gold_bonus' | 'energy_efficiency' | 'research_speed' | 'experience_multiplier';
+  value: number;
+  description: string;
+  permanent: boolean;
+}
+
+export interface PrestigeReward {
+  level: number;
+  rewards: {
+    cosmetics: string[];
+    titles: string[];
+    specialAbilities: string[];
+  };
+}
+
+// ✅ NEW: Terrain Modification System Types for Issue #63
+export type TerrainModificationType = 'crater' | 'bridge' | 'platform' | 'trench' | 'wall' | 'tunnel' | 'elevation';
+
+export interface TerrainModificationCost {
+  gold: number;
+  energy: number;
+  researchPoints: number;
+}
+
+export interface TerrainModification {
+  id: string;
+  type: TerrainModificationType;
+  position: Position;
+  cost: TerrainModificationCost;
+  description: string;
+  effects: string[];
+  createdBy: string;
+  createdAt: number;
+  duration?: number;
+  isActive: boolean;
+  removedAt?: number;
+}
+
+// ✅ NEW: Campaign & Narrative System Types for Issue #63
+export interface CampaignObjective {
+  id: string;
+  type: 'survive_waves' | 'build_towers' | 'complete_tutorial' | 'research_technology' | 'form_alliance' | 'defeat_boss' | 'unlock_technology' | 'faction_choice';
+  target: number;
+  description: string;
+  completed: boolean;
+  progress?: number;
+}
+
+export interface CampaignReward {
+  gold: number;
+  researchPoints: number;
+  cosmetics: string[];
+  titles: string[];
+}
+
+export interface StoryChoice {
+  id: string;
+  text: string;
+  description: string;
+  consequences: string[];
+}
+
+export interface StoryDecision {
+  id: string;
+  description: string;
+  options: StoryChoice[];
+  chapterId?: string;
+  choiceId?: string;
+  timestamp?: number;
+  consequences?: string[];
+}
+
+export interface StoryConsequence {
+  id: string;
+  chapterId: string;
+  choiceId: string;
+  timestamp: number;
+  consequences: string[];
+}
+
+export interface AlternativePath {
+  id: string;
+  name: string;
+  description: string;
+  requirements: string[];
+  rewards: CampaignReward;
+}
+
+export interface CampaignChapter {
+  id: string;
+  name: string;
+  description: string;
+  objectives: CampaignObjective[];
+  rewards: CampaignReward;
+  storyDecisions: StoryDecision[];
+  worldStateChanges: {
+    globalEvents: string[];
+    factionControl: Record<string, number>;
+    resourceAvailability: Record<string, number>;
+  };
+}
+
+// ✅ NEW: Live Events System Types for Issue #63
+export type EventType = 'speed_challenge' | 'boss_rush' | 'resource_efficiency' | 'tower_specialist' | 'endurance_test' | 'community_challenge';
+
+export interface EventReward {
+  gold: number;
+  researchPoints: number;
+  cosmetics: string[];
+  titles: string[];
+  specialRewards: string[];
+}
+
+export interface EventParticipant {
+  playerId: string;
+  playerName: string;
+  joinTime: number;
+  score: number;
+  achievements: string[];
+  currentRank: number;
+  lastUpdate?: number;
+  finalRewards?: EventReward;
+}
+
+export interface EventLeaderboard {
+  playerId: string;
+  playerName: string;
+  score: number;
+  rank: number;
+  achievements: string[];
+}
+
+export interface LiveEvent {
+  id: string;
+  name: string;
+  description: string;
+  type: EventType;
+  startTime: number;
+  endTime: number;
+  rewards: EventReward;
+  participants: EventParticipant[];
+  leaderboard: EventLeaderboard[];
+  specialRules: string[];
+  isActive: boolean;
+  currentPhase: 'upcoming' | 'active' | 'completed';
+}
+
+// ✅ NEW: Faction System Types for Issue #63
+export type FactionType = 'military' | 'scientific' | 'merchant' | 'neutral' | 'chaos';
+
+export interface FactionAbility {
+  id: string;
+  name: string;
+  description: string;
+  type: 'passive' | 'active' | 'ultimate';
+  effect: string;
+  cost: { gold: number; researchPoints: number };
+}
+
+export interface FactionTechnology {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  maxLevel: number;
+  cost: { gold: number; researchPoints: number };
+}
+
+export interface FactionResource {
+  gold: number;
+  researchPoints: number;
+  influence: number;
+  technology: number;
+}
+
+export interface FactionRelationship {
+  faction1: string;
+  faction2: string;
+  relationship: 'allied' | 'neutral' | 'hostile' | 'cooperative';
+  trustLevel: number;
+  tradeAgreements: string[];
+  conflicts: string[];
+}
+
+export interface FactionMember {
+  playerId: string;
+  playerName: string;
+  joinDate: number;
+  contribution: number;
+  rank: 'recruit' | 'member' | 'veteran' | 'elite' | 'leader';
+  specializations: string[];
+}
+
+export interface Faction {
+  id: string;
+  name: string;
+  description: string;
+  type: FactionType;
+  leader: string;
+  members: FactionMember[];
+  maxMembers: number;
+  level: number;
+  experience: number;
+  resources: FactionResource;
+  abilities: FactionAbility[];
+  technologies: FactionTechnology[];
+  specializations: string[];
+  reputation: number;
+  territory: string[];
+  isActive: boolean;
+}

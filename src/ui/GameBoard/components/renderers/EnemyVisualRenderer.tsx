@@ -23,34 +23,6 @@ export const EnemyVisualRenderer: React.FC<EnemyVisualRendererProps> = ({ enemy,
   const groupRef = useRef<SVGGElement>(null);
   const animationRef = useRef<number>();
 
-  useEffect(() => {
-    if (!isVisible) return;
-
-    // Boss entrance animation
-    if (enemy.bossType && enemy.cinematicState === 'entrance') {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      startEntranceAnimation();
-    }
-
-    // Phase transition animation
-    if (enemy.bossType && enemy.cinematicState === 'phase_transition') {
-      startPhaseTransitionAnimation();
-    }
-
-    // Death animation
-    if (enemy.cinematicState === 'defeat') {
-      startDeathAnimation();
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enemy.cinematicState, enemy.bossType, isVisible]);
-
   const startEntranceAnimation = () => {
     if (!groupRef.current) return;
     
@@ -129,6 +101,31 @@ export const EnemyVisualRenderer: React.FC<EnemyVisualRendererProps> = ({ enemy,
     animationRef.current = requestAnimationFrame(animate);
   };
 
+  useEffect(() => {
+    if (!isVisible) return;
+
+    // Boss entrance animation
+    if (enemy.bossType && enemy.cinematicState === 'entrance') {
+      startEntranceAnimation();
+    }
+
+    // Phase transition animation
+    if (enemy.bossType && enemy.cinematicState === 'phase_transition') {
+      startPhaseTransitionAnimation();
+    }
+
+    // Death animation
+    if (enemy.cinematicState === 'defeat') {
+      startDeathAnimation();
+    }
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [enemy.cinematicState, enemy.bossType, isVisible]);
+
   if (!isVisible) return null;
 
   return (
@@ -156,6 +153,5 @@ export const EnemyVisualRenderer: React.FC<EnemyVisualRendererProps> = ({ enemy,
     </g>
   );
 };
-
 
 export default EnemyVisualRenderer; 

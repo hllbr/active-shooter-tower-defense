@@ -46,18 +46,13 @@ const SecurityStatus: React.FC = () => {
   );
 };
 
-
-
 // Secure Upgrade Screen Component
 export const SecureUpgradeScreen: React.FC = () => {
   const [securityStats, setSecurityStats] = useState(securityManager.getSecurityStats());
 
   useEffect(() => {
     // Log security event when upgrade screen is accessed
-    securityManager.logSecurityEvent('upgrade_purchase', {
-      action: 'upgradeScreenAccess',
-      timestamp: Date.now()
-    }, 'low');
+    console.log('🔒 Security: Upgrade screen accessed');
 
     const interval = setInterval(() => {
       setSecurityStats(securityManager.getSecurityStats());
@@ -101,24 +96,4 @@ export const SecureUpgradeScreen: React.FC = () => {
       <UpgradeScreen />
     </>
   );
-};
-
-// Security monitoring hook
-export const useSecurityMonitoring = () => {
-  const [securityStats, setSecurityStats] = useState(securityManager.getSecurityStats());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSecurityStats(securityManager.getSecurityStats());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return {
-    securityStats,
-    isLocked: securityStats.isLocked as boolean,
-    suspiciousActivityCount: securityStats.suspiciousActivityCount as number,
-    totalEvents: securityStats.totalEvents as number
-  };
 }; 

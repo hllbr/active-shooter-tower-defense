@@ -6,7 +6,7 @@ import { formatProfessional } from '../../../utils/formatters';
 import type { TowerSlot, Enemy } from '../../../models/gameTypes';
 import type { TowerUpgradeInfo } from '../types';
 import { playSound } from '../../../utils/sound/soundEffects';
-import { useChallenge } from '../../challenge/ChallengeContext';
+import { useChallenge } from '../../challenge/hooks/useChallenge';
 import { toast } from 'react-toastify';
 
 export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {

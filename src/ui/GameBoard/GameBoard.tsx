@@ -1,8 +1,11 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect, useRef } from 'react';
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { initUpgradeEffects } from '../../game-systems/UpgradeEffects';
-import { useChallenge } from '../challenge/ChallengeContext';
+import { useChallenge } from '../challenge/hooks/useChallenge';
+import { CinematicCameraManager } from '../../game-systems/cinematic/CinematicCameraManager';
+import { PostProcessingManager } from '../../game-systems/post-processing/PostProcessingManager';
+import { useTheme } from '../theme/ThemeProvider';
 
 // Lazy load heavy components for code splitting
 const UpgradeScreen = lazy(() => import('../game/UpgradeScreen').then(module => ({ default: module.UpgradeScreen })));
@@ -69,10 +72,62 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     addEnemyKillListener,
     removeEnemyKillListener,
     addTowerUpgradeListener,
+    energy,
+    maxEnergy,
   } = useGameStore();
 
   const { incrementChallenge } = useChallenge();
+  const { isReducedMotion } = useTheme();
   const prevWaveRef = React.useRef(currentWave);
+  const gameContainerRef = useRef<HTMLDivElement>(null);
+  const cinematicManager = CinematicCameraManager.getInstance();
+  const postProcessingManager = PostProcessingManager.getInstance();
+
+  // Initialize cinematic and post-processing systems
+  useEffect(() => {
+    const updateSystems = (currentTime: number) => {
+      cinematicManager.update(currentTime);
+      postProcessingManager.update(currentTime);
+    };
+
+    const gameLoop = () => {
+      const currentTime = performance.now();
+      updateSystems(currentTime);
+      requestAnimationFrame(gameLoop);
+    };
+
+    requestAnimationFrame(gameLoop);
+  }, [cinematicManager, postProcessingManager]);
+
+  // Apply post-processing based on game state
+  useEffect(() => {
+    if (!isStarted) {
+      postProcessingManager.applyGameStateFilter('normal');
+      return;
+    }
+
+    // Low health warning
+    if (energy < maxEnergy * 0.3) {
+      postProcessingManager.applyGameStateFilter('low_health', 1000);
+    } else if (energy < maxEnergy * 0.5) {
+      postProcessingManager.applyGameStateFilter('under_attack', 1000);
+    } else {
+      postProcessingManager.applyGameStateFilter('normal', 1000);
+    }
+  }, [energy, maxEnergy, isStarted, postProcessingManager]);
+
+  // Boss wave cinematic effects
+  useEffect(() => {
+    if (currentWave % 10 === 0 && currentWave > 0) {
+      // Boss wave
+      postProcessingManager.applyGameStateFilter('boss_fight', 2000);
+      
+      // Trigger boss entrance cinematic
+      setTimeout(() => {
+        cinematicManager.triggerBossEntrance({ x: 960, y: 540 });
+      }, 1000);
+    }
+  }, [currentWave, cinematicManager, postProcessingManager]);
 
   React.useEffect(() => {
     if (isStarted && currentWave > prevWaveRef.current) {
@@ -164,12 +219,77 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
   // --- Mobil algılama ---
   const isMobile = typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || /Mobi|Android/i.test(navigator.userAgent));
 
+  // Get cinematic camera transform
+  const cameraTransform = cinematicManager.getCameraTransform();
+  const isInCinematicMode = cinematicManager.isInCinematicMode();
+
+  // Get post-processing effects
+  const postProcessingFilters = postProcessingManager.getCSSFilters();
+  const vignetteCSS = postProcessingManager.getVignetteCSS();
+  const grainCSS = postProcessingManager.getGrainCSS();
+  const scanlinesCSS = postProcessingManager.getScanlinesCSS();
+
   return (
-    <div style={{ 
-      ...containerStyle,
-      background: GAME_CONSTANTS.CANVAS_BG,
-      animation: screenShake ? 'screen-shake 0.6s ease-in-out' : 'none'
-    }} className={className}>
+    <div 
+      ref={gameContainerRef}
+      style={{ 
+        ...containerStyle,
+        background: GAME_CONSTANTS.CANVAS_BG,
+        animation: screenShake ? 'screen-shake 0.6s ease-in-out' : 'none',
+        transform: isInCinematicMode ? cameraTransform : 'none',
+        filter: postProcessingFilters,
+        transition: isReducedMotion ? 'none' : 'transform 0.3s ease-out, filter 0.5s ease-out',
+      }} 
+      className={className}
+    >
+      {/* Post-processing overlays */}
+      {vignetteCSS && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: vignetteCSS,
+            pointerEvents: 'none',
+            zIndex: 1000,
+          }}
+        />
+      )}
+      
+      {grainCSS && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: grainCSS,
+            pointerEvents: 'none',
+            zIndex: 1001,
+            opacity: 0.1,
+          }}
+        />
+      )}
+      
+      {scanlinesCSS && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: scanlinesCSS,
+            pointerEvents: 'none',
+            zIndex: 1002,
+            opacity: 0.05,
+          }}
+        />
+      )}
+
       <style>
         {keyframeStyles}
       </style>

@@ -1082,4 +1082,183 @@ export const GAME_CONSTANTS = {
       tower_vicinity: { maxMines: 1, bonusDamage: 1.2 }
     }
   },
+
+  // ✅ NEW: Environment & Terrain System for Issue #62
+  ENVIRONMENT_SYSTEM: {
+    // Terrain Types
+    TERRAIN_TYPES: {
+      lowlands: {
+        elevation: 0,
+        visibility: 1.0,
+        movementSpeed: 1.0,
+        towerBonuses: { damage: 0, range: 0, fireRate: 0 },
+        coverBonus: 0,
+        color: '#90EE90'
+      },
+      hills: {
+        elevation: 50,
+        visibility: 1.25,
+        movementSpeed: 0.8,
+        towerBonuses: { damage: 0.1, range: 0.25, fireRate: 0 },
+        coverBonus: 0.25,
+        color: '#8B4513'
+      },
+      plateaus: {
+        elevation: 100,
+        visibility: 1.5,
+        movementSpeed: 0.6,
+        towerBonuses: { damage: 0.15, range: 0.5, fireRate: 0 },
+        coverBonus: 0.5,
+        color: '#A0522D'
+      },
+      valleys: {
+        elevation: -25,
+        visibility: 0.85,
+        movementSpeed: 1.1,
+        towerBonuses: { damage: 0, range: -0.15, fireRate: 0 },
+        coverBonus: 0.75,
+        color: '#228B22'
+      }
+    },
+
+    // Weather Types
+    WEATHER_TYPES: {
+      clear: {
+        visibility: 1.0,
+        movementPenalty: 0,
+        damageModifier: 1.0,
+        duration: { min: 60000, max: 120000 },
+        color: '#87CEEB',
+        effects: []
+      },
+      rain: {
+        visibility: 0.8,
+        movementPenalty: 0.1,
+        damageModifier: 0.75,
+        duration: { min: 30000, max: 90000 },
+        color: '#4682B4',
+        effects: ['extinguishes_fire', 'reduces_accuracy']
+      },
+      fog: {
+        visibility: 0.5,
+        movementPenalty: 0,
+        damageModifier: 0.75,
+        duration: { min: 45000, max: 75000 },
+        color: '#D3D3D3',
+        effects: ['stealth_bonus', 'reduces_accuracy']
+      },
+      storm: {
+        visibility: 0.6,
+        movementPenalty: 0.2,
+        damageModifier: 1.5,
+        duration: { min: 20000, max: 60000 },
+        color: '#2F4F4F',
+        effects: ['lightning_damage', 'grounds_flying_units']
+      },
+      sandstorm: {
+        visibility: 0.4,
+        movementPenalty: 0.3,
+        damageModifier: 0.5,
+        duration: { min: 30000, max: 90000 },
+        color: '#F4A460',
+        effects: ['jams_mechanical', 'reduces_projectile_accuracy']
+      },
+      snow: {
+        visibility: 0.9,
+        movementPenalty: 0.15,
+        damageModifier: 1.25,
+        duration: { min: 60000, max: 180000 },
+        color: '#F0F8FF',
+        effects: ['ice_weapon_bonus', 'slippery_surfaces']
+      }
+    },
+
+    // Time of Day Phases
+    TIME_OF_DAY: {
+      dawn: {
+        lighting: 0.85,
+        visibility: 0.85,
+        enemyBehavior: 1.2,
+        color: '#FFE4B5',
+        effects: ['stealth_detection_reduced']
+      },
+      day: {
+        lighting: 1.0,
+        visibility: 1.0,
+        enemyBehavior: 1.0,
+        color: '#FFFFFF',
+        effects: []
+      },
+      dusk: {
+        lighting: 0.9,
+        visibility: 0.9,
+        enemyBehavior: 1.1,
+        color: '#FF6347',
+        effects: ['transition_bonuses']
+      },
+      night: {
+        lighting: 0.6,
+        visibility: 0.6,
+        enemyBehavior: 1.3,
+        color: '#191970',
+        effects: ['stealth_enemies_common', 'night_vision_valuable']
+      }
+    },
+
+    // Environmental Hazards
+    HAZARDS: {
+      earthquake: {
+        frequency: 300000, // 5 minutes
+        duration: 10000,
+        effects: ['screen_shake', 'accuracy_reduction', 'structure_damage'],
+        warningTime: 10000
+      },
+      volcanic_activity: {
+        frequency: 600000, // 10 minutes
+        duration: 180000,
+        effects: ['lava_flows', 'ash_clouds', 'fire_weapon_bonus'],
+        warningTime: 15000
+      },
+      solar_flare: {
+        frequency: 900000, // 15 minutes
+        duration: 30000,
+        effects: ['electronic_disruption', 'energy_weapon_disruption'],
+        warningTime: 5000
+      }
+    },
+
+    // Interactive Elements
+    INTERACTIVE_ELEMENTS: {
+      tree: {
+        health: 100,
+        strategicValue: 0.3,
+        effects: ['cover_bonus', 'line_of_sight_block'],
+        resourceDrop: 'materials'
+      },
+      rock: {
+        health: 300,
+        strategicValue: 0.5,
+        effects: ['pathway_block', 'cover_bonus'],
+        resourceDrop: 'materials'
+      },
+      building: {
+        health: 500,
+        strategicValue: 0.8,
+        effects: ['cover_bonus', 'debris_field'],
+        resourceDrop: 'advanced_materials'
+      },
+      bridge: {
+        health: 200,
+        strategicValue: 0.9,
+        effects: ['pathway_control', 'chokepoint_creation'],
+        resourceDrop: 'materials'
+      },
+      gate: {
+        health: 400,
+        strategicValue: 0.7,
+        effects: ['access_control', 'defensive_position'],
+        resourceDrop: 'materials'
+      }
+    }
+  },
 } as const; 

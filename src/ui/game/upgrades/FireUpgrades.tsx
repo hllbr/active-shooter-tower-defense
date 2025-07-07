@@ -8,13 +8,11 @@ import { getUpgradeColor } from './utils';
 export const FireUpgrades: React.FC = () => {
   const { 
     gold, 
+    bulletLevel,
     upgradeBullet, 
     discountMultiplier, 
     diceResult,
-    purchaseIndividualFireUpgrade,
-    getIndividualFireUpgradeInfo
   } = useGameStore();
-  // CRITICAL FIX: setRefreshing kaldırıldı - lock problemini çözmek için
 
   return (
     <div style={{ 
@@ -25,42 +23,53 @@ export const FireUpgrades: React.FC = () => {
     }}>
       {GAME_CONSTANTS.BULLET_TYPES.map((bulletType: BulletTypeData, index: number) => {
         const level = index + 1;
-        const upgradeId = `fire_${level}`; // CRITICAL FIX: Her fire upgrade için benzersiz ID
         const cost = GAME_CONSTANTS.BULLET_COST * Math.pow(GAME_CONSTANTS.BULLET_COST_MULTIPLIER, index);
         
-        // CRITICAL FIX: Individual tracking sistemini kullan
-        const upgradeInfo = getIndividualFireUpgradeInfo(upgradeId, 2);
-        const currentLevel = upgradeInfo.currentLevel;
-        const isMaxed = upgradeInfo.isMaxed;
-        const canUpgrade = upgradeInfo.canUpgrade && gold >= cost;
+        // CRITICAL FIX: Progression sistemi - sadece bir sonraki seviye satın alınabilir
+        const currentBulletLevel = bulletLevel || 1; // Default 1 if undefined
+        const isCurrentLevel = level === currentBulletLevel; // Mevcut seviye
+        const isNextLevel = level === currentBulletLevel + 1; // Satın alınabilir seviye
+        const isPastLevel = level < currentBulletLevel; // Geçmiş seviye (tamamlanmış)
+        const isFutureLevel = level > currentBulletLevel + 1; // Gelecek seviye (henüz erişilemez)
         
-        // DEBUG: Only log if there's an issue
-        if (currentLevel === 1 && bulletType.name.includes('Kraliçe')) {
-          console.log(`🔍 ${bulletType.name} Debug:`, {
-            upgradeId,
-            currentLevel,
+        const canUpgrade = isNextLevel && gold >= cost;
+        const isMaxed = isPastLevel; // Geçmiş seviyeler "tamamlanmış" olarak gösterilir
+        const isLocked = isFutureLevel; // Gelecek seviyeler kilitli
+        
+        // Debug logging
+        if (level <= 4) {
+          console.log(`🔍 ${bulletType.name} (Level ${level}):`, {
+            currentBulletLevel,
+            isCurrentLevel,
+            isNextLevel,
+            isPastLevel,
+            isFutureLevel,
+            canUpgrade,
             isMaxed,
-            canUpgrade: upgradeInfo.canUpgrade,
-            hasGold: gold >= cost,
-            finalCanUpgrade: canUpgrade,
-            gold,
-            cost
+            isLocked
           });
         }
         
         const upgradeData = {
           name: bulletType.name,
-          description: `${bulletType.name} mermi sistemi. Daha güçlü ve etkili saldırılar.`,
-          currentLevel,
+          description: isLocked 
+            ? `🔒 Önce Level ${currentBulletLevel + 1} alın` 
+            : isPastLevel 
+              ? `✅ Tamamlandı - Aktif seviye`
+              : `${bulletType.name} mermi sistemi. Daha güçlü ve etkili saldırılar.`,
+          currentLevel: isPastLevel ? 1 : isCurrentLevel ? 1 : 0, // Visual için
           baseCost: cost,
-          maxLevel: 2,
+          maxLevel: 1,
           onUpgrade: () => {
+            if (!isNextLevel) {
+              console.log(`❌ ${bulletType.name} - Progression hatası! Önce Level ${currentBulletLevel + 1} alın.`);
+              return;
+            }
+            
             console.log(`🚀 ${bulletType.name} onUpgrade clicked!`);
             
-            // CRITICAL FIX: Basit ve direkt satın alma - store kendi kontrollerini yapacak
-            let discountedCost = cost;
-            
             // Zar indirimleri
+            let discountedCost = cost;
             if (diceResult && diceResult === 6) discountedCost = Math.floor(cost * 0.5);
             else if (diceResult && diceResult === 5) discountedCost = Math.floor(cost * 0.7);
             else if (diceResult && diceResult === 4) discountedCost = Math.floor(cost * 0.85);
@@ -70,21 +79,23 @@ export const FireUpgrades: React.FC = () => {
               discountedCost = Math.floor(discountedCost / discountMultiplier);
             }
             
-            console.log(`💰 Attempting purchase: ${upgradeId} for ${discountedCost} gold`);
+            console.log(`💰 Attempting purchase: ${bulletType.name} for ${discountedCost} gold`);
             
-            // CRITICAL FIX: Individual tracking ile satın alma
-            const success = purchaseIndividualFireUpgrade(upgradeId, discountedCost, 2);
-            
-            if (success) {
-              upgradeBullet(false); // Backward compatibility için
-              console.log(`✅ ${bulletType.name} upgrade successful!`);
-            } else {
-              console.log(`❌ ${bulletType.name} upgrade failed!`);
-            }
+            // CRITICAL FIX: Normal bullet upgrade kullan
+            upgradeBullet(false);
+            console.log(`✅ ${bulletType.name} upgrade successful! New bullet level: ${currentBulletLevel + 1}`);
           },
-          icon: "🔥",
-          color: getUpgradeColor(currentLevel > 0, canUpgrade, isMaxed),
-          additionalInfo: `Hasar Çarpanı: x${bulletType.damageMultiplier} | Hız: x${bulletType.speedMultiplier || 1} | Seviye: ${currentLevel}/2`
+          icon: isPastLevel ? "✅" : isCurrentLevel ? "🔥" : isLocked ? "🔒" : "🔥",
+          color: isPastLevel 
+            ? '#4ade80' // Yeşil - tamamlanmış
+            : isLocked 
+              ? '#666666' // Gri - kilitli
+              : getUpgradeColor(false, canUpgrade, isMaxed),
+          additionalInfo: isPastLevel 
+            ? `✅ Aktif - Hasar: x${bulletType.damageMultiplier}`
+            : isLocked 
+              ? `🔒 Level ${currentBulletLevel + 1} gerekli`
+              : `Hasar Çarpanı: x${bulletType.damageMultiplier} | Hız: x${bulletType.speedMultiplier || 1}`
         };
 
         return (
