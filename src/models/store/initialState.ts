@@ -131,4 +131,26 @@ export const initialState: GameState = {
   dailyMissions: [],
   lastMissionRefresh: 0,
   unlockedTowerTypes: [],
+
+  // ✅ NEW: Environment & Terrain System for Issue #62
+  terrainTiles: [],
+  weatherState: {
+    currentWeather: 'clear',
+    weatherIntensity: 0,
+    visibility: 1.0,
+    movementPenalty: 0,
+    damageModifier: 1.0,
+    duration: 60000,
+    startTime: Date.now(),
+    transitionTime: 0
+  },
+  timeOfDayState: {
+    currentPhase: 'day',
+    cycleProgress: 0.5,
+    lightingIntensity: 1.0,
+    visibilityModifier: 1.0,
+    enemyBehaviorModifier: 1.0
+  },
+  environmentalHazards: [],
+  interactiveElements: [],
 };

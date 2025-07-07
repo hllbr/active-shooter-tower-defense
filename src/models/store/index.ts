@@ -12,6 +12,7 @@ import { createWaveSlice, type WaveSlice } from './slices/waveSlice';
 import { createEnergySlice, type EnergySlice, addEnemyKillListener, removeEnemyKillListener } from './slices/energySlice';
 import { createEconomySlice, type EconomySlice } from './slices/economySlice';
 import { createUpgradeSlice, type UpgradeSlice } from './slices/upgradeSlice';
+import { createEnvironmentSlice, type EnvironmentSlice } from './slices/environmentSlice';
 
 export type Store = GameState &
   DiceSlice &
@@ -21,7 +22,8 @@ export type Store = GameState &
   EnemySlice &
   TowerSlice &
   EconomySlice &
-  UpgradeSlice & {
+  UpgradeSlice &
+  EnvironmentSlice & {
     resetGame: () => void;
     setStarted: (started: boolean) => void;
     setRefreshing: (refreshing: boolean) => void;
@@ -37,6 +39,7 @@ export const useGameStore = create<Store>((set, get, api): Store => ({
   ...createEnergySlice(set, get, api),
   ...createEconomySlice(set, get, api),
   ...createUpgradeSlice(set, get, api),
+  ...createEnvironmentSlice(set, get, api),
 
   resetGame: () => set(() => ({ ...initialState, gameStartTime: Date.now() })),
 

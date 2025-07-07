@@ -304,6 +304,13 @@ export interface GameState {
   packagesPurchased: number;
   defenseUpgradesPurchased: number;
   
+  // ✅ NEW: Environment & Terrain System for Issue #62
+  terrainTiles: TerrainTile[];
+  weatherState: WeatherState;
+  timeOfDayState: TimeOfDayState;
+  environmentalHazards: EnvironmentalHazard[];
+  interactiveElements: InteractiveElement[];
+  
   // CRITICAL FIX: Individual Fire Upgrade Tracking System (fixes sayaç problemi)
   individualFireUpgrades: Record<string, number>; // bulletType -> upgrade count (e.g., "fire_1": 2, "fire_2": 1)
   individualShieldUpgrades: Record<string, number>; // shieldType -> upgrade count
@@ -646,3 +653,65 @@ export interface SpecializedTowerConfig {
 export type TowerClass = 'sniper' | 'gatling' | 'laser' | 'mortar' | 'flamethrower' | 'radar' | 'supply_depot' | 'shield_generator' | 'repair_station' | 'emp' | 'stealth_detector' | 'air_defense';
 
 export type SpecializedTowersConfig = Record<TowerClass, SpecializedTowerConfig>;
+
+export interface TerrainTile {
+  id: string;
+  position: Position;
+  terrainType: 'lowlands' | 'hills' | 'plateaus' | 'valleys';
+  elevation: number;
+  isDestructible: boolean;
+  health?: number;
+  maxHealth?: number;
+  coverBonus?: number;
+  movementPenalty?: number;
+  visibilityBonus?: number;
+  towerBonus?: {
+    damage?: number;
+    range?: number;
+    fireRate?: number;
+  };
+}
+
+export interface WeatherState {
+  currentWeather: 'clear' | 'rain' | 'fog' | 'storm' | 'sandstorm' | 'snow';
+  weatherIntensity: number; // 0-1
+  visibility: number; // 0-1
+  movementPenalty: number; // 0-1
+  damageModifier: number; // 0-1
+  duration: number; // milliseconds
+  startTime: number;
+  transitionTime: number;
+}
+
+export interface TimeOfDayState {
+  currentPhase: 'dawn' | 'day' | 'dusk' | 'night';
+  cycleProgress: number; // 0-1
+  lightingIntensity: number; // 0-1
+  visibilityModifier: number; // 0-1
+  enemyBehaviorModifier: number; // 0-1
+}
+
+export interface EnvironmentalHazard {
+  id: string;
+  type: 'earthquake' | 'volcanic_activity' | 'solar_flare' | 'radioactive_zone' | 'magnetic_anomaly' | 'unstable_ground';
+  position: Position;
+  radius: number;
+  intensity: number; // 0-1
+  duration: number;
+  startTime: number;
+  effects: readonly string[];
+  warningTime?: number;
+}
+
+export interface InteractiveElement {
+  id: string;
+  type: 'tree' | 'rock' | 'building' | 'bridge' | 'gate' | 'switch';
+  position: Position;
+  size: number;
+  health: number;
+  maxHealth: number;
+  isDestructible: boolean;
+  strategicValue: number;
+  effects: readonly string[];
+  isActive?: boolean;
+}

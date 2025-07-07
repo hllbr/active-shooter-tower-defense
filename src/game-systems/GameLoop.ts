@@ -4,6 +4,7 @@ import { updateEffects } from './Effects';
 import { updateMineCollisions } from './MineManager';
 import { useGameStore } from '../models/store';
 import { stateTracker, performanceMonitor, GameStateSelectors } from './StateOptimizer';
+import { EnvironmentManager } from './environment/EnvironmentManager';
 
 // Performance metrics for monitoring
 interface GameLoopMetrics {
@@ -29,6 +30,9 @@ export function startGameLoop() {
     effectCount: 0,
     lastSignificantChange: 0
   };
+  
+  // Initialize environment manager
+  const environmentManager = new EnvironmentManager();
 
   const loop = (currentTime: number) => {
     const deltaTime = currentTime - lastUpdateTime;
@@ -58,6 +62,21 @@ export function startGameLoop() {
       updateBullets(deltaTime);
       updateEffects();
       updateMineCollisions();
+      
+      // Update environment systems
+      environmentManager.updateEnvironment(currentTime, (effect) => {
+        useGameStore.getState().addEffect(effect);
+      });
+      
+      // Update store with environment state
+      const environmentState = environmentManager.getEnvironmentState();
+      useGameStore.setState({
+        terrainTiles: environmentState.terrainTiles,
+        weatherState: environmentState.weatherState,
+        timeOfDayState: environmentState.timeOfDayState,
+        environmentalHazards: environmentState.environmentalHazards,
+        interactiveElements: environmentState.interactiveElements
+      });
 
       // Get current state after updates
       const updatedState = useGameStore.getState();
