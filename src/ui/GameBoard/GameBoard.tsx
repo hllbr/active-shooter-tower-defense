@@ -6,6 +6,7 @@ import { useChallenge } from '../challenge/hooks/useChallenge';
 import { CinematicCameraManager } from '../../game-systems/cinematic/CinematicCameraManager';
 import { PostProcessingManager } from '../../game-systems/post-processing/PostProcessingManager';
 import { useTheme } from '../theme/ThemeProvider';
+import { EnvironmentManager } from '../../game-systems/environment/EnvironmentManager';
 
 // Lazy load heavy components for code splitting
 const UpgradeScreen = lazy(() => import('../game/UpgradeScreen').then(module => ({ default: module.UpgradeScreen })));
@@ -80,8 +81,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
   const { isReducedMotion } = useTheme();
   const prevWaveRef = React.useRef(currentWave);
   const gameContainerRef = useRef<HTMLDivElement>(null);
+  const environmentManagerRef = useRef<EnvironmentManager | null>(null);
   const cinematicManager = CinematicCameraManager.getInstance();
   const postProcessingManager = PostProcessingManager.getInstance();
+
+  // Initialize environment manager for background rendering
+  useEffect(() => {
+    if (!environmentManagerRef.current) {
+      environmentManagerRef.current = new EnvironmentManager();
+      const envState = environmentManagerRef.current.getEnvironmentState();
+      useGameStore.setState({
+        terrainTiles: envState.terrainTiles,
+        weatherState: envState.weatherState,
+        timeOfDayState: envState.timeOfDayState,
+        environmentalHazards: envState.environmentalHazards,
+        interactiveElements: envState.interactiveElements,
+      });
+    }
+  }, []);
 
   // Initialize cinematic and post-processing systems
   useEffect(() => {
@@ -198,7 +215,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
   );
 
   // Game loop management
-  useGameLoop(isStarted, isRefreshing, isPreparing, currentWave);
+  useGameLoop(isStarted, isRefreshing, isPreparing, currentWave, environmentManagerRef.current);
 
   // Command center management
   const { commandCenterOpen, closeCommandCenter } = useCommandCenter(

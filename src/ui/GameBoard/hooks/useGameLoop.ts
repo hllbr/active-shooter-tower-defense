@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { stopEnemyWave, startContinuousSpawning, stopContinuousSpawning } from '../../../game-systems/EnemySpawner';
 import { startGameLoop } from '../../../game-systems/GameLoop';
+import type { EnvironmentManager } from '../../../game-systems/environment/EnvironmentManager';
 import { waveManager } from '../../../game-systems/WaveManager';
 // import { startBackgroundMusic } from '../../../utils/sound'; // 🎵 OYUN MÜZİĞİ DEVRE DIŞI
 
@@ -8,7 +9,8 @@ export const useGameLoop = (
   isStarted: boolean,
   isRefreshing: boolean,
   isPreparing: boolean,
-  currentWave: number
+  currentWave: number,
+  environmentManager: EnvironmentManager | null
 ) => {
   const loopStopper = useRef<(() => void) | null>(null);
 
@@ -22,7 +24,7 @@ export const useGameLoop = (
     }
     
     if (!loopStopper.current) {
-      loopStopper.current = startGameLoop();
+      loopStopper.current = startGameLoop(environmentManager ?? undefined);
       // startBackgroundMusic(); // 🎵 OYUN MÜZİĞİ DEVRE DIŞI
     }
     
@@ -36,5 +38,5 @@ export const useGameLoop = (
       loopStopper.current?.();
       loopStopper.current = null;
     };
-  }, [isStarted, isRefreshing, isPreparing, currentWave]);
+  }, [isStarted, isRefreshing, isPreparing, currentWave, environmentManager]);
 }; 
