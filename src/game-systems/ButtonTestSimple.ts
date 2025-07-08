@@ -4,6 +4,7 @@
  */
 
 import { useGameStore } from '../models/store';
+import { Logger } from '../utils/Logger';
 
 export function testContinueButton() {
   
@@ -18,28 +19,28 @@ export function testContinueButton() {
   try {
     store.nextWave();
   } catch (error) {
-    console.error('❌ nextWave failed:', error);
+    Logger.error('❌ nextWave failed:', error);
   }
   
   // Test 2: startPreparation function
   try {
     store.startPreparation();
   } catch (error) {
-    console.error('❌ startPreparation failed:', error);
+    Logger.error('❌ startPreparation failed:', error);
   }
   
   // Test 3: resetDice function
   try {
     store.resetDice();
   } catch (error) {
-    console.error('❌ resetDice failed:', error);
+    Logger.error('❌ resetDice failed:', error);
   }
   
   // Test 4: setRefreshing function
   try {
     store.setRefreshing(false);
   } catch (error) {
-    console.error('❌ setRefreshing failed:', error);
+    Logger.error('❌ setRefreshing failed:', error);
   }
   
   const finalState = useGameStore.getState();
@@ -70,7 +71,7 @@ export function testDiceButton() {
     }, 2500);
     
   } catch (error) {
-    console.error('❌ rollDice failed:', error);
+    Logger.error('❌ rollDice failed:', error);
   }
 }
 

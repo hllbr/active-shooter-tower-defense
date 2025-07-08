@@ -1,6 +1,7 @@
 import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
+import { Logger } from '../../../utils/Logger';
 
 export interface EconomySlice {
   addGold: (amount: number) => void;
@@ -15,7 +16,7 @@ export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (se
   addGold: (amount) => {
     const validation = securityManager.validateStateChange('addGold', {}, { gold: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: addGold blocked:', validation.reason);
+      Logger.warn('🔒 Security: addGold blocked:', validation.reason);
       return;
     }
     set((state: Store) => ({ gold: state.gold + amount }));
@@ -24,7 +25,7 @@ export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (se
   spendGold: (amount) => {
     const validation = securityManager.validateStateChange('spendGold', {}, { gold: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: spendGold blocked:', validation.reason);
+      Logger.warn('🔒 Security: spendGold blocked:', validation.reason);
       return;
     }
     set((state: Store) => ({
@@ -36,7 +37,7 @@ export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (se
   setGold: (amount) => {
     const validation = securityManager.validateStateChange('setGold', {}, { gold: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: setGold blocked:', validation.reason);
+      Logger.warn('🔒 Security: setGold blocked:', validation.reason);
       return;
     }
     set(() => ({ gold: amount }));

@@ -1,5 +1,6 @@
 import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Position } from '../../models/gameTypes';
+import { Logger } from '../../utils/Logger';
 
 /**
  * Interface for defining spawn zones
@@ -207,10 +208,10 @@ export class SpawnZoneManager {
     const activeZones = this.spawnZones.filter(zone => zone.active);
     
     if (activeZones.length === 0) {
-      console.warn('⚠️ No active spawn zones! Falling back to center spawn');
-      return { 
-        x: GAME_CONSTANTS.CANVAS_WIDTH / 2, 
-        y: GAME_CONSTANTS.CANVAS_HEIGHT / 2 
+      Logger.warn('⚠️ No active spawn zones! Falling back to center spawn');
+      return {
+        x: GAME_CONSTANTS.CANVAS_WIDTH / 2,
+        y: GAME_CONSTANTS.CANVAS_HEIGHT / 2
       };
     }
 
@@ -231,7 +232,7 @@ export class SpawnZoneManager {
     const zone = this.spawnZones.find(z => z.id === zoneId && z.active);
     
     if (!zone) {
-      console.warn(`⚠️ Zone ${zoneId} not found or inactive`);
+      Logger.warn(`⚠️ Zone ${zoneId} not found or inactive`);
       return null;
     }
 

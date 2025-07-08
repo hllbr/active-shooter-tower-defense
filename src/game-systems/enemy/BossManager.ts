@@ -2,6 +2,7 @@ import type { Enemy, BossLootEntry } from '../../models/gameTypes';
 import { selectBossForWave, type BossDefinition } from './BossDefinitions';
 import { useGameStore } from '../../models/store';
 import { playSound } from '../../utils/sound';
+import { Logger } from '../../utils/Logger';
 import {
   executeChargeAttack,
   executeGroundSlam,
@@ -338,7 +339,7 @@ export class BossManager {
         executeRealityTear(boss, definition);
         break;
       default:
-        console.warn(`Unknown boss ability: ${ability}`);
+        Logger.warn(`Unknown boss ability: ${ability}`);
     }
   }
 

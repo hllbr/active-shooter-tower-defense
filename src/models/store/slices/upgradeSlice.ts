@@ -2,6 +2,7 @@ import { GAME_CONSTANTS } from '../../../utils/constants';
 import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
+import { Logger } from '../../../utils/Logger';
 
 export interface UpgradeSlice {
   upgradeBullet: (free?: boolean) => void;
@@ -47,15 +48,15 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
   purchasePackage: (packageId, cost, maxAllowed) => {
     const validation = securityManager.validateStateChange('purchasePackage', {}, { packageId, cost, maxAllowed });
     if (!validation.valid) {
-      console.warn('🔒 Security: purchasePackage blocked:', validation.reason);
+      Logger.warn('🔒 Security: purchasePackage blocked:', validation.reason);
       return false;
     }
     if (!packageId || typeof packageId !== 'string') {
-      console.warn('🔒 Security: Invalid package ID:', packageId);
+      Logger.warn('🔒 Security: Invalid package ID:', packageId);
       return false;
     }
     if (cost <= 0 || cost > 10000) {
-      console.warn('🔒 Security: Invalid package cost:', cost);
+      Logger.warn('🔒 Security: Invalid package cost:', cost);
       return false;
     }
     const state = get();

@@ -4,6 +4,7 @@
  */
 
 import { useGameStore } from '../models/store';
+import { Logger } from '../utils/Logger';
 
 export class ButtonTestDiagnostic {
   
@@ -23,7 +24,7 @@ export class ButtonTestDiagnostic {
     
     // Test rollDice function exists
     if (typeof store.rollDice !== 'function') {
-      console.error('❌ rollDice function not found!');
+      Logger.error('❌ rollDice function not found!');
       return false;
     }
     
@@ -85,7 +86,7 @@ export class ButtonTestDiagnostic {
       .map(([name]) => name);
     
     if (missingFunctions.length > 0) {
-      console.error('❌ Missing functions:', missingFunctions);
+      Logger.error('❌ Missing functions:', missingFunctions);
       return false;
     }
     
@@ -133,7 +134,7 @@ export class ButtonTestDiagnostic {
       return true;
       
     } catch (error) {
-      console.error('❌ Error in continue sequence:', error);
+      Logger.error('❌ Error in continue sequence:', error);
       return false;
     }
   }

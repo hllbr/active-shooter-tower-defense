@@ -4,6 +4,7 @@
  */
 
 import { useGameStore } from '../../models/store';
+import { Logger } from '../../utils/Logger';
 
 export class DiceRollingTest {
   
@@ -23,7 +24,7 @@ export class DiceRollingTest {
     
     // Test rollDice function exists
     if (typeof store.rollDice !== 'function') {
-      console.error('❌ rollDice function not found!');
+      Logger.error('❌ rollDice function not found!');
       return false;
     }
     

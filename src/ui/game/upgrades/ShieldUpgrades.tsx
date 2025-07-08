@@ -3,6 +3,7 @@ import { useGameStore, type Store } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { ShieldStatsDisplay } from './ShieldStatsDisplay';
 import { ShieldUpgradeCard } from './ShieldUpgradeCard';
+import { Logger } from '../../../utils/Logger';
 
 export const ShieldUpgrades: React.FC = () => {
   const gold = useGameStore((state: Store) => state.gold);
@@ -44,7 +45,7 @@ export const ShieldUpgrades: React.FC = () => {
   const handlePurchase = (index: number, finalCost: number) => {
     const shield = GAME_CONSTANTS.WALL_SHIELDS[index];
     if (!shield) {
-      console.error(`❌ Invalid shield index: ${index}`);
+      Logger.error(`❌ Invalid shield index: ${index}`);
       return;
     }
     

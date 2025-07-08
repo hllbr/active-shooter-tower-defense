@@ -1,6 +1,7 @@
 import { musicManager } from './musicManager';
 import { getSettings } from '../settings';
 import { GAME_CONSTANTS } from '../constants';
+import { Logger } from '../Logger';
 
 export const audioCache: Record<string, HTMLAudioElement> = {};
 export const gameAudio: HTMLAudioElement | null = null;
@@ -180,7 +181,7 @@ export function resumeGameSceneSounds(): void {
  * @deprecated Use pauseGameSceneSounds() instead
  */
 export function pauseAllSounds(): void {
-  console.warn('⚠️ pauseAllSounds() is deprecated, use pauseGameSceneSounds()');
+  Logger.warn('⚠️ pauseAllSounds() is deprecated, use pauseGameSceneSounds()');
   pauseGameSceneSounds();
 }
 
@@ -189,7 +190,7 @@ export function pauseAllSounds(): void {
  * @deprecated Use resumeGameSceneSounds() instead
  */
 export function resumeAllSounds(): void {
-  console.warn('⚠️ resumeAllSounds() is deprecated, use resumeGameSceneSounds()');
+  Logger.warn('⚠️ resumeAllSounds() is deprecated, use resumeGameSceneSounds()');
   resumeGameSceneSounds();
 }
 

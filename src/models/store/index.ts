@@ -3,6 +3,7 @@ import type { GameState } from '../gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { energyManager } from '../../game-systems/EnergyManager';
 import { waveManager } from '../../game-systems/WaveManager';
+import { Logger } from '../../utils/Logger';
 import { initialState } from './initialState';
 import { createEnemySlice, type EnemySlice } from './slices/enemySlice';
 import { createTowerSlice, type TowerSlice } from './slices/towerSlice';
@@ -60,7 +61,7 @@ try {
     initialEnergy,
     (e, w) => {
       if (isNaN(e) || e < 0) {
-        console.warn('⚠️ Energy manager returned invalid value, resetting:', e);
+        Logger.warn('⚠️ Energy manager returned invalid value, resetting:', e);
         e = GAME_CONSTANTS.BASE_ENERGY || 100;
       }
       useGameStore.setState({ energy: e, energyWarning: w ?? null });
@@ -69,7 +70,7 @@ try {
   );
 
 } catch (error) {
-  console.error('❌ Energy Manager initialization failed:', error);
+  Logger.error('❌ Energy Manager initialization failed:', error);
   energyManager.reset();
 }
 

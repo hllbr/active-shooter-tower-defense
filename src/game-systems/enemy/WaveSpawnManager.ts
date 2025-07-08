@@ -6,6 +6,7 @@ import { waveManager } from '../WaveManager';
 import { EnemyFactory } from './EnemyFactory';
 import { SpawnPositionManager } from './SpawnPositionManager';
 import type { Tower, TowerSlot, WaveEnemyConfig } from '../../models/gameTypes';
+import { Logger } from '../../utils/Logger';
 
 /**
  * Manager class responsible for handling wave-based enemy spawning
@@ -187,7 +188,7 @@ export class WaveSpawnManager {
         const randomSlot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
         buildTower(randomSlot.index, true); // Free tower placement
       } else {
-        console.warn('⚠️ No unlocked slots available for auto tower placement!');
+        Logger.warn('⚠️ No unlocked slots available for auto tower placement!');
       }
     }
   }

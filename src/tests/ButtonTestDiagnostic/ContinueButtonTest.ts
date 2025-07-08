@@ -4,6 +4,7 @@
  */
 
 import { useGameStore } from '../../models/store';
+import { Logger } from '../../utils/Logger';
 
 export class ContinueButtonTest {
   
@@ -34,7 +35,7 @@ export class ContinueButtonTest {
       .map(([name]) => name);
     
     if (missingFunctions.length > 0) {
-      console.error('❌ Missing functions:', missingFunctions);
+      Logger.error('❌ Missing functions:', missingFunctions);
       return false;
     }
     
@@ -82,7 +83,7 @@ export class ContinueButtonTest {
       return true;
       
     } catch (error) {
-      console.error('❌ Error in continue sequence:', error);
+      Logger.error('❌ Error in continue sequence:', error);
       return false;
     }
   }

@@ -7,6 +7,7 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Effect } from '../../models/gameTypes';
 import { effectPool } from './EffectPool';
 import { cleanupManager } from '../memory';
+import { Logger } from '../../utils/Logger';
 
 /**
  * Update all effects with automatic cleanup
@@ -33,7 +34,7 @@ export function updateEffects() {
       try {
         effectPool.release(effect);
       } catch (error) {
-        console.warn('🚨 Error releasing effect to pool:', error);
+        Logger.warn('🚨 Error releasing effect to pool:', error);
       }
     }
   });

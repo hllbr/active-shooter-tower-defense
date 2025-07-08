@@ -2,6 +2,7 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { useGameStore } from '../../models/store';
 import type { Store } from '../../models/store';
 import { getContinueButtonStyle } from './Footer/footerStyles';
+import { Logger } from '../../utils/Logger';
 // CRITICAL FIX: Security validation kaldırıldı - oyun akıcılığı için
 // import { validateStateChange } from '../../security/SecurityEnhancements';
 
@@ -36,9 +37,6 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     // CRITICAL FIX: Security validation kaldırıldı - oyun akıcılığı için
     // const validation = validateStateChange('continueWave', {}, {});
     // if (!validation.valid) {
-    //   console.warn('🔒 Continue action blocked:', validation.reason);
-    //   setIsProcessing(false);
-    //   return;
     // }
     
     try {
@@ -65,7 +63,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       }
       
     } catch (error) {
-      console.error('❌ Error in handleContinue:', error);
+      Logger.error('❌ Error in handleContinue:', error);
       setRefreshing(false);
     } finally {
       setIsProcessing(false);
@@ -99,7 +97,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     try {
       handleContinue();
     } catch (error) {
-      console.error('❌ Error in handleContinue:', error);
+      Logger.error('❌ Error in handleContinue:', error);
       setRefreshing(false);
       setIsProcessing(false);
     }
