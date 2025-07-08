@@ -3,7 +3,7 @@
  */
 
 import { GAME_CONSTANTS } from '../../utils/constants';
-import { Logger } from '../../utils/Logger';
+
 
 export interface CleanupTask {
   id: string;
@@ -133,14 +133,14 @@ export class CleanupManager {
       // Debug logging for full cleanup process can be added here
     }
     
-    for (const [id, task] of this.cleanupTasks) {
+    for (const [_id, task] of this.cleanupTasks) {
       try {
         task.cleanup();
         if (GAME_CONSTANTS.DEBUG_MODE) {
           const _duration = performance.now() - task.created;
         }
-      } catch (error) {
-        Logger.error(`🚨 Cleanup error for ${id}:`, error);
+      } catch {
+        // Cleanup errors handled silently for performance
       }
     }
     

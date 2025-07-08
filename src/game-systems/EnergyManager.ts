@@ -1,5 +1,5 @@
 import { GAME_CONSTANTS } from '../utils/constants';
-import { Logger } from '../utils/Logger';
+
 
 export interface EnergyLog {
   time: number;
@@ -124,10 +124,9 @@ class EnergyManager {
 
   // CRITICAL FIX: Add setEnergy function to directly set energy value
   setEnergy(value: number) {
-    if (isNaN(value) || value < 0) {
-      Logger.warn('⚠️ EnergyManager: Invalid energy value, resetting to 0:', value);
-      value = 0;
-    }
+          if (isNaN(value) || value < 0) {
+        value = 0;
+      }
     
     this.energy = Math.min(value, this.maxEnergy);
     this.energy = Number(this.energy.toFixed(2));
