@@ -15,6 +15,10 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   const startPreparation = useGameStore((s: Store) => s.startPreparation);
   const setRefreshing = useGameStore((s: Store) => s.setRefreshing);
   
+  // 🆕 UPGRADE SCREEN: New functions for cleanup
+  const clearAllEnemies = useGameStore((s: Store) => s.clearAllEnemies);
+  const clearAllEffects = useGameStore((s: Store) => s.clearAllEffects);
+  
   const currentWave = useGameStore((s: Store) => s.currentWave);
   const isRefreshing = useGameStore((s: Store) => s.isRefreshing);
   const isPreparing = useGameStore((s: Store) => s.isPreparing);
@@ -40,6 +44,11 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     // }
     
     try {
+      console.log('🧹 Clearing enemies and effects...');
+      clearAllEnemies();
+      clearAllEffects();
+      console.log('✅ Cleanup completed');
+      
       console.log('📈 Calling nextWave...');
       nextWave();
       console.log('✅ nextWave completed');
@@ -51,6 +60,13 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       console.log('🎲 Calling resetDice...');
       resetDice();
       console.log('✅ resetDice completed');
+      
+      // 🎮 Resume game scene sounds after upgrade
+      setTimeout(() => {
+        import('../../utils/sound').then(({ resumeGameSceneSounds }) => {
+          resumeGameSceneSounds();
+        });
+      }, 100);
       
       console.log('🔄 Setting refreshing to false...');
       setRefreshing(false);

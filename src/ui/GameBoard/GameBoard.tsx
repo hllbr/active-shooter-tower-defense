@@ -22,6 +22,7 @@ import {
   GameOverScreen,
   GameArea
 } from './components';
+import { SpawnZoneDebugOverlay } from './components/overlays/SpawnZoneDebugOverlay';
 import { CommandCenter } from './components/ui/CommandCenter';
 
 // Import enhanced hooks
@@ -132,6 +133,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       postProcessingManager.applyGameStateFilter('normal', 1000);
     }
   }, [energy, maxEnergy, isStarted, postProcessingManager]);
+
+  // 🎮 UPGRADE SCREEN: Stop only game scene sounds when upgrade screen opens
+  useEffect(() => {
+    if (isRefreshing) {
+      import('../../utils/sound').then(({ pauseGameSceneSounds }) => {
+        pauseGameSceneSounds();
+      });
+    }
+  }, [isRefreshing]);
 
   // Boss wave cinematic effects
   useEffect(() => {
@@ -319,6 +329,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       <StartScreen />
       <GameOverScreen />
       <FrostOverlay />
+      
+      {/* Debug overlays */}
+      <SpawnZoneDebugOverlay />
 
       {/* Lazy loaded UpgradeScreen with Suspense */}
       {isRefreshing && (

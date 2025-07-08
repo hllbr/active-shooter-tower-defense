@@ -488,18 +488,29 @@ export const SVGEffectsRenderer: React.FC = () => {
         />
       ))}
 
-      {/* Effects - Only render visible ones */}
-      {visibleEffects.map((effect: Effect) => (
-        <circle
-          key={effect.id}
-          cx={effect.position.x}
-          cy={effect.position.y}
-          r={(effect.radius * effect.life) / effect.maxLife}
-          fill={effect.color}
-          fillOpacity={effect.life / effect.maxLife}
-          stroke="none"
-        />
-      ))}
+      {/* Effects - Only render visible ones with reduced size */}
+      {visibleEffects.map((effect: Effect) => {
+        // 🎆 FIXED: Reduced explosion sizes for better gameplay visibility
+        const scaleFactor = 0.4; // Reduce all effects to 40% of original size
+        const adjustedRadius = Math.min(
+          (effect.radius * effect.life * scaleFactor) / effect.maxLife,
+          60 // Maximum explosion radius to prevent screen coverage
+        );
+        
+        return (
+          <circle
+            key={effect.id}
+            cx={effect.position.x}
+            cy={effect.position.y}
+            r={adjustedRadius}
+            fill={effect.color}
+            fillOpacity={Math.min(effect.life / effect.maxLife, 0.5)} // Max 50% opacity for better visibility
+            stroke={effect.color}
+            strokeOpacity={Math.min(effect.life / effect.maxLife, 0.3)} // Subtle border
+            strokeWidth={1}
+          />
+        );
+      })}
 
       {/* Mines with managed animations - Only render visible ones */}
       {visibleMines.map((mine: Mine) => (

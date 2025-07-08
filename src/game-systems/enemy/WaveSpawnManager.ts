@@ -4,6 +4,7 @@ import { waveCompositions } from '../../config/waves';
 import { spawnStrategy, performanceTracker, dynamicSpawnController } from '../spawn-system';
 import { waveManager } from '../WaveManager';
 import { EnemyFactory } from './EnemyFactory';
+import { SpawnPositionManager } from './SpawnPositionManager';
 import type { Tower, TowerSlot, WaveEnemyConfig } from '../../models/gameTypes';
 
 /**
@@ -69,6 +70,9 @@ export class WaveSpawnManager {
   static startEnemyWave(wave: number) {
     const { addEnemy, towers, towerSlots, buildTower, currentWaveModifier } = useGameStore.getState();
 
+    // 🎯 UPDATE: Configure spawn zones for current wave
+    SpawnPositionManager.updateSpawnZonesForWave(wave);
+
     // ✅ ENHANCED: Auto-place tower if no towers exist
     WaveSpawnManager.autoPlaceStarterTower(towers, towerSlots, buildTower);
 
@@ -130,19 +134,26 @@ export class WaveSpawnManager {
       
       spawnCount++;
       
-      // Calculate next spawn delay (slower after initial composition)
+      // 🎯 TIMING FIX: More reasonable spawn delays for better gameplay
       let nextDelay = spawnStrategy.calculateNextSpawnDelay(wave, spawnCount);
+      
+      // Minimum delays to ensure players can see and react to enemies
       if (WaveSpawnManager.spawnIndex >= WaveSpawnManager.spawnQueue.length) {
         // Slower spawning for additional enemies
-        nextDelay = Math.max(3000, nextDelay * 2);
+        nextDelay = Math.max(4000, nextDelay * 1.5); // Increased from 3000ms to 4000ms
+      } else {
+        // Even initial spawns should have reasonable delays
+        nextDelay = Math.max(1500, nextDelay); // Minimum 1.5 seconds between spawns
       }
       
       // Continue spawning
       WaveSpawnManager.spawnInterval = window.setTimeout(spawnNext, nextDelay);
     };
 
-    // Start the first spawn
-    spawnNext();
+    // 🎯 TIMING FIX: Delay first spawn to let players see the transition
+    WaveSpawnManager.spawnInterval = window.setTimeout(() => {
+      spawnNext();
+    }, 2000); // 2 second delay before first enemy spawns
   }
 
   /**
