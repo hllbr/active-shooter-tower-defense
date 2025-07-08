@@ -16,13 +16,7 @@ export class DiceRollingTest {
     
     const store = useGameStore.getState();
     
-    // Initial state check
-    console.log({
-      diceUsed: store.diceUsed,
-      isDiceRolling: store.isDiceRolling,
-      diceRoll: store.diceRoll,
-      discountMultiplier: store.discountMultiplier
-    });
+    // Check initial dice state
     
     // Test rollDice function exists
     if (typeof store.rollDice !== 'function') {
@@ -38,22 +32,10 @@ export class DiceRollingTest {
     
     // Check immediate state
     const afterRoll = useGameStore.getState();
-    console.log({
-      diceUsed: afterRoll.diceUsed,
-      isDiceRolling: afterRoll.isDiceRolling,
-      diceRoll: afterRoll.diceRoll,
-      discountMultiplier: afterRoll.discountMultiplier
-    });
     
     // Wait for animation to complete
     setTimeout(() => {
       const finalState = useGameStore.getState();
-      console.log({
-        diceUsed: finalState.diceUsed,
-        isDiceRolling: finalState.isDiceRolling,
-        diceRoll: finalState.diceRoll,
-        discountMultiplier: finalState.discountMultiplier
-      });
       
       if (finalState.diceRoll && finalState.diceUsed && !finalState.isDiceRolling) {
         Logger.log('✅ Dice rolling test passed');

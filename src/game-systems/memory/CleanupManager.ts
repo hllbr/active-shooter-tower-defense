@@ -38,6 +38,7 @@ export class CleanupManager {
     this.cleanupTasks.set(task.id, task);
     
     if (GAME_CONSTANTS.DEBUG_MODE) {
+      // Debug logging for cleanup task registration can be added here
     }
   }
   
@@ -115,6 +116,7 @@ export class CleanupManager {
       task.cleanup();
       this.cleanupTasks.delete(id);
       if (GAME_CONSTANTS.DEBUG_MODE) {
+        // Debug logging for individual cleanup execution can be added here
       }
       return true;
     }
@@ -128,13 +130,14 @@ export class CleanupManager {
     this.isShuttingDown = true;
     
     if (GAME_CONSTANTS.DEBUG_MODE) {
+      // Debug logging for full cleanup process can be added here
     }
     
     for (const [id, task] of this.cleanupTasks) {
       try {
         task.cleanup();
         if (GAME_CONSTANTS.DEBUG_MODE) {
-          const duration = performance.now() - task.created;
+          const _duration = performance.now() - task.created;
         }
       } catch (error) {
         Logger.error(`🚨 Cleanup error for ${id}:`, error);

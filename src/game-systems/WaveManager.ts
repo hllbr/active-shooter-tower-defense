@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS } from '../utils/constants';
+// Game constants removed as not needed
 import { useGameStore } from '../models/store';
 
 export type WaveStartHandler = () => void;
@@ -27,10 +27,9 @@ export class WaveManager {
     else this.completeListeners.push(fn);
   }
 
-  startWave(wave: number) {
+  startWave(_wave: number) {
     if (this.waveActive) return;
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-    }
+    // Wave start processing
     this.waveActive = true;
     if (this.idleTimer) {
       clearTimeout(this.idleTimer);
@@ -73,9 +72,7 @@ export class WaveManager {
     
     if (!this.waveActive) return;
     
-    // DEBUG: Always log progress for Wave 1
-    if (wave === 1 || GAME_CONSTANTS.DEBUG_MODE) {
-    }
+    // Wave progress tracking
     
     if (kills >= required) {
       this.waveActive = false;

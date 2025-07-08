@@ -16,15 +16,7 @@ export class UpgradeScreenTest {
     
     const store = useGameStore.getState();
     
-    console.log({
-      isRefreshing: store.isRefreshing,
-      gold: store.gold,
-      currentWave: store.currentWave,
-      enemiesKilled: store.enemiesKilled,
-      enemiesRequired: store.enemiesRequired,
-      isPreparing: store.isPreparing,
-      diceUsed: store.diceUsed
-    });
+    // Check upgrade screen state
     
     // Test opening upgrade screen
     store.setRefreshing(true);

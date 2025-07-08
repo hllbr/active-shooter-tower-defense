@@ -14,12 +14,13 @@ export class SpawnPositionManager {
    */
   static getRandomSpawnPosition(): Position {
     if (GAME_CONSTANTS.SPAWN_ZONES.PERFORMANCE_LOGGING) {
-      const startTime = performance.now();
+      const _startTime = performance.now();
       const position = spawnZoneManager.getRandomSpawnPosition();
-      const endTime = performance.now();
+      const _endTime = performance.now();
       
       // Log performance occasionally (every 100th call)
       if (Math.random() < 0.01) {
+        // Performance logging can be added here
       }
       
       return position;

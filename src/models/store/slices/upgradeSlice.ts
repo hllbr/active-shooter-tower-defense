@@ -82,7 +82,8 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
   initializeAchievements: () => {
   },
 
-  triggerAchievementEvent: (eventType, eventData) => {
+  triggerAchievementEvent: (_eventType, _eventData) => {
+    // Achievement event triggering logic can be added here
   },
 
   unlockTowerType: (towerType) => set((state: Store) => {

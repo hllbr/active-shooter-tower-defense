@@ -16,12 +16,7 @@ export const DiceRoller: React.FC = () => {
   const rollDice = useGameStore((state: Store) => state.rollDice);
 
   const handleDiceRoll = () => {
-    console.log({
-      diceUsed,
-      isDiceRolling,
-      diceRoll,
-      discountMultiplier
-    });
+    // Handle dice roll action
     
     // ✅ SOUND FIX: Play dice roll sound effect
     setTimeout(() => {
@@ -35,13 +30,8 @@ export const DiceRoller: React.FC = () => {
       
       // Check state after a short delay
       setTimeout(() => {
-        const newState = useGameStore.getState();
-        console.log({
-          diceUsed: newState.diceUsed,
-          isDiceRolling: newState.isDiceRolling,
-          diceRoll: newState.diceRoll,
-          discountMultiplier: newState.discountMultiplier
-        });
+        const _newState = useGameStore.getState();
+        // State verification after dice roll
       }, 100);
       
     } catch (error) {

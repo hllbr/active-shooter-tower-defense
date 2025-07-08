@@ -15,13 +15,7 @@ export class ButtonTestDiagnostic {
     
     const store = useGameStore.getState();
     
-    // Initial state check
-    console.log({
-      diceUsed: store.diceUsed,
-      isDiceRolling: store.isDiceRolling,
-      diceRoll: store.diceRoll,
-      discountMultiplier: store.discountMultiplier
-    });
+    // Initial state check - dice system status
     
     // Test rollDice function exists
     if (typeof store.rollDice !== 'function') {
@@ -37,22 +31,10 @@ export class ButtonTestDiagnostic {
     
     // Check immediate state
     const afterRoll = useGameStore.getState();
-    console.log({
-      diceUsed: afterRoll.diceUsed,
-      isDiceRolling: afterRoll.isDiceRolling,
-      diceRoll: afterRoll.diceRoll,
-      discountMultiplier: afterRoll.discountMultiplier
-    });
     
     // Wait for animation to complete
     setTimeout(() => {
       const finalState = useGameStore.getState();
-      console.log({
-        diceUsed: finalState.diceUsed,
-        isDiceRolling: finalState.isDiceRolling,
-        diceRoll: finalState.diceRoll,
-        discountMultiplier: finalState.discountMultiplier
-      });
       
       if (finalState.diceRoll && finalState.diceUsed && !finalState.isDiceRolling) {
         Logger.log('✅ Dice rolling test passed');
@@ -71,14 +53,7 @@ export class ButtonTestDiagnostic {
     
     const store = useGameStore.getState();
     
-    // Initial state
-    console.log({
-      currentWave: store.currentWave,
-      isRefreshing: store.isRefreshing,
-      isPreparing: store.isPreparing,
-      enemiesKilled: store.enemiesKilled,
-      enemiesRequired: store.enemiesRequired
-    });
+    // Check initial state before testing continue button
     
     // Test functions exist
     const functionsToTest = {
@@ -120,20 +95,11 @@ export class ButtonTestDiagnostic {
       // Check results
       setTimeout(() => {
         const result = useGameStore.getState();
-        console.log({
-          currentWave: result.currentWave,
-          isRefreshing: result.isRefreshing,
-          isPreparing: result.isPreparing,
-          enemiesKilled: result.enemiesKilled,
-          enemiesRequired: result.enemiesRequired
-        });
         
         const waveIncremented = result.currentWave === initialWave + 1;
         const preparationStarted = result.isPreparing;
-        const screenClosed = !result.isRefreshing;
+        const _screenClosed = !result.isRefreshing;
         const killsReset = result.enemiesKilled === 0;
-        
-        Logger.log('Test results:', { waveIncremented, preparationStarted, screenClosed, killsReset });
         
         if (waveIncremented && preparationStarted && killsReset) {
           Logger.log('✅ Continue button test passed');
@@ -157,15 +123,7 @@ export class ButtonTestDiagnostic {
     
     const store = useGameStore.getState();
     
-    console.log({
-      isRefreshing: store.isRefreshing,
-      gold: store.gold,
-      currentWave: store.currentWave,
-      enemiesKilled: store.enemiesKilled,
-      enemiesRequired: store.enemiesRequired,
-      isPreparing: store.isPreparing,
-      diceUsed: store.diceUsed
-    });
+    // Check upgrade screen state
     
     // Test opening upgrade screen
     store.setRefreshing(true);

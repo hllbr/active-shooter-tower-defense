@@ -1,5 +1,5 @@
 import type { Tower, TowerSlot, Position, Enemy, Effect } from '../../models/gameTypes';
-import { GAME_CONSTANTS } from '../../utils/constants';
+// GAME_CONSTANTS removed as not used
 import { getDefenseRecommendations } from "./helpers/recommendations";
 
 /**
@@ -175,16 +175,11 @@ export class DefenseSystemManager {
       color: '#00bfff',
       life: 100,
       maxLife: 100,
-      alpha: 0.3,
-      damage: 0,
-      size: tower.size + 10,
-      speed: { x: 0, y: 0 },
-      createdAt: currentTime,
-      visual: {
-        type: 'circle',
-        color: '#00bfff',
-        size: tower.size + 10
-      }
+      opacity: 0.3,
+
+
+
+      createdAt: currentTime
     };
 
     addEffect(shieldEffect);
@@ -194,12 +189,11 @@ export class DefenseSystemManager {
    * Create repair effect
    */
   private createRepairEffect(
-    tower: Tower,
-    healAmount: number
+    _tower: Tower,
+    _healAmount: number
   ): void {
     // Create visual repair effect (sparks, tools, etc.)
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-    }
+    // Implementation placeholder - add repair visual effects here
   }
 
   /**

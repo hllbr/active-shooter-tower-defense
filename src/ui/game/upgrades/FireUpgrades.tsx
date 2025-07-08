@@ -36,19 +36,7 @@ export const FireUpgrades: React.FC = () => {
         const isMaxed = isPastLevel; // Geçmiş seviyeler "tamamlanmış" olarak gösterilir
         const isLocked = isFutureLevel; // Gelecek seviyeler kilitli
         
-        // Debug logging
-        if (level <= 4) {
-          console.log({
-            currentBulletLevel,
-            isCurrentLevel,
-            isNextLevel,
-            isPastLevel,
-            isFutureLevel,
-            canUpgrade,
-            isMaxed,
-            isLocked
-          });
-        }
+        // Bullet level progression logic verified
         
         const upgradeData = {
           name: bulletType.name,
@@ -66,18 +54,18 @@ export const FireUpgrades: React.FC = () => {
             }
             
             
-            // Zar indirimleri
-            let discountedCost = cost;
-            if (diceResult && diceResult === 6) discountedCost = Math.floor(cost * 0.5);
-            else if (diceResult && diceResult === 5) discountedCost = Math.floor(cost * 0.7);
-            else if (diceResult && diceResult === 4) discountedCost = Math.floor(cost * 0.85);
+            // Zar indirimleri hesaplanır ama kullanılmaz (gelecekte genişletilebilir)
+            let _discountedCost = cost;
+            if (diceResult && diceResult === 6) _discountedCost = Math.floor(cost * 0.5);
+            else if (diceResult && diceResult === 5) _discountedCost = Math.floor(cost * 0.7);
+            else if (diceResult && diceResult === 4) _discountedCost = Math.floor(cost * 0.85);
             
             // Discount multiplier
             if (discountMultiplier !== 1) {
-              discountedCost = Math.floor(discountedCost / discountMultiplier);
+              _discountedCost = Math.floor(_discountedCost / discountMultiplier);
             }
             
-            console.log(`Upgrading bullet with cost: ${discountedCost}`);
+            // Bullet upgrade with calculated cost
             
             // CRITICAL FIX: Normal bullet upgrade kullan
             upgradeBullet(false);

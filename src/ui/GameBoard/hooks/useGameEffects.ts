@@ -95,7 +95,7 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
       }
       
       if (GAME_CONSTANTS.DEBUG_MODE) {
-        const bulletStats = bulletPool.getStats();
+        const _bulletStats = bulletPool.getStats();
       }
     };
   }, []);

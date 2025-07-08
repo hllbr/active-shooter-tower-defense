@@ -62,6 +62,7 @@ export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, g
     const newKillCount = state.enemiesKilled + 1;
 
     if (state.currentWave === 1) {
+      // Wave 1 specific processing can be added here
     }
 
     setTimeout(() => {
@@ -107,6 +108,7 @@ export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, g
         const newKillCount = state.enemiesKilled + 1;
 
         if (state.currentWave === 1) {
+          // Wave 1 specific enemy processing can be added here
         }
 
         setTimeout(() => {

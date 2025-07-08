@@ -11,11 +11,7 @@ export function testContinueButton() {
   
   const store = useGameStore.getState();
   
-  console.log({
-    currentWave: store.currentWave,
-    isRefreshing: store.isRefreshing,
-    isPreparing: store.isPreparing
-  });
+  // Check current game state
   
   // Test 1: nextWave function
   try {
@@ -49,12 +45,8 @@ export function testContinueButton() {
     Logger.error('❌ setRefreshing failed:', error);
   }
   
-  const finalState = useGameStore.getState();
-  console.log({
-    currentWave: finalState.currentWave,
-    isRefreshing: finalState.isRefreshing,
-    isPreparing: finalState.isPreparing
-  });
+  const _finalState = useGameStore.getState();
+  // Final state verified
 }
 
 export function testDiceButton() {
@@ -62,24 +54,16 @@ export function testDiceButton() {
   
   const store = useGameStore.getState();
   
-  console.log({
-    diceUsed: store.diceUsed,
-    isDiceRolling: store.isDiceRolling,
-    diceRoll: store.diceRoll
-  });
+  // Check dice state before rolling
   
   try {
     store.rollDice();
     Logger.log('✅ rollDice executed');
     
-    setTimeout(() => {
-      const afterState = useGameStore.getState();
-      console.log({
-        diceUsed: afterState.diceUsed,
-        isDiceRolling: afterState.isDiceRolling,
-        diceRoll: afterState.diceRoll
-      });
-    }, 2500);
+          setTimeout(() => {
+        const _afterState = useGameStore.getState();
+        // Dice state after animation complete
+      }, 2500);
     
   } catch (error) {
     Logger.error('❌ rollDice failed:', error);

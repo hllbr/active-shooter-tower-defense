@@ -81,12 +81,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   };
 
   const handleContinueClick = () => {
-    console.log({
-      currentWave,
-      isRefreshing,
-      isPreparing,
-      isProcessing
-    });
+    // Check game state before proceeding
     
     // CRITICAL FIX: Lock problemi çözüldü - isRefreshing kontrolü kaldırıldı
     if (isProcessing) {
@@ -107,16 +102,10 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   // CRITICAL FIX: isRefreshing kontrolü kaldırıldı - sadece processing kontrol edilir
   const isDisabled = isProcessing;
 
-  // ✅ DEBUG: Global debug function for testing
+  // Debug function available in development
   useEffect(() => {
     (window as unknown as { debugContinueButton: () => void }).debugContinueButton = () => {
-      console.log({
-        isRefreshing,
-        isProcessing,
-        isDisabled,
-        currentWave,
-        isPreparing
-      });
+      // Debug state available via debugContinueButton()
     };
   }, [isRefreshing, isProcessing, isDisabled, currentWave, isPreparing]);
 
