@@ -50,7 +50,6 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
       const newTowers = state.towers.filter((t) => t.id !== slot.tower!.id);
       const shouldGameOver = newTowers.length === 0 && state.isStarted && !state.isGameOver;
       if (shouldGameOver) {
-        console.log('💀 Game Over: All towers destroyed!');
         import('../../../game-systems/EnemySpawner').then(({ stopEnemyWave }) => { stopEnemyWave(); });
         setTimeout(() => { import('../../../utils/sound').then(({ playContextualSound }) => { playContextualSound('defeat'); }); }, 100);
       }

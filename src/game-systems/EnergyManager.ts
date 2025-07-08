@@ -1,4 +1,5 @@
 import { GAME_CONSTANTS } from '../utils/constants';
+import { Logger } from '../utils/Logger';
 
 export interface EnergyLog {
   time: number;
@@ -75,13 +76,11 @@ class EnergyManager {
       finalAmount = Math.max(1, Math.ceil(amount * (1 - efficiency)));
       
       if (GAME_CONSTANTS.DEBUG_MODE && finalAmount !== amount) {
-        console.log(`[EnergyManager] Energy efficiency applied: ${amount} -> ${finalAmount} (${(efficiency * 100).toFixed(1)}% efficiency)`);
       }
     }
     
     if (this.energy < finalAmount) {
       if (GAME_CONSTANTS.DEBUG_MODE) {
-        console.log(`[EnergyManager] Insufficient energy for ${action} (need ${finalAmount}, have ${this.energy})`);
       }
       
       // ✅ CRITICAL FIX: User-friendly Turkish energy messages
@@ -96,7 +95,6 @@ class EnergyManager {
     this.history.push(log);
     if (this.setState) this.setState(this.energy, null);
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log(`[EnergyManager] ${action} -${finalAmount} => ${this.energy}`);
     }
     this.listeners.forEach(l => l(this.energy, log));
     return true;
@@ -111,7 +109,6 @@ class EnergyManager {
     this.history.push(log);
     if (this.setState) this.setState(this.energy, null);
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log(`[EnergyManager] ${action} +${amount} => ${this.energy} (max: ${this.maxEnergy})`);
     }
     this.listeners.forEach(l => l(this.energy, log));
   }
@@ -132,7 +129,7 @@ class EnergyManager {
   // CRITICAL FIX: Add setEnergy function to directly set energy value
   setEnergy(value: number) {
     if (isNaN(value) || value < 0) {
-      console.warn('⚠️ EnergyManager: Invalid energy value, resetting to 0:', value);
+      Logger.warn('⚠️ EnergyManager: Invalid energy value, resetting to 0:', value);
       value = 0;
     }
     
@@ -143,7 +140,6 @@ class EnergyManager {
       this.setState(this.energy, null);
     }
     
-    console.log(`🔋 EnergyManager: Energy set to ${this.energy}/${this.maxEnergy}`);
   }
 
   // CRITICAL FIX: Reset function to fix NaN issues
@@ -156,7 +152,6 @@ class EnergyManager {
       this.setState(this.energy, null);
     }
     
-    console.log('🔄 EnergyManager: Reset completed, energy =', this.energy);
   }
 }
 

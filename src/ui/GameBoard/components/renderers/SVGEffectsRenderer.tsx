@@ -95,7 +95,6 @@ export const SVGEffectsRenderer: React.FC = () => {
       animationElements.clear();
       
       if (GAME_CONSTANTS.DEBUG_MODE) {
-        console.log('🎨 SVGEffectsRenderer: Animation cleanup completed');
       }
     };
   }, []);

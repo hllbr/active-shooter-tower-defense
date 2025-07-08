@@ -258,7 +258,6 @@ store.setGold(999999);
 ```typescript
 // Check security status
 const stats = getSecurityStatus();
-console.log('Security Stats:', stats);
 // Output: { totalEvents: 5, suspiciousActivityCount: 1, isLocked: false, ... }
 ```
 

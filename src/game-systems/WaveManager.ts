@@ -30,7 +30,6 @@ export class WaveManager {
   startWave(wave: number) {
     if (this.waveActive) return;
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log(`[WaveManager] Wave ${wave} started`);
     }
     this.waveActive = true;
     if (this.idleTimer) {
@@ -76,17 +75,14 @@ export class WaveManager {
     
     // DEBUG: Always log progress for Wave 1
     if (wave === 1 || GAME_CONSTANTS.DEBUG_MODE) {
-      console.log(`🌊 Wave ${wave}: ${kills}/${required} enemies killed, ${remainingEnemies} remaining, pending: ${pendingSpawns}`);
     }
     
     if (kills >= required) {
-      console.log(`✅ Wave ${wave} COMPLETED! ${kills}/${required} enemies defeated`);
       this.waveActive = false;
       
       // ✅ CRITICAL FIX: Trigger upgrade screen when wave completes
       // Show upgrade screen after wave 1 and every subsequent wave
       if (wave >= 1) {
-        console.log(`🔄 Opening upgrade screen for Wave ${wave} completion`);
         useGameStore.getState().setRefreshing(true);
       }
       

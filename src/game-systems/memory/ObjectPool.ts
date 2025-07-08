@@ -2,6 +2,8 @@
  * 🏊 Object Pool - Generic object pooling system for memory optimization
  */
 
+import { Logger } from '../../utils/Logger';
+
 export class ObjectPool<T> {
   private pool: T[] = [];
   private active: Set<T> = new Set();
@@ -43,7 +45,7 @@ export class ObjectPool<T> {
    */
   release(obj: T): void {
     if (!this.active.has(obj)) {
-      console.warn('🚨 Attempting to release object not in active set');
+      Logger.warn('🚨 Attempting to release object not in active set');
       return;
     }
     

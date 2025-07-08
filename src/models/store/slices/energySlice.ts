@@ -3,6 +3,7 @@ import { energyManager } from '../../../game-systems/EnergyManager';
 import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
+import { Logger } from '../../../utils/Logger';
 
 let enemyKillListeners: ((isSpecial?: boolean, enemyType?: string) => void)[] = [];
 export const addEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) => void) => {
@@ -37,7 +38,7 @@ export const createEnergySlice: StateCreator<Store, [], [], EnergySlice> = (set,
   addEnergy: (amount, action) => {
     const validation = securityManager.validateStateChange('addEnergy', {}, { energy: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: addEnergy blocked:', validation.reason);
+      Logger.warn('🔒 Security: addEnergy blocked:', validation.reason);
       return;
     }
     energyManager.add(amount, action || 'manual');
@@ -136,7 +137,7 @@ export const createEnergySlice: StateCreator<Store, [], [], EnergySlice> = (set,
   addAction: (amount) => {
     const validation = securityManager.validateStateChange('addAction', {}, { actions: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: addAction blocked:', validation.reason);
+      Logger.warn('🔒 Security: addAction blocked:', validation.reason);
       return;
     }
     const state = get();

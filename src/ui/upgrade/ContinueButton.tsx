@@ -2,6 +2,7 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { useGameStore } from '../../models/store';
 import type { Store } from '../../models/store';
 import { getContinueButtonStyle } from './Footer/footerStyles';
+import { Logger } from '../../utils/Logger';
 // CRITICAL FIX: Security validation kaldırıldı - oyun akıcılığı için
 // import { validateStateChange } from '../../security/SecurityEnhancements';
 
@@ -27,39 +28,26 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
 
   useEffect(() => {
     if (!isRefreshing && isProcessing) {
-      console.log('🔄 isRefreshing changed to false, resetting processing state');
       setIsProcessing(false);
     }
   }, [isRefreshing, isProcessing]);
 
   const handleContinue = useCallback(() => {
-    console.log('🔒 Secure UpgradeScreen: handleContinue started');
     
     // CRITICAL FIX: Security validation kaldırıldı - oyun akıcılığı için
     // const validation = validateStateChange('continueWave', {}, {});
     // if (!validation.valid) {
-    //   console.warn('🔒 Continue action blocked:', validation.reason);
-    //   setIsProcessing(false);
-    //   return;
     // }
     
     try {
-      console.log('🧹 Clearing enemies and effects...');
       clearAllEnemies();
       clearAllEffects();
-      console.log('✅ Cleanup completed');
       
-      console.log('📈 Calling nextWave...');
       nextWave();
-      console.log('✅ nextWave completed');
       
-      console.log('⏳ Calling startPreparation...');
       startPreparation();
-      console.log('✅ startPreparation completed');
       
-      console.log('🎲 Calling resetDice...');
       resetDice();
-      console.log('✅ resetDice completed');
       
       // 🎮 Resume game scene sounds after upgrade
       setTimeout(() => {
@@ -68,17 +56,14 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
         });
       }, 100);
       
-      console.log('🔄 Setting refreshing to false...');
       setRefreshing(false);
-      console.log('✅ setRefreshing(false) completed');
-      console.log('🎉 handleContinue completed successfully!');
       
       if (onContinueCallback) {
         onContinueCallback();
       }
       
     } catch (error) {
-      console.error('❌ Error in handleContinue:', error);
+      Logger.error('❌ Error in handleContinue:', error);
       setRefreshing(false);
     } finally {
       setIsProcessing(false);
@@ -96,8 +81,6 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   };
 
   const handleContinueClick = () => {
-    console.log('🚀 ContinueButton: Savaşa Devam button clicked!');
-    console.log('📊 Current state:', {
       currentWave,
       isRefreshing,
       isPreparing,
@@ -106,19 +89,15 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     
     // CRITICAL FIX: Lock problemi çözüldü - isRefreshing kontrolü kaldırıldı
     if (isProcessing) {
-      console.log('⚠️ Button already processed, ignoring click');
       return;
     }
     
-    console.log('✅ Setting processing state to true');
     setIsProcessing(true);
     
     try {
-      console.log('🔄 Calling handleContinue...');
       handleContinue();
-      console.log('✅ handleContinue called successfully');
     } catch (error) {
-      console.error('❌ Error in handleContinue:', error);
+      Logger.error('❌ Error in handleContinue:', error);
       setRefreshing(false);
       setIsProcessing(false);
     }
@@ -130,7 +109,6 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   // ✅ DEBUG: Global debug function for testing
   useEffect(() => {
     (window as unknown as { debugContinueButton: () => void }).debugContinueButton = () => {
-      console.log('🔍 ContinueButton Debug Info:', {
         isRefreshing,
         isProcessing,
         isDisabled,

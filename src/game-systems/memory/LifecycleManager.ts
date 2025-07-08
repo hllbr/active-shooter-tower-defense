@@ -68,7 +68,6 @@ export class LifecycleManager {
     }
     
     if (GAME_CONSTANTS.DEBUG_MODE && cleaned > 0) {
-      console.log(`🧹 LifecycleManager: Cleaned ${cleaned} stale objects`);
     }
     
     return cleaned;

@@ -40,7 +40,6 @@ class PerformanceMonitor {
     this.measureFrame();
     
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.log('🚀 Performance monitoring started');
     }
   }
 
@@ -48,7 +47,6 @@ class PerformanceMonitor {
     this.isMonitoring = false;
     
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.log('🛑 Performance monitoring stopped');
     }
   }
 

@@ -62,7 +62,6 @@ export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, g
     const newKillCount = state.enemiesKilled + 1;
 
     if (state.currentWave === 1) {
-      console.log(`💀 Enemy killed! Wave ${state.currentWave}: ${newKillCount}/${state.enemiesRequired} (${enemy.type}, special: ${enemy.isSpecial})`);
     }
 
     setTimeout(() => {
@@ -108,7 +107,6 @@ export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, g
         const newKillCount = state.enemiesKilled + 1;
 
         if (state.currentWave === 1) {
-          console.log(`💀 Enemy killed! Wave ${state.currentWave}: ${newKillCount}/${state.enemiesRequired} (${enemy.type}, special: ${enemy.isSpecial})`);
         }
 
         setTimeout(() => {

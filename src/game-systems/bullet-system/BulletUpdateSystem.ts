@@ -2,6 +2,7 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Bullet, Enemy, Effect } from '../../models/gameTypes';
 import { bulletPool } from './BulletPool';
 import { collisionManager } from '../CollisionDetection';
+import { Logger } from '../../utils/Logger';
 
 /**
  * Bullet update system
@@ -45,7 +46,7 @@ export class BulletUpdateSystem {
         try {
           bulletPool.release(bullet);
         } catch (error) {
-          console.warn('🚨 Error releasing bullet to pool:', error);
+          Logger.warn('🚨 Error releasing bullet to pool:', error);
         }
       }
     });
@@ -64,7 +65,7 @@ export class BulletUpdateSystem {
         try {
           bulletPool.release(bullet);
         } catch (error) {
-          console.warn('🚨 Error releasing bullet to pool after collision:', error);
+          Logger.warn('🚨 Error releasing bullet to pool after collision:', error);
         }
         
         // Apply bullet effects
@@ -86,7 +87,6 @@ export class BulletUpdateSystem {
         }
         
         if (GAME_CONSTANTS.DEBUG_MODE) {
-          console.log(`Bullet ${bullet.id} hit enemy ${enemy.id} at collision time: ${collisionResult.collisionTime?.toFixed(3)}`);
         }
       }
     );

@@ -19,7 +19,6 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
     const newWave = state.currentWave + 1;
     const newEnemiesRequired = GAME_CONSTANTS.getWaveEnemiesRequired(newWave);
     const waveIncome = Math.floor(50 + (state.currentWave * 10));
-    console.log(`📈 Wave ${state.currentWave} → ${newWave}: Income +${waveIncome} gold`);
     return {
       currentWave: newWave,
       enemiesKilled: 0,
@@ -57,7 +56,6 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
   })),
 
   startWave: () => set((state: Store) => {
-    console.log(`🚀 Starting Wave ${state.currentWave}!`);
     setTimeout(() => {
       import('../../../game-systems/EnemySpawner').then(({ startEnemyWave }) => {
         startEnemyWave(state.currentWave);

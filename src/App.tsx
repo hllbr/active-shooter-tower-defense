@@ -25,8 +25,6 @@ function App() {
     // Apply initial post-processing filter
     postProcessingManager.applyGameStateFilter('normal', 0);
 
-    console.log('🎬 Cinematic Camera Manager initialized');
-    console.log('🎨 Post-Processing Manager initialized');
   }, []);
 
   return (

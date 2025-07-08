@@ -3,6 +3,7 @@
  */
 
 import type { Effect } from '../../models/gameTypes';
+import { Logger } from '../../utils/Logger';
 
 // =================== EFFECT POOL ===================
 
@@ -46,7 +47,7 @@ export class EffectPool {
    */
   release(effect: Effect): void {
     if (!this.active.has(effect)) {
-      console.warn('🚨 Attempting to release effect not in active set');
+      Logger.warn('🚨 Attempting to release effect not in active set');
       return;
     }
     

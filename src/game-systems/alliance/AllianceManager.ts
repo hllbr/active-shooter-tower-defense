@@ -271,7 +271,6 @@ export class AllianceManager {
         const reward = Math.floor(project.cost * rewardShare * 0.5); // 50% of cost as reward
         
         // Grant rewards (would be integrated with player system)
-        console.log(`Player ${contributor.playerId} earned ${reward} research points from alliance research`);
       }
     }
   }
@@ -299,7 +298,6 @@ export class AllianceManager {
    */
   private applyLevelUpBonuses(_alliance: Alliance): void {
     // This would be integrated with the alliance system
-    console.log('Applying level-up bonuses to alliance');
   }
 
   /**
@@ -307,7 +305,6 @@ export class AllianceManager {
    */
   private applyAllianceBonuses(playerId: string, _alliance: Alliance): void {
     // This would be integrated with the player system
-    console.log(`Applying alliance bonuses to player ${playerId}`);
   }
 
   /**
@@ -315,7 +312,6 @@ export class AllianceManager {
    */
   private removeAllianceBonuses(playerId: string): void {
     // This would be integrated with the player system
-    console.log(`Removing alliance bonuses from player ${playerId}`);
   }
 
   /**

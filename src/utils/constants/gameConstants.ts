@@ -718,11 +718,9 @@ export const GAME_CONSTANTS = {
     const comp = waveCompositions[wave];
     if (comp) {
       const required = comp.reduce((sum, c) => sum + c.count, 0);
-      console.log(`🎯 Wave ${wave} requires ${required} enemies:`, comp);
       return required;
     }
     const fallback = GAME_CONSTANTS.ENEMY_WAVE_INCREASE * wave;
-    console.log(`⚠️ Wave ${wave} fallback: ${fallback} enemies`);
     return fallback;
   },
 
@@ -1275,15 +1273,12 @@ export const GAME_CONSTANTS = {
 export const toggleDebugMode = () => {
   const constants = GAME_CONSTANTS as { DEBUG_MODE: boolean };
   constants.DEBUG_MODE = !constants.DEBUG_MODE;
-  console.log(`🐛 Debug mode ${constants.DEBUG_MODE ? 'ENABLED' : 'DISABLED'}`);
-  console.log('🎯 Spawn zones will be', constants.DEBUG_MODE ? 'visible' : 'hidden');
   return constants.DEBUG_MODE;
 };
 
 export const toggleSpawnZoneDebug = () => {
   const spawnZones = GAME_CONSTANTS.SPAWN_ZONES as { DEBUG_VISIBLE: boolean };
   spawnZones.DEBUG_VISIBLE = !spawnZones.DEBUG_VISIBLE;
-  console.log(`🎯 Spawn zone debug ${spawnZones.DEBUG_VISIBLE ? 'ENABLED' : 'DISABLED'}`);
   return spawnZones.DEBUG_VISIBLE;
 };
 
@@ -1295,7 +1290,4 @@ if (typeof window !== 'undefined') {
   };
   globalWindow.toggleDebugMode = toggleDebugMode;
   globalWindow.toggleSpawnZoneDebug = toggleSpawnZoneDebug;
-  console.log('💡 Console commands available:');
-  console.log('  toggleDebugMode() - Toggle general debug mode');
-  console.log('  toggleSpawnZoneDebug() - Toggle spawn zone visualization');
 } 

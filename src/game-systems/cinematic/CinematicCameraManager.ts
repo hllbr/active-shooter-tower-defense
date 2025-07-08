@@ -112,11 +112,9 @@ export class CinematicCameraManager {
     
     // Apply slow motion effect through game state
     // Note: Game time scale will be handled by the game loop
-    console.log(`🎬 Cinematic: Slow motion activated for ${duration}ms with scale ${timeScale}`);
 
     // Reset after duration
     setTimeout(() => {
-      console.log('🎬 Cinematic: Slow motion deactivated');
       this.cinematicEvents.delete(event.id);
     }, duration);
   }

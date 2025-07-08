@@ -4,6 +4,7 @@
  */
 
 import { useGameStore } from '../../models/store';
+import { Logger } from '../../utils/Logger';
 
 export class ContinueButtonTest {
   
@@ -11,12 +12,10 @@ export class ContinueButtonTest {
    * Test Continue Button Chain
    */
   static testContinueButton() {
-    console.log('🧪 Testing Continue Button Chain...');
     
     const store = useGameStore.getState();
     
     // Initial state
-    console.log(`Initial state:`, {
       currentWave: store.currentWave,
       isRefreshing: store.isRefreshing,
       isPreparing: store.isPreparing,
@@ -36,15 +35,13 @@ export class ContinueButtonTest {
       .map(([name]) => name);
     
     if (missingFunctions.length > 0) {
-      console.error('❌ Missing functions:', missingFunctions);
+      Logger.error('❌ Missing functions:', missingFunctions);
       return false;
     }
     
-    console.log('✅ All required functions exist');
     
     // Test the exact sequence from UpgradeScreen
     try {
-      console.log('🔄 Executing continue sequence...');
       
       const initialWave = store.currentWave;
       
@@ -65,7 +62,6 @@ export class ContinueButtonTest {
       // Check results
       setTimeout(() => {
         const result = useGameStore.getState();
-        console.log(`After continue sequence:`, {
           currentWave: result.currentWave,
           isRefreshing: result.isRefreshing,
           isPreparing: result.isPreparing,
@@ -78,23 +74,16 @@ export class ContinueButtonTest {
         const screenClosed = !result.isRefreshing;
         const killsReset = result.enemiesKilled === 0;
         
-        console.log('📊 Continue Button Results:');
-        console.log(`✅ Wave incremented: ${waveIncremented}`);
-        console.log(`✅ Preparation started: ${preparationStarted}`);
-        console.log(`✅ Screen closed: ${screenClosed}`);
-        console.log(`✅ Kills reset: ${killsReset}`);
         
         if (waveIncremented && preparationStarted && killsReset) {
-          console.log('🎉 Continue button works correctly!');
         } else {
-          console.log('❌ Continue button has issues');
         }
       }, 100);
       
       return true;
       
     } catch (error) {
-      console.error('❌ Error in continue sequence:', error);
+      Logger.error('❌ Error in continue sequence:', error);
       return false;
     }
   }

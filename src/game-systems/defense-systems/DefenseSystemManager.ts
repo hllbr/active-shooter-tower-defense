@@ -199,7 +199,6 @@ export class DefenseSystemManager {
   ): void {
     // Create visual repair effect (sparks, tools, etc.)
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log(`🔧 Repair Station healed ${tower.id} for ${healAmount} HP`);
     }
   }
 

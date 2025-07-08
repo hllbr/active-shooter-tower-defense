@@ -40,7 +40,6 @@ export class TerrainModificationManager {
    */
   private initializeTerrainModificationSystem(): void {
     // System is ready for modifications
-    console.log('Terrain Modification System initialized');
   }
 
   /**

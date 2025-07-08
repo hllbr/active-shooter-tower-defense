@@ -95,9 +95,7 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
       }
       
       if (GAME_CONSTANTS.DEBUG_MODE) {
-        console.log('🧹 GameBoard: Global memory cleanup completed');
         const bulletStats = bulletPool.getStats();
-        console.log(`📊 Bullet Pool Stats: Created: ${bulletStats.created}, Reused: ${bulletStats.reused}, Reuse Rate: ${bulletStats.reuseRate.toFixed(1)}%`);
       }
     };
   }, []);

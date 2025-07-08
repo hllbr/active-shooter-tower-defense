@@ -333,7 +333,6 @@ export class CampaignManager {
    */
   private applyChapterRewards(chapter: CampaignChapter): void {
     // This would be integrated with the game state
-    console.log(`Chapter ${chapter.name} completed! Rewards:`, chapter.rewards);
   }
 
   /**

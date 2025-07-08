@@ -21,7 +21,6 @@ export const createDiceSlice: StateCreator<Store, [], [], DiceSlice> = (set, get
         diceUsed: true,
         isDiceRolling: false,
       });
-      console.log(`🎲 Dice rolled: ${roll}, Multiplier: ${multiplier.toFixed(1)}`);
     }, 2000);
   },
 

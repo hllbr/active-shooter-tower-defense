@@ -45,7 +45,6 @@ export const UpgradePackages: React.FC = () => {
               discountMultiplier={discountMultiplier}
               diceUsed={diceUsed}
               onPurchase={(packageId, finalCost) => {
-                console.log(`Package purchased: ${packageId} for ${finalCost} gold`);
                 packageDef.onPurchase(addEnergy, addAction);
               }}
               color={packageDef.color}

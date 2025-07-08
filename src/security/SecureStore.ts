@@ -6,6 +6,7 @@
 
 import { securityManager } from './SecurityManager';
 import type { Store } from '../models/store';
+import { Logger } from '../utils/Logger';
 
 // Secure Store Interface
 export interface SecureStore extends Store {
@@ -33,7 +34,7 @@ export function createSecureStore(originalStore: Store): SecureStore {
   secureStore.secureAddGold = (amount: number) => {
     const validation = securityManager.validateStateChange('addGold', {}, { gold: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: secureAddGold blocked:', validation.reason);
+      Logger.warn('🔒 Security: secureAddGold blocked:', validation.reason);
       return;
     }
     originalStore.addGold(amount);
@@ -42,7 +43,7 @@ export function createSecureStore(originalStore: Store): SecureStore {
   secureStore.secureSpendGold = (amount: number) => {
     const validation = securityManager.validateStateChange('spendGold', {}, { gold: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: secureSpendGold blocked:', validation.reason);
+      Logger.warn('🔒 Security: secureSpendGold blocked:', validation.reason);
       return;
     }
     originalStore.spendGold(amount);
@@ -51,7 +52,7 @@ export function createSecureStore(originalStore: Store): SecureStore {
   secureStore.secureSetGold = (amount: number) => {
     const validation = securityManager.validateStateChange('setGold', {}, { gold: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: secureSetGold blocked:', validation.reason);
+      Logger.warn('🔒 Security: secureSetGold blocked:', validation.reason);
       return;
     }
     originalStore.setGold(amount);
@@ -61,7 +62,7 @@ export function createSecureStore(originalStore: Store): SecureStore {
   secureStore.secureAddEnergy = (amount: number, action?: string) => {
     const validation = securityManager.validateStateChange('addEnergy', {}, { energy: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: secureAddEnergy blocked:', validation.reason);
+      Logger.warn('🔒 Security: secureAddEnergy blocked:', validation.reason);
       return;
     }
     originalStore.addEnergy(amount, action);
@@ -72,7 +73,7 @@ export function createSecureStore(originalStore: Store): SecureStore {
     const validation = securityManager.validateStateChange('consumeEnergy', oldState, {});
     
     if (!validation.valid) {
-      console.warn('🔒 Security validation failed for consumeEnergy:', validation.reason);
+      Logger.warn('🔒 Security validation failed for consumeEnergy:', validation.reason);
       return false;
     }
 
@@ -83,7 +84,7 @@ export function createSecureStore(originalStore: Store): SecureStore {
   secureStore.secureAddAction = (amount: number) => {
     const validation = securityManager.validateStateChange('addAction', {}, { actions: amount });
     if (!validation.valid) {
-      console.warn('🔒 Security: secureAddAction blocked:', validation.reason);
+      Logger.warn('🔒 Security: secureAddAction blocked:', validation.reason);
       return;
     }
     originalStore.addAction(amount);
@@ -95,13 +96,13 @@ export function createSecureStore(originalStore: Store): SecureStore {
     const validation = securityManager.validateStateChange('purchasePackage', oldState, {});
     
     if (!validation.valid) {
-      console.warn('🔒 Security validation failed for purchasePackage:', validation.reason);
+      Logger.warn('🔒 Security validation failed for purchasePackage:', validation.reason);
       return false;
     }
 
     // Additional validation for package purchases
     if (cost > 10000) {
-      console.warn('🔒 Security: Package cost exceeds maximum allowed:', cost);
+      Logger.warn('🔒 Security: Package cost exceeds maximum allowed:', cost);
       return false;
     }
 

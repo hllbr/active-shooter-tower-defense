@@ -145,16 +145,6 @@ export const GameLoopPerformance = {
   getMetrics: (): GameLoopMetrics => ({ ...gameLoopMetrics }),
   
   logPerformance: () => {
-    const efficiency = gameLoopMetrics.totalFrames > 0 ? 
-      ((gameLoopMetrics.skippedUpdates / gameLoopMetrics.totalFrames) * 100).toFixed(1) : '0';
-    
-    console.log(`🎮 GameLoop Performance:
-      FPS: ${gameLoopMetrics.lastFPS}
-      Total Frames: ${gameLoopMetrics.totalFrames}
-      Skipped Updates: ${gameLoopMetrics.skippedUpdates} (${efficiency}% saved)
-      Avg Delta: ${gameLoopMetrics.avgDelta.toFixed(1)}ms`);
-      
-    // Also log StateOptimizer metrics
     performanceMonitor.logPerformance();
   },
   

@@ -11,11 +11,9 @@ export class UpgradeScreenTest {
    * Test Upgrade Screen State
    */
   static testUpgradeScreenState() {
-    console.log('🧪 Testing Upgrade Screen State...');
     
     const store = useGameStore.getState();
     
-    console.log(`Current upgrade screen state:`, {
       isRefreshing: store.isRefreshing,
       gold: store.gold,
       currentWave: store.currentWave,
@@ -29,7 +27,6 @@ export class UpgradeScreenTest {
     store.setRefreshing(true);
     
     const opened = useGameStore.getState().isRefreshing;
-    console.log(`✅ Upgrade screen opens: ${opened}`);
     
     return opened;
   }

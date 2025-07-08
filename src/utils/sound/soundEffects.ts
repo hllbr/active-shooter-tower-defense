@@ -1,6 +1,7 @@
 import { musicManager } from './musicManager';
 import { getSettings } from '../settings';
 import { GAME_CONSTANTS } from '../constants';
+import { Logger } from '../Logger';
 
 export const audioCache: Record<string, HTMLAudioElement> = {};
 export const gameAudio: HTMLAudioElement | null = null;
@@ -24,11 +25,6 @@ export function updateAllSoundVolumes(): void {
 // Test fonksiyonu - volume ayarlarının çalışıp çalışmadığını kontrol et
 export function testVolumeControls(): void {
   const settings = getSettings();
-  console.log('🔊 Ses Ayarları Testi:');
-  console.log('Mute:', settings.mute);
-  console.log('Müzik Volume:', settings.musicVolume);
-  console.log('SFX Volume:', settings.sfxVolume);
-  console.log('Cache boyutu:', soundCache.size);
   
   // Test sesi çal
   playSound('dice-roll');
@@ -162,9 +158,6 @@ export function pauseGameSceneSounds(): void {
   musicManager.stop();
   
   if (GAME_CONSTANTS.DEBUG_MODE) {
-    console.log('🎮 Game scene sounds paused:', SOUND_CATEGORIES.GAME_SCENE.length, 'sounds');
-    console.log('🔊 UI/Market sounds still active:', SOUND_CATEGORIES.UI_MARKET.length, 'sounds');
-    console.log('✅ Zar atma, satın alma gibi sesler çalışmaya devam ediyor');
   }
 }
 
@@ -180,8 +173,6 @@ export function resumeGameSceneSounds(): void {
   });
   
   if (GAME_CONSTANTS.DEBUG_MODE) {
-    console.log('🎮 Game scene sounds resumed after upgrade screen');
-    console.log('🔊 UI sounds were never paused, still active');
   }
 }
 
@@ -190,7 +181,7 @@ export function resumeGameSceneSounds(): void {
  * @deprecated Use pauseGameSceneSounds() instead
  */
 export function pauseAllSounds(): void {
-  console.warn('⚠️ pauseAllSounds() is deprecated, use pauseGameSceneSounds()');
+  Logger.warn('⚠️ pauseAllSounds() is deprecated, use pauseGameSceneSounds()');
   pauseGameSceneSounds();
 }
 
@@ -199,7 +190,7 @@ export function pauseAllSounds(): void {
  * @deprecated Use resumeGameSceneSounds() instead
  */
 export function resumeAllSounds(): void {
-  console.warn('⚠️ resumeAllSounds() is deprecated, use resumeGameSceneSounds()');
+  Logger.warn('⚠️ resumeAllSounds() is deprecated, use resumeGameSceneSounds()');
   resumeGameSceneSounds();
 }
 
@@ -221,11 +212,6 @@ export function validateSounds(): { available: string[]; missing: string[] } {
  * 🔍 DEBUG: Show sound categories for testing
  */
 export function debugSoundCategories(): void {
-  console.log('🎮 GAME SCENE SOUNDS (paused during upgrade):');
-  console.log(SOUND_CATEGORIES.GAME_SCENE);
-  console.log('\n🔊 UI/MARKET SOUNDS (continue during upgrade):');
-  console.log(SOUND_CATEGORIES.UI_MARKET);
-  console.log('\n💡 Test: Upgrade ekranını açın ve zar atın - ses çalmalı!');
 }
 
 // Add debug function to window for console access

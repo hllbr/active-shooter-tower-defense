@@ -29,7 +29,6 @@ export const EmptySlotRenderer: React.FC<EmptySlotRendererProps> = ({
           strokeDasharray="4 2"
           style={{ cursor: 'pointer' }}
           onClick={() => {
-            console.log('Kule inşa et tıklandı', slotIdx);
             if (onBuildTower) onBuildTower(slotIdx, 'attack');
           }}
         />

@@ -162,20 +162,16 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({
       // Detect swipe gestures
       if (deltaTime < 300 && Math.abs(deltaX) > 50) {
         if (deltaX > 0) {
-          console.log('🔄 Swipe right detected');
           // Handle swipe right
         } else {
-          console.log('🔄 Swipe left detected');
           // Handle swipe left
         }
       }
       
       if (deltaTime < 300 && Math.abs(deltaY) > 50) {
         if (deltaY > 0) {
-          console.log('🔄 Swipe down detected');
           // Handle swipe down
         } else {
-          console.log('🔄 Swipe up detected');
           // Handle swipe up
         }
       }
@@ -209,7 +205,6 @@ export const MobileOptimizations: React.FC<MobileOptimizationsProps> = ({
         
         // Auto-adjust performance if FPS is too low
         if (fps < 30 && performanceMode !== 'low') {
-          console.log(`📱 Mobile: Low FPS detected (${fps}), adjusting performance settings`);
           setPerformanceSettings(prev => ({
             ...prev,
             particleCount: Math.max(20, prev.particleCount - 10),

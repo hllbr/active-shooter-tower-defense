@@ -3,6 +3,7 @@ import { useGameStore, type Store } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { ShieldStatsDisplay } from './ShieldStatsDisplay';
 import { ShieldUpgradeCard } from './ShieldUpgradeCard';
+import { Logger } from '../../../utils/Logger';
 
 export const ShieldUpgrades: React.FC = () => {
   const gold = useGameStore((state: Store) => state.gold);
@@ -44,24 +45,21 @@ export const ShieldUpgrades: React.FC = () => {
   const handlePurchase = (index: number, finalCost: number) => {
     const shield = GAME_CONSTANTS.WALL_SHIELDS[index];
     if (!shield) {
-      console.error(`❌ Invalid shield index: ${index}`);
+      Logger.error(`❌ Invalid shield index: ${index}`);
       return;
     }
     
     const currentShieldLevel = wallLevel || 0;
     if (index !== currentShieldLevel) {
-      console.log(`❌ Shield progression error! Current: ${currentShieldLevel}, Attempted: ${index}`);
       return;
     }
     
-    console.log(`🛡️ Processing shield upgrade:`, {
       shield: shield.name,
       cost: finalCost,
       currentLevel: currentShieldLevel
     });
     
     upgradeWall();
-    console.log(`✅ Shield upgrade successful: ${shield.name} (+${shield.strength} strength)`);
   };
 
   return (
@@ -94,7 +92,6 @@ export const ShieldUpgrades: React.FC = () => {
           const isLocked = isFutureLevel;
           
           if (i <= 3) {
-            console.log(`🔍 ${shield.name} (Level ${i}):`, {
               currentShieldLevel,
               isCurrentLevel,
               isPastLevel,

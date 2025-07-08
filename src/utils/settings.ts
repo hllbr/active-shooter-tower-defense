@@ -7,6 +7,7 @@ export interface Settings {
 const SETTINGS_KEY = 'game_settings';
 
 import { secureLocalStorage } from '../security/SecurityEnhancements';
+import { Logger } from './Logger';
 
 export function getSettings(): Settings {
   try {
@@ -22,7 +23,7 @@ export function saveSettings(settings: Settings) {
   try {
     const success = secureLocalStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     if (!success) {
-      console.warn('🔒 Security: Settings save blocked due to security validation');
+      Logger.warn('🔒 Security: Settings save blocked due to security validation');
     }
   } catch {
     // localStorage erişim hatası

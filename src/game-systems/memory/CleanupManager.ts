@@ -3,6 +3,7 @@
  */
 
 import { GAME_CONSTANTS } from '../../utils/constants';
+import { Logger } from '../../utils/Logger';
 
 export interface CleanupTask {
   id: string;
@@ -37,7 +38,6 @@ export class CleanupManager {
     this.cleanupTasks.set(task.id, task);
     
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log(`🧹 Registered cleanup: ${task.type} - ${task.description || task.id}`);
     }
   }
   
@@ -115,7 +115,6 @@ export class CleanupManager {
       task.cleanup();
       this.cleanupTasks.delete(id);
       if (GAME_CONSTANTS.DEBUG_MODE) {
-        console.log(`🧹 Executed cleanup: ${task.type} - ${task.description || id}`);
       }
       return true;
     }
@@ -129,7 +128,6 @@ export class CleanupManager {
     this.isShuttingDown = true;
     
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log(`🧹 CleanupManager: Executing ${this.cleanupTasks.size} cleanup tasks`);
     }
     
     for (const [id, task] of this.cleanupTasks) {
@@ -137,10 +135,9 @@ export class CleanupManager {
         task.cleanup();
         if (GAME_CONSTANTS.DEBUG_MODE) {
           const duration = performance.now() - task.created;
-          console.log(`🧹 Cleaned: ${task.type} (${id}) - lived ${duration.toFixed(0)}ms`);
         }
       } catch (error) {
-        console.error(`🚨 Cleanup error for ${id}:`, error);
+        Logger.error(`🚨 Cleanup error for ${id}:`, error);
       }
     }
     

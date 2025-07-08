@@ -40,6 +40,7 @@ import {
   isExpectedStateChange,
   isExpectedGoldIncrease
 } from './helpers/securityUtils';
+import { Logger } from '../utils/Logger';
 
 // Security Event Types
 export type SecurityEventType = 
@@ -96,7 +97,6 @@ export class SecurityManager {
    * Initialize security systems
    */
   private initializeSecurity(): void {
-    console.log('🔒 Security Manager initialized');
     
     // Set up periodic security checks
     setInterval(() => {
@@ -336,8 +336,8 @@ export class SecurityManager {
       this.auditLog.shift();
     }
 
-    // Log to console for debugging
-    console.warn(`[Security] ${severity.toUpperCase()}: ${type}`, details);
+    // Log to console for debugging in non-production environments
+    Logger.warn(`[Security] ${severity.toUpperCase()}: ${type}`, details);
   }
 
   /**
@@ -359,7 +359,7 @@ export class SecurityManager {
         this.isLocked = false;
       }, 300000); // 5 minutes lockout
       
-      console.warn('[Security] System temporarily locked due to suspicious activity');
+      Logger.warn('[Security] System temporarily locked due to suspicious activity');
     }
   }
 

@@ -261,7 +261,6 @@ export class LootManager {
     } else {
       // Show notification for valuable items
       if (lootItem.rarity !== 'common') {
-        console.log(`Loot dropped: ${lootItem.name}`);
       }
     }
     
@@ -307,7 +306,6 @@ export class LootManager {
         this.addExperience(lootItem.amount);
         break;
       default:
-        console.log(`Unknown loot type: ${lootItem.type}`);
     }
     
     // Create pickup effect
@@ -324,7 +322,6 @@ export class LootManager {
     });
     
     // Show pickup notification
-    console.log(`Loot picked up: +${lootItem.amount} ${lootItem.name}`);
     
     // Play pickup sound
     this.playLootPickupSound(lootItem.rarity);
@@ -400,27 +397,22 @@ export class LootManager {
    */
   private static addResearchPoints(amount: number): void {
     // Integrate with research system when available
-    console.log(`+${amount} Research Points`);
   }
 
   private static addUpgradeMaterials(amount: number): void {
     // Integrate with upgrade materials system
-    console.log(`+${amount} Upgrade Materials`);
   }
 
   private static addRareComponents(amount: number): void {
     // Integrate with rare components system
-    console.log(`+${amount} Rare Components`);
   }
 
   private static addLegendaryItem(name: string): void {
     // Integrate with legendary items system
-    console.log(`Acquired: ${name}`);
   }
 
   private static addExperience(amount: number): void {
     // Integrate with experience system
-    console.log(`+${amount} Experience`);
   }
 
   /**

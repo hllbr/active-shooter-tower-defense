@@ -31,7 +31,6 @@ export class SecurityTests {
    * Run all security tests
    */
   public runAllTests(): TestResult[] {
-    console.log('🔒 Running Security Tests...');
     
     this.testInputSanitization();
     this.testCSSSanitization();
@@ -254,27 +253,20 @@ export class SecurityTests {
    * Print test results
    */
   private printResults(): void {
-    console.log('\n🔒 Security Test Results:');
-    console.log('========================');
     
     const passed = this.results.filter(r => r.passed).length;
     const total = this.results.length;
     
     this.results.forEach(result => {
       const status = result.passed ? '✅ PASS' : '❌ FAIL';
-      console.log(`${status} ${result.testName}: ${result.message}`);
       
       if (result.details && !result.passed) {
-        console.log(`   Details:`, result.details);
       }
     });
     
-    console.log(`\n📊 Summary: ${passed}/${total} tests passed`);
     
     if (passed === total) {
-      console.log('🎉 All security tests passed!');
     } else {
-      console.log('⚠️ Some security tests failed. Review the details above.');
     }
   }
 
@@ -282,55 +274,25 @@ export class SecurityTests {
    * Test security features manually
    */
   public static runManualTests(): void {
-    console.log('🔒 Manual Security Tests');
-    console.log('========================');
     
     // Test 1: Try to manipulate store state
-    console.log('\n1. Testing store state manipulation prevention...');
-    console.log('   Try running this in browser console:');
-    console.log('   window.gameStore.setState({ gold: 999999 })');
-    console.log('   Expected: Security warning in console');
     
     // Test 2: Test rate limiting
-    console.log('\n2. Testing rate limiting...');
-    console.log('   Try clicking upgrade buttons rapidly');
-    console.log('   Expected: Actions blocked after rate limit exceeded');
     
     // Test 3: Test input sanitization
-    console.log('\n3. Testing input sanitization...');
     const testInput = '<script>alert("xss")</script>';
     const sanitized = sanitizeInput(testInput);
-    console.log(`   Input: ${testInput}`);
-    console.log(`   Sanitized: ${sanitized}`);
-    console.log(`   Result: ${sanitized.includes('<script>') ? '❌ FAIL' : '✅ PASS'}`);
     
     // Test 4: Test security monitoring
-    console.log('\n4. Testing security monitoring...');
     const stats = getSecurityStatus();
-    console.log('   Security Stats:', stats);
     
     // Test 5: Test store method security
-    console.log('\n5. Testing store method security...');
-    console.log('   Try calling these methods with invalid values:');
-    console.log('   - store.addGold(999999)');
-    console.log('   - store.spendGold(-100)');
-    console.log('   - store.setGold(999999)');
-    console.log('   Expected: All should be blocked by security');
     
     // Test 6: Test package purchase security
-    console.log('\n6. Testing package purchase security...');
-    console.log('   Try purchasing packages with invalid data:');
-    console.log('   - Invalid package ID');
-    console.log('   - Invalid cost values');
-    console.log('   Expected: Invalid purchases should be blocked');
     
     // Test 7: Test CSS injection prevention
-    console.log('\n7. Testing CSS injection prevention...');
     const maliciousCSS = 'red; } body { display: none; } .hack {';
     const sanitizedCSS = sanitizeCSSValue(maliciousCSS);
-    console.log(`   Malicious CSS: ${maliciousCSS}`);
-    console.log(`   Sanitized CSS: ${sanitizedCSS}`);
-    console.log(`   Result: ${sanitizedCSS === '' ? '✅ PASS' : '❌ FAIL'}`);
   }
 }
 

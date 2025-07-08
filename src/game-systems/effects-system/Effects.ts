@@ -7,6 +7,7 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Effect } from '../../models/gameTypes';
 import { effectPool } from './EffectPool';
 import { cleanupManager } from '../memory';
+import { Logger } from '../../utils/Logger';
 
 /**
  * Update all effects with automatic cleanup
@@ -33,7 +34,7 @@ export function updateEffects() {
       try {
         effectPool.release(effect);
       } catch (error) {
-        console.warn('🚨 Error releasing effect to pool:', error);
+        Logger.warn('🚨 Error releasing effect to pool:', error);
       }
     }
   });
@@ -41,7 +42,6 @@ export function updateEffects() {
   // Log performance statistics periodically
   if (GAME_CONSTANTS.DEBUG_MODE && Math.random() < 0.01) { // 1% chance per frame
     const stats = effectPool.getStats();
-    console.log(`🎆 Effect Pool Stats: ${stats.activeCount} active, ${stats.poolSize} pooled, ${stats.reuseRate.toFixed(1)}% reuse`);
   }
 }
 
@@ -70,6 +70,5 @@ export function performMemoryCleanup(): void {
   effectPool.clear();
   
   if (GAME_CONSTANTS.DEBUG_MODE) {
-    console.log('🧹 Memory cleanup completed');
   }
 } 
