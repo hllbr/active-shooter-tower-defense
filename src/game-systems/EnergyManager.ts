@@ -75,13 +75,11 @@ class EnergyManager {
       const efficiency = gameState.calculateEnergyStats().efficiency;
       finalAmount = Math.max(1, Math.ceil(amount * (1 - efficiency)));
       
-      if (GAME_CONSTANTS.DEBUG_MODE && finalAmount !== amount) {
-      }
+      // Energy efficiency calculation applied
     }
     
     if (this.energy < finalAmount) {
-      if (GAME_CONSTANTS.DEBUG_MODE) {
-      }
+      // Energy consumption failed - insufficient energy
       
       // ✅ CRITICAL FIX: User-friendly Turkish energy messages
       const userMessage = ENERGY_MESSAGES[action] || `⚡ ${action} için yeterli enerji yok!`;
@@ -94,8 +92,7 @@ class EnergyManager {
     const log = { time: performance.now(), action, delta: -finalAmount, remaining: this.energy };
     this.history.push(log);
     if (this.setState) this.setState(this.energy, null);
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-    }
+    // Energy consumed successfully
     this.listeners.forEach(l => l(this.energy, log));
     return true;
   }
@@ -108,8 +105,7 @@ class EnergyManager {
     const log = { time: performance.now(), action, delta: amount, remaining: this.energy };
     this.history.push(log);
     if (this.setState) this.setState(this.energy, null);
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-    }
+    // Energy added successfully
     this.listeners.forEach(l => l(this.energy, log));
   }
 

@@ -319,7 +319,7 @@ export class SpawnZoneManager {
       });
     }
 
-    const activeCount = this.spawnZones.filter(z => z.active).length;
+    const _activeCount = this.spawnZones.filter(z => z.active).length;
   }
 }
 

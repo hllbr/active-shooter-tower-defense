@@ -268,7 +268,7 @@ export class AllianceManager {
       const member = alliance.members.find(m => m.playerId === contributor.playerId);
       if (member) {
         const rewardShare = contributor.amount / totalContribution;
-        const reward = Math.floor(project.cost * rewardShare * 0.5); // 50% of cost as reward
+        const _reward = Math.floor(project.cost * rewardShare * 0.5); // 50% of cost as reward
         
         // Grant rewards (would be integrated with player system)
       }
@@ -303,14 +303,14 @@ export class AllianceManager {
   /**
    * Apply alliance bonuses to player
    */
-  private applyAllianceBonuses(playerId: string, _alliance: Alliance): void {
+  private applyAllianceBonuses(_playerId: string, _alliance: Alliance): void {
     // This would be integrated with the player system
   }
 
   /**
    * Remove alliance bonuses from player
    */
-  private removeAllianceBonuses(playerId: string): void {
+  private removeAllianceBonuses(_playerId: string): void {
     // This would be integrated with the player system
   }
 

@@ -95,6 +95,7 @@ export const SVGEffectsRenderer: React.FC = () => {
       animationElements.clear();
       
       if (GAME_CONSTANTS.DEBUG_MODE) {
+        // Debug logging for animation cleanup can be added here
       }
     };
   }, []);

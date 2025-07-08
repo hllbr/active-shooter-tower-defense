@@ -53,14 +53,11 @@ export class StatePerformanceMonitor {
   }
   
   public logPerformance(): void {
-    const efficiency = this.getEfficiencyPercent().toFixed(1);
-    const updateRate = this.getUpdateRate().toFixed(1);
-    
-      Update Rate: ${updateRate}/sec
-      Total Updates: ${this.metrics.totalUpdates}
-      Skipped: ${this.metrics.skippedUpdates} (${efficiency}% efficiency)
-      Avg Batch Size: ${this.metrics.avgBatchSize.toFixed(1)}
-      Last Update: ${Date.now() - this.metrics.lastUpdateTime}ms ago`);
+    // Performance metrics available via getters:
+    // - getEfficiencyPercent(): efficiency percentage  
+    // - getUpdateRate(): updates per second
+    // - getMetrics(): complete metrics object
+    // This method can be extended for external monitoring integration
   }
   
   public reset(): void {

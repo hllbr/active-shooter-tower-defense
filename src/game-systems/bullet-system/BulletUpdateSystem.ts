@@ -86,8 +86,7 @@ export class BulletUpdateSystem {
           });
         }
         
-        if (GAME_CONSTANTS.DEBUG_MODE) {
-        }
+        // Debug mode collision logging can be added here if needed
       }
     );
   }

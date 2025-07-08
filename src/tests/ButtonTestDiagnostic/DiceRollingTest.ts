@@ -12,15 +12,11 @@ export class DiceRollingTest {
    * Test Dice Rolling System
    */
   static testDiceRolling() {
+    Logger.log('🎲 Testing dice rolling...');
     
     const store = useGameStore.getState();
     
-    // Initial state check
-      diceUsed: store.diceUsed,
-      isDiceRolling: store.isDiceRolling,
-      diceRoll: store.diceRoll,
-      discountMultiplier: store.discountMultiplier
-    });
+    // Check initial dice state
     
     // Test rollDice function exists
     if (typeof store.rollDice !== 'function') {
@@ -36,23 +32,15 @@ export class DiceRollingTest {
     
     // Check immediate state
     const afterRoll = useGameStore.getState();
-      diceUsed: afterRoll.diceUsed,
-      isDiceRolling: afterRoll.isDiceRolling,
-      diceRoll: afterRoll.diceRoll,
-      discountMultiplier: afterRoll.discountMultiplier
-    });
     
     // Wait for animation to complete
     setTimeout(() => {
       const finalState = useGameStore.getState();
-        diceUsed: finalState.diceUsed,
-        isDiceRolling: finalState.isDiceRolling,
-        diceRoll: finalState.diceRoll,
-        discountMultiplier: finalState.discountMultiplier
-      });
       
       if (finalState.diceRoll && finalState.diceUsed && !finalState.isDiceRolling) {
+        Logger.log('✅ Dice rolling test passed');
       } else {
+        Logger.error('❌ Dice rolling test failed');
       }
     }, 3000);
     

@@ -40,6 +40,7 @@ class PerformanceMonitor {
     this.measureFrame();
     
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      // Development monitoring can be enabled here
     }
   }
 
@@ -47,6 +48,7 @@ class PerformanceMonitor {
     this.isMonitoring = false;
     
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      // Development monitoring cleanup can be added here
     }
   }
 

@@ -24,7 +24,7 @@ export function updateAllSoundVolumes(): void {
 
 // Test fonksiyonu - volume ayarlarının çalışıp çalışmadığını kontrol et
 export function testVolumeControls(): void {
-  const settings = getSettings();
+  const _settings = getSettings();
   
   // Test sesi çal
   playSound('dice-roll');
@@ -158,6 +158,7 @@ export function pauseGameSceneSounds(): void {
   musicManager.stop();
   
   if (GAME_CONSTANTS.DEBUG_MODE) {
+    // Debug logging for game scene sound pausing can be added here
   }
 }
 
@@ -173,6 +174,7 @@ export function resumeGameSceneSounds(): void {
   });
   
   if (GAME_CONSTANTS.DEBUG_MODE) {
+    // Debug logging for game scene sound resuming can be added here
   }
 }
 

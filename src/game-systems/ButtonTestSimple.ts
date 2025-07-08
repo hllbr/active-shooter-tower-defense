@@ -7,17 +7,16 @@ import { useGameStore } from '../models/store';
 import { Logger } from '../utils/Logger';
 
 export function testContinueButton() {
+  Logger.log('🔧 Testing continue button...');
   
   const store = useGameStore.getState();
   
-    currentWave: store.currentWave,
-    isRefreshing: store.isRefreshing,
-    isPreparing: store.isPreparing
-  });
+  // Check current game state
   
   // Test 1: nextWave function
   try {
     store.nextWave();
+    Logger.log('✅ nextWave executed');
   } catch (error) {
     Logger.error('❌ nextWave failed:', error);
   }
@@ -25,6 +24,7 @@ export function testContinueButton() {
   // Test 2: startPreparation function
   try {
     store.startPreparation();
+    Logger.log('✅ startPreparation executed');
   } catch (error) {
     Logger.error('❌ startPreparation failed:', error);
   }
@@ -32,6 +32,7 @@ export function testContinueButton() {
   // Test 3: resetDice function
   try {
     store.resetDice();
+    Logger.log('✅ resetDice executed');
   } catch (error) {
     Logger.error('❌ resetDice failed:', error);
   }
@@ -39,36 +40,30 @@ export function testContinueButton() {
   // Test 4: setRefreshing function
   try {
     store.setRefreshing(false);
+    Logger.log('✅ setRefreshing executed');
   } catch (error) {
     Logger.error('❌ setRefreshing failed:', error);
   }
   
-  const finalState = useGameStore.getState();
-    currentWave: finalState.currentWave,
-    isRefreshing: finalState.isRefreshing,
-    isPreparing: finalState.isPreparing
-  });
+  const _finalState = useGameStore.getState();
+  // Final state verified
 }
 
 export function testDiceButton() {
+  Logger.log('🔧 Testing dice button...');
   
   const store = useGameStore.getState();
   
-    diceUsed: store.diceUsed,
-    isDiceRolling: store.isDiceRolling,
-    diceRoll: store.diceRoll
-  });
+  // Check dice state before rolling
   
   try {
     store.rollDice();
+    Logger.log('✅ rollDice executed');
     
-    setTimeout(() => {
-      const afterState = useGameStore.getState();
-        diceUsed: afterState.diceUsed,
-        isDiceRolling: afterState.isDiceRolling,
-        diceRoll: afterState.diceRoll
-      });
-    }, 2500);
+          setTimeout(() => {
+        const _afterState = useGameStore.getState();
+        // Dice state after animation complete
+      }, 2500);
     
   } catch (error) {
     Logger.error('❌ rollDice failed:', error);

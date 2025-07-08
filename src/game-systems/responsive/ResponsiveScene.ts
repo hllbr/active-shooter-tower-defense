@@ -1,3 +1,6 @@
+import type { Enemy, Tower } from '../../models/gameTypes';
+import { throttle } from '../../utils/performance';
+
 export interface SpawnPoint {
   x: number;
   y: number;
@@ -11,16 +14,31 @@ export interface SpawnPoint {
 export class ResponsiveScene {
   private spawnPoints: SpawnPoint[] = [];
   private scale = 1;
+  private towers: Tower[] = [];
+  private enemies: Enemy[] = [];
 
   /** Minimum tower size in pixels to keep gameplay readable */
   private readonly minTowerSize = 16;
 
   constructor(private baseWidth = 1920, private baseHeight = 1080) {
-    this.updateForScreenSize(window.innerWidth, window.innerHeight);
-    // Recalculate when the window size changes
-    window.addEventListener('resize', () => {
+    if (typeof window !== 'undefined') {
       this.updateForScreenSize(window.innerWidth, window.innerHeight);
-    }, { passive: true });
+      const handler = throttle(() => {
+        this.updateForScreenSize(window.innerWidth, window.innerHeight);
+        this.updateTowerPositions(window.innerWidth, window.innerHeight);
+      }, 100);
+      window.addEventListener('resize', handler, { passive: true });
+    }
+  }
+
+  /** Update stored tower list */
+  setTowers(towers: Tower[]): void {
+    this.towers = towers;
+  }
+
+  /** Update stored enemy list */
+  setEnemies(enemies: Enemy[]): void {
+    this.enemies = enemies;
   }
 
   /**
@@ -30,6 +48,24 @@ export class ResponsiveScene {
   updateForScreenSize(width: number, height: number): void {
     this.scale = Math.min(width / this.baseWidth, height / this.baseHeight);
     this.spawnPoints = this.generateSpawnPoints(width, height);
+  }
+
+  /**
+   * Normalize all tower positions when the screen size changes
+   */
+  updateTowerPositions(width: number, height: number): void {
+    this.towers = this.towers.map((tower) => {
+      const size = this.getTowerSize(tower.size);
+      const pos = this.constrainTowerPosition(
+        tower.position.x,
+        tower.position.y,
+        size,
+        tower.range,
+        width,
+        height
+      );
+      return { ...tower, position: pos };
+    });
   }
 
   /**
@@ -68,6 +104,48 @@ export class ResponsiveScene {
 
   getSpawnPoints(): SpawnPoint[] {
     return this.spawnPoints;
+  }
+
+  /**
+   * Calculate a spawn point that does not collide with towers or enemies
+   */
+  getValidSpawnPoint(screenWidth: number, screenHeight: number, enemySize: number): SpawnPoint {
+    const maxAttempts = 20;
+    for (let i = 0; i < maxAttempts; i++) {
+      const candidate = this.randomPointWithinScreen(screenWidth, screenHeight, enemySize);
+      if (this.isPositionFree(candidate, enemySize)) {
+        return candidate;
+      }
+    }
+    // Fallback to center if no free point found
+    return { x: screenWidth / 2, y: screenHeight / 2 };
+  }
+
+  private randomPointWithinScreen(width: number, height: number, size: number): SpawnPoint {
+    const margin = size / 2;
+    return {
+      x: margin + Math.random() * (width - 2 * margin),
+      y: margin + Math.random() * (height - 2 * margin)
+    };
+  }
+
+  private isPositionFree(point: SpawnPoint, size: number): boolean {
+    const radius = size / 2;
+    for (const tower of this.towers) {
+      const dx = point.x - tower.position.x;
+      const dy = point.y - tower.position.y;
+      if (Math.hypot(dx, dy) < radius + tower.size / 2) {
+        return false;
+      }
+    }
+    for (const enemy of this.enemies) {
+      const dx = point.x - enemy.position.x;
+      const dy = point.y - enemy.position.y;
+      if (Math.hypot(dx, dy) < radius + enemy.size / 2) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /** Scale any value according to the current screen size */

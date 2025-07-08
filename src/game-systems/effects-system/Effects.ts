@@ -41,7 +41,8 @@ export function updateEffects() {
   
   // Log performance statistics periodically
   if (GAME_CONSTANTS.DEBUG_MODE && Math.random() < 0.01) { // 1% chance per frame
-    const stats = effectPool.getStats();
+    const _stats = effectPool.getStats();
+    // Performance statistics available for debugging
   }
 }
 
@@ -70,5 +71,6 @@ export function performMemoryCleanup(): void {
   effectPool.clear();
   
   if (GAME_CONSTANTS.DEBUG_MODE) {
+    // Debug cleanup logging can be added here
   }
 } 

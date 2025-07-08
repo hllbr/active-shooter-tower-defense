@@ -261,6 +261,7 @@ export class LootManager {
     } else {
       // Show notification for valuable items
       if (lootItem.rarity !== 'common') {
+        // Valuable loot dropped - notification could be added here
       }
     }
     
@@ -395,24 +396,24 @@ export class LootManager {
   /**
    * Helper methods for applying loot effects
    */
-  private static addResearchPoints(amount: number): void {
-    // Integrate with research system when available
+  private static addResearchPoints(_amount: number): void {
+    // Research points feature placeholder - integrate with research system when available
   }
 
-  private static addUpgradeMaterials(amount: number): void {
-    // Integrate with upgrade materials system
+  private static addUpgradeMaterials(_amount: number): void {
+    // Upgrade materials feature placeholder - integrate with upgrade materials system
   }
 
-  private static addRareComponents(amount: number): void {
-    // Integrate with rare components system
+  private static addRareComponents(_amount: number): void {
+    // Rare components feature placeholder - integrate with rare components system
   }
 
-  private static addLegendaryItem(name: string): void {
-    // Integrate with legendary items system
+  private static addLegendaryItem(_name: string): void {
+    // Legendary items feature placeholder - integrate with legendary items system
   }
 
-  private static addExperience(amount: number): void {
-    // Integrate with experience system
+  private static addExperience(_amount: number): void {
+    // Experience system feature placeholder - integrate with experience system
   }
 
   /**

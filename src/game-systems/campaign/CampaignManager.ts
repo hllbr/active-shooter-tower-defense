@@ -331,7 +331,7 @@ export class CampaignManager {
   /**
    * Apply chapter rewards
    */
-  private applyChapterRewards(chapter: CampaignChapter): void {
+  private applyChapterRewards(_chapter: CampaignChapter): void {
     // This would be integrated with the game state
   }
 

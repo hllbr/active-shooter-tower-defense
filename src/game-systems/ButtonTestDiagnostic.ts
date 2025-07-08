@@ -15,12 +15,7 @@ export class ButtonTestDiagnostic {
     
     const store = useGameStore.getState();
     
-    // Initial state check
-      diceUsed: store.diceUsed,
-      isDiceRolling: store.isDiceRolling,
-      diceRoll: store.diceRoll,
-      discountMultiplier: store.discountMultiplier
-    });
+    // Initial state check - dice system status
     
     // Test rollDice function exists
     if (typeof store.rollDice !== 'function') {
@@ -36,23 +31,15 @@ export class ButtonTestDiagnostic {
     
     // Check immediate state
     const afterRoll = useGameStore.getState();
-      diceUsed: afterRoll.diceUsed,
-      isDiceRolling: afterRoll.isDiceRolling,
-      diceRoll: afterRoll.diceRoll,
-      discountMultiplier: afterRoll.discountMultiplier
-    });
     
     // Wait for animation to complete
     setTimeout(() => {
       const finalState = useGameStore.getState();
-        diceUsed: finalState.diceUsed,
-        isDiceRolling: finalState.isDiceRolling,
-        diceRoll: finalState.diceRoll,
-        discountMultiplier: finalState.discountMultiplier
-      });
       
       if (finalState.diceRoll && finalState.diceUsed && !finalState.isDiceRolling) {
+        Logger.log('✅ Dice rolling test passed');
       } else {
+        Logger.error('❌ Dice rolling test failed');
       }
     }, 3000);
     
@@ -66,13 +53,7 @@ export class ButtonTestDiagnostic {
     
     const store = useGameStore.getState();
     
-    // Initial state
-      currentWave: store.currentWave,
-      isRefreshing: store.isRefreshing,
-      isPreparing: store.isPreparing,
-      enemiesKilled: store.enemiesKilled,
-      enemiesRequired: store.enemiesRequired
-    });
+    // Check initial state before testing continue button
     
     // Test functions exist
     const functionsToTest = {
@@ -90,6 +71,7 @@ export class ButtonTestDiagnostic {
       return false;
     }
     
+    Logger.log('✅ All required functions exist');
     
     // Test the exact sequence from UpgradeScreen
     try {
@@ -113,21 +95,16 @@ export class ButtonTestDiagnostic {
       // Check results
       setTimeout(() => {
         const result = useGameStore.getState();
-          currentWave: result.currentWave,
-          isRefreshing: result.isRefreshing,
-          isPreparing: result.isPreparing,
-          enemiesKilled: result.enemiesKilled,
-          enemiesRequired: result.enemiesRequired
-        });
         
         const waveIncremented = result.currentWave === initialWave + 1;
         const preparationStarted = result.isPreparing;
-        const screenClosed = !result.isRefreshing;
+        const _screenClosed = !result.isRefreshing;
         const killsReset = result.enemiesKilled === 0;
         
-        
         if (waveIncremented && preparationStarted && killsReset) {
+          Logger.log('✅ Continue button test passed');
         } else {
+          Logger.error('❌ Continue button test failed');
         }
       }, 100);
       
@@ -146,19 +123,13 @@ export class ButtonTestDiagnostic {
     
     const store = useGameStore.getState();
     
-      isRefreshing: store.isRefreshing,
-      gold: store.gold,
-      currentWave: store.currentWave,
-      enemiesKilled: store.enemiesKilled,
-      enemiesRequired: store.enemiesRequired,
-      isPreparing: store.isPreparing,
-      diceUsed: store.diceUsed
-    });
+    // Check upgrade screen state
     
     // Test opening upgrade screen
     store.setRefreshing(true);
     
     const opened = useGameStore.getState().isRefreshing;
+    Logger.log(`Upgrade screen opened: ${opened}`);
     
     return opened;
   }
@@ -167,6 +138,7 @@ export class ButtonTestDiagnostic {
    * Run All Button Tests
    */
   static runAllTests() {
+    Logger.log('🔧 Running all button tests...');
     
     const results = {
       upgradeScreenState: this.testUpgradeScreenState(),
@@ -175,9 +147,11 @@ export class ButtonTestDiagnostic {
     };
     
     Object.entries(results).forEach(([test, passed]) => {
+      Logger.log(`${test}: ${passed ? '✅' : '❌'}`);
     });
     
     const allPassed = Object.values(results).every(result => result);
+    Logger.log(`All tests passed: ${allPassed ? '✅' : '❌'}`);
     
     return results;
   }

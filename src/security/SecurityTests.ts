@@ -258,15 +258,18 @@ export class SecurityTests {
     const total = this.results.length;
     
     this.results.forEach(result => {
-      const status = result.passed ? '✅ PASS' : '❌ FAIL';
+      const _status = result.passed ? '✅ PASS' : '❌ FAIL';
       
       if (result.details && !result.passed) {
+        // Debug logging for failed test details can be added here
       }
     });
     
     
     if (passed === total) {
+      // All security tests passed
     } else {
+      // Some security tests failed - investigate
     }
   }
 
@@ -281,10 +284,10 @@ export class SecurityTests {
     
     // Test 3: Test input sanitization
     const testInput = '<script>alert("xss")</script>';
-    const sanitized = sanitizeInput(testInput);
+    const _sanitized = sanitizeInput(testInput);
     
     // Test 4: Test security monitoring
-    const stats = getSecurityStatus();
+    const _stats = getSecurityStatus();
     
     // Test 5: Test store method security
     
@@ -292,7 +295,7 @@ export class SecurityTests {
     
     // Test 7: Test CSS injection prevention
     const maliciousCSS = 'red; } body { display: none; } .hack {';
-    const sanitizedCSS = sanitizeCSSValue(maliciousCSS);
+    const _sanitizedCSS = sanitizeCSSValue(maliciousCSS);
   }
 }
 

@@ -28,7 +28,7 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
   discountMultiplier,
   diceUsed,
   purchaseCount,
-  maxAllowed,
+  maxAllowed: _maxAllowed,
   isMaxed,
   onPurchase,
 }) => {
@@ -57,28 +57,18 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
   const newShieldStrength = (globalWallStrength + shield.strength) * 10;
 
   const handleClick = () => {
-      shield: shield.name,
-      index,
-      canAfford,
-      isMaxed,
-      isPastLevel,
-      isCurrentLevel,
-      isFutureLevel,
-      gold,
-      finalCost,
-      purchaseCount,
-      maxAllowed
-    });
+    // Shield upgrade click handler
     
     if (canAfford && isCurrentLevel) {
       onPurchase(index, finalCost);
       playSound('upgrade-purchase');
     } else {
-      const reason = isPastLevel 
+      const _reason = isPastLevel 
         ? 'Already completed' 
         : isFutureLevel 
           ? 'Locked - complete previous levels first'
           : 'Not enough gold';
+      // Purchase blocked for reason
     }
   };
 

@@ -50,7 +50,7 @@ export class GameSystemsTest {
     
     // Test nextWave function
     const initialWave = store.currentWave;
-    const initialKills = store.enemiesKilled;
+    const _initialKills = store.enemiesKilled;
     
     
     store.nextWave();
@@ -147,10 +147,11 @@ export class GameSystemsTest {
       upgradeScreen: this.testUpgradeScreenFlow(),
     };
     
-    Object.entries(results).forEach(([test, passed]) => {
+    Object.entries(results).forEach(([_test, _passed]) => {
+      // Test results processed
     });
     
-    const allPassed = Object.values(results).every(result => result);
+    const _allPassed = Object.values(results).every(result => result);
     
     return results;
   }

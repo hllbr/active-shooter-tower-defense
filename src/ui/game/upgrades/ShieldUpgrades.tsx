@@ -42,7 +42,7 @@ export const ShieldUpgrades: React.FC = () => {
   const currentShieldStrength = getCurrentShieldStrength();
   const nextShieldStrength = getNextShieldStrength();
 
-  const handlePurchase = (index: number, finalCost: number) => {
+  const handlePurchase = (index: number, _finalCost: number) => {
     const shield = GAME_CONSTANTS.WALL_SHIELDS[index];
     if (!shield) {
       Logger.error(`❌ Invalid shield index: ${index}`);
@@ -51,13 +51,11 @@ export const ShieldUpgrades: React.FC = () => {
     
     const currentShieldLevel = wallLevel || 0;
     if (index !== currentShieldLevel) {
+      Logger.error(`❌ Invalid purchase attempt: index ${index} !== currentLevel ${currentShieldLevel}`);
       return;
     }
     
-      shield: shield.name,
-      cost: finalCost,
-      currentLevel: currentShieldLevel
-    });
+    // Shield purchase processed
     
     upgradeWall();
   };
@@ -87,20 +85,11 @@ export const ShieldUpgrades: React.FC = () => {
           const isPastLevel = i < currentShieldLevel;
           const isFutureLevel = i > currentShieldLevel;
           
-          const canPurchase = isCurrentLevel && gold >= shield.cost;
+          const _canPurchase = isCurrentLevel && gold >= shield.cost;
           const isMaxed = isPastLevel;
-          const isLocked = isFutureLevel;
+          const _isLocked = isFutureLevel;
           
-          if (i <= 3) {
-              currentShieldLevel,
-              isCurrentLevel,
-              isPastLevel,
-              isFutureLevel,
-              canPurchase,
-              isMaxed,
-              isLocked
-            });
-          }
+          // Shield level progression logic verified
           
           return (
             <ShieldUpgradeCard

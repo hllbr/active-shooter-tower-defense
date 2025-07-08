@@ -181,8 +181,7 @@ export class MemoryLeakTester {
     
     // Log results
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      
-      
+      // Debug logging for comprehensive test results can be added here
     }
     
     return {

@@ -55,6 +55,7 @@ export class TowerFiringSystem {
     tower.lastFired = performance.now();
     
     if (GAME_CONSTANTS.DEBUG_MODE) {
+      // Debug logging for tower firing can be added here
     }
   }
 
@@ -231,6 +232,7 @@ export class TowerFiringSystem {
       
       // Debug targeting information
       if (GAME_CONSTANTS.DEBUG_MODE && threatScore) {
+        // Debug logging for targeting information can be added here
       }
 
       this.fireTower(tower, enemy, {
