@@ -1,22 +1,13 @@
 export class Logger {
   static log(...args: unknown[]): void {
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.log(...args);
-    }
+    // Logging disabled
   }
 
   static warn(...args: unknown[]): void {
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.warn(...args);
-    }
+    // Logging disabled
   }
 
   static error(...args: unknown[]): void {
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.error(...args);
-    }
+    // Logging disabled
   }
 }
