@@ -2,6 +2,7 @@
 export { EnemyFactory } from './EnemyFactory';
 export { EnemyMovement } from './EnemyMovement';
 export { SpawnPositionManager, getRandomSpawnPosition } from './SpawnPositionManager';
+export { SpawnZoneManager, spawnZoneManager } from './SpawnZoneManager';
 export { TargetFinder } from './TargetFinder';
 export { WaveSpawnManager } from './WaveSpawnManager';
 

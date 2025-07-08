@@ -11,6 +11,8 @@ export interface EnemySlice {
   removeBullet: (bulletId: string) => void;
   addEffect: (effect: Effect) => void;
   removeEffect: (effectId: string) => void;
+  clearAllEnemies: () => void;
+  clearAllEffects: () => void;
 }
 
 export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, get, _api) => ({
@@ -32,6 +34,17 @@ export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, g
 
   removeEffect: (effectId) => set((state: Store) => ({
     effects: state.effects.filter((e) => e.id !== effectId)
+  })),
+
+  // 🆕 UPGRADE SCREEN: Clear all enemies when entering upgrade
+  clearAllEnemies: () => set((_state: Store) => ({
+    enemies: []
+  })),
+
+  // 🆕 UPGRADE SCREEN: Clear all effects for clean slate
+  clearAllEffects: () => set((_state: Store) => ({
+    effects: [],
+    bullets: [] // Also clear bullets for complete cleanup
   })),
 
   removeEnemy: (enemyId) => set((state: Store) => {

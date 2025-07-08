@@ -1,5 +1,6 @@
 import { musicManager } from './musicManager';
 import { getSettings } from '../settings';
+import { GAME_CONSTANTS } from '../constants';
 
 export const audioCache: Record<string, HTMLAudioElement> = {};
 export const gameAudio: HTMLAudioElement | null = null;
@@ -62,12 +63,12 @@ export function playContextualSound(context: 'victory' | 'defeat' | 'warning' | 
     defeat: 'gameover',
     death: 'death-soundü',
     warning: 'gameover',
-    purchase: 'lock-break',
-    'tower-build': 'tower-create-sound',
-    'tower-upgrade': 'tower-levelup-sound',
-    'dice-roll': 'dice-roll',
+    purchase: 'lock-break',        // 🔊 UI_MARKET category - plays during upgrade
+    'tower-build': 'tower-create-sound',  // 🎮 GAME_SCENE category - paused during upgrade
+    'tower-upgrade': 'tower-levelup-sound', // 🎮 GAME_SCENE category - paused during upgrade
+    'dice-roll': 'dice-roll',      // 🔊 UI_MARKET category - plays during upgrade
     click: '',
-    unlock: 'lock-break'
+    unlock: 'lock-break'           // 🔊 UI_MARKET category - plays during upgrade
   };
   const soundFile = soundMap[context];
   if (soundFile) playSound(soundFile);
@@ -88,6 +89,120 @@ export function clearSoundCache(): void {
   musicManager.stop();
 }
 
+// 🎮 Sound categories for better management
+const SOUND_CATEGORIES = {
+  // Game scene sounds - paused during upgrade
+  GAME_SCENE: [
+    'explosion-large',
+    'explosion-small', 
+    'tower-attack-explosive',
+    'tower-attack-laser',
+    'tower-attack-plasma',
+    'tower-attack-sniper',
+    'tower-create-sound',
+    'tower-destroy',
+    'tower-levelup-sound',
+    'tower-repair',
+    'defeat-heavy',
+    'boss-bombing',
+    'boss-charge',
+    'boss-defeat',
+    'boss-entrance',
+    'boss-ground-slam',
+    'boss-missile',
+    'boss-phase-transition',
+    'boss-reality-tear',
+    'boss-spawn-minions',
+    'ambient-battle',
+    'ambient-wind',
+    'energy-recharge',
+    'freeze-effect',
+    'slow-effect',
+    'shield-activate',
+    'shield-break',
+    'gameover',
+    'wave-complete',
+    'victory-fanfare'
+  ],
+  
+  // UI/Market sounds - continue during upgrade
+  UI_MARKET: [
+    'dice-roll',
+    'click',
+    'hover',
+    'lock-break',
+    'coin-collect',
+    'gold-drop',
+    'loot-common',
+    'loot-rare',
+    'loot-epic',
+    'loot-legendary',
+    'pickup-common',
+    'pickup-rare',
+    'notification',
+    'error',
+    'countdown-beep'
+  ]
+} as const;
+
+/**
+ * 🎮 UPGRADE SCREEN: Stop only game scene sounds (keep UI/market sounds)
+ */
+export function pauseGameSceneSounds(): void {
+  // Only pause game scene sounds
+  SOUND_CATEGORIES.GAME_SCENE.forEach(soundName => {
+    const audio = soundCache.get(soundName);
+    if (audio && !audio.paused) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  });
+  
+  // Stop background music (this is game scene)
+  musicManager.stop();
+  
+  if (GAME_CONSTANTS.DEBUG_MODE) {
+    console.log('🎮 Game scene sounds paused:', SOUND_CATEGORIES.GAME_SCENE.length, 'sounds');
+    console.log('🔊 UI/Market sounds still active:', SOUND_CATEGORIES.UI_MARKET.length, 'sounds');
+    console.log('✅ Zar atma, satın alma gibi sesler çalışmaya devam ediyor');
+  }
+}
+
+/**
+ * 🔊 UPGRADE SCREEN: Resume game scene sounds after upgrade
+ */
+export function resumeGameSceneSounds(): void {
+  // Resume background music (main game scene audio)
+  import('./musicManager').then(({ startBackgroundMusic }) => {
+    setTimeout(() => {
+      startBackgroundMusic();
+    }, 500); // Small delay to prevent audio overlap
+  });
+  
+  if (GAME_CONSTANTS.DEBUG_MODE) {
+    console.log('🎮 Game scene sounds resumed after upgrade screen');
+    console.log('🔊 UI sounds were never paused, still active');
+  }
+}
+
+/**
+ * 🔇 LEGACY: Keep old function name for backward compatibility
+ * @deprecated Use pauseGameSceneSounds() instead
+ */
+export function pauseAllSounds(): void {
+  console.warn('⚠️ pauseAllSounds() is deprecated, use pauseGameSceneSounds()');
+  pauseGameSceneSounds();
+}
+
+/**
+ * 🔊 LEGACY: Keep old function name for backward compatibility
+ * @deprecated Use resumeGameSceneSounds() instead
+ */
+export function resumeAllSounds(): void {
+  console.warn('⚠️ resumeAllSounds() is deprecated, use resumeGameSceneSounds()');
+  resumeGameSceneSounds();
+}
+
 export function getMissingSounds(): string[] {
   return Array.from(missingSounds);
 }
@@ -100,4 +215,20 @@ export function validateSounds(): { available: string[]; missing: string[] } {
     if (missingSounds.has(sound)) missing.push(sound); else available.push(sound);
   });
   return { available, missing };
+}
+
+/**
+ * 🔍 DEBUG: Show sound categories for testing
+ */
+export function debugSoundCategories(): void {
+  console.log('🎮 GAME SCENE SOUNDS (paused during upgrade):');
+  console.log(SOUND_CATEGORIES.GAME_SCENE);
+  console.log('\n🔊 UI/MARKET SOUNDS (continue during upgrade):');
+  console.log(SOUND_CATEGORIES.UI_MARKET);
+  console.log('\n💡 Test: Upgrade ekranını açın ve zar atın - ses çalmalı!');
+}
+
+// Add debug function to window for console access
+if (typeof window !== 'undefined') {
+  (window as Window & { debugSoundCategories?: () => void }).debugSoundCategories = debugSoundCategories;
 }

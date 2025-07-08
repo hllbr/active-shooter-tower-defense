@@ -623,16 +623,16 @@ export const GAME_CONSTANTS = {
   INITIAL_SLOT_COUNT: 4,
   INITIAL_TOWER_LIMIT: 4,
 
-  // Enemy
-  ENEMY_SIZE: 36,
+  // Enemy - Improved for better visual clarity
+  ENEMY_SIZE: 32, // Reduced from 36 to 32 for less screen coverage
   ENEMY_HEALTH: 60,
   ENEMY_SPEED: 80,
   ENEMY_GOLD_DROP: 50,
-  ENEMY_SPAWN_RATE: 800,
+  ENEMY_SPAWN_RATE: 1200, // Increased from 800ms to 1200ms for better pacing
   ENEMY_WAVE_INCREASE: 2,
   ENEMY_HEALTH_INCREASE: 25,
   ENEMY_COLORS: ['#ff3333', '#ff8800', '#ffcc00'],
-  ENEMY_HEALTHBAR_HEIGHT: 6,
+  ENEMY_HEALTHBAR_HEIGHT: 4, // Reduced from 6 to 4 for less visual clutter
   ENEMY_TYPES: {
     // Basic Enemies (Wave 1-10)
     Basic: { speed: 80, hp: 60, damage: 10, color: '#ff3333', behaviorTag: 'normal' },
@@ -1261,4 +1261,41 @@ export const GAME_CONSTANTS = {
       }
     }
   },
-} as const; 
+
+  // Spawn Zone System (NEW)
+  SPAWN_ZONES: {
+    ENABLED: true, // Enable zone-based spawning
+    DEBUG_VISIBLE: false, // Show zones visually (separate from general debug)
+    PERFORMANCE_LOGGING: true, // Log performance improvements
+    FALLBACK_TO_LEGACY: false, // Fallback to edge spawning if needed
+  },
+  } as const;
+
+// Debug utilities for spawn zone testing
+export const toggleDebugMode = () => {
+  const constants = GAME_CONSTANTS as { DEBUG_MODE: boolean };
+  constants.DEBUG_MODE = !constants.DEBUG_MODE;
+  console.log(`🐛 Debug mode ${constants.DEBUG_MODE ? 'ENABLED' : 'DISABLED'}`);
+  console.log('🎯 Spawn zones will be', constants.DEBUG_MODE ? 'visible' : 'hidden');
+  return constants.DEBUG_MODE;
+};
+
+export const toggleSpawnZoneDebug = () => {
+  const spawnZones = GAME_CONSTANTS.SPAWN_ZONES as { DEBUG_VISIBLE: boolean };
+  spawnZones.DEBUG_VISIBLE = !spawnZones.DEBUG_VISIBLE;
+  console.log(`🎯 Spawn zone debug ${spawnZones.DEBUG_VISIBLE ? 'ENABLED' : 'DISABLED'}`);
+  return spawnZones.DEBUG_VISIBLE;
+};
+
+// Add to window for easy console access
+if (typeof window !== 'undefined') {
+  const globalWindow = window as Window & { 
+    toggleDebugMode?: () => boolean; 
+    toggleSpawnZoneDebug?: () => boolean; 
+  };
+  globalWindow.toggleDebugMode = toggleDebugMode;
+  globalWindow.toggleSpawnZoneDebug = toggleSpawnZoneDebug;
+  console.log('💡 Console commands available:');
+  console.log('  toggleDebugMode() - Toggle general debug mode');
+  console.log('  toggleSpawnZoneDebug() - Toggle spawn zone visualization');
+} 
