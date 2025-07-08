@@ -77,22 +77,7 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   // Show build text logic
   const shouldShowBuildText = canBuild;
 
-  // Debug logging for slot unlock
-  React.useEffect(() => {
-    if (!slot.unlocked && slotIdx >= 4) {
-        slotIdx,
-        unlocked: slot.unlocked,
-        unlockCost,
-        costArray: GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD,
-        gold,
-        energy,
-        energyNeeded: GAME_CONSTANTS.ENERGY_COSTS.buildTower,
-        canUnlock,
-        hasEnoughGold: gold >= unlockCost,
-        hasEnoughEnergy: energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower
-      });
-    }
-  }, [slot.unlocked, slotIdx, canUnlock, energy, gold, unlockCost]);
+
 
   // Event handlers
   const handleContextMenu = (e: React.MouseEvent) => {
