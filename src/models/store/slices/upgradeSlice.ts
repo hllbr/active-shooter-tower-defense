@@ -79,11 +79,9 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
   },
 
   initializeAchievements: () => {
-    console.log('Achievement system initialized');
   },
 
   triggerAchievementEvent: (eventType, eventData) => {
-    console.log(`Achievement event: ${eventType}`, eventData);
   },
 
   unlockTowerType: (towerType) => set((state: Store) => {
@@ -133,7 +131,6 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
       globalWallStrength: state.globalWallStrength + strengthBonus, // CRITICAL FIX: Shield gücünü de güncelle
     });
     
-    console.log(`🛡️ Shield upgrade: ${upgradeId} (+${strengthBonus} strength) - Total: ${state.globalWallStrength + strengthBonus}`);
     return true;
   },
 

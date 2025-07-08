@@ -96,7 +96,6 @@ export class SecurityManager {
    * Initialize security systems
    */
   private initializeSecurity(): void {
-    console.log('🔒 Security Manager initialized');
     
     // Set up periodic security checks
     setInterval(() => {

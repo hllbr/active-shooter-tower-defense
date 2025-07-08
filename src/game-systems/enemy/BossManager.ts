@@ -119,7 +119,6 @@ export class BossManager {
     playSound('boss-entrance');
     
     // Show entrance message
-    console.log(`Boss Entrance: ${definition.cinematicData.entranceText}`);
 
     // Create entrance visual effects
     addEffect({
@@ -245,7 +244,6 @@ export class BossManager {
     playSound('boss-phase-transition');
 
     // Show phase transition message
-    console.log(`Boss Phase Transition: ${definition.name} enters ${phaseData.name}!`);
 
     // Create phase transition effect
     addEffect({
@@ -373,7 +371,6 @@ export class BossManager {
     playSound('boss-defeat');
     
     // Show defeat message
-    console.log(`Boss Defeated: ${definition.cinematicData.defeatText}`);
 
     // Create defeat effect
     addEffect({
@@ -419,7 +416,6 @@ export class BossManager {
         // Trigger achievement (integrate with achievement system)
         break;
       default:
-        console.log(`Boss loot: ${lootEntry.itemName} x${lootEntry.amount}`);
     }
 
     // Create loot drop effect
@@ -438,7 +434,6 @@ export class BossManager {
     });
 
     // Show loot notification
-    console.log(`Boss loot acquired: ${lootEntry.itemName}`);
   }
 
   /**

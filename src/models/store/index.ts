@@ -68,7 +68,6 @@ try {
     maxEnergy
   );
 
-  console.log('✅ Energy Manager initialized successfully');
 } catch (error) {
   console.error('❌ Energy Manager initialization failed:', error);
   energyManager.reset();

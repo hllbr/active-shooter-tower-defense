@@ -11,12 +11,10 @@ export class ContinueButtonTest {
    * Test Continue Button Chain
    */
   static testContinueButton() {
-    console.log('🧪 Testing Continue Button Chain...');
     
     const store = useGameStore.getState();
     
     // Initial state
-    console.log(`Initial state:`, {
       currentWave: store.currentWave,
       isRefreshing: store.isRefreshing,
       isPreparing: store.isPreparing,
@@ -40,11 +38,9 @@ export class ContinueButtonTest {
       return false;
     }
     
-    console.log('✅ All required functions exist');
     
     // Test the exact sequence from UpgradeScreen
     try {
-      console.log('🔄 Executing continue sequence...');
       
       const initialWave = store.currentWave;
       
@@ -65,7 +61,6 @@ export class ContinueButtonTest {
       // Check results
       setTimeout(() => {
         const result = useGameStore.getState();
-        console.log(`After continue sequence:`, {
           currentWave: result.currentWave,
           isRefreshing: result.isRefreshing,
           isPreparing: result.isPreparing,
@@ -78,16 +73,9 @@ export class ContinueButtonTest {
         const screenClosed = !result.isRefreshing;
         const killsReset = result.enemiesKilled === 0;
         
-        console.log('📊 Continue Button Results:');
-        console.log(`✅ Wave incremented: ${waveIncremented}`);
-        console.log(`✅ Preparation started: ${preparationStarted}`);
-        console.log(`✅ Screen closed: ${screenClosed}`);
-        console.log(`✅ Kills reset: ${killsReset}`);
         
         if (waveIncremented && preparationStarted && killsReset) {
-          console.log('🎉 Continue button works correctly!');
         } else {
-          console.log('❌ Continue button has issues');
         }
       }, 100);
       

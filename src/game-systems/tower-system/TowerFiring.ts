@@ -55,7 +55,6 @@ export class TowerFiringSystem {
     tower.lastFired = performance.now();
     
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log(`🔫 Tower ${tower.id} fired upgraded bullet (${damage} dmg) at ${enemy.id}`);
     }
   }
 
@@ -232,7 +231,6 @@ export class TowerFiringSystem {
       
       // Debug targeting information
       if (GAME_CONSTANTS.DEBUG_MODE && threatScore) {
-        console.log(`Tower ${tower.id} (L${tower.level}) targeting ${enemy.type} with threat score: ${threatScore.toFixed(1)}`);
       }
 
       this.fireTower(tower, enemy, {

@@ -19,7 +19,6 @@ export class SpawnPositionManager {
       
       // Log performance occasionally (every 100th call)
       if (Math.random() < 0.01) {
-        console.log(`🎯 Zone spawn time: ${(endTime - startTime).toFixed(3)}ms (vs ~0.5-2ms for edge spawn)`);
       }
       
       return position;

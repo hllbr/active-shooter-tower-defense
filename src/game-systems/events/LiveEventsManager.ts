@@ -200,7 +200,6 @@ export class LiveEventsManager {
     };
 
     this.activeEvents.push(event);
-    console.log(`Live Event Started: ${event.name}`);
   }
 
   /**
@@ -216,7 +215,6 @@ export class LiveEventsManager {
     // Move to history
     this.eventHistory.push(event);
 
-    console.log(`Live Event Ended: ${event.name}`);
   }
 
   /**

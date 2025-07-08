@@ -41,7 +41,6 @@ export function updateEffects() {
   // Log performance statistics periodically
   if (GAME_CONSTANTS.DEBUG_MODE && Math.random() < 0.01) { // 1% chance per frame
     const stats = effectPool.getStats();
-    console.log(`🎆 Effect Pool Stats: ${stats.activeCount} active, ${stats.poolSize} pooled, ${stats.reuseRate.toFixed(1)}% reuse`);
   }
 }
 
@@ -70,6 +69,5 @@ export function performMemoryCleanup(): void {
   effectPool.clear();
   
   if (GAME_CONSTANTS.DEBUG_MODE) {
-    console.log('🧹 Memory cleanup completed');
   }
 } 

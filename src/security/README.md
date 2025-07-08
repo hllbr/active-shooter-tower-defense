@@ -158,9 +158,6 @@ In development mode, security events are logged to console:
 ### Security Statistics
 ```typescript
 const stats = getSecurityStatus();
-console.log('Total events:', stats.totalEvents);
-console.log('Suspicious activities:', stats.suspiciousActivityCount);
-console.log('System locked:', stats.isLocked);
 ```
 
 ## Best Practices

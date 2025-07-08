@@ -57,7 +57,6 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
   const newShieldStrength = (globalWallStrength + shield.strength) * 10;
 
   const handleClick = () => {
-    console.log(`🛡️ Shield purchase attempt:`, {
       shield: shield.name,
       index,
       canAfford,
@@ -80,7 +79,6 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
         : isFutureLevel 
           ? 'Locked - complete previous levels first'
           : 'Not enough gold';
-      console.log(`❌ Shield purchase blocked:`, { reason });
     }
   };
 

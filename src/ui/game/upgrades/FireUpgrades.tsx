@@ -38,7 +38,6 @@ export const FireUpgrades: React.FC = () => {
         
         // Debug logging
         if (level <= 4) {
-          console.log(`🔍 ${bulletType.name} (Level ${level}):`, {
             currentBulletLevel,
             isCurrentLevel,
             isNextLevel,
@@ -62,11 +61,9 @@ export const FireUpgrades: React.FC = () => {
           maxLevel: 1,
           onUpgrade: () => {
             if (!isNextLevel) {
-              console.log(`❌ ${bulletType.name} - Progression hatası! Önce Level ${currentBulletLevel + 1} alın.`);
               return;
             }
             
-            console.log(`🚀 ${bulletType.name} onUpgrade clicked!`);
             
             // Zar indirimleri
             let discountedCost = cost;
@@ -79,11 +76,9 @@ export const FireUpgrades: React.FC = () => {
               discountedCost = Math.floor(discountedCost / discountMultiplier);
             }
             
-            console.log(`💰 Attempting purchase: ${bulletType.name} for ${discountedCost} gold`);
             
             // CRITICAL FIX: Normal bullet upgrade kullan
             upgradeBullet(false);
-            console.log(`✅ ${bulletType.name} upgrade successful! New bullet level: ${currentBulletLevel + 1}`);
           },
           icon: isPastLevel ? "✅" : isCurrentLevel ? "🔥" : isLocked ? "🔒" : "🔥",
           color: isPastLevel 

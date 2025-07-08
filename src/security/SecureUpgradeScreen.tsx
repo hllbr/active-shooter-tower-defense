@@ -52,7 +52,6 @@ export const SecureUpgradeScreen: React.FC = () => {
 
   useEffect(() => {
     // Log security event when upgrade screen is accessed
-    console.log('🔒 Security: Upgrade screen accessed');
 
     const interval = setInterval(() => {
       setSecurityStats(securityManager.getSecurityStats());

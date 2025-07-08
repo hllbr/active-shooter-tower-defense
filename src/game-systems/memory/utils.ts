@@ -23,7 +23,6 @@ export const testMemoryLeaks = async (): Promise<boolean> => {
  * Memory usage monitoring for development
  */
 export const startMemoryMonitoring = (interval: number = 5000): () => void => {
-  console.log('🔍 Starting memory monitoring...');
   
   const intervalId = setInterval(() => {
     const sample = memoryTester.sample();
@@ -31,7 +30,6 @@ export const startMemoryMonitoring = (interval: number = 5000): () => void => {
       const analysis = memoryTester.analyzeTrend();
       
       if (GAME_CONSTANTS.DEBUG_MODE) {
-        console.log(`💾 Memory: ${(sample.heapUsed / 1024 / 1024).toFixed(1)} MB, Trend: ${analysis.trend}`);
         
         if (analysis.trend === 'rising') {
           console.warn('⚠️ Memory usage is rising - potential leak detected');
@@ -43,6 +41,5 @@ export const startMemoryMonitoring = (interval: number = 5000): () => void => {
   // Return cleanup function
   return () => {
     clearInterval(intervalId);
-    console.log('🔍 Memory monitoring stopped');
   };
 }; 

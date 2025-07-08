@@ -80,7 +80,6 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   // Debug logging for slot unlock
   React.useEffect(() => {
     if (!slot.unlocked && slotIdx >= 4) {
-      console.log(`🔍 Slot ${slotIdx} unlock status:`, {
         slotIdx,
         unlocked: slot.unlocked,
         unlockCost,

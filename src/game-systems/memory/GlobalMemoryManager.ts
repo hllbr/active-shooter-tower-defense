@@ -73,7 +73,6 @@ export class GlobalMemoryManager {
    */
   performMaintenanceCleanup(): void {
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log('🧹 Performing maintenance cleanup');
     }
     
     // Clean up stale objects

@@ -173,7 +173,6 @@ export class MemoryLeakTester {
     effectTest: MemoryTestResult;
     overallPassed: boolean;
   }> {
-    console.log('🧪 Starting comprehensive memory leak test...');
     
     const bulletTest = await this.testBulletMemoryLeaks(500);
     const effectTest = await this.testEffectMemoryLeaks(500);
@@ -182,16 +181,8 @@ export class MemoryLeakTester {
     
     // Log results
     if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log('📊 Memory Test Results:');
-      console.log(`  Bullet Test: ${bulletTest.passed ? '✅ PASSED' : '❌ FAILED'}`);
-      console.log(`    Memory Growth: ${bulletTest.memoryGrowthPercent.toFixed(2)}%`);
-      console.log(`    Duration: ${bulletTest.duration.toFixed(0)}ms`);
       
-      console.log(`  Effect Test: ${effectTest.passed ? '✅ PASSED' : '❌ FAILED'}`);
-      console.log(`    Memory Growth: ${effectTest.memoryGrowthPercent.toFixed(2)}%`);
-      console.log(`    Duration: ${effectTest.duration.toFixed(0)}ms`);
       
-      console.log(`  Overall: ${overallPassed ? '✅ PASSED' : '❌ FAILED'}`);
     }
     
     return {

@@ -198,7 +198,6 @@ export class SpawnZoneManager {
       }
     ];
 
-    console.log(`🎯 SpawnZoneManager initialized with ${this.spawnZones.length} spawn zones`);
   }
 
   /**
@@ -275,7 +274,6 @@ export class SpawnZoneManager {
     if (!zone) return false;
 
     zone.active = active !== undefined ? active : !zone.active;
-    console.log(`🎯 Zone ${zoneId} ${zone.active ? 'activated' : 'deactivated'}`);
     return true;
   }
 
@@ -287,7 +285,6 @@ export class SpawnZoneManager {
     if (!zone) return false;
 
     zone.weight = Math.max(0, weight);
-    console.log(`🎯 Zone ${zoneId} weight updated to ${weight}`);
     return true;
   }
 
@@ -322,7 +319,6 @@ export class SpawnZoneManager {
     }
 
     const activeCount = this.spawnZones.filter(z => z.active).length;
-    console.log(`🎯 Wave ${wave}: ${activeCount} spawn zones active`);
   }
 }
 

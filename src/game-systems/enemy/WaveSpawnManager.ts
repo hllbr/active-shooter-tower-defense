@@ -98,7 +98,6 @@ export class WaveSpawnManager {
       
       // ✅ CRITICAL FIX: Stop spawning if game is over
       if (state.isGameOver) {
-        console.log('💀 Stopping enemy spawn: Game Over');
         if (WaveSpawnManager.spawnInterval) {
           clearInterval(WaveSpawnManager.spawnInterval);
           WaveSpawnManager.spawnInterval = null;
@@ -186,7 +185,6 @@ export class WaveSpawnManager {
       if (emptySlots.length > 0) {
         // Choose random empty slot instead of first one for variety
         const randomSlot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
-        console.log(`🏗️ Auto-building starter tower at slot ${randomSlot.index} (${emptySlots.length} slots available)`);
         buildTower(randomSlot.index, true); // Free tower placement
       } else {
         console.warn('⚠️ No unlocked slots available for auto tower placement!');

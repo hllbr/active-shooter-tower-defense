@@ -86,7 +86,6 @@ export class BulletUpdateSystem {
         }
         
         if (GAME_CONSTANTS.DEBUG_MODE) {
-          console.log(`Bullet ${bullet.id} hit enemy ${enemy.id} at collision time: ${collisionResult.collisionTime?.toFixed(3)}`);
         }
       }
     );

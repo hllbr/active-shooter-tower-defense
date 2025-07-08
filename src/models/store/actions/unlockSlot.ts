@@ -6,26 +6,22 @@ import { useGameStore } from '../index';
 export function unlockSlotAction(state: Store, slotIdx: number): Partial<Store> {
   const slot = state.towerSlots[slotIdx];
   if (slot.unlocked) {
-    console.log(`❌ Slot ${slotIdx} already unlocked`);
     return {};
   }
 
   const cost = GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] ?? 2400;
   if (state.gold < cost) {
-    console.log(`❌ Not enough gold: need ${cost}, have ${state.gold}`);
     return {};
   }
 
   const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower;
   if (!energyManager.consume(energyCost, 'unlockSlot')) {
-    console.log(`❌ Not enough energy: need ${energyCost}`);
     return {};
   }
 
   const newSlots = [...state.towerSlots];
   newSlots[slotIdx] = { ...slot, unlocked: true };
 
-  console.log(`✅ Slot ${slotIdx} unlocked! Cost: ${cost}💰, New tower limit: ${state.maxTowers + 1}`);
 
   setTimeout(() => {
     import('../../../utils/sound').then(({ playContextualSound }) => {

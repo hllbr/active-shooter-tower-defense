@@ -11,12 +11,10 @@ export class ButtonTestDiagnostic {
    * Test Dice Rolling System
    */
   static testDiceRolling() {
-    console.log('🧪 Testing Dice Rolling System...');
     
     const store = useGameStore.getState();
     
     // Initial state check
-    console.log(`Initial state:`, {
       diceUsed: store.diceUsed,
       isDiceRolling: store.isDiceRolling,
       diceRoll: store.diceRoll,
@@ -33,12 +31,10 @@ export class ButtonTestDiagnostic {
     store.resetDice();
     
     // Test dice rolling
-    console.log('🎲 Attempting to roll dice...');
     store.rollDice();
     
     // Check immediate state
     const afterRoll = useGameStore.getState();
-    console.log(`After rollDice():`, {
       diceUsed: afterRoll.diceUsed,
       isDiceRolling: afterRoll.isDiceRolling,
       diceRoll: afterRoll.diceRoll,
@@ -48,7 +44,6 @@ export class ButtonTestDiagnostic {
     // Wait for animation to complete
     setTimeout(() => {
       const finalState = useGameStore.getState();
-      console.log(`Final state after animation:`, {
         diceUsed: finalState.diceUsed,
         isDiceRolling: finalState.isDiceRolling,
         diceRoll: finalState.diceRoll,
@@ -56,9 +51,7 @@ export class ButtonTestDiagnostic {
       });
       
       if (finalState.diceRoll && finalState.diceUsed && !finalState.isDiceRolling) {
-        console.log('✅ Dice rolling works correctly!');
       } else {
-        console.log('❌ Dice rolling has issues');
       }
     }, 3000);
     
@@ -69,12 +62,10 @@ export class ButtonTestDiagnostic {
    * Test Continue Button Chain
    */
   static testContinueButton() {
-    console.log('🧪 Testing Continue Button Chain...');
     
     const store = useGameStore.getState();
     
     // Initial state
-    console.log(`Initial state:`, {
       currentWave: store.currentWave,
       isRefreshing: store.isRefreshing,
       isPreparing: store.isPreparing,
@@ -98,11 +89,9 @@ export class ButtonTestDiagnostic {
       return false;
     }
     
-    console.log('✅ All required functions exist');
     
     // Test the exact sequence from UpgradeScreen
     try {
-      console.log('🔄 Executing continue sequence...');
       
       const initialWave = store.currentWave;
       
@@ -123,7 +112,6 @@ export class ButtonTestDiagnostic {
       // Check results
       setTimeout(() => {
         const result = useGameStore.getState();
-        console.log(`After continue sequence:`, {
           currentWave: result.currentWave,
           isRefreshing: result.isRefreshing,
           isPreparing: result.isPreparing,
@@ -136,16 +124,9 @@ export class ButtonTestDiagnostic {
         const screenClosed = !result.isRefreshing;
         const killsReset = result.enemiesKilled === 0;
         
-        console.log('📊 Continue Button Results:');
-        console.log(`✅ Wave incremented: ${waveIncremented}`);
-        console.log(`✅ Preparation started: ${preparationStarted}`);
-        console.log(`✅ Screen closed: ${screenClosed}`);
-        console.log(`✅ Kills reset: ${killsReset}`);
         
         if (waveIncremented && preparationStarted && killsReset) {
-          console.log('🎉 Continue button works correctly!');
         } else {
-          console.log('❌ Continue button has issues');
         }
       }, 100);
       
@@ -161,11 +142,9 @@ export class ButtonTestDiagnostic {
    * Test Upgrade Screen State
    */
   static testUpgradeScreenState() {
-    console.log('🧪 Testing Upgrade Screen State...');
     
     const store = useGameStore.getState();
     
-    console.log(`Current upgrade screen state:`, {
       isRefreshing: store.isRefreshing,
       gold: store.gold,
       currentWave: store.currentWave,
@@ -179,7 +158,6 @@ export class ButtonTestDiagnostic {
     store.setRefreshing(true);
     
     const opened = useGameStore.getState().isRefreshing;
-    console.log(`✅ Upgrade screen opens: ${opened}`);
     
     return opened;
   }
@@ -188,7 +166,6 @@ export class ButtonTestDiagnostic {
    * Run All Button Tests
    */
   static runAllTests() {
-    console.log('🚀 Running Button Test Diagnostic Suite...\n');
     
     const results = {
       upgradeScreenState: this.testUpgradeScreenState(),
@@ -196,13 +173,10 @@ export class ButtonTestDiagnostic {
       continueButton: this.testContinueButton(),
     };
     
-    console.log('\n📊 Button Test Results:');
     Object.entries(results).forEach(([test, passed]) => {
-      console.log(`${passed ? '✅' : '❌'} ${test}: ${passed ? 'PASSED' : 'FAILED'}`);
     });
     
     const allPassed = Object.values(results).every(result => result);
-    console.log(`\n🎯 Overall: ${allPassed ? 'ALL BUTTON TESTS PASSED' : 'SOME BUTTON TESTS FAILED'}`);
     
     return results;
   }

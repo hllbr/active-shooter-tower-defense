@@ -34,7 +34,6 @@ export class ButtonTestDiagnostic {
    * Run All Button Tests
    */
   static runAllTests() {
-    console.log('🚀 Running Button Test Diagnostic Suite...\n');
     
     const results = {
       upgradeScreenState: this.testUpgradeScreenState(),
@@ -42,13 +41,10 @@ export class ButtonTestDiagnostic {
       continueButton: this.testContinueButton(),
     };
     
-    console.log('\n📊 Button Test Results:');
     Object.entries(results).forEach(([test, passed]) => {
-      console.log(`${passed ? '✅' : '❌'} ${test}: ${passed ? 'PASSED' : 'FAILED'}`);
     });
     
     const allPassed = Object.values(results).every(result => result);
-    console.log(`\n🎯 Overall: ${allPassed ? 'ALL BUTTON TESTS PASSED' : 'SOME BUTTON TESTS FAILED'}`);
     
     return results;
   }

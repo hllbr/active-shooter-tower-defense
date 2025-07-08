@@ -50,18 +50,15 @@ export const ShieldUpgrades: React.FC = () => {
     
     const currentShieldLevel = wallLevel || 0;
     if (index !== currentShieldLevel) {
-      console.log(`❌ Shield progression error! Current: ${currentShieldLevel}, Attempted: ${index}`);
       return;
     }
     
-    console.log(`🛡️ Processing shield upgrade:`, {
       shield: shield.name,
       cost: finalCost,
       currentLevel: currentShieldLevel
     });
     
     upgradeWall();
-    console.log(`✅ Shield upgrade successful: ${shield.name} (+${shield.strength} strength)`);
   };
 
   return (
@@ -94,7 +91,6 @@ export const ShieldUpgrades: React.FC = () => {
           const isLocked = isFutureLevel;
           
           if (i <= 3) {
-            console.log(`🔍 ${shield.name} (Level ${i}):`, {
               currentShieldLevel,
               isCurrentLevel,
               isPastLevel,
