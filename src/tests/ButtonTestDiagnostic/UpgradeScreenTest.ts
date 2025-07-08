@@ -4,6 +4,7 @@
  */
 
 import { useGameStore } from '../../models/store';
+import { Logger } from '../../utils/Logger';
 
 export class UpgradeScreenTest {
   
@@ -11,9 +12,11 @@ export class UpgradeScreenTest {
    * Test Upgrade Screen State
    */
   static testUpgradeScreenState() {
+    Logger.log('📱 Testing upgrade screen state...');
     
     const store = useGameStore.getState();
     
+    console.log({
       isRefreshing: store.isRefreshing,
       gold: store.gold,
       currentWave: store.currentWave,
@@ -27,6 +30,7 @@ export class UpgradeScreenTest {
     store.setRefreshing(true);
     
     const opened = useGameStore.getState().isRefreshing;
+    Logger.log(`Upgrade screen opened: ${opened}`);
     
     return opened;
   }

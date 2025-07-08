@@ -56,6 +56,7 @@ export class StatePerformanceMonitor {
     const efficiency = this.getEfficiencyPercent().toFixed(1);
     const updateRate = this.getUpdateRate().toFixed(1);
     
+    console.log(`State Performance Monitor:
       Update Rate: ${updateRate}/sec
       Total Updates: ${this.metrics.totalUpdates}
       Skipped: ${this.metrics.skippedUpdates} (${efficiency}% efficiency)

@@ -7,9 +7,11 @@ import { useGameStore } from '../models/store';
 import { Logger } from '../utils/Logger';
 
 export function testContinueButton() {
+  Logger.log('🔧 Testing continue button...');
   
   const store = useGameStore.getState();
   
+  console.log({
     currentWave: store.currentWave,
     isRefreshing: store.isRefreshing,
     isPreparing: store.isPreparing
@@ -18,6 +20,7 @@ export function testContinueButton() {
   // Test 1: nextWave function
   try {
     store.nextWave();
+    Logger.log('✅ nextWave executed');
   } catch (error) {
     Logger.error('❌ nextWave failed:', error);
   }
@@ -25,6 +28,7 @@ export function testContinueButton() {
   // Test 2: startPreparation function
   try {
     store.startPreparation();
+    Logger.log('✅ startPreparation executed');
   } catch (error) {
     Logger.error('❌ startPreparation failed:', error);
   }
@@ -32,6 +36,7 @@ export function testContinueButton() {
   // Test 3: resetDice function
   try {
     store.resetDice();
+    Logger.log('✅ resetDice executed');
   } catch (error) {
     Logger.error('❌ resetDice failed:', error);
   }
@@ -39,11 +44,13 @@ export function testContinueButton() {
   // Test 4: setRefreshing function
   try {
     store.setRefreshing(false);
+    Logger.log('✅ setRefreshing executed');
   } catch (error) {
     Logger.error('❌ setRefreshing failed:', error);
   }
   
   const finalState = useGameStore.getState();
+  console.log({
     currentWave: finalState.currentWave,
     isRefreshing: finalState.isRefreshing,
     isPreparing: finalState.isPreparing
@@ -51,9 +58,11 @@ export function testContinueButton() {
 }
 
 export function testDiceButton() {
+  Logger.log('🔧 Testing dice button...');
   
   const store = useGameStore.getState();
   
+  console.log({
     diceUsed: store.diceUsed,
     isDiceRolling: store.isDiceRolling,
     diceRoll: store.diceRoll
@@ -61,9 +70,11 @@ export function testDiceButton() {
   
   try {
     store.rollDice();
+    Logger.log('✅ rollDice executed');
     
     setTimeout(() => {
       const afterState = useGameStore.getState();
+      console.log({
         diceUsed: afterState.diceUsed,
         isDiceRolling: afterState.isDiceRolling,
         diceRoll: afterState.diceRoll

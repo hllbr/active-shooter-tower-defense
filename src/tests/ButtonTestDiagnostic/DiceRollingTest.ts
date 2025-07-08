@@ -12,10 +12,12 @@ export class DiceRollingTest {
    * Test Dice Rolling System
    */
   static testDiceRolling() {
+    Logger.log('🎲 Testing dice rolling...');
     
     const store = useGameStore.getState();
     
     // Initial state check
+    console.log({
       diceUsed: store.diceUsed,
       isDiceRolling: store.isDiceRolling,
       diceRoll: store.diceRoll,
@@ -36,6 +38,7 @@ export class DiceRollingTest {
     
     // Check immediate state
     const afterRoll = useGameStore.getState();
+    console.log({
       diceUsed: afterRoll.diceUsed,
       isDiceRolling: afterRoll.isDiceRolling,
       diceRoll: afterRoll.diceRoll,
@@ -45,6 +48,7 @@ export class DiceRollingTest {
     // Wait for animation to complete
     setTimeout(() => {
       const finalState = useGameStore.getState();
+      console.log({
         diceUsed: finalState.diceUsed,
         isDiceRolling: finalState.isDiceRolling,
         diceRoll: finalState.diceRoll,
@@ -52,7 +56,9 @@ export class DiceRollingTest {
       });
       
       if (finalState.diceRoll && finalState.diceUsed && !finalState.isDiceRolling) {
+        Logger.log('✅ Dice rolling test passed');
       } else {
+        Logger.error('❌ Dice rolling test failed');
       }
     }, 3000);
     

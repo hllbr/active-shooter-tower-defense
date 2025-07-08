@@ -38,6 +38,7 @@ export const FireUpgrades: React.FC = () => {
         
         // Debug logging
         if (level <= 4) {
+          console.log({
             currentBulletLevel,
             isCurrentLevel,
             isNextLevel,
@@ -76,6 +77,7 @@ export const FireUpgrades: React.FC = () => {
               discountedCost = Math.floor(discountedCost / discountMultiplier);
             }
             
+            console.log(`Upgrading bullet with cost: ${discountedCost}`);
             
             // CRITICAL FIX: Normal bullet upgrade kullan
             upgradeBullet(false);

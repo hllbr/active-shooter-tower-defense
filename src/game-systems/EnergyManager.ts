@@ -76,11 +76,13 @@ class EnergyManager {
       finalAmount = Math.max(1, Math.ceil(amount * (1 - efficiency)));
       
       if (GAME_CONSTANTS.DEBUG_MODE && finalAmount !== amount) {
+        console.log(`Energy efficiency applied: ${amount} -> ${finalAmount}`);
       }
     }
     
     if (this.energy < finalAmount) {
       if (GAME_CONSTANTS.DEBUG_MODE) {
+        console.log(`Energy consumption failed: ${action} requires ${finalAmount}, have ${this.energy}`);
       }
       
       // ✅ CRITICAL FIX: User-friendly Turkish energy messages
@@ -95,6 +97,7 @@ class EnergyManager {
     this.history.push(log);
     if (this.setState) this.setState(this.energy, null);
     if (GAME_CONSTANTS.DEBUG_MODE) {
+      console.log(`Energy consumed: ${finalAmount} for ${action}, remaining: ${this.energy}`);
     }
     this.listeners.forEach(l => l(this.energy, log));
     return true;
@@ -109,6 +112,7 @@ class EnergyManager {
     this.history.push(log);
     if (this.setState) this.setState(this.energy, null);
     if (GAME_CONSTANTS.DEBUG_MODE) {
+      console.log(`Energy added: ${amount} for ${action}, remaining: ${this.energy}`);
     }
     this.listeners.forEach(l => l(this.energy, log));
   }

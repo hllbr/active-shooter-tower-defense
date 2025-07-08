@@ -51,9 +51,11 @@ export const ShieldUpgrades: React.FC = () => {
     
     const currentShieldLevel = wallLevel || 0;
     if (index !== currentShieldLevel) {
+      Logger.error(`❌ Invalid purchase attempt: index ${index} !== currentLevel ${currentShieldLevel}`);
       return;
     }
     
+    console.log({
       shield: shield.name,
       cost: finalCost,
       currentLevel: currentShieldLevel
@@ -92,6 +94,7 @@ export const ShieldUpgrades: React.FC = () => {
           const isLocked = isFutureLevel;
           
           if (i <= 3) {
+            console.log({
               currentShieldLevel,
               isCurrentLevel,
               isPastLevel,

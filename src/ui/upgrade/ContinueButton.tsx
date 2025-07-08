@@ -81,6 +81,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   };
 
   const handleContinueClick = () => {
+    console.log({
       currentWave,
       isRefreshing,
       isPreparing,
@@ -109,6 +110,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   // ✅ DEBUG: Global debug function for testing
   useEffect(() => {
     (window as unknown as { debugContinueButton: () => void }).debugContinueButton = () => {
+      console.log({
         isRefreshing,
         isProcessing,
         isDisabled,

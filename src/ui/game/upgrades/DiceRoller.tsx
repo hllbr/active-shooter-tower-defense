@@ -16,6 +16,7 @@ export const DiceRoller: React.FC = () => {
   const rollDice = useGameStore((state: Store) => state.rollDice);
 
   const handleDiceRoll = () => {
+    console.log({
       diceUsed,
       isDiceRolling,
       diceRoll,
@@ -35,6 +36,7 @@ export const DiceRoller: React.FC = () => {
       // Check state after a short delay
       setTimeout(() => {
         const newState = useGameStore.getState();
+        console.log({
           diceUsed: newState.diceUsed,
           isDiceRolling: newState.isDiceRolling,
           diceRoll: newState.diceRoll,
