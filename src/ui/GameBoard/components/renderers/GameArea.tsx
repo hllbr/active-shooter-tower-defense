@@ -1,8 +1,6 @@
 import React from 'react';
 import { TowerSpot } from '../../../TowerSpot';
 import { TowerDragVisualization } from './TowerDragVisualization';
-import { SVGEffectsRenderer } from './SVGEffectsRenderer';
-import { EnvironmentRenderer } from './EnvironmentRenderer';
 import { useGameStore } from '../../../../models/store';
 import type { TowerSlot } from '../../../../models/gameTypes';
 import type { DragState, DropZoneState, DragFeedback } from '../../types';
@@ -38,13 +36,15 @@ export const GameArea: React.FC<GameAreaProps> = ({
   timeOfDay = 'day',
   isMobile = false,
 }) => {
-  const { terrainTiles, weatherState, timeOfDayState, environmentalHazards, interactiveElements } = useGameStore();
+  const { enemies, bullets, mines } = useGameStore();
+  
   const ambientColors: Record<string, string> = {
     dawn: '#FFE4B5',
     day: '#FFFFFF',
     dusk: '#FF6347',
     night: '#191970',
   };
+  
   const ambientColor = ambientColors[timeOfDay] || '#FFFFFF';
   const overlayOpacity = isMobile ? 0.09 : 0.18;
   const saturation = isMobile ? 1.0 : 1.1;
@@ -76,46 +76,74 @@ export const GameArea: React.FC<GameAreaProps> = ({
           <feFuncB type="linear" slope={brightness.toString()} />
         </feComponentTransfer>
       </filter>
+      
       <g filter="url(#postprocess-filter)">
-      {/* Environment & Terrain System */}
-      <EnvironmentRenderer 
-        terrainTiles={terrainTiles}
-        weatherState={weatherState}
-        timeOfDayState={timeOfDayState}
-        environmentalHazards={environmentalHazards}
-        interactiveElements={interactiveElements}
-        width={width}
-        height={height}
-      />
+        {/* Tower Slots with Enhanced Drag Support */}
+        {towerSlots.map((slot: TowerSlot, i: number) => (
+          <TowerSpot 
+            key={i} 
+            slot={slot} 
+            slotIdx={i} 
+            onTowerDragStart={(slotIdx, event) => {
+              // Support both mouse and touch events
+              if ('touches' in event) {
+                onTowerDragStart(slotIdx, event as React.TouchEvent);
+              } else {
+                onTowerDragStart(slotIdx, event as React.MouseEvent);
+              }
+            }}
+            isDragTarget={dragState.isDragging && i !== dragState.draggedTowerSlotIdx && slot.unlocked && !slot.tower}
+            draggedTowerSlotIdx={dragState.draggedTowerSlotIdx}
+          />
+        ))}
 
-      {/* Tower Slots with Enhanced Drag Support */}
-      {towerSlots.map((slot: TowerSlot, i: number) => (
-        <TowerSpot 
-          key={i} 
-          slot={slot} 
-          slotIdx={i} 
-          onTowerDragStart={(slotIdx, event) => {
-            // Support both mouse and touch events
-            if ('touches' in event) {
-              onTowerDragStart(slotIdx, event as React.TouchEvent);
-            } else {
-              onTowerDragStart(slotIdx, event as React.MouseEvent);
-            }
-          }}
-          isDragTarget={dragState.isDragging && i !== dragState.draggedTowerSlotIdx && slot.unlocked && !slot.tower}
-          draggedTowerSlotIdx={dragState.draggedTowerSlotIdx}
+        {/* Enhanced Drag Visualization System */}
+        <TowerDragVisualization 
+          dragState={dragState}
+          dropZones={dropZones}
+          feedback={feedback}
         />
-      ))}
 
-      {/* Enhanced Drag Visualization System */}
-      <TowerDragVisualization 
-        dragState={dragState}
-        dropZones={dropZones}
-        feedback={feedback}
-      />
+        {/* Simplified Game Elements */}
+        {/* Enemies */}
+        {enemies.map((enemy) => (
+          <circle
+            key={enemy.id}
+            cx={enemy.position?.x || 0}
+            cy={enemy.position?.y || 0}
+            r={enemy.size || 8}
+            fill={enemy.type === 'boss' ? '#DC2626' : '#EF4444'}
+            stroke="#000"
+            strokeWidth="1"
+            opacity={0.9}
+          />
+        ))}
 
-      {/* SVG Effects (Enemies, Bullets, Effects, Mines) */}
-      <SVGEffectsRenderer />
+        {/* Bullets */}
+        {bullets.map((bullet) => (
+          <circle
+            key={bullet.id}
+            cx={bullet.position?.x || 0}
+            cy={bullet.position?.y || 0}
+            r={2}
+            fill="#FCD34D"
+            opacity={0.8}
+          />
+        ))}
+
+        {/* Mines */}
+        {mines.map((mine) => (
+          <circle
+            key={mine.id}
+            cx={mine.position?.x || 0}
+            cy={mine.position?.y || 0}
+            r={4}
+            fill="#8B5CF6"
+            stroke="#6D28D9"
+            strokeWidth="1"
+            opacity={0.7}
+          />
+        ))}
       </g>
     </svg>
   );

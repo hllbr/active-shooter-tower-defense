@@ -68,7 +68,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     } finally {
       setIsProcessing(false);
     }
-  }, [nextWave, startPreparation, resetDice, setRefreshing, onContinueCallback]);
+  }, [nextWave, startPreparation, resetDice, setRefreshing, onContinueCallback, clearAllEffects, clearAllEnemies]);
 
   const [hovered, setHovered] = useState(false);
 

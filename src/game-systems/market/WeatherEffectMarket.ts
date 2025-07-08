@@ -6,6 +6,7 @@
 import { useGameStore } from '../../models/store';
 import { playSound } from '../../utils/sound/soundEffects';
 import { Logger } from '../../utils/Logger';
+import type { Enemy } from '../../models/gameTypes';
 
 export interface WeatherEffectCard {
   id: string;
@@ -326,24 +327,31 @@ export class WeatherEffectMarket {
     }
   }
 
-  /**
-   * Apply enemy slow effect
-   */
-  private applyEnemySlow(effect: WeatherEffect): void {
-    const { enemies } = useGameStore.getState();
-    
-    enemies.forEach(enemy => {
-      // Apply slow debuff (this would need to be integrated with enemy system)
-      if (enemy.statusEffects) {
-        enemy.statusEffects.push({
-          type: 'slow',
-          intensity: effect.slowAmount || 0.5,
-          duration: 25000,
-          startTime: performance.now()
-        });
-      }
-    });
-  }
+     /**
+    * Apply enemy slow effect
+    */
+   private applyEnemySlow(effect: WeatherEffect): void {
+     const { enemies } = useGameStore.getState();
+     
+     enemies.forEach(enemy => {
+       // Apply slow debuff by modifying enemy speed directly
+       if (enemy.speed) {
+         enemy.speed = enemy.speed * (1 - (effect.slowAmount || 0.5));
+       }
+       
+       // Mark enemy as affected by weather effect
+       const enemyWithEffects = enemy as Enemy & { weatherEffects?: Array<{ type: string; intensity: number; duration: number; startTime: number }> };
+       if (!enemyWithEffects.weatherEffects) {
+         enemyWithEffects.weatherEffects = [];
+       }
+       enemyWithEffects.weatherEffects.push({
+         type: 'slow',
+         intensity: effect.slowAmount || 0.5,
+         duration: 25000,
+         startTime: performance.now()
+       });
+     });
+   }
 
   /**
    * Apply time dilation effect
