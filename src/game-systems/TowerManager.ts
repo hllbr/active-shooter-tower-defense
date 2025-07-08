@@ -5,7 +5,6 @@ import type { Enemy, Position, Tower } from '../models/gameTypes';
 // Import new modular systems
 import { bulletUpdateSystem } from './bullet-system';
 import { 
-  getNearestEnemy as targetingGetNearestEnemy, 
   getTargetEnemy as targetingGetTargetEnemy, 
   getTargetEnemies as targetingGetTargetEnemies, 
   getEnemiesInRange as targetingGetEnemiesInRange,
@@ -16,13 +15,7 @@ import { towerFiringSystem } from './tower-system';
 
 // =================== ENHANCED PUBLIC FUNCTIONS ===================
 
-/**
- * Enhanced enemy selection with targeting modes
- * @deprecated Use eliteTargeting.selectTarget() for new implementations
- */
-export function getNearestEnemy(pos: Position, enemies: Enemy[]) {
-  return targetingGetNearestEnemy(pos, enemies);
-}
+
 
 /**
  * Enhanced enemy targeting with strategic options

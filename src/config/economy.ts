@@ -16,12 +16,4 @@
 // Re-export everything from the new modular system
 export * from './economy/index';
 
-// Legacy compatibility exports (deprecated - use specific imports instead)
-export { 
-  calculateTotalWaveIncome,
-  getComprehensiveEconomyAnalysis,
-  economyConfig,
-  type EconomyStats,
-  type ExtractorMetrics,
-  type MissionCondition
-} from './economy/index';
+

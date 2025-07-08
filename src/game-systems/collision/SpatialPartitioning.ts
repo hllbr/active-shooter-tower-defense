@@ -303,31 +303,46 @@ export class OptimizedCollisionDetector {
   /**
    * Update enemy positions in spatial grid
    */
-  updateEnemies(enemies: SpatialObject[]): void {
+  updateEnemies(enemies: Array<{id: string, position: {x: number, y: number}, size?: number}>): void {
     this.enemyGrid.clear();
     for (const enemy of enemies) {
-      this.enemyGrid.insert(enemy);
+      // Cast to SpatialObject interface for compatibility
+      const spatialEnemy: SpatialObject = {
+        id: enemy.id,
+        position: enemy.position,
+        size: enemy.size || 20
+      };
+      this.enemyGrid.insert(spatialEnemy);
     }
   }
   
   /**
    * Update bullet positions in spatial grid
    */
-  updateBullets(bullets: SpatialObject[]): void {
+  updateBullets(bullets: Array<{id: string, position: {x: number, y: number}, size?: number}>): void {
     this.bulletGrid.clear();
     for (const bullet of bullets) {
-      this.bulletGrid.insert(bullet);
+      // Cast to SpatialObject interface for compatibility
+      const spatialBullet: SpatialObject = {
+        id: bullet.id,
+        position: bullet.position,
+        size: bullet.size || 5
+      };
+      this.bulletGrid.insert(spatialBullet);
     }
   }
   
   /**
    * Find all bullet-enemy collisions efficiently
    */
-  findBulletCollisions(bullets: SpatialObject[], _enemies: SpatialObject[]): Array<{bullet: SpatialObject, enemy: SpatialObject}> {
+  findBulletCollisions(
+    bullets: Array<{id: string, position: {x: number, y: number}, size?: number}>, 
+    _enemies: Array<{id: string, position: {x: number, y: number}, size?: number}>
+  ): Array<{bullet: SpatialObject, enemy: SpatialObject}> {
     const collisions: Array<{bullet: SpatialObject, enemy: SpatialObject}> = [];
     
     for (const bullet of bullets) {
-      const bulletRadius = bullet.radius || bullet.size || 5;
+      const bulletRadius = bullet.size || 5;
       const nearbyEnemies = this.enemyGrid.queryRadius(bullet.position, bulletRadius + 50); // Extra margin
       
       for (const enemy of nearbyEnemies) {
@@ -338,7 +353,12 @@ export class OptimizedCollisionDetector {
         const collisionDistanceSquared = (bulletRadius + enemyRadius) * (bulletRadius + enemyRadius);
         
         if (distanceSquared <= collisionDistanceSquared) {
-          collisions.push({ bullet, enemy });
+          const spatialBullet: SpatialObject = {
+            id: bullet.id,
+            position: bullet.position,
+            size: bullet.size || 5
+          };
+          collisions.push({ bullet: spatialBullet, enemy });
         }
       }
     }

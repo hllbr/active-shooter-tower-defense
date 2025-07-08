@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { useGameStore } from '../../../../models/store';
 import { infoIconStyle, tooltipStyle } from '../../styles';
+import { PerformanceModeSelector } from '../../../settings/PerformanceModeSelector';
+import { performanceSettings } from '../../../../utils/settings/PerformanceSettings';
 
 interface GameStatsPanelProps {
   onCommandCenterOpen?: () => void;
@@ -49,6 +51,9 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterO
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [handleKeyDown, handleKeyUp]); // Include handlers in deps
+
+  const [showPerformanceSelector, setShowPerformanceSelector] = React.useState(false);
+  const currentPerformanceMode = performanceSettings.getMode();
 
   return (
     <div style={{ position: 'absolute', top: 24, left: 32, zIndex: 2, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -274,6 +279,31 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onCommandCenterO
             </div>
           </div>
         </div>
+      )}
+      <button
+        style={{
+          background: 'rgba(74, 222, 128, 0.1)',
+          border: '1px solid #4ADE80',
+          borderRadius: '8px',
+          padding: '8px 12px',
+          color: '#4ADE80',
+          fontSize: '12px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          transition: 'all 0.2s ease'
+        }}
+        onClick={() => setShowPerformanceSelector(true)}
+        title={`Aktif Mod: ${performanceSettings.getModeDescription(currentPerformanceMode).title}`}
+      >
+        {performanceSettings.getModeDescription(currentPerformanceMode).icon}
+        <span>Performans</span>
+      </button>
+      {showPerformanceSelector && (
+        <PerformanceModeSelector 
+          onClose={() => setShowPerformanceSelector(false)}
+        />
       )}
     </div>
   );

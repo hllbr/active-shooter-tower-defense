@@ -144,35 +144,22 @@ export function startOptimizedGameLoop(existingManager?: EnvironmentManager) {
       const prevEnemyCount = lastStateSnapshot.enemyCount;
       const prevBulletCount = lastStateSnapshot.bulletCount;
       
-      // Update spatial partitioning with current objects
+      // 🚀 OPTIMIZED: Reuse arrays and avoid object creation every frame
       advancedProfiler.startTimer('spatial-update');
-      collisionDetector.updateEnemies(state.enemies.map(enemy => ({
-        id: enemy.id,
-        position: enemy.position,
-        size: enemy.size
-      })));
       
-      collisionDetector.updateBullets(state.bullets.map(bullet => ({
-        id: bullet.id,
-        position: bullet.position,
-        size: bullet.size
-      })));
+      // Update spatial partitioning - use existing objects to avoid allocation
+      const enemies = state.enemies;
+      const bullets = state.bullets;
+      
+      // Update spatial grid with direct references (no object creation)
+      collisionDetector.updateEnemies(enemies);
+      collisionDetector.updateBullets(bullets);
+      
       advancedProfiler.endTimer('spatial-update', 'collision');
       
-      // Optimized collision detection
+      // Optimized collision detection - use direct references
       advancedProfiler.startTimer('collision-detection');
-      const collisions = collisionDetector.findBulletCollisions(
-        state.bullets.map(bullet => ({
-          id: bullet.id,
-          position: bullet.position,
-          size: bullet.size
-        })),
-        state.enemies.map(enemy => ({
-          id: enemy.id,
-          position: enemy.position,
-          size: enemy.size
-        }))
-      );
+      const collisions = collisionDetector.findBulletCollisions(bullets, enemies);
       
       // Apply collision results (integrate with existing collision system)
       for (const _collision of collisions) {

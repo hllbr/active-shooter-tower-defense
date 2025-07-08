@@ -14,28 +14,26 @@ import { cleanupManager } from '../memory';
  */
 export function updateEffects() {
   const { effects, removeEffect } = useGameStore.getState();
-  const expiredEffects: string[] = [];
+  const expiredEffects: Effect[] = []; // 🚀 Store references instead of IDs
   
+  // Single pass: update life and collect expired effects
   effects.forEach((effect: Effect) => {
     effect.life -= GAME_CONSTANTS.GAME_TICK;
     
-    // Check if effect is expired
+    // Check if effect is expired - store reference directly
     if (effect.life <= 0) {
-      expiredEffects.push(effect.id);
+      expiredEffects.push(effect); // 🚀 Direct reference, no ID lookup needed
     }
   });
   
-  // Batch remove expired effects and return them to pool
-  expiredEffects.forEach(effectId => {
-    const effect = effects.find((e: Effect) => e.id === effectId);
-    if (effect) {
-      removeEffect(effectId);
-      // Return to pool for reuse
-      try {
-        effectPool.release(effect);
-          } catch {
+  // 🚀 OPTIMIZED: Batch remove expired effects (no find() operation)
+  expiredEffects.forEach(effect => {
+    removeEffect(effect.id); // Remove from state
+    // Return to pool for reuse
+    try {
+      effectPool.release(effect);
+    } catch {
       // Error silently handled for performance
-    }
     }
   });
   
