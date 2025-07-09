@@ -9,6 +9,96 @@ export const gameAudio: HTMLAudioElement | null = null;
 const soundCache = new Map<string, HTMLAudioElement>();
 const missingSounds = new Set<string>();
 
+// 🔊 COOLDOWN SYSTEM: Prevent sound spam and overlapping
+const soundCooldowns = new Map<string, number>();
+const soundLastPlayed = new Map<string, number>();
+
+// Cooldown süreleri (milisaniye cinsinden) - ses türüne göre ayarlanmış
+const SOUND_COOLDOWN_DURATIONS: Record<string, number> = {
+  // Çok sık çalınan UI sesleri - kısa cooldown
+  'click': 50,
+  'hover': 100,
+  'error': 200,
+  
+  // Orta sıklıkta çalınan sesler - orta cooldown  
+  'coin-collect': 150,
+  'gold-drop': 200,
+  'lock-break': 300,
+  'dice-roll': 400,
+  'pickup-common': 250,
+  'pickup-rare': 300,
+  'notification': 500,
+  'countdown-beep': 800,
+  
+  // Loot sesleri - kısa cooldown (hızlı toplamalar için)
+  'loot-common': 100,
+  'loot-rare': 150,
+  'loot-epic': 200,
+  'loot-legendary': 250,
+  
+  // Oyun aksiyonu sesleri - orta cooldown
+  'explosion-large': 200,
+  'explosion-small': 150,
+  'tower-attack-explosive': 100,
+  'tower-attack-laser': 80,
+  'tower-attack-plasma': 120,
+  'tower-attack-sniper': 300,
+  'freeze-effect': 400,
+  'slow-effect': 400,
+  'shield-activate': 500,
+  'shield-break': 600,
+  'energy-recharge': 300,
+  
+  // Kule sesleri - uzun cooldown
+  'tower-create-sound': 400,
+  'tower-levelup-sound': 500,
+  'tower-destroy': 600,
+  'tower-repair': 400,
+  
+  // Boss sesleri - uzun cooldown
+  'boss-bombing': 800,
+  'boss-charge': 1000,
+  'boss-defeat': 2000,
+  'boss-entrance': 3000,
+  'boss-ground-slam': 600,
+  'boss-missile': 400,
+  'boss-phase-transition': 2000,
+  'boss-reality-tear': 1500,
+  'boss-spawn-minions': 800,
+  
+  // Özel sesler - çok uzun cooldown
+  'gameover': 3000,
+  'levelupwav': 2000,
+  'victory-fanfare': 3000,
+  'wave-complete': 2000,
+  'defeat-heavy': 1500,
+  
+  // Ambient sesler - orta cooldown
+  'ambient-battle': 5000,
+  'ambient-wind': 8000,
+  
+  // Varsayılan cooldown
+  'default': 200
+};
+
+/**
+ * Ses için cooldown kontrolü yapar
+ */
+function canPlaySound(soundName: string): boolean {
+  const now = Date.now();
+  const lastPlayed = soundLastPlayed.get(soundName) || 0;
+  const cooldownDuration = SOUND_COOLDOWN_DURATIONS[soundName] || SOUND_COOLDOWN_DURATIONS.default;
+  
+  return (now - lastPlayed) >= cooldownDuration;
+}
+
+/**
+ * Ses çalındığında cooldown kaydeder
+ */
+function recordSoundPlayed(soundName: string): void {
+  soundLastPlayed.set(soundName, Date.now());
+}
+
 // Volume ayarlarını gerçek zamanlı güncellemek için
 export function updateAllSoundVolumes(): void {
   const settings = getSettings();
@@ -32,6 +122,15 @@ export function testVolumeControls(): void {
 
 export function playSound(sound: string): void {
   if (missingSounds.has(sound)) return;
+  
+  // 🔊 COOLDOWN CHECK: Ses çok sık çalınıyorsa engelle
+  if (!canPlaySound(sound)) {
+    if (GAME_CONSTANTS.DEBUG_MODE) {
+      console.log(`🔇 Sound "${sound}" blocked due to cooldown`);
+    }
+    return;
+  }
+  
   try {
     let audio = soundCache.get(sound);
     if (!audio) {
@@ -46,7 +145,18 @@ export function playSound(sound: string): void {
     
     const playPromise = audio.play();
     if (playPromise) {
-      playPromise.catch(() => missingSounds.add(sound));
+      playPromise.then(() => {
+        // Ses başarıyla çalındığında cooldown kaydet
+        recordSoundPlayed(sound);
+        if (GAME_CONSTANTS.DEBUG_MODE) {
+          console.log(`🔊 Sound "${sound}" played successfully`);
+        }
+      }).catch(() => {
+        missingSounds.add(sound);
+        if (GAME_CONSTANTS.DEBUG_MODE) {
+          console.log(`❌ Sound "${sound}" failed to play`);
+        }
+      });
     }
   } catch {
     missingSounds.add(sound);
@@ -82,6 +192,8 @@ export const playDiceRollSound = () => playContextualSound('dice-roll');
 export function clearSoundCache(): void {
   soundCache.clear();
   missingSounds.clear();
+  soundCooldowns.clear();
+  soundLastPlayed.clear();
   musicManager.stop();
 }
 
@@ -178,7 +290,29 @@ export function resumeGameSceneSounds(): void {
   }
 }
 
+/**
+ * 🔊 COOLDOWN SYSTEM: Debug function to check sound cooldowns
+ */
+export function debugSoundCooldowns(): void {
+  console.log('🔊 Active Sound Cooldowns:');
+  const now = Date.now();
+  
+  soundLastPlayed.forEach((lastPlayed, soundName) => {
+    const cooldownDuration = SOUND_COOLDOWN_DURATIONS[soundName] || SOUND_COOLDOWN_DURATIONS.default;
+    const timeSinceLastPlayed = now - lastPlayed;
+    const canPlay = timeSinceLastPlayed >= cooldownDuration;
+    
+    console.log(`  ${soundName}: ${canPlay ? '✅ Ready' : '⏳ Cooldown'} (${timeSinceLastPlayed}ms/${cooldownDuration}ms)`);
+  });
+}
 
+/**
+ * 🔊 COOLDOWN SYSTEM: Reset all cooldowns (for testing)
+ */
+export function resetSoundCooldowns(): void {
+  soundLastPlayed.clear();
+  console.log('🔊 All sound cooldowns reset');
+}
 
 export function getMissingSounds(): string[] {
   return Array.from(missingSounds);
@@ -198,9 +332,22 @@ export function validateSounds(): { available: string[]; missing: string[] } {
  * 🔍 DEBUG: Show sound categories for testing
  */
 export function debugSoundCategories(): void {
+  console.log('🔊 Sound Categories:');
+  console.log('  GAME_SCENE:', SOUND_CATEGORIES.GAME_SCENE);
+  console.log('  UI_MARKET:', SOUND_CATEGORIES.UI_MARKET);
+  console.log('🔊 Sound Cooldown Durations:');
+  console.log(SOUND_COOLDOWN_DURATIONS);
 }
 
-// Add debug function to window for console access
+// Add debug functions to window for console access
 if (typeof window !== 'undefined') {
-  (window as Window & { debugSoundCategories?: () => void }).debugSoundCategories = debugSoundCategories;
+  const win = window as Window & { 
+    debugSoundCategories?: () => void;
+    debugSoundCooldowns?: () => void;
+    resetSoundCooldowns?: () => void;
+  };
+  
+  win.debugSoundCategories = debugSoundCategories;
+  win.debugSoundCooldowns = debugSoundCooldowns;
+  win.resetSoundCooldowns = resetSoundCooldowns;
 }

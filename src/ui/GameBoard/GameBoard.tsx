@@ -23,7 +23,6 @@ import {
   GameArea
 } from './components';
 import { SpawnZoneDebugOverlay } from './components/overlays/SpawnZoneDebugOverlay';
-import { CommandCenter } from './components/ui/CommandCenter';
 
 import { WeatherEffectsIndicator } from './components/overlays/WeatherEffectsIndicator';
 
@@ -33,7 +32,6 @@ import {
   useGameEffects,
   useGameTimers,
   useGameLoop,
-  useCommandCenter
 } from './hooks';
 
 // Import styles and types
@@ -70,8 +68,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
     tickEnergyRegen,
     tickActionRegen,
     unlockingSlots,
-    pausePreparation,
-    resumePreparation,
     initializeAchievements,
     addEnemyKillListener,
     removeEnemyKillListener,
@@ -190,14 +186,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
   // Game loop management
   useGameLoop(isStarted, isRefreshing, isPreparing, currentWave, environmentManagerRef.current);
 
-  // Command center management
-  const { commandCenterOpen, closeCommandCenter } = useCommandCenter(
-    isPreparing,
-    isPaused,
-    pausePreparation,
-    resumePreparation
-  );
-
   // Initialize game systems
   React.useEffect(() => {
     initUpgradeEffects();
@@ -233,7 +221,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       </style>
       
       {/* UI Components */}
-      <GameStatsPanel onCommandCenterOpen={() => closeCommandCenter} />
+      <GameStatsPanel />
       <EnergyWarning />
       <DebugMessage message={debugMessage} onClear={clearDebugMessage} />
       <PreparationScreen />
@@ -259,14 +247,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
         </Suspense>
       )}
       
-      {/* Command Center (S Key) */}
-      <CommandCenter 
-        isOpen={commandCenterOpen} 
-        onClose={closeCommandCenter} 
-      />
-
-
-
       {/* Game Area */}
       <GameArea
         width={width}
