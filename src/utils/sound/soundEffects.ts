@@ -24,7 +24,7 @@ const SOUND_COOLDOWN_DURATIONS: Record<string, number> = {
   'coin-collect': 150,
   'gold-drop': 200,
   'lock-break': 300,
-  'dice-roll': 400,
+  'dice-roll': 200, // Zar sesi cooldown'unu azalttık (400ms -> 200ms)
   'pickup-common': 250,
   'pickup-rare': 300,
   'notification': 500,
@@ -155,6 +155,44 @@ export function playSound(sound: string): void {
         missingSounds.add(sound);
         if (GAME_CONSTANTS.DEBUG_MODE) {
           console.log(`❌ Sound "${sound}" failed to play`);
+        }
+      });
+    }
+  } catch {
+    missingSounds.add(sound);
+  }
+}
+
+/**
+ * 🔊 TEST MODE: Ses çalma (cooldown bypass)
+ * Test butonları için kullanılır
+ */
+export function playSoundForTest(sound: string): void {
+  if (missingSounds.has(sound)) return;
+  
+  try {
+    let audio = soundCache.get(sound);
+    if (!audio) {
+      audio = new Audio(`/assets/sounds/${sound}.wav`);
+      soundCache.set(sound, audio);
+    }
+    
+    // Her ses çalınırken güncel ayarları al
+    const settings = getSettings();
+    audio.volume = settings.mute ? 0 : settings.sfxVolume;
+    audio.currentTime = 0;
+    
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.then(() => {
+        // Test modu için cooldown kaydetme
+        if (GAME_CONSTANTS.DEBUG_MODE) {
+          console.log(`🔊 Test sound "${sound}" played successfully (cooldown bypassed)`);
+        }
+      }).catch(() => {
+        missingSounds.add(sound);
+        if (GAME_CONSTANTS.DEBUG_MODE) {
+          console.log(`❌ Test sound "${sound}" failed to play`);
         }
       });
     }

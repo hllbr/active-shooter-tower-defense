@@ -54,7 +54,7 @@ const LoadingFallback: React.FC = () => (
   </div>
 );
 
-export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick, onChallengeClick }) => {
   const {
     towerSlots,
     currentWave,
@@ -221,7 +221,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       </style>
       
       {/* UI Components */}
-      <GameStatsPanel />
+      <GameStatsPanel 
+        onSettingsClick={onSettingsClick}
+        onChallengeClick={onChallengeClick}
+      />
       <EnergyWarning />
       <DebugMessage message={debugMessage} onClear={clearDebugMessage} />
       <PreparationScreen />

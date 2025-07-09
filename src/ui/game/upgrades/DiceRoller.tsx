@@ -18,12 +18,10 @@ export const DiceRoller: React.FC = () => {
   const handleDiceRoll = () => {
     // Handle dice roll action
     
-    // ✅ SOUND FIX: Play dice roll sound effect
-    setTimeout(() => {
-      import('../../../utils/sound').then(({ playDiceRollSound }) => {
-        playDiceRollSound(); // Zar atma sesi
-      });
-    }, 50);
+    // ✅ SOUND FIX: Play dice roll sound effect immediately
+    import('../../../utils/sound').then(({ playSound }) => {
+      playSound('dice-roll'); // Zar atma sesi - doğrudan çal
+    });
     
     try {
       rollDice();

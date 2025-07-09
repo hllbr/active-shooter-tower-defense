@@ -25,6 +25,12 @@ export const UpgradeScreen: React.FC = () => {
       // Kısa bir delay ile zar at (kullanıcı deneyimi için)
       const timer = setTimeout(() => {
         try {
+          // Zar sesi çal
+          import('../../utils/sound').then(({ playSound }) => {
+            playSound('dice-roll');
+          });
+          
+          // Zar at
           rollDice();
         } catch (error) {
           console.error('Otomatik zar atma hatası:', error);

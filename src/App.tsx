@@ -17,23 +17,6 @@ function App() {
     <ThemeProvider>
       <ChallengeProvider>
         <>
-          <div className="fab-row">
-            <button
-              className="settings-fab"
-              aria-label="Ayarlar"
-              onClick={() => setSettingsOpen(true)}
-            >
-              <span role="img" aria-label="settings">⚙️</span>
-            </button>
-            <button
-              className="settings-fab"
-              aria-label="Görevler"
-              style={{ background: '#4caf50' }}
-              onClick={() => setChallengeOpen(true)}
-            >
-              <span role="img" aria-label="challenge">🏆</span>
-            </button>
-          </div>
           <div className="App">
             <ToastContainer 
               position="bottom-center" 
@@ -51,7 +34,10 @@ function App() {
             <MiniSecurityIndicator />
             <div className="game-container">
               <h1>Shooter Tower Defense</h1>
-              <GameBoard />
+              <GameBoard 
+                onSettingsClick={() => setSettingsOpen(true)}
+                onChallengeClick={() => setChallengeOpen(true)}
+              />
             </div>
           </div>
         </>
