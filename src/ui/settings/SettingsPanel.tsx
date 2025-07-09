@@ -1,26 +1,20 @@
 import React, { useState } from 'react';
-import { useGameStore } from '../../models/store';
 import { performanceSettings } from '../../utils/settings/PerformanceSettings';
 import { PerformanceModeSelector } from './PerformanceModeSelector';
 import './SettingsPanel.css';
 
-export const SettingsPanel: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface SettingsPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
   const [showPerformanceSelector, setShowPerformanceSelector] = useState(false);
-  const { settings, updateSettings } = useGameStore();
 
   const currentPerformanceMode = performanceSettings.getMode();
 
   if (!isOpen) {
-    return (
-      <button
-        className="settings-trigger"
-        onClick={() => setIsOpen(true)}
-        title="Ayarlar"
-      >
-        ⚙️
-      </button>
-    );
+    return null;
   }
 
   return (
@@ -31,7 +25,7 @@ export const SettingsPanel: React.FC = () => {
             <h2>🎮 Oyun Ayarları</h2>
             <button 
               className="close-button"
-              onClick={() => setIsOpen(false)}
+              onClick={onClose}
             >
               ✕
             </button>
@@ -62,115 +56,6 @@ export const SettingsPanel: React.FC = () => {
               </div>
             </div>
 
-            {/* Audio Settings */}
-            <div className="settings-section">
-              <h3>🔊 Ses Ayarları</h3>
-              
-              <label className="setting-item">
-                <span>Müzik Seviyesi</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={settings.musicVolume * 100}
-                  onChange={(e) => updateSettings({
-                    musicVolume: parseInt(e.target.value) / 100
-                  })}
-                />
-                <span className="value">{Math.round(settings.musicVolume * 100)}%</span>
-              </label>
-
-              <label className="setting-item">
-                <span>Efekt Ses Seviyesi</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={settings.sfxVolume * 100}
-                  onChange={(e) => updateSettings({
-                    sfxVolume: parseInt(e.target.value) / 100
-                  })}
-                />
-                <span className="value">{Math.round(settings.sfxVolume * 100)}%</span>
-              </label>
-
-              <label className="setting-checkbox">
-                <input
-                  type="checkbox"
-                  checked={settings.muteSounds}
-                  onChange={(e) => updateSettings({
-                    muteSounds: e.target.checked
-                  })}
-                />
-                <span>Tüm sesleri kapat</span>
-              </label>
-            </div>
-
-            {/* Visual Settings */}
-            <div className="settings-section">
-              <h3>👁️ Görsel Ayarlar</h3>
-              
-              <label className="setting-checkbox">
-                <input
-                  type="checkbox"
-                  checked={settings.reduceMotion}
-                  onChange={(e) => updateSettings({
-                    reduceMotion: e.target.checked
-                  })}
-                />
-                <span>Animasyonları azalt (Performans için)</span>
-              </label>
-
-              <label className="setting-checkbox">
-                <input
-                  type="checkbox"
-                  checked={settings.showDebugInfo}
-                  onChange={(e) => updateSettings({
-                    showDebugInfo: e.target.checked
-                  })}
-                />
-                <span>Debug bilgilerini göster</span>
-              </label>
-
-              <label className="setting-checkbox">
-                <input
-                  type="checkbox"
-                  checked={settings.enableHapticFeedback}
-                  onChange={(e) => updateSettings({
-                    enableHapticFeedback: e.target.checked
-                  })}
-                />
-                <span>Titreşim geri bildirimi (Mobil)</span>
-              </label>
-            </div>
-
-            {/* Game Settings */}
-            <div className="settings-section">
-              <h3>🎲 Oyun Ayarları</h3>
-              
-              <label className="setting-checkbox">
-                <input
-                  type="checkbox"
-                  checked={settings.autoSave}
-                  onChange={(e) => updateSettings({
-                    autoSave: e.target.checked
-                  })}
-                />
-                <span>Otomatik kayıt</span>
-              </label>
-
-              <label className="setting-checkbox">
-                <input
-                  type="checkbox"
-                  checked={settings.confirmResets}
-                  onChange={(e) => updateSettings({
-                    confirmResets: e.target.checked
-                  })}
-                />
-                <span>Oyun sıfırlama onayı iste</span>
-              </label>
-            </div>
-
             {/* Performance Tips */}
             <div className="settings-section performance-tips">
               <h3>💡 Performans İpuçları</h3>
@@ -187,18 +72,7 @@ export const SettingsPanel: React.FC = () => {
             <button 
               className="reset-button"
               onClick={() => {
-                if (confirm('Tüm ayarları varsayılana döndürmek istediğinizden emin misiniz?')) {
-                  // Reset to defaults
-                  updateSettings({
-                    musicVolume: 0.7,
-                    sfxVolume: 0.8,
-                    muteSounds: false,
-                    reduceMotion: false,
-                    showDebugInfo: false,
-                    enableHapticFeedback: true,
-                    autoSave: true,
-                    confirmResets: true
-                  });
+                if (confirm('Performans ayarlarını varsayılana döndürmek istediğinizden emin misiniz?')) {
                   performanceSettings.setMode('normal');
                 }
               }}
@@ -208,7 +82,7 @@ export const SettingsPanel: React.FC = () => {
             
             <button 
               className="close-panel-button"
-              onClick={() => setIsOpen(false)}
+              onClick={onClose}
             >
               ✓ Tamam
             </button>

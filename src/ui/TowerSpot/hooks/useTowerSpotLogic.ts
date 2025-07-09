@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/constants';
-import { getNearestEnemy } from '../../../game-systems/TowerManager';
+import { getTargetEnemy, TargetingMode } from '../../../game-systems/TowerManager';
 import { formatProfessional } from '../../../utils/formatters';
 import type { TowerSlot, Enemy } from '../../../models/gameTypes';
 import type { TowerUpgradeInfo } from '../types';
@@ -66,7 +66,7 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   // Debug info
   const debugInfo = React.useMemo(() => {
     if (!slot.tower || !GAME_CONSTANTS.DEBUG_MODE) return null;
-    const { enemy } = getNearestEnemy(slot.tower.position, enemies);
+    const { enemy } = getTargetEnemy(slot.tower, enemies, TargetingMode.NEAREST);
     const firing = performance.now() - slot.tower.lastFired < 100;
     return enemy ? {
       enemy: enemy as Enemy,

@@ -108,7 +108,6 @@ export function updateBullets(deltaTime: number = 16) {
 // Re-export the new systems for backward compatibility
 export { bulletUpdateSystem } from './bullet-system';
 export { 
-  getNearestEnemy as targetingGetNearestEnemy, 
   getTargetEnemy as targetingGetTargetEnemy, 
   getTargetEnemies as targetingGetTargetEnemies, 
   getEnemiesInRange as targetingGetEnemiesInRange,

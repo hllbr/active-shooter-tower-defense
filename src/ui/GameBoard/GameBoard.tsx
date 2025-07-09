@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useRef } from 'react';
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { initUpgradeEffects } from '../../game-systems/UpgradeEffects';
@@ -24,7 +24,7 @@ import {
 } from './components';
 import { SpawnZoneDebugOverlay } from './components/overlays/SpawnZoneDebugOverlay';
 import { CommandCenter } from './components/ui/CommandCenter';
-import { WeatherMarketPanel } from '../game/market/WeatherMarketPanel';
+
 import { WeatherEffectsIndicator } from './components/overlays/WeatherEffectsIndicator';
 
 // Import enhanced hooks
@@ -80,7 +80,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
   } = useGameStore();
 
   // Weather market panel state
-  const [isWeatherMarketOpen, setIsWeatherMarketOpen] = useState(false);
+
 
   const { incrementChallenge } = useChallenge();
   const { isReducedMotion } = useTheme();
@@ -240,36 +240,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
       <StartScreen />
       <GameOverScreen />
 
-      {/* Weather Market Button */}
-      {isStarted && !isRefreshing && (
-        <button
-          onClick={() => setIsWeatherMarketOpen(true)}
-          style={{
-            position: 'fixed',
-            top: '10px',
-            left: '170px',
-            zIndex: 500,
-            padding: '8px 16px',
-            backgroundColor: '#3B82F6',
-            color: '#FFF',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            transition: 'background-color 0.2s',
-            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#2563EB';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#3B82F6';
-          }}
-        >
-          🌦️ Hava Mağazası
-        </button>
-      )}
+
 
       {/* Weather Effects Indicator */}
       <WeatherEffectsIndicator />
@@ -294,17 +265,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className }) => {
         onClose={closeCommandCenter} 
       />
 
-      {/* Weather Market Panel */}
-      <WeatherMarketPanel 
-        isOpen={isWeatherMarketOpen} 
-        onClose={() => setIsWeatherMarketOpen(false)} 
-      />
 
-      {/* Weather Market Panel */}
-      <WeatherMarketPanel 
-        isOpen={isWeatherMarketOpen} 
-        onClose={() => setIsWeatherMarketOpen(false)} 
-      />
 
       {/* Game Area */}
       <GameArea

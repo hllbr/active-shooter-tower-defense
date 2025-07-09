@@ -1,4 +1,4 @@
-export type TabType = 'dice' | 'core' | 'packages' | 'advanced';
+export type TabType = 'dice' | 'core' | 'packages' | 'advanced' | 'weather';
 
 export interface TabConfig {
   id: TabType;
