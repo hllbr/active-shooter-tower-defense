@@ -19,7 +19,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
 
   return (
     <>
-      <div className="settings-overlay">
+      <div className="settings-panel-overlay">
         <div className="settings-panel">
           <div className="settings-header">
             <h2>🎮 Oyun Ayarları</h2>
