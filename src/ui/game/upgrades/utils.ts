@@ -50,9 +50,9 @@ export const createUpgradeHandler = (
   baseCost: number,
   currentLevel: number,
   costMultiplier: number,
-  goldSetter: (gold: number) => void,
+  _goldSetter: (gold: number) => void, // Keep for compatibility but not used
   levelSetter: (level: number) => void,
-  gold: number,
+  _gold: number, // Keep for compatibility but not used
   diceResult?: number | null,
   discountMultiplier?: number
 ) => {
@@ -60,7 +60,19 @@ export const createUpgradeHandler = (
     const cost = baseCost * Math.pow(costMultiplier, currentLevel);
     const finalCost = calculateDiscountedCost(cost, diceResult, discountMultiplier);
     
-    goldSetter(gold - finalCost);
-    levelSetter(currentLevel + 1);
+    // CRITICAL FIX: Use proper state transaction instead of direct gold manipulation
+    import('../../../models/store').then(({ useGameStore }) => {
+      const { spendGold } = useGameStore.getState();
+      const success = spendGold(finalCost);
+      
+      if (success) {
+        levelSetter(currentLevel + 1);
+      } else {
+        console.error('❌ Upgrade failed: Insufficient funds or state error');
+        import('../../../utils/sound').then(({ playSound }) => {
+          playSound('error');
+        });
+      }
+    });
   };
 }; 

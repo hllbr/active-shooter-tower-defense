@@ -16,9 +16,9 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   const startPreparation = useGameStore((s: Store) => s.startPreparation);
   const setRefreshing = useGameStore((s: Store) => s.setRefreshing);
   
-  // 🆕 UPGRADE SCREEN: New functions for cleanup
-  const clearAllEnemies = useGameStore((s: Store) => s.clearAllEnemies);
-  const clearAllEffects = useGameStore((s: Store) => s.clearAllEffects);
+  // 🆕 UPGRADE SCREEN: Functions for cleanup (now handled in UpgradeScreen mount)
+  // const clearAllEnemies = useGameStore((s: Store) => s.clearAllEnemies);
+  // const clearAllEffects = useGameStore((s: Store) => s.clearAllEffects);
   
   const currentWave = useGameStore((s: Store) => s.currentWave);
   const isRefreshing = useGameStore((s: Store) => s.isRefreshing);
@@ -40,8 +40,8 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     // }
     
     try {
-      clearAllEnemies();
-      clearAllEffects();
+      // clearAllEnemies(); // REMOVED: Now handled in UpgradeScreen mount
+      // clearAllEffects(); // REMOVED: Now handled in UpgradeScreen mount
       
       nextWave();
       
@@ -68,7 +68,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     } finally {
       setIsProcessing(false);
     }
-  }, [nextWave, startPreparation, resetDice, setRefreshing, onContinueCallback, clearAllEffects, clearAllEnemies]);
+  }, [nextWave, startPreparation, resetDice, setRefreshing, onContinueCallback]);
 
   const [hovered, setHovered] = useState(false);
 

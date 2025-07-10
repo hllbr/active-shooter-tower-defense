@@ -17,9 +17,17 @@ export const UpgradeScreen: React.FC = () => {
   // Store'dan dice state'lerini al
   const diceUsed = useGameStore(state => state.diceUsed);
   const rollDice = useGameStore(state => state.rollDice);
+  
+  // 🆕 UPGRADE SCREEN: Clear enemies when entering upgrade screen (no gold given)
+  const clearAllEnemies = useGameStore(state => state.clearAllEnemies);
+  const clearAllEffects = useGameStore(state => state.clearAllEffects);
 
-  // Yükseltme ekranı açıldığında zar otomatik at
+  // Yükseltme ekranı açıldığında düşmanları temizle ve zar otomatik at
   useEffect(() => {
+    // Düşmanları ve efektleri temizle (para vermeden)
+    clearAllEnemies();
+    clearAllEffects();
+    
     // Eğer zar henüz bu dalga için atılmamışsa otomatik at
     if (!diceUsed) {
       // Kısa bir delay ile zar at (kullanıcı deneyimi için)

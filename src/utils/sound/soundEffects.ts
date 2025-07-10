@@ -15,26 +15,29 @@ const soundLastPlayed = new Map<string, number>();
 
 // Cooldown süreleri (milisaniye cinsinden) - ses türüne göre ayarlanmış
 const SOUND_COOLDOWN_DURATIONS: Record<string, number> = {
-  // Çok sık çalınan UI sesleri - kısa cooldown
-  'click': 50,
-  'hover': 100,
-  'error': 200,
+  // Çok sık çalınan UI sesleri - kısa cooldown (REDUCED for better responsiveness)
+  'click': 25,
+  'hover': 50,
+  'error': 100,
   
-  // Orta sıklıkta çalınan sesler - orta cooldown  
-  'coin-collect': 150,
-  'gold-drop': 200,
-  'lock-break': 300,
-  'dice-roll': 200, // Zar sesi cooldown'unu azalttık (400ms -> 200ms)
-  'pickup-common': 250,
-  'pickup-rare': 300,
-  'notification': 500,
-  'countdown-beep': 800,
+  // Orta sıklıkta çalınan sesler - orta cooldown (REDUCED for purchase responsiveness)
+  'coin-collect': 75,
+  'gold-drop': 100,
+  'lock-break': 150,
+  'dice-roll': 100, // Further reduced for better dice responsiveness
+  'pickup-common': 125,
+  'pickup-rare': 150,
+  'notification': 250,
+  'countdown-beep': 400,
+  
+  // Purchase & Upgrade sesleri - kısa cooldown (responsive UI için)
+  'upgrade-purchase': 50,
   
   // Loot sesleri - kısa cooldown (hızlı toplamalar için)
-  'loot-common': 100,
-  'loot-rare': 150,
-  'loot-epic': 200,
-  'loot-legendary': 250,
+  'loot-common': 50,
+  'loot-rare': 75,
+  'loot-epic': 100,
+  'loot-legendary': 125,
   
   // Oyun aksiyonu sesleri - orta cooldown
   'explosion-large': 200,
@@ -43,11 +46,11 @@ const SOUND_COOLDOWN_DURATIONS: Record<string, number> = {
   'tower-attack-laser': 80,
   'tower-attack-plasma': 120,
   'tower-attack-sniper': 300,
-  'freeze-effect': 400,
-  'slow-effect': 400,
-  'shield-activate': 500,
-  'shield-break': 600,
-  'energy-recharge': 300,
+  'freeze-effect': 200,
+  'slow-effect': 200,
+  'shield-activate': 100, // REDUCED for purchase responsiveness
+  'shield-break': 300,
+  'energy-recharge': 150,
   
   // Kule sesleri - uzun cooldown
   'tower-create-sound': 400,

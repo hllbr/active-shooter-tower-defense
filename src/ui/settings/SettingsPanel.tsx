@@ -66,15 +66,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
               </div>
               
               <div className="card-content">
-                {/* Master Mute */}
+                {/* Master Mute with Enhanced Speaker Icon */}
                 <div className="setting-row">
                   <label>Ana Ses</label>
-                  <button 
-                    className={`toggle-button ${settings.mute ? 'muted' : 'active'}`}
-                    onClick={handleMuteToggle}
-                  >
-                    {settings.mute ? '🔇 Kapalı' : '🔊 Açık'}
-                  </button>
+                  <div className="mute-control">
+                    <button 
+                      className={`mute-toggle-button ${settings.mute ? 'muted' : 'active'}`}
+                      onClick={handleMuteToggle}
+                      title={settings.mute ? 'Sesi Aç' : 'Sesi Kapat'}
+                    >
+                      <span className="speaker-icon">
+                        {settings.mute ? '🔇' : '🔊'}
+                      </span>
+                      <span className="mute-text">
+                        {settings.mute ? 'Sessiz' : 'Sesli'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* SFX Volume */}
