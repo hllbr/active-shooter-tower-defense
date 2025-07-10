@@ -3,37 +3,64 @@ import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { UpgradeCard } from './UpgradeCard';
 import type { UpgradeData } from './types';
+import { checkEliteUpgradeRequirements, getRequirementDisplayText } from './requirementHelpers';
+import { calculateCleanCost, applyDiceDiscount, applyUniversalDiscount } from '../../../utils/formatters/pricing';
 
 export const EliteUpgradeCard: React.FC = () => {
   const { 
     gold, 
-    setGold, 
+    bulletLevel,
+    wallLevel,
+    currentWave,
     eliteModuleLevel,
     setEliteModuleLevel,
     discountMultiplier,
     diceResult 
   } = useGameStore();
 
+  const rawBaseCost = calculateCleanCost(GAME_CONSTANTS.ELITE_MODULE_COST, GAME_CONSTANTS.ELITE_COST_MULTIPLIER, eliteModuleLevel);
+  
+  // Apply discounts cleanly
+  let baseCost = applyDiceDiscount(rawBaseCost, diceResult);
+  if (discountMultiplier !== 1) {
+    baseCost = applyUniversalDiscount(baseCost, discountMultiplier);
+  }
+  
+  const requirements = checkEliteUpgradeRequirements(bulletLevel, wallLevel, currentWave, gold, baseCost);
+  const requirementText = getRequirementDisplayText(requirements);
+
   const eliteUpgrade: UpgradeData = {
     name: 'Elite Modül',
-    description: 'Gelişmiş oyun mekaniği açar ve özel yetenekler kazandırır. En üst seviye güçlendirme.',
+    description: requirements.allMet 
+      ? 'Gelişmiş oyun mekaniği açar ve özel yetenekler kazandırır. En üst seviye güçlendirme.'
+      : requirementText,
     currentLevel: eliteModuleLevel,
-    baseCost: GAME_CONSTANTS.ELITE_MODULE_COST * Math.pow(GAME_CONSTANTS.ELITE_COST_MULTIPLIER, eliteModuleLevel),
+    baseCost,
     maxLevel: GAME_CONSTANTS.MAX_ELITE_MODULE_LEVEL,
     onUpgrade: () => {
-      const cost = GAME_CONSTANTS.ELITE_MODULE_COST * Math.pow(GAME_CONSTANTS.ELITE_COST_MULTIPLIER, eliteModuleLevel);
-      let finalCost = cost;
-      
-      if (diceResult && diceResult === 6) finalCost = Math.floor(cost * 0.5);
-      else if (diceResult && diceResult === 5) finalCost = Math.floor(cost * 0.7);
-      else if (diceResult && diceResult === 4) finalCost = Math.floor(cost * 0.85);
-      
-      if (discountMultiplier !== 1) {
-        finalCost = Math.floor(finalCost / discountMultiplier);
+      // Check requirements before attempting purchase
+      if (!requirements.allMet) {
+        console.error('❌ Elite upgrade blocked:', requirementText);
+        import('../../../utils/sound').then(({ playSound }) => {
+          playSound('error');
+        });
+        return;
       }
+
+      const finalCost = baseCost; // Cost already has discounts applied
       
-      setGold(gold - finalCost);
-      setEliteModuleLevel(eliteModuleLevel + 1);
+      // CRITICAL FIX: Use proper state transaction instead of direct gold manipulation
+      const { spendGold } = useGameStore.getState();
+      const success = spendGold(finalCost);
+      
+      if (success) {
+        setEliteModuleLevel(eliteModuleLevel + 1);
+      } else {
+        console.error('❌ Elite upgrade failed: Insufficient funds or state error');
+        import('../../../utils/sound').then(({ playSound }) => {
+          playSound('error');
+        });
+      }
     },
     icon: '🚀',
     color: '#8b5cf6',

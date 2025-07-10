@@ -43,9 +43,11 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
     
     // Only update if enough time has passed
     if (deltaTime >= targetFrameTime) {
-      // ✅ CRITICAL FIX: Stop game loop updates if game is over
-      if (state.isGameOver) {
-        // Still request animation frame to show game over screen, but don't update game logic
+      // ✅ CRITICAL FIX: Stop game loop updates if game is over OR in upgrade screen
+      // PERFORMANCE: This prevents unnecessary updates during upgrade screen,
+      // improving battery life and reducing CPU usage when game is paused
+      if (state.isGameOver || state.isRefreshing) {
+        // Still request animation frame to show screen, but don't update game logic
         frameId = requestAnimationFrame(loop);
         return;
       }
@@ -92,8 +94,7 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
         // Smart update decision
         const shouldUpdate = timeSinceLastUpdate >= throttleThreshold || 
                            Math.abs(currentEnemyCount - prevEnemyCount) > 5 ||
-                           Math.abs(currentBulletCount - prevBulletCount) > 10 ||
-                           updatedState.isGameOver !== stateTracker['lastValues']?.isGameOver;
+                           Math.abs(currentBulletCount - prevBulletCount) > 10;
         
         if (shouldUpdate) {
           useGameStore.setState({ 

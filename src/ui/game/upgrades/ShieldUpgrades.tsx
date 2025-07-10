@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useGameStore, type Store } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { ShieldStatsDisplay } from './ShieldStatsDisplay';
@@ -14,9 +14,6 @@ export const ShieldUpgrades: React.FC = () => {
   const discountMultiplier = useGameStore((state: Store) => state.discountMultiplier);
   const diceUsed = useGameStore((state: Store) => state.diceUsed);
   
-  const [prevWallStrength, setPrevWallStrength] = useState(globalWallStrength);
-  const [showUpgradeAnimation, setShowUpgradeAnimation] = useState(false);
-
   // Calculate current shield strength
   const getCurrentShieldStrength = () => {
     return globalWallStrength * 10; // Each wall point = 10 shield strength
@@ -30,34 +27,45 @@ export const ShieldUpgrades: React.FC = () => {
     return (globalWallStrength + nextShield.strength) * 10;
   };
 
-  // Detect upgrade and trigger animation
-  useEffect(() => {
-    if (globalWallStrength > prevWallStrength) {
-      setShowUpgradeAnimation(true);
-      setTimeout(() => setShowUpgradeAnimation(false), 2000);
-    }
-    setPrevWallStrength(globalWallStrength);
-  }, [globalWallStrength, prevWallStrength]);
-
   const currentShieldStrength = getCurrentShieldStrength();
   const nextShieldStrength = getNextShieldStrength();
 
-  const handlePurchase = (index: number, _finalCost: number) => {
+  const handlePurchase = (index: number, finalCost: number) => {
     const shield = GAME_CONSTANTS.WALL_SHIELDS[index];
     if (!shield) {
       Logger.error(`❌ Invalid shield index: ${index}`);
+      import('../../../utils/sound').then(({ playSound }) => {
+        playSound('error');
+      });
       return;
     }
     
     const currentShieldLevel = wallLevel || 0;
     if (index !== currentShieldLevel) {
       Logger.error(`❌ Invalid purchase attempt: index ${index} !== currentLevel ${currentShieldLevel}`);
+      import('../../../utils/sound').then(({ playSound }) => {
+        playSound('error');
+      });
       return;
     }
     
-    // Shield purchase processed
+    // Validate cost matches what the UI calculated
+    if (gold < finalCost) {
+      Logger.error(`❌ Insufficient gold: ${gold} < ${finalCost}`);
+      import('../../../utils/sound').then(({ playSound }) => {
+        playSound('error');
+      });
+      return;
+    }
     
+    // Shield purchase processed - this will now use the correct shield.cost from WALL_SHIELDS
+    Logger.log(`✅ Purchasing shield ${shield.name} for ${finalCost} gold. Current level: ${currentShieldLevel}`);
     upgradeWall();
+    
+    // Show success feedback
+    import('../../../utils/sound').then(({ playSound }) => {
+      playSound('shield-activate');
+    });
   };
 
   return (
@@ -70,7 +78,7 @@ export const ShieldUpgrades: React.FC = () => {
         currentShieldStrength={currentShieldStrength}
         nextShieldStrength={nextShieldStrength}
         globalWallStrength={globalWallStrength}
-        showUpgradeAnimation={showUpgradeAnimation}
+        showUpgradeAnimation={false}
         hasAvailableShields={GAME_CONSTANTS.WALL_SHIELDS.length > 0}
       />
 

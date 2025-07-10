@@ -127,9 +127,26 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
   }),
 
   upgradeWall: () => set((state: Store) => {
-    const cost = 200 * (state.wallLevel + 1);
+    const currentShieldLevel = state.wallLevel || 0;
+    const shield = GAME_CONSTANTS.WALL_SHIELDS[currentShieldLevel];
+    
+    // Check if shield exists and can be purchased
+    if (!shield) return {};
+    
+    const cost = shield.cost;
     if (state.gold < cost) return {};
-    return { wallLevel: state.wallLevel + 1, globalWallStrength: 10 + state.wallLevel * 5, gold: state.gold - cost, defenseUpgradesPurchased: state.defenseUpgradesPurchased + 1, totalGoldSpent: state.totalGoldSpent + cost };
+    
+    // Calculate new wall strength based on shield strength
+    const newWallStrength = state.globalWallStrength + shield.strength;
+    
+    return { 
+      wallLevel: state.wallLevel + 1, 
+      globalWallStrength: newWallStrength, 
+      gold: state.gold - cost, 
+      defenseUpgradesPurchased: state.defenseUpgradesPurchased + 1, 
+      totalGoldSpent: state.totalGoldSpent + cost,
+      shieldUpgradesPurchased: state.shieldUpgradesPurchased + 1 // Also increment shield upgrades counter
+    };
   }),
 
   damageWall: (slotIdx) => set((state: Store) => {

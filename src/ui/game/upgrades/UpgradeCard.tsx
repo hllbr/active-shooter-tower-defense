@@ -2,7 +2,7 @@ import React from 'react';
 import type { UpgradeCardProps } from './types';
 import { DiscountBadge } from './DiscountBadge';
 import { calculateDiscountedCost } from './utils';
-import { playSound } from '../../../utils/sound/soundEffects';
+// import { playSound } from '../../../utils/sound/soundEffects'; // REMOVED: Use dynamic import
 
 export const UpgradeCard: React.FC<UpgradeCardProps> = ({ upgrade, gold, diceResult, discountMultiplier }) => {
   const {
@@ -24,8 +24,24 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ upgrade, gold, diceRes
 
   const handleUpgrade = () => {
     if (canAfford) {
-      onUpgrade();
-      playSound('upgrade-purchase');
+      try {
+        onUpgrade();
+        // 🔊 ENHANCED: Play purchase success sound with dynamic import
+        import('../../../utils/sound/soundEffects').then(({ playSound }) => {
+          playSound('upgrade-purchase');
+        });
+      } catch (error) {
+        console.error('❌ Upgrade failed:', error);
+        // 🔊 ENHANCED: Play error sound on upgrade failure
+        import('../../../utils/sound/soundEffects').then(({ playSound }) => {
+          playSound('error');
+        });
+      }
+    } else {
+      // 🔊 ENHANCED: Play error sound when cannot afford
+      import('../../../utils/sound/soundEffects').then(({ playSound }) => {
+        playSound('error');
+      });
     }
   };
 

@@ -63,12 +63,25 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
       onPurchase(index, finalCost);
       playSound('upgrade-purchase');
     } else {
-      const _reason = isPastLevel 
+      const reason = isPastLevel 
         ? 'Already completed' 
         : isFutureLevel 
           ? 'Locked - complete previous levels first'
           : 'Not enough gold';
-      // Purchase blocked for reason
+      
+      // Play error sound and log reason for debugging
+      playSound('error');
+      console.warn(`Shield purchase blocked: ${reason}`, {
+        index,
+        canAfford,
+        isCurrentLevel,
+        isPastLevel,
+        isFutureLevel,
+        gold,
+        finalCost,
+        purchaseCount,
+        isMaxed
+      });
     }
   };
 

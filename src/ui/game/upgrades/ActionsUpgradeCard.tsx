@@ -3,37 +3,45 @@ import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { UpgradeCard } from './UpgradeCard';
 import type { UpgradeData } from './types';
+import { calculateCleanCost, applyDiceDiscount, applyUniversalDiscount } from '../../../utils/formatters/pricing';
 
 export const ActionsUpgradeCard: React.FC = () => {
   const { 
     gold, 
-    setGold, 
     maxActionsLevel, 
     setMaxActionsLevel,
     discountMultiplier,
     diceResult 
   } = useGameStore();
 
+  // Calculate clean cost with discounts
+  const rawBaseCost = calculateCleanCost(GAME_CONSTANTS.MAX_ACTIONS_COST, GAME_CONSTANTS.COST_MULTIPLIER, maxActionsLevel);
+  let cleanBaseCost = applyDiceDiscount(rawBaseCost, diceResult);
+  if (discountMultiplier !== 1) {
+    cleanBaseCost = applyUniversalDiscount(cleanBaseCost, discountMultiplier);
+  }
+
   const actionsUpgrade: UpgradeData = {
     name: 'Aksiyon Sistemi',
     description: 'Dalga başına maksimum aksiyon sayısını artırır ve daha fazla harita değişikliği yapma imkanı sağlar.',
     currentLevel: maxActionsLevel,
-    baseCost: GAME_CONSTANTS.MAX_ACTIONS_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, maxActionsLevel),
+    baseCost: cleanBaseCost,
     maxLevel: GAME_CONSTANTS.MAX_MAX_ACTIONS_LEVEL,
     onUpgrade: () => {
-      const cost = GAME_CONSTANTS.MAX_ACTIONS_COST * Math.pow(GAME_CONSTANTS.COST_MULTIPLIER, maxActionsLevel);
-      let finalCost = cost;
+      const finalCost = cleanBaseCost; // Cost already has discounts applied
       
-      if (diceResult && diceResult === 6) finalCost = Math.floor(cost * 0.5);
-      else if (diceResult && diceResult === 5) finalCost = Math.floor(cost * 0.7);
-      else if (diceResult && diceResult === 4) finalCost = Math.floor(cost * 0.85);
+      // CRITICAL FIX: Use proper state transaction instead of direct gold manipulation
+      const { spendGold } = useGameStore.getState();
+      const success = spendGold(finalCost);
       
-      if (discountMultiplier !== 1) {
-        finalCost = Math.floor(finalCost / discountMultiplier);
+      if (success) {
+        setMaxActionsLevel(maxActionsLevel + 1);
+      } else {
+        console.error('❌ Actions upgrade failed: Insufficient funds or state error');
+        import('../../../utils/sound').then(({ playSound }) => {
+          playSound('error');
+        });
       }
-      
-      setGold(gold - finalCost);
-      setMaxActionsLevel(maxActionsLevel + 1);
     },
     icon: '🎯',
     color: '#06b6d4',

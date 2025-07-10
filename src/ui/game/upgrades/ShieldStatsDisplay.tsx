@@ -12,7 +12,7 @@ export const ShieldStatsDisplay: React.FC<ShieldStatsDisplayProps> = ({
   currentShieldStrength,
   nextShieldStrength,
   globalWallStrength,
-  showUpgradeAnimation,
+  showUpgradeAnimation: _showUpgradeAnimation,
   hasAvailableShields,
 }) => {
   return (
@@ -23,8 +23,7 @@ export const ShieldStatsDisplay: React.FC<ShieldStatsDisplayProps> = ({
       border: '2px solid #6666ff',
       marginBottom: '16px',
       textAlign: 'center',
-      transform: showUpgradeAnimation ? 'scale(1.05)' : 'scale(1)',
-      transition: 'transform 0.3s ease',
+      transform: 'scale(1)',
     }}>
       <div style={{ fontSize: '14px', color: '#ccc', marginBottom: '4px' }}>
         Mevcut Kalkan Gücü
@@ -33,8 +32,7 @@ export const ShieldStatsDisplay: React.FC<ShieldStatsDisplayProps> = ({
         fontSize: '24px',
         fontWeight: 'bold',
         color: '#6666ff',
-        textShadow: showUpgradeAnimation ? '0 0 10px #6666ff' : 'none',
-        transition: 'text-shadow 0.3s ease',
+        textShadow: 'none',
       }}>
         {currentShieldStrength} Güç
       </div>
@@ -46,32 +44,7 @@ export const ShieldStatsDisplay: React.FC<ShieldStatsDisplayProps> = ({
           Sonraki Kalkan: {nextShieldStrength} Güç (+{nextShieldStrength - currentShieldStrength})
         </div>
       )}
-      {showUpgradeAnimation && (
-        <div style={{
-          color: '#4ade80',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          marginTop: '8px',
-          animation: 'fadeUp 2s ease-out',
-        }}>
-          🛡️ Kalkan Güçlendirildi!
-        </div>
-      )}
-      
-      <style>
-        {`
-          @keyframes fadeUp {
-            0% {
-              opacity: 1;
-              transform: translateY(0);
-            }
-            100% {
-              opacity: 0;
-              transform: translateY(-20px);
-            }
-          }
-        `}
-      </style>
+
     </div>
   );
 }; 

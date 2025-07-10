@@ -4,6 +4,7 @@ import { GAME_CONSTANTS } from '../../../utils/constants';
 import { UpgradeCard } from './UpgradeCard';
 import type { BulletTypeData } from './types';
 import { getUpgradeColor } from './utils';
+import { calculateCleanCost, applyDiceDiscount, applyUniversalDiscount } from '../../../utils/formatters/pricing';
 
 export const FireUpgrades: React.FC = () => {
   const { 
@@ -23,14 +24,22 @@ export const FireUpgrades: React.FC = () => {
     }}>
       {GAME_CONSTANTS.BULLET_TYPES.map((bulletType: BulletTypeData, index: number) => {
         const level = index + 1;
-        const cost = GAME_CONSTANTS.BULLET_COST * Math.pow(GAME_CONSTANTS.BULLET_COST_MULTIPLIER, index);
+        const baseCost = calculateCleanCost(GAME_CONSTANTS.BULLET_COST, GAME_CONSTANTS.BULLET_COST_MULTIPLIER, index);
+        
+        // Apply discounts cleanly
+        let cost = applyDiceDiscount(baseCost, diceResult);
+        if (discountMultiplier !== 1) {
+          cost = applyUniversalDiscount(cost, discountMultiplier);
+        }
         
         // CRITICAL FIX: Progression sistemi - sadece bir sonraki seviye satın alınabilir
         const currentBulletLevel = bulletLevel || 1; // Default 1 if undefined
         const isCurrentLevel = level === currentBulletLevel; // Mevcut seviye
         const isNextLevel = level === currentBulletLevel + 1; // Satın alınabilir seviye
-        const isPastLevel = level < currentBulletLevel; // Geçmiş seviye (tamamlanmış)
+        const isPastLevel = level <= currentBulletLevel; // FIXED: Current level ve past level dahil
         const isFutureLevel = level > currentBulletLevel + 1; // Gelecek seviye (henüz erişilemez)
+        
+        // DEBUG: Current state logging (removed from production)
         
         const canUpgrade = isNextLevel && gold >= cost;
         const isMaxed = isPastLevel; // Geçmiş seviyeler "tamamlanmış" olarak gösterilir
@@ -50,24 +59,11 @@ export const FireUpgrades: React.FC = () => {
           maxLevel: 1,
           onUpgrade: () => {
             if (!isNextLevel) {
+              // Cannot upgrade: not next level
               return;
             }
             
-            
-            // Zar indirimleri hesaplanır ama kullanılmaz (gelecekte genişletilebilir)
-            let _discountedCost = cost;
-            if (diceResult && diceResult === 6) _discountedCost = Math.floor(cost * 0.5);
-            else if (diceResult && diceResult === 5) _discountedCost = Math.floor(cost * 0.7);
-            else if (diceResult && diceResult === 4) _discountedCost = Math.floor(cost * 0.85);
-            
-            // Discount multiplier
-            if (discountMultiplier !== 1) {
-              _discountedCost = Math.floor(_discountedCost / discountMultiplier);
-            }
-            
-            // Bullet upgrade with calculated cost
-            
-            // CRITICAL FIX: Normal bullet upgrade kullan
+            // CRITICAL FIX: Use normal bullet upgrade with clean cost already calculated
             upgradeBullet(false);
           },
           icon: isPastLevel ? "✅" : isCurrentLevel ? "🔥" : isLocked ? "🔒" : "🔥",
