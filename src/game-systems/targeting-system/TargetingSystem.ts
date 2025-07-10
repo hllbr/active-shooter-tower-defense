@@ -228,24 +228,7 @@ export function getDirection(from: Position, to: Position) {
   return utilGetDirection(from, to);
 }
 
-/**
- * Enhanced enemy selection with targeting modes
- * @deprecated Use eliteTargeting.selectTarget() for new implementations
- */
-export function getNearestEnemy(pos: Position, enemies: Enemy[]) {
-  let min = Infinity;
-  let nearest: Enemy | null = null;
-  enemies.forEach((e) => {
-    const dx = e.position.x - pos.x;
-    const dy = e.position.y - pos.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < min) {
-      min = dist;
-      nearest = e;
-    }
-  });
-  return { enemy: nearest, distance: min };
-}
+
 
 /**
  * Enhanced enemy targeting with strategic options

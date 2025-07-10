@@ -2,7 +2,6 @@ export {
   TargetingMode, 
   eliteTargeting,
   getDirection,
-  getNearestEnemy,
   getTargetEnemy,
   getTargetEnemies,
   getEnemiesInRange

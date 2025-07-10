@@ -49,6 +49,8 @@ export interface AnimatedCounterHookReturn {
 
 export interface GameBoardProps {
   className?: string;
+  onSettingsClick?: () => void;
+  onChallengeClick?: () => void;
 }
 
 export interface TooltipProps {

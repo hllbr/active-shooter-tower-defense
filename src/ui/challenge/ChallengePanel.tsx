@@ -1,5 +1,4 @@
 import React from 'react';
-import './ChallengePanel.css';
 import { useChallenge } from './hooks/useChallenge';
 import type { Reward } from './context/ChallengeContext';
 import { format } from 'date-fns';
@@ -25,73 +24,340 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
     toast.success(msg, { position: 'bottom-center' });
   };
 
+  const dailyChallenges = challenges.filter(c => !c.weekly);
+  const weeklyChallenges = challenges.filter(c => c.weekly);
+
   return (
-    <div className="challenge-panel-overlay" onClick={onClose}>
-      <div className="challenge-panel" onClick={e => e.stopPropagation()}>
-        <h2>Günlük Görevler</h2>
-        <ul>
-          {challenges.filter(c => !c.weekly).map(c => {
-            const isCompleted = c.completed;
-            const isClaimed = claimedRewards.includes(c.id);
-            if (isCompleted && !isClaimed) {
-              handleClaim(c.id, c.reward);
-            }
-            return (
-              <li key={c.id} className={isCompleted ? 'completed' : ''} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 22, userSelect: 'none' }}>
-                  {isCompleted ? (
-                    <span style={{ color: '#4ade80' }}>☑️</span>
-                  ) : (
-                    <span style={{ color: '#888' }}>☐</span>
-                  )}
-                </span>
-                <span style={{ textDecoration: isCompleted ? 'line-through' : 'none', flex: 1 }}>
-                  {c.text} <span className="progress">({c.progress}/{c.target})</span>
-                </span>
-                <span className="reward">Ödül: {c.reward.type === 'gold' ? `${c.reward.amount} 💰` : c.reward.type === 'skin' ? `Skin: ${c.reward.name}` : `Kule: ${c.reward.towerType}`}</span>
-              </li>
-            );
-          })}
-        </ul>
-        <h2>Haftalık Görevler</h2>
-        <ul>
-          {challenges.filter(c => c.weekly).map(c => {
-            const isCompleted = c.completed;
-            const isClaimed = claimedRewards.includes(c.id);
-            if (isCompleted && !isClaimed) {
-              handleClaim(c.id, c.reward);
-            }
-            return (
-              <li key={c.id} className={isCompleted ? 'completed' : ''} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 22, userSelect: 'none' }}>
-                  {isCompleted ? (
-                    <span style={{ color: '#4ade80' }}>☑️</span>
-                  ) : (
-                    <span style={{ color: '#888' }}>☐</span>
-                  )}
-                </span>
-                <span style={{ textDecoration: isCompleted ? 'line-through' : 'none', flex: 1 }}>
-                  {c.text} <span className="progress">({c.progress}/{c.target})</span>
-                </span>
-                <span className="reward">Ödül: {c.reward.type === 'gold' ? `${c.reward.amount} 💰` : c.reward.type === 'skin' ? `Skin: ${c.reward.name}` : `Kule: ${c.reward.towerType}`}</span>
-              </li>
-            );
-          })}
-        </ul>
-        <div className="reward-history">
-          <h3>Ödül Geçmişi</h3>
-          <ul>
-            {claimedRewardHistory.slice(-10).reverse().map((item, _i) => (
-              <li key={item.id + '-' + item.date}>
-                <span>{format(new Date(item.date), 'dd.MM.yyyy HH:mm')}</span> - 
-                <span>{item.reward.type === 'gold' ? `${item.reward.amount} 💰` : item.reward.type === 'skin' ? `Skin: ${item.reward.name}` : `Kule: ${item.reward.towerType}`}</span>
-              </li>
-            ))}
-          </ul>
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          backgroundColor: '#1A202C',
+          border: '2px solid #4A5568',
+          borderRadius: '12px',
+          padding: '24px',
+          maxWidth: '900px',
+          maxHeight: '85vh',
+          width: '90%',
+          overflow: 'hidden',
+          position: 'relative'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ 
+            color: '#FFF', 
+            fontSize: '24px', 
+            fontWeight: 'bold', 
+            margin: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            🏆 Günlük Görevler
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              backgroundColor: '#EF4444',
+              color: '#FFF',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }}
+          >
+            ✕
+          </button>
         </div>
-        <button className="close-btn" onClick={onClose} aria-label="Görev panelini kapat">Kapat</button>
+
+        {/* Content Container */}
+        <div style={{ maxHeight: '65vh', overflowY: 'auto', padding: '4px' }}>
+          
+          {/* Daily Challenges Section */}
+          <div style={{ marginBottom: '32px' }}>
+            <h3 style={{ 
+              color: '#F59E0B', 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              📅 Günlük Görevler ({dailyChallenges.filter(c => !claimedRewards.includes(c.id)).length})
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {dailyChallenges.map(c => {
+                const isCompleted = c.completed;
+                const isClaimed = claimedRewards.includes(c.id);
+                if (isCompleted && !isClaimed) {
+                  handleClaim(c.id, c.reward);
+                }
+                return (
+                  <div 
+                    key={c.id}
+                    style={{
+                      background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 100%)',
+                      border: `2px solid ${isCompleted ? '#10B981' : '#4A5568'}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      opacity: isClaimed ? 0.6 : 1
+                    }}
+                  >
+                    {/* Completion Status */}
+                    <div style={{ fontSize: '24px' }}>
+                      {isCompleted ? (
+                        <span style={{ color: '#10B981' }}>✅</span>
+                      ) : (
+                        <span style={{ color: '#6B7280' }}>⏳</span>
+                      )}
+                    </div>
+                    
+                    {/* Challenge Info */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ 
+                        color: '#FFF', 
+                        fontSize: '14px', 
+                        fontWeight: 'bold',
+                        marginBottom: '4px',
+                        textDecoration: isClaimed ? 'line-through' : 'none'
+                      }}>
+                        {c.text}
+                      </div>
+                      <div style={{ 
+                        color: '#9CA3AF', 
+                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <span>📊 İlerleme: {c.progress}/{c.target}</span>
+                        {/* Progress Bar */}
+                        <div style={{
+                          backgroundColor: '#4A5568',
+                          borderRadius: '4px',
+                          height: '6px',
+                          width: '80px',
+                          overflow: 'hidden'
+                        }}>
+                          <div 
+                            style={{
+                              backgroundColor: isCompleted ? '#10B981' : '#F59E0B',
+                              height: '100%',
+                              width: `${Math.min((c.progress / c.target) * 100, 100)}%`,
+                              transition: 'width 0.3s ease'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reward Info */}
+                    <div style={{ 
+                      backgroundColor: '#4A5568',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      minWidth: '120px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ color: '#F59E0B', fontSize: '12px', fontWeight: 'bold' }}>ÖDÜL</div>
+                      <div style={{ color: '#FFF', fontSize: '14px' }}>
+                        {c.reward.type === 'gold' ? `${c.reward.amount} 💰` : 
+                         c.reward.type === 'skin' ? `🎨 ${c.reward.name}` : 
+                         `🏰 ${c.reward.towerType}`}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Weekly Challenges Section */}
+          <div style={{ marginBottom: '32px' }}>
+            <h3 style={{ 
+              color: '#8B5CF6', 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              📆 Haftalık Görevler ({weeklyChallenges.filter(c => !claimedRewards.includes(c.id)).length})
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {weeklyChallenges.map(c => {
+                const isCompleted = c.completed;
+                const isClaimed = claimedRewards.includes(c.id);
+                if (isCompleted && !isClaimed) {
+                  handleClaim(c.id, c.reward);
+                }
+                return (
+                  <div 
+                    key={c.id}
+                    style={{
+                      background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 100%)',
+                      border: `2px solid ${isCompleted ? '#8B5CF6' : '#4A5568'}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      opacity: isClaimed ? 0.6 : 1
+                    }}
+                  >
+                    {/* Completion Status */}
+                    <div style={{ fontSize: '24px' }}>
+                      {isCompleted ? (
+                        <span style={{ color: '#8B5CF6' }}>✅</span>
+                      ) : (
+                        <span style={{ color: '#6B7280' }}>⏳</span>
+                      )}
+                    </div>
+                    
+                    {/* Challenge Info */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ 
+                        color: '#FFF', 
+                        fontSize: '14px', 
+                        fontWeight: 'bold',
+                        marginBottom: '4px',
+                        textDecoration: isClaimed ? 'line-through' : 'none'
+                      }}>
+                        {c.text}
+                      </div>
+                      <div style={{ 
+                        color: '#9CA3AF', 
+                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <span>📊 İlerleme: {c.progress}/{c.target}</span>
+                        {/* Progress Bar */}
+                        <div style={{
+                          backgroundColor: '#4A5568',
+                          borderRadius: '4px',
+                          height: '6px',
+                          width: '80px',
+                          overflow: 'hidden'
+                        }}>
+                          <div 
+                            style={{
+                              backgroundColor: isCompleted ? '#8B5CF6' : '#F59E0B',
+                              height: '100%',
+                              width: `${Math.min((c.progress / c.target) * 100, 100)}%`,
+                              transition: 'width 0.3s ease'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reward Info */}
+                    <div style={{ 
+                      backgroundColor: '#4A5568',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      minWidth: '120px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ color: '#8B5CF6', fontSize: '12px', fontWeight: 'bold' }}>ÖDÜL</div>
+                      <div style={{ color: '#FFF', fontSize: '14px' }}>
+                        {c.reward.type === 'gold' ? `${c.reward.amount} 💰` : 
+                         c.reward.type === 'skin' ? `🎨 ${c.reward.name}` : 
+                         `🏰 ${c.reward.towerType}`}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Reward History Section */}
+          {claimedRewardHistory.length > 0 && (
+            <div>
+              <h3 style={{ 
+                color: '#6B7280', 
+                fontSize: '16px', 
+                fontWeight: 'bold', 
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                📜 Ödül Geçmişi (Son 10)
+              </h3>
+              <div style={{
+                backgroundColor: '#2D3748',
+                border: '1px solid #4A5568',
+                borderRadius: '8px',
+                padding: '12px',
+                maxHeight: '200px',
+                overflowY: 'auto'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {claimedRewardHistory.slice(-10).reverse().map((item, i) => (
+                    <div 
+                      key={item.id + '-' + item.date + '-' + i}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px',
+                        backgroundColor: '#1A202C',
+                        borderRadius: '6px'
+                      }}
+                    >
+                      <span style={{ color: '#9CA3AF', fontSize: '12px' }}>
+                        {format(new Date(item.date), 'dd.MM.yyyy HH:mm')}
+                      </span>
+                      <span style={{ color: '#FFF', fontSize: '12px' }}>
+                        {item.reward.type === 'gold' ? `${item.reward.amount} 💰` : 
+                         item.reward.type === 'skin' ? `🎨 ${item.reward.name}` : 
+                         `🏰 ${item.reward.towerType}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-      <ToastContainer position="bottom-center" autoClose={3000} hideProgressBar newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+      <ToastContainer 
+        position="bottom-center" 
+        autoClose={3000} 
+        hideProgressBar 
+        newestOnTop 
+        closeOnClick 
+        rtl={false} 
+        pauseOnFocusLoss 
+        draggable 
+        pauseOnHover 
+      />
     </div>
   );
 };

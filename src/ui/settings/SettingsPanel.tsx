@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { getSettings, saveSettings, type Settings } from '../../utils/settings';
-import { updateMusicSettings } from '../../utils/sound/musicManager';
-import { playSound, updateAllSoundVolumes, testVolumeControls } from '../../utils/sound/soundEffects';
-import { toast } from 'react-toastify';
+import React, { useState } from 'react';
+import { performanceSettings } from '../../utils/settings/PerformanceSettings';
+import { PerformanceModeSelector } from './PerformanceModeSelector';
+import { getSettings, saveSettings } from '../../utils/settings';
+import { updateAllSoundVolumes } from '../../utils/sound';
 import './SettingsPanel.css';
 
 interface SettingsPanelProps {
@@ -10,235 +10,195 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
-const defaultSettings: Settings = {
-  musicVolume: 0.7,
-  sfxVolume: 0.7,
-  mute: false,
-};
-
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [changed, setChanged] = useState(false);
+  const [showPerformanceSelector, setShowPerformanceSelector] = useState(false);
+  const [settings, setSettingsState] = useState(getSettings());
 
-  useEffect(() => {
-    if (isOpen) {
-      setSettings(getSettings());
-      setChanged(false);
-    }
-  }, [isOpen]);
+  const currentPerformanceMode = performanceSettings.getMode();
 
-  const handleChange = (key: keyof Settings, value: Settings[keyof Settings]) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
+  if (!isOpen) {
+    return null;
+  }
+
+  const handleVolumeChange = (type: 'sfxVolume' | 'musicVolume', value: number) => {
+    const newSettings = { ...settings, [type]: value };
+    setSettingsState(newSettings);
     saveSettings(newSettings);
-    
-    // Gerçek zamanlı volume güncellemesi
-    updateMusicSettings();
     updateAllSoundVolumes();
-    
-    setChanged(true);
   };
 
-  const handleClose = () => {
-    if (changed) {
-      toast('🎵 Ses ayarları kaydedildi', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-    }
-    onClose();
+  const handleMuteToggle = () => {
+    const newSettings = { ...settings, mute: !settings.mute };
+    setSettingsState(newSettings);
+    saveSettings(newSettings);
+    updateAllSoundVolumes();
   };
 
-  // Ses seviyesi ikonları
-  const getVolumeIcon = (volume: number, isMuted: boolean) => {
-    if (isMuted || volume === 0) return '🔇';
-    if (volume < 0.3) return '🔈';
-    if (volume < 0.7) return '🔉';
-    return '🔊';
-  };
-
-  // Ses test fonksiyonu
-  const testSound = (type: 'music' | 'sfx') => {
-    if (type === 'sfx') {
-      playSound('dice-roll');
-    } else {
-      // Müzik testi için kısa bir ses çalabilir
-      playSound('levelupwav');
-    }
-  };
-
-  // Master mute toggle
-  const toggleMute = () => {
-    const newMute = !settings.mute;
-    handleChange('mute', newMute);
-    
-    // Ses geri bildirimi
-    if (!newMute) {
-      setTimeout(() => playSound('levelupwav'), 100);
-    }
-  };
-
-  // Volume test fonksiyonu
-  const testVolumeSystem = () => {
-    testVolumeControls();
-    toast('🔊 Ses sistemi test ediliyor...', {
-      position: "top-right",
-      autoClose: 2000,
+  const testDiceSound = () => {
+    import('../../utils/sound').then(({ playSoundForTest }) => {
+      playSoundForTest('dice-roll'); // Cooldown bypass ile test
     });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="settings-panel-overlay" onClick={handleClose}>
-      <div className="settings-panel" onClick={e => e.stopPropagation()}>
-        <div className="settings-header">
-          <h2>🎵 Ses Ayarları</h2>
-          <button className="close-button" onClick={handleClose}>✕</button>
-        </div>
-
-        {/* Master Mute Toggle */}
-        <div className="master-mute-section">
-          <button 
-            className={`master-mute-button ${settings.mute ? 'muted' : 'active'}`}
-            onClick={toggleMute}
-          >
-            <span className="mute-icon">
-              {settings.mute ? '🔇' : '🔊'}
-            </span>
-            <span className="mute-text">
-              {settings.mute ? 'Sesler Kapalı' : 'Sesler Açık'}
-            </span>
-          </button>
-        </div>
-
-        {/* Müzik Ses Seviyesi */}
-        <div className="volume-control">
-          <div className="volume-header">
-            <span className="volume-icon">
-              {getVolumeIcon(settings.musicVolume, settings.mute)}
-            </span>
-            <span className="volume-label">Müzik</span>
-            <span className="volume-value">
-              {settings.mute ? '0' : Math.round(settings.musicVolume * 100)}%
-            </span>
-          </div>
-          <div className="volume-slider-container">
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={settings.musicVolume}
-              onChange={e => handleChange('musicVolume', parseFloat(e.target.value))}
-              className="volume-slider music-slider"
-              disabled={settings.mute}
-            />
+    <>
+      <div className="settings-panel-overlay">
+        <div className="modern-settings-panel">
+          {/* Header */}
+          <div className="modern-settings-header">
+            <h2>⚙️ Oyun Ayarları</h2>
             <button 
-              className="test-button"
-              onClick={() => testSound('music')}
-              disabled={settings.mute}
+              className="modern-close-button"
+              onClick={onClose}
             >
-              🎵 Test
+              ✕
             </button>
           </div>
-        </div>
 
-        {/* Efekt Ses Seviyesi */}
-        <div className="volume-control">
-          <div className="volume-header">
-            <span className="volume-icon">
-              {getVolumeIcon(settings.sfxVolume, settings.mute)}
-            </span>
-            <span className="volume-label">Efektler</span>
-            <span className="volume-value">
-              {settings.mute ? '0' : Math.round(settings.sfxVolume * 100)}%
-            </span>
-          </div>
-          <div className="volume-slider-container">
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={settings.sfxVolume}
-              onChange={e => handleChange('sfxVolume', parseFloat(e.target.value))}
-              className="volume-slider sfx-slider"
-              disabled={settings.mute}
-            />
-            <button 
-              className="test-button"
-              onClick={() => testSound('sfx')}
-              disabled={settings.mute}
-            >
-              🎮 Test
-            </button>
-          </div>
-        </div>
+          {/* Settings Grid */}
+          <div className="modern-settings-grid">
+            
+            {/* Audio Settings Card */}
+            <div className="modern-settings-card">
+              <div className="card-header">
+                <span className="card-icon">🔊</span>
+                <h3>Ses Ayarları</h3>
+              </div>
+              
+              <div className="card-content">
+                {/* Master Mute */}
+                <div className="setting-row">
+                  <label>Ana Ses</label>
+                  <button 
+                    className={`toggle-button ${settings.mute ? 'muted' : 'active'}`}
+                    onClick={handleMuteToggle}
+                  >
+                    {settings.mute ? '🔇 Kapalı' : '🔊 Açık'}
+                  </button>
+                </div>
 
-        {/* Ses Profilleri */}
-        <div className="audio-presets">
-          <h3>Hızlı Ayarlar</h3>
-          <div className="preset-buttons">
-            <button 
-              className="preset-button"
-              onClick={() => {
-                handleChange('musicVolume', 0.3);
-                handleChange('sfxVolume', 0.9);
-              }}
-            >
-              🎯 Odaklanma
-            </button>
-            <button 
-              className="preset-button"
-              onClick={() => {
-                handleChange('musicVolume', 0.8);
-                handleChange('sfxVolume', 0.7);
-              }}
-            >
-              🎪 Eğlence
-            </button>
-            <button 
-              className="preset-button"
-              onClick={() => {
-                handleChange('musicVolume', 0.5);
-                handleChange('sfxVolume', 0.5);
-              }}
-            >
-              ⚖️ Dengeli
-            </button>
-          </div>
-        </div>
+                {/* SFX Volume */}
+                <div className="setting-row">
+                  <label>Efekt Sesleri</label>
+                  <div className="volume-control">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={settings.sfxVolume}
+                      onChange={(e) => handleVolumeChange('sfxVolume', parseFloat(e.target.value))}
+                      className="volume-slider"
+                      disabled={settings.mute}
+                    />
+                    <span className="volume-value">{Math.round(settings.sfxVolume * 100)}%</span>
+                  </div>
+                </div>
 
-        {/* Ses Sistemi Test Butonu */}
-        <div className="audio-test-section">
-          <button 
-            className="volume-test-button"
-            onClick={testVolumeSystem}
-          >
-            🔧 Ses Sistemi Test Et
-          </button>
-        </div>
+                {/* Music Volume */}
+                <div className="setting-row">
+                  <label>Müzik</label>
+                  <div className="volume-control">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={settings.musicVolume}
+                      onChange={(e) => handleVolumeChange('musicVolume', parseFloat(e.target.value))}
+                      className="volume-slider"
+                      disabled={settings.mute}
+                    />
+                    <span className="volume-value">{Math.round(settings.musicVolume * 100)}%</span>
+                  </div>
+                </div>
 
-        {/* Ses Sistemi Durumu */}
-        <div className="audio-status">
-          <div className="status-indicator">
-            <span className="status-dot active"></span>
-            <span>Ses Sistemi Aktif</span>
-          </div>
-          {changed && (
-            <div className="save-indicator">
-              <span className="save-dot"></span>
-              <span>Ayarlar kaydedildi</span>
+                {/* Test Sound Button */}
+                <div className="setting-row">
+                  <button 
+                    className="test-sound-button"
+                    onClick={testDiceSound}
+                    disabled={settings.mute}
+                  >
+                    🎲 Zar Sesini Test Et
+                  </button>
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Performance Settings Card */}
+            <div className="modern-settings-card">
+              <div className="card-header">
+                <span className="card-icon">🎯</span>
+                <h3>Performans Modu</h3>
+              </div>
+              
+              <div className="card-content">
+                <div className="setting-row">
+                  <label>Aktif Mod</label>
+                  <div className="performance-display">
+                    <span className="mode-badge">
+                      {performanceSettings.getModeDescription(currentPerformanceMode).icon}
+                      {performanceSettings.getModeDescription(currentPerformanceMode).title}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="setting-row">
+                  <button 
+                    className="change-mode-button"
+                    onClick={() => setShowPerformanceSelector(true)}
+                  >
+                    Modu Değiştir
+                  </button>
+                </div>
+
+                <div className="performance-tips">
+                  <h4>💡 Performans İpuçları</h4>
+                  <ul>
+                    <li>🎯 <strong>Temiz Mod:</strong> En iyi performans için önerilir</li>
+                    <li>🔊 <strong>Ses Azaltma:</strong> Ses seviyesini düşürmek CPU kullanımını azaltır</li>
+                    <li>👁️ <strong>Animasyon Azaltma:</strong> Animasyonları kapatmak FPS'i artırır</li>
+                    <li>📱 <strong>Mobil Cihazlar:</strong> Temiz modu kullanın</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Footer */}
+          <div className="modern-settings-footer">
+            <button 
+              className="reset-button"
+              onClick={() => {
+                if (confirm('Tüm ayarları varsayılana döndürmek istediğinizden emin misiniz?')) {
+                  const defaultSettings = { mute: false, sfxVolume: 0.7, musicVolume: 0.5 };
+                  setSettingsState(defaultSettings);
+                  saveSettings(defaultSettings);
+                  performanceSettings.setMode('normal');
+                  updateAllSoundVolumes();
+                }
+              }}
+            >
+              🔄 Varsayılana Dön
+            </button>
+            
+            <button 
+              className="save-button"
+              onClick={onClose}
+            >
+              ✓ Tamam
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {showPerformanceSelector && (
+        <PerformanceModeSelector 
+          onClose={() => setShowPerformanceSelector(false)}
+        />
+      )}
+    </>
   );
 }; 

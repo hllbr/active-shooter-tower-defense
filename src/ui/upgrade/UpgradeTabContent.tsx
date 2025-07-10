@@ -10,6 +10,7 @@ import { ShieldUpgrades } from '../game/upgrades/ShieldUpgrades';
 import { DefenseUpgrades } from '../game/upgrades/DefenseUpgrades';
 import { UpgradePackages } from '../game/upgrades/UpgradePackages';
 import { PowerMarket } from '../game/upgrades/PowerMarket';
+import { WeatherMarketContent } from '../game/market/WeatherMarketContent';
 
 // Tab specific components
 
@@ -37,6 +38,9 @@ export const UpgradeTabContent: React.FC<TabContentProps> = ({ activeTab }) => {
         
       case 'advanced':
         return <PowerMarket />;
+        
+      case 'weather':
+        return <WeatherMarketContent />;
         
       default:
         return null;

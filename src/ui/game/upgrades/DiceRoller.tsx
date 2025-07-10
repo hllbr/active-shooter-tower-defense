@@ -18,12 +18,10 @@ export const DiceRoller: React.FC = () => {
   const handleDiceRoll = () => {
     // Handle dice roll action
     
-    // ✅ SOUND FIX: Play dice roll sound effect
-    setTimeout(() => {
-      import('../../../utils/sound').then(({ playDiceRollSound }) => {
-        playDiceRollSound(); // Zar atma sesi
-      });
-    }, 50);
+    // ✅ SOUND FIX: Play dice roll sound effect immediately
+    import('../../../utils/sound').then(({ playSound }) => {
+      playSound('dice-roll'); // Zar atma sesi - doğrudan çal
+    });
     
     try {
       rollDice();
@@ -39,44 +37,122 @@ export const DiceRoller: React.FC = () => {
     }
   };
 
+  const getStatusColor = () => {
+    if (diceUsed) return '#6B7280';
+    if (discountMultiplier > 1) return '#4ade80';
+    if (discountMultiplier === 0) return '#ef4444';
+    return GAME_CONSTANTS.GOLD_COLOR;
+  };
+
   return (
     <div style={{
-      maxWidth: 'calc(100% - 40px)',
-      margin: '0 auto',
-      padding: 14,
-      borderRadius: 12,
-      border: `2px solid ${diceUsed ? '#444' : GAME_CONSTANTS.GOLD_COLOR}`,
-      background: diceUsed ? '#1a1a1a' : 'rgba(255, 215, 0, 0.1)',
-      marginBottom: 16,
-      textAlign: 'center'
+      backgroundColor: '#1A202C',
+      border: `2px solid ${getStatusColor()}`,
+      borderRadius: '12px',
+      padding: '20px',
+      textAlign: 'center',
+      transition: 'all 0.3s ease',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <div style={{ width: 24 }} /> {/* Spacer */}
-        <span style={{ fontWeight: 'bold', fontSize: 20, color: diceUsed ? '#888' : GAME_CONSTANTS.GOLD_COLOR }}>
-          🎲 Şansını Dene!
-        </span>
-        <DiceFace 
-          roll={diceRoll} 
-          size="small" 
-          color={discountMultiplier > 1 ? '#4ade80' : discountMultiplier === 0 ? '#ff4444' : GAME_CONSTANTS.GOLD_COLOR}
-        />
+      {/* Header */}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        marginBottom: '16px' 
+      }}>
+        <div style={{ width: '40px' }} /> {/* Spacer */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '12px' 
+        }}>
+          <span style={{ fontSize: '24px' }}>🎲</span>
+          <span style={{ 
+            fontWeight: 'bold', 
+            fontSize: '18px', 
+            color: getStatusColor() 
+          }}>
+            Şansını Dene!
+          </span>
+        </div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <DiceFace 
+            roll={diceRoll} 
+            size="small" 
+            color={getStatusColor()}
+          />
+          {discountMultiplier > 1 && (
+            <span style={{
+              backgroundColor: '#4ade80',
+              color: '#000',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+              x{discountMultiplier.toFixed(1)}
+            </span>
+          )}
+        </div>
       </div>
 
+      {/* Status Info */}
+      <div style={{
+        backgroundColor: '#2D3748',
+        border: '1px solid #4A5568',
+        borderRadius: '8px',
+        padding: '12px',
+        marginBottom: '16px'
+      }}>
+        <div style={{
+          color: '#D1D5DB',
+          fontSize: '14px',
+          lineHeight: '1.4'
+        }}>
+          {diceUsed ? (
+            <div style={{ color: '#6B7280' }}>
+              ⏳ Zar bu dalga için kullanıldı. Yeni dalga bekleyin.
+            </div>
+          ) : (
+            <div>
+              <div style={{ color: '#F59E0B', fontWeight: 'bold', marginBottom: '4px' }}>
+                💡 Zar atarak indirim kazanın!
+              </div>
+              <div style={{ fontSize: '13px' }}>
+                • 4-5-6 atarsanız büyük indirimler kazanırsınız
+                • 1-2-3 atarsanız normal fiyatlar geçerli olur
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Dice Info */}
       <DiceInfo show={!diceUsed && !isDiceRolling} />
       
+      {/* Dice Animation */}
       <DiceAnimation isRolling={isDiceRolling} />
 
+      {/* Dice Result */}
       <DiceResult 
         diceRoll={diceRoll} 
         discountMultiplier={discountMultiplier} 
         show={!!diceRoll && !isDiceRolling} 
       />
 
-      <DiceButton 
-        onRoll={handleDiceRoll}
-        diceUsed={diceUsed}
-        isDiceRolling={isDiceRolling}
-      />
+      {/* Dice Button */}
+      <div style={{ marginTop: '16px' }}>
+        <DiceButton 
+          onRoll={handleDiceRoll}
+          diceUsed={diceUsed}
+          isDiceRolling={isDiceRolling}
+        />
+      </div>
 
       <style>
         {`

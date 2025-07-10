@@ -1,10 +1,9 @@
 import { updateTowerFire, updateBullets } from './TowerManager';
 import { updateEnemyMovement } from './EnemySpawner';
-import { updateEffects } from './Effects';
 import { updateMineCollisions } from './MineManager';
 import { useGameStore } from '../models/store';
 import { stateTracker, performanceMonitor, GameStateSelectors } from './StateOptimizer';
-import { EnvironmentManager } from './environment/EnvironmentManager';
+import { SimplifiedEnvironmentManager } from './environment/SimplifiedEnvironmentManager';
 
 // Performance metrics for monitoring
 interface GameLoopMetrics {
@@ -21,18 +20,17 @@ let gameLoopMetrics: GameLoopMetrics = {
   avgDelta: 16
 };
 
-export function startGameLoop(existingManager?: EnvironmentManager) {
+export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
   let frameId = 0;
   let lastUpdateTime = performance.now();
   const lastStateSnapshot = {
     enemyCount: 0,
     bulletCount: 0,
-    effectCount: 0,
     lastSignificantChange: 0
   };
   
-  // Initialize environment manager
-  const environmentManager = existingManager ?? new EnvironmentManager();
+  // Initialize simplified environment manager for optimal performance
+  const environmentManager = existingManager ?? new SimplifiedEnvironmentManager();
 
   const loop = (currentTime: number) => {
     const deltaTime = currentTime - lastUpdateTime;
@@ -56,33 +54,26 @@ export function startGameLoop(existingManager?: EnvironmentManager) {
       const prevEnemyCount = lastStateSnapshot.enemyCount;
       const prevBulletCount = lastStateSnapshot.bulletCount;
       
-      // Run game logic updates
+      // Run core game logic updates only
       updateEnemyMovement();
       updateTowerFire();
       updateBullets(deltaTime);
-      updateEffects();
       updateMineCollisions();
       
-      // Update environment systems
-      environmentManager.updateEnvironment(currentTime, (effect) => {
-        useGameStore.getState().addEffect(effect);
-      });
-      
-      // Update store with environment state
-      const environmentState = environmentManager.getEnvironmentState();
-      useGameStore.setState({
-        terrainTiles: environmentState.terrainTiles,
-        weatherState: environmentState.weatherState,
-        timeOfDayState: environmentState.timeOfDayState,
-        environmentalHazards: environmentState.environmentalHazards,
-        interactiveElements: environmentState.interactiveElements
-      });
+      // Update simplified environment (minimal processing)
+      if (gameLoopMetrics.totalFrames % 10 === 0) {
+        // Only update environment every 10 frames for performance
+        const environmentState = environmentManager.getEnvironmentState();
+        useGameStore.setState({
+          weatherState: environmentState.weatherState,
+          timeOfDayState: environmentState.timeOfDayState
+        });
+      }
 
       // Get current state after updates
       const updatedState = useGameStore.getState();
       const currentEnemyCount = updatedState.enemies.length;
       const currentBulletCount = updatedState.bullets.length;
-      const currentEffectCount = updatedState.effects.length;
       
       // Enhanced change detection using StateOptimizer
       const hasSignificantChange = stateTracker.hasSignificantChanges(updatedState);
@@ -123,7 +114,6 @@ export function startGameLoop(existingManager?: EnvironmentManager) {
       // Update state snapshot
       lastStateSnapshot.enemyCount = currentEnemyCount;
       lastStateSnapshot.bulletCount = currentBulletCount;
-      lastStateSnapshot.effectCount = currentEffectCount;
       
       // Calculate performance metrics
       gameLoopMetrics.avgDelta = (gameLoopMetrics.avgDelta * 0.9) + (deltaTime * 0.1);

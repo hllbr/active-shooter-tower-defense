@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { GAME_CONSTANTS } from '../../../utils/constants';
-import { performMemoryCleanup } from '../../../game-systems/Effects';
+
 import { bulletPool } from '../../../game-systems/bullet-system/BulletPool';
 
 export const useGameEffects = (unlockingSlots: Set<number>) => {
@@ -40,30 +40,7 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
     }
   }, [unlockingSlots]);
 
-  // Legacy screen shake support
-  useEffect(() => {
-    const legacyShakeTimerRef = { current: null as number | null };
-    
-    const onScreenShake = () => {
-      if (legacyShakeTimerRef.current) {
-        clearTimeout(legacyShakeTimerRef.current);
-      }
-      
-      setScreenShake(true);
-      legacyShakeTimerRef.current = window.setTimeout(() => {
-        setScreenShake(false);
-        legacyShakeTimerRef.current = null;
-      }, 600);
-    };
-    
-    window.addEventListener('screenShake', onScreenShake, { passive: true });
-    return () => {
-      window.removeEventListener('screenShake', onScreenShake);
-      if (legacyShakeTimerRef.current) {
-        clearTimeout(legacyShakeTimerRef.current);
-      }
-    };
-  }, []);
+
 
   // Viewport dimensions management with passive listeners
   useEffect(() => {
@@ -87,7 +64,7 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
   // Global memory cleanup
   useEffect(() => {
     return () => {
-      performMemoryCleanup();
+
       bulletPool.clear();
       
       if (screenShakeTimerRef.current) {

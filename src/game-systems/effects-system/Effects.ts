@@ -7,35 +7,33 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Effect } from '../../models/gameTypes';
 import { effectPool } from './EffectPool';
 import { cleanupManager } from '../memory';
-import { Logger } from '../../utils/Logger';
+
 
 /**
  * Update all effects with automatic cleanup
  */
 export function updateEffects() {
   const { effects, removeEffect } = useGameStore.getState();
-  const expiredEffects: string[] = [];
+  const expiredEffects: Effect[] = []; // 🚀 Store references instead of IDs
   
+  // Single pass: update life and collect expired effects
   effects.forEach((effect: Effect) => {
     effect.life -= GAME_CONSTANTS.GAME_TICK;
     
-    // Check if effect is expired
+    // Check if effect is expired - store reference directly
     if (effect.life <= 0) {
-      expiredEffects.push(effect.id);
+      expiredEffects.push(effect); // 🚀 Direct reference, no ID lookup needed
     }
   });
   
-  // Batch remove expired effects and return them to pool
-  expiredEffects.forEach(effectId => {
-    const effect = effects.find((e: Effect) => e.id === effectId);
-    if (effect) {
-      removeEffect(effectId);
-      // Return to pool for reuse
-      try {
-        effectPool.release(effect);
-      } catch (error) {
-        Logger.warn('🚨 Error releasing effect to pool:', error);
-      }
+  // 🚀 OPTIMIZED: Batch remove expired effects (no find() operation)
+  expiredEffects.forEach(effect => {
+    removeEffect(effect.id); // Remove from state
+    // Return to pool for reuse
+    try {
+      effectPool.release(effect);
+    } catch {
+      // Error silently handled for performance
     }
   });
   

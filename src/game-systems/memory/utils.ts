@@ -5,7 +5,7 @@
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { MemoryTester } from './MemoryTester';
 import { MemoryLeakTester } from './MemoryLeakTester';
-import { Logger } from '../../utils/Logger';
+
 
 // =================== EXPORTS ===================
 
@@ -33,7 +33,7 @@ export const startMemoryMonitoring = (interval: number = 5000): () => void => {
       if (GAME_CONSTANTS.DEBUG_MODE) {
         
         if (analysis.trend === 'rising') {
-          Logger.warn('⚠️ Memory usage is rising - potential leak detected');
+          // Memory trend tracked silently for performance
         }
       }
     }

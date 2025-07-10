@@ -34,6 +34,11 @@ export const UpgradeTabNavigation: React.FC<UpgradeTabNavigationProps> = ({
       name: '⚡ Elite Sistemler', 
       color: '#8b5cf6'
     },
+    { 
+      id: 'weather', 
+      name: '🌦️ Hava Mağazası', 
+      color: '#06b6d4'
+    },
   ];
 
   // Tab change handler

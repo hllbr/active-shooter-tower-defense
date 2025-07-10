@@ -8,5 +8,4 @@ export { useSvgRectCache } from './useSvgRectCache';
 export { useDragEventHandlers } from './useDragEventHandlers';
 export { useGameEffects } from './useGameEffects';
 export { useGameTimers } from './useGameTimers';
-export { useGameLoop } from './useGameLoop';
-export { useCommandCenter } from './useCommandCenter'; 
+export { useGameLoop } from './useGameLoop'; 

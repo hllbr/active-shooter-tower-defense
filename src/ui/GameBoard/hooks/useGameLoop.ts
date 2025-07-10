@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { stopEnemyWave, startContinuousSpawning, stopContinuousSpawning } from '../../../game-systems/EnemySpawner';
 import { startGameLoop } from '../../../game-systems/GameLoop';
-import type { EnvironmentManager } from '../../../game-systems/environment/EnvironmentManager';
+import type { SimplifiedEnvironmentManager } from '../../../game-systems/environment/SimplifiedEnvironmentManager';
 import { waveManager } from '../../../game-systems/WaveManager';
 // import { startBackgroundMusic } from '../../../utils/sound'; // 🎵 OYUN MÜZİĞİ DEVRE DIŞI
 
@@ -10,7 +10,7 @@ export const useGameLoop = (
   isRefreshing: boolean,
   isPreparing: boolean,
   currentWave: number,
-  environmentManager: EnvironmentManager | null
+  environmentManager: SimplifiedEnvironmentManager | null
 ) => {
   const loopStopper = useRef<(() => void) | null>(null);
 

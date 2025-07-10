@@ -1,6 +1,6 @@
 import type { Bullet, Position } from '../../models/gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
-import { Logger } from '../../utils/Logger';
+
 
 /**
  * Bullet Pool System for efficient memory management
@@ -46,7 +46,6 @@ export class BulletPool {
    */
   release(bullet: Bullet): void {
     if (!this.active.has(bullet)) {
-      Logger.warn('🚨 Attempting to release bullet not in active set');
       return;
     }
     
