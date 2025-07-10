@@ -81,10 +81,22 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
     const fromSlot = state.towerSlots[fromIdx];
     const toSlot = state.towerSlots[toIdx];
     if (!fromSlot.tower || toSlot.tower || !toSlot.unlocked) return {};
+
+    const movedTower = {
+      ...fromSlot.tower,
+      position: { x: toSlot.x, y: toSlot.y },
+      lastRelocated: performance.now()
+    };
+
     const newSlots = [...state.towerSlots];
-    newSlots[toIdx] = { ...toSlot, tower: fromSlot.tower };
+    newSlots[toIdx] = { ...toSlot, tower: movedTower };
     newSlots[fromIdx] = { ...fromSlot, tower: null };
-    return { towerSlots: newSlots };
+
+    const updatedTowers = state.towers.map(t =>
+      t.id === movedTower.id ? movedTower : t
+    );
+
+    return { towerSlots: newSlots, towers: updatedTowers };
   }),
 
   buyWall: (slotIdx) => set((state: Store) => {
