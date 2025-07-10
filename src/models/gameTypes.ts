@@ -299,6 +299,10 @@ export interface GameState {
   enemiesRequired: number;
   totalEnemiesKilled: number;
   totalGoldSpent: number;
+  // 🎯 MISSION SYSTEM: Statistics for mission-based upgrades
+  wavesCompleted: number;
+  towersBuilt: number;
+  goldEarned: number;
   fireUpgradesPurchased: number;
   shieldUpgradesPurchased: number;
   packagesPurchased: number;

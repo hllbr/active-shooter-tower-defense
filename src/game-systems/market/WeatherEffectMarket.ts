@@ -175,6 +175,10 @@ export class WeatherEffectMarket {
     startTime: number;
     endTime: number;
   }> = new Map();
+  
+  // 🆕 AUTOMATIC ACTIVATION: Track which effects were used per wave
+  private waveActivatedEffects: Set<string> = new Set();
+  private currentWave: number = 1;
 
   /**
    * Get available cards for purchase (not owned)
@@ -237,12 +241,21 @@ export class WeatherEffectMarket {
       return false;
     }
 
+    // 🆕 WAVE LIMIT: Check if effect was already used this wave
+    if (this.waveActivatedEffects.has(cardId)) {
+      Logger.warn(`Effect already used this wave: ${cardId}`);
+      return false;
+    }
+
     const now = performance.now();
     this.activeEffects.set(cardId, {
       card,
       startTime: now,
       endTime: now + card.duration
     });
+
+    // Mark as used this wave
+    this.waveActivatedEffects.add(cardId);
 
     // Apply the effect to the game
     this.applyWeatherEffect(card);
@@ -251,6 +264,43 @@ export class WeatherEffectMarket {
     Logger.log(`Weather effect activated: ${card.name}`);
     
     return true;
+  }
+
+  /**
+   * 🆕 AUTOMATIC ACTIVATION: Automatically activate weather effects at wave start
+   */
+  onWaveStart(waveNumber: number): void {
+    this.currentWave = waveNumber;
+    this.waveActivatedEffects.clear(); // Reset for new wave
+    
+    // Get all owned cards that haven't been activated this wave
+    const availableCards = this.getOwnedCards().filter(card => 
+      !this.waveActivatedEffects.has(card.id) && 
+      !this.activeEffects.has(card.id)
+    );
+
+    if (availableCards.length > 0) {
+      // Automatically activate the first available effect
+      const cardToActivate = availableCards[0];
+      this.activateEffect(cardToActivate.id);
+      
+      // Show notification
+      this.showWeatherNotification(`${cardToActivate.name} hava yükseltmesi devreye alındı.`);
+    }
+  }
+
+  /**
+   * 🆕 NOTIFICATION SYSTEM: Show weather effect notifications
+   */
+  private showWeatherNotification(message: string): void {
+    const store = useGameStore.getState();
+    store.addNotification({
+      id: `weather-${Date.now()}`,
+      type: 'info',
+      message,
+      timestamp: Date.now(),
+      duration: 3000
+    });
   }
 
   /**

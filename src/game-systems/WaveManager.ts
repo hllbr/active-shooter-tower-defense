@@ -27,7 +27,7 @@ export class WaveManager {
     else this.completeListeners.push(fn);
   }
 
-  startWave(_wave: number) {
+  startWave(wave: number) {
     if (this.waveActive) return;
     // Wave start processing
     this.waveActive = true;
@@ -35,6 +35,16 @@ export class WaveManager {
       clearTimeout(this.idleTimer);
       this.idleTimer = null;
     }
+    
+    // 🆕 WEATHER SYSTEM: Automatically activate weather effects at wave start
+    try {
+      import('./market/WeatherEffectMarket').then(({ weatherEffectMarket }) => {
+        weatherEffectMarket.onWaveStart(wave);
+      });
+    } catch (error) {
+      console.warn('Weather system not available:', error);
+    }
+    
     this.onStart();
     this.startListeners.forEach(l => l());
   }

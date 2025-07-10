@@ -137,11 +137,16 @@ const SOUND_CATEGORIES = {
     'pickup-rare',
     'notification',
     'error',
-    'countdown-beep'
+    'countdown-beep',
+    'upgrade-purchase',
+    'upgrade-success',
+    'upgrade-failed'
   ]
 } as const;
 
-const isGameSceneSound = (sound: string) => SOUND_CATEGORIES.GAME_SCENE.includes(sound);
+const isGameSceneSound = (sound: string): boolean => {
+  return (SOUND_CATEGORIES.GAME_SCENE as readonly string[]).includes(sound);
+};
 
 /**
  * Ses için cooldown kontrolü yapar

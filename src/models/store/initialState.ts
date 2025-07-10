@@ -18,6 +18,10 @@ export const initialState: GameState = {
   enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(1),
   totalEnemiesKilled: 0,
   totalGoldSpent: 0,
+  // 🎯 MISSION SYSTEM: Statistics for mission-based upgrades
+  wavesCompleted: 0,
+  towersBuilt: 0,
+  goldEarned: 0,
   fireUpgradesPurchased: 0,
   shieldUpgradesPurchased: 0,
   packagesPurchased: 0,

@@ -28,6 +28,11 @@ export const UpgradeScreen: React.FC = () => {
     clearAllEnemies();
     clearAllEffects();
     
+    // 🎵 UPGRADE SCREEN: Pause game scene sounds, allow only market sounds
+    import('../../utils/sound/soundEffects').then(({ pauseGameSceneSounds }) => {
+      pauseGameSceneSounds();
+    });
+    
     // Eğer zar henüz bu dalga için atılmamışsa otomatik at
     if (!diceUsed) {
       // Kısa bir delay ile zar at (kullanıcı deneyimi için)
@@ -47,6 +52,13 @@ export const UpgradeScreen: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
+    
+    // Cleanup: Resume game scene sounds when leaving upgrade screen
+    return () => {
+      import('../../utils/sound/soundEffects').then(({ resumeGameSceneSounds }) => {
+        resumeGameSceneSounds();
+      });
+    };
   }, []); // Sadece component mount olduğunda çalışsın
 
   // Event handlers - Sadece tab change kaldı
