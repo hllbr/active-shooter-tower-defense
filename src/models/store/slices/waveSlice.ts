@@ -60,6 +60,9 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
       import('../../../game-systems/EnemySpawner').then(({ startEnemyWave }) => {
         startEnemyWave(state.currentWave);
       });
+      import('../../../game-systems/market/WeatherEffectMarket').then(({ weatherEffectMarket }) => {
+        weatherEffectMarket.autoActivateEffects(state.currentWave);
+      });
     }, 100);
     return {
       isPreparing: false,

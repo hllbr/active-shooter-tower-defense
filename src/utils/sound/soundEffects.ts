@@ -1,6 +1,7 @@
 import { musicManager } from './musicManager';
 import { getSettings } from '../settings';
 import { GAME_CONSTANTS } from '../constants';
+import { useGameStore } from '../../models/store';
 
 
 export const audioCache: Record<string, HTMLAudioElement> = {};
@@ -84,6 +85,64 @@ const SOUND_COOLDOWN_DURATIONS: Record<string, number> = {
   'default': 200
 };
 
+// 🎮 Sound categories for better management
+const SOUND_CATEGORIES = {
+  // Game scene sounds - paused during upgrade
+  GAME_SCENE: [
+    'explosion-large',
+    'explosion-small',
+    'tower-attack-explosive',
+    'tower-attack-laser',
+    'tower-attack-plasma',
+    'tower-attack-sniper',
+    'tower-create-sound',
+    'tower-destroy',
+    'tower-levelup-sound',
+    'tower-repair',
+    'defeat-heavy',
+    'boss-bombing',
+    'boss-charge',
+    'boss-defeat',
+    'boss-entrance',
+    'boss-ground-slam',
+    'boss-missile',
+    'boss-phase-transition',
+    'boss-reality-tear',
+    'boss-spawn-minions',
+    'ambient-battle',
+    'ambient-wind',
+    'energy-recharge',
+    'freeze-effect',
+    'slow-effect',
+    'shield-activate',
+    'shield-break',
+    'gameover',
+    'wave-complete',
+    'victory-fanfare'
+  ],
+
+  // UI/Market sounds - continue during upgrade
+  UI_MARKET: [
+    'dice-roll',
+    'click',
+    'hover',
+    'lock-break',
+    'coin-collect',
+    'gold-drop',
+    'loot-common',
+    'loot-rare',
+    'loot-epic',
+    'loot-legendary',
+    'pickup-common',
+    'pickup-rare',
+    'notification',
+    'error',
+    'countdown-beep'
+  ]
+} as const;
+
+const isGameSceneSound = (sound: string) => SOUND_CATEGORIES.GAME_SCENE.includes(sound);
+
 /**
  * Ses için cooldown kontrolü yapar
  */
@@ -125,7 +184,10 @@ export function testVolumeControls(): void {
 
 export function playSound(sound: string): void {
   if (missingSounds.has(sound)) return;
-  
+
+  const { isRefreshing } = useGameStore.getState();
+  if (isRefreshing && isGameSceneSound(sound)) return;
+
   // 🔊 COOLDOWN CHECK: Ses çok sık çalınıyorsa engelle
   if (!canPlaySound(sound)) {
     if (GAME_CONSTANTS.DEBUG_MODE) {
@@ -237,62 +299,6 @@ export function clearSoundCache(): void {
   soundLastPlayed.clear();
   musicManager.stop();
 }
-
-// 🎮 Sound categories for better management
-const SOUND_CATEGORIES = {
-  // Game scene sounds - paused during upgrade
-  GAME_SCENE: [
-    'explosion-large',
-    'explosion-small', 
-    'tower-attack-explosive',
-    'tower-attack-laser',
-    'tower-attack-plasma',
-    'tower-attack-sniper',
-    'tower-create-sound',
-    'tower-destroy',
-    'tower-levelup-sound',
-    'tower-repair',
-    'defeat-heavy',
-    'boss-bombing',
-    'boss-charge',
-    'boss-defeat',
-    'boss-entrance',
-    'boss-ground-slam',
-    'boss-missile',
-    'boss-phase-transition',
-    'boss-reality-tear',
-    'boss-spawn-minions',
-    'ambient-battle',
-    'ambient-wind',
-    'energy-recharge',
-    'freeze-effect',
-    'slow-effect',
-    'shield-activate',
-    'shield-break',
-    'gameover',
-    'wave-complete',
-    'victory-fanfare'
-  ],
-  
-  // UI/Market sounds - continue during upgrade
-  UI_MARKET: [
-    'dice-roll',
-    'click',
-    'hover',
-    'lock-break',
-    'coin-collect',
-    'gold-drop',
-    'loot-common',
-    'loot-rare',
-    'loot-epic',
-    'loot-legendary',
-    'pickup-common',
-    'pickup-rare',
-    'notification',
-    'error',
-    'countdown-beep'
-  ]
-} as const;
 
 /**
  * 🎮 UPGRADE SCREEN: Stop only game scene sounds (keep UI/market sounds)

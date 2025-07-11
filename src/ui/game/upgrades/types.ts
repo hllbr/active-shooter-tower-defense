@@ -47,6 +47,7 @@ export interface BulletTypeData {
   fireRateMultiplier: number;
   speedMultiplier: number;
   freezeDuration?: number;
+  missionRequirement?: { id: string; text: string };
 }
 
 // Package tracking types

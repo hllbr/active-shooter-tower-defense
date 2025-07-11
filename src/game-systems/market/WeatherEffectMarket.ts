@@ -5,6 +5,7 @@
 
 import { useGameStore } from '../../models/store';
 import { playSound } from '../../utils/sound/soundEffects';
+import { toast } from 'react-toastify';
 import { Logger } from '../../utils/Logger';
 import type { Enemy } from '../../models/gameTypes';
 
@@ -175,6 +176,8 @@ export class WeatherEffectMarket {
     startTime: number;
     endTime: number;
   }> = new Map();
+  // Track last wave activation to enforce once-per-wave usage
+  private lastActivatedWave: Map<string, number> = new Map();
 
   /**
    * Get available cards for purchase (not owned)
@@ -490,11 +493,34 @@ export class WeatherEffectMarket {
    */
   update(): void {
     const now = performance.now();
-    
+
     for (const [cardId, effectData] of this.activeEffects.entries()) {
       if (now >= effectData.endTime) {
         this.activeEffects.delete(cardId);
         Logger.log(`Weather effect expired: ${effectData.card.name}`);
+      }
+    }
+  }
+
+  /**
+   * Automatically activate all owned effects at wave start
+   */
+  autoActivateEffects(currentWave: number): void {
+    for (const cardId of this.ownedCards) {
+      const lastWave = this.lastActivatedWave.get(cardId);
+      if (lastWave === currentWave) continue;
+
+      const card = WEATHER_EFFECT_CARDS.find(c => c.id === cardId);
+      if (!card) continue;
+
+      toast.info(`${card.name} hava yükseltmesi başlatılıyor.`);
+      toast.info(`${card.name} hava yükseltmesi devreye alındı.`);
+      if (this.activateEffect(cardId)) {
+        toast.info(`${card.name} hava yükseltmesi uygulanıyor.`);
+        this.lastActivatedWave.set(cardId, currentWave);
+        setTimeout(() => {
+          toast.info(`${card.name} hava yükseltmesi süresi doldu.`);
+        }, card.duration);
       }
     }
   }

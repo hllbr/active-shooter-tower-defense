@@ -41,29 +41,33 @@ export const FireUpgrades: React.FC = () => {
         
         // DEBUG: Current state logging (removed from production)
         
-        const canUpgrade = isNextLevel && gold >= cost;
+        const missionReq = bulletType.missionRequirement;
+        const missionCompleted = missionReq ? useGameStore.getState().isMissionCompleted(missionReq.id) : true;
+        const canUpgrade = isNextLevel && gold >= cost && missionCompleted;
         const isMaxed = isPastLevel; // Geçmiş seviyeler "tamamlanmış" olarak gösterilir
         const isLocked = isFutureLevel; // Gelecek seviyeler kilitli
         
         // Bullet level progression logic verified
         
+        const requirementText = missionReq && !missionCompleted
+          ? `Bu yükseltmeyi kazanmak için:\nAteş Gücü ${missionReq.id === 'fire_mastery' ? 3 : ''} seviyesi ve görev: ${missionReq.text}`
+          : `${bulletType.name} mermi sistemi. Daha güçlü ve etkili saldırılar.`;
+
         const upgradeData = {
           name: bulletType.name,
-          description: isLocked 
-            ? `🔒 Önce Level ${currentBulletLevel + 1} alın` 
-            : isPastLevel 
+          description: isLocked
+            ? `🔒 Önce Level ${currentBulletLevel + 1} alın`
+            : isPastLevel
               ? `✅ Tamamlandı - Aktif seviye`
-              : `${bulletType.name} mermi sistemi. Daha güçlü ve etkili saldırılar.`,
+              : requirementText,
           currentLevel: isPastLevel ? 1 : isCurrentLevel ? 1 : 0, // Visual için
           baseCost: cost,
           maxLevel: 1,
           onUpgrade: () => {
-            if (!isNextLevel) {
-              // Cannot upgrade: not next level
+            if (!isNextLevel || (missionReq && !missionCompleted)) {
               return;
             }
-            
-            // CRITICAL FIX: Use normal bullet upgrade with clean cost already calculated
+
             upgradeBullet(false);
           },
           icon: isPastLevel ? "✅" : isCurrentLevel ? "🔥" : isLocked ? "🔒" : "🔥",
@@ -72,11 +76,13 @@ export const FireUpgrades: React.FC = () => {
             : isLocked 
               ? '#666666' // Gri - kilitli
               : getUpgradeColor(false, canUpgrade, isMaxed),
-          additionalInfo: isPastLevel 
+          additionalInfo: isPastLevel
             ? `✅ Aktif - Hasar: x${bulletType.damageMultiplier}`
-            : isLocked 
+            : isLocked
               ? `🔒 Level ${currentBulletLevel + 1} gerekli`
-              : `Hasar Çarpanı: x${bulletType.damageMultiplier} | Hız: x${bulletType.speedMultiplier || 1}`
+              : missionReq && !missionCompleted
+                ? requirementText
+                : `Hasar Çarpanı: x${bulletType.damageMultiplier} | Hız: x${bulletType.speedMultiplier || 1}`
         };
 
         return (
