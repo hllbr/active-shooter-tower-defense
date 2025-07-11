@@ -506,22 +506,23 @@ export class WeatherEffectMarket {
    * Automatically activate all owned effects at wave start
    */
   autoActivateEffects(currentWave: number): void {
-    for (const cardId of this.ownedCards) {
-      const lastWave = this.lastActivatedWave.get(cardId);
-      if (lastWave === currentWave) continue;
+    const cardsToActivate = WEATHER_EFFECT_CARDS.filter(c =>
+      this.ownedCards.has(c.id) && this.lastActivatedWave.get(c.id) !== currentWave
+    );
 
-      const card = WEATHER_EFFECT_CARDS.find(c => c.id === cardId);
-      if (!card) continue;
-
-      toast.info(`${card.name} hava yükseltmesi başlatılıyor.`);
-      toast.info(`${card.name} hava yükseltmesi devreye alındı.`);
-      if (this.activateEffect(cardId)) {
-        toast.info(`${card.name} hava yükseltmesi uygulanıyor.`);
-        this.lastActivatedWave.set(cardId, currentWave);
-        setTimeout(() => {
-          toast.info(`${card.name} hava yükseltmesi süresi doldu.`);
-        }, card.duration);
-      }
+    let delay = 0;
+    for (const card of cardsToActivate) {
+      setTimeout(() => {
+        toast.info(`${card.name} hava yükseltmesi devreye alındı.`);
+        if (this.activateEffect(card.id)) {
+          toast.info(`${card.name} hava yükseltmesi uygulanıyor.`);
+          this.lastActivatedWave.set(card.id, currentWave);
+          setTimeout(() => {
+            toast.info(`${card.name} hava yükseltmesi süresi doldu.`);
+          }, card.duration);
+        }
+      }, delay);
+      delay += card.duration + 1000; // küçük boşlukla sırayla başlat
     }
   }
 
