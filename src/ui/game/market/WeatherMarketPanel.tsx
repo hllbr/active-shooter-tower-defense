@@ -49,15 +49,6 @@ export const WeatherMarketPanel: React.FC<WeatherMarketPanelProps> = ({ isOpen, 
     }
   };
 
-  const handleActivateEffect = (cardId: string) => {
-    const success = weatherEffectMarket.activateEffect(cardId);
-    if (success) {
-      setActiveEffects(weatherEffectMarket.getActiveEffects());
-      playSound('energy-recharge');
-    } else {
-      playSound('error');
-    }
-  };
 
   const formatTime = (ms: number): string => {
     const seconds = Math.floor(ms / 1000);
@@ -218,7 +209,6 @@ export const WeatherMarketPanel: React.FC<WeatherMarketPanelProps> = ({ isOpen, 
                   key={card.id}
                   card={card}
                   gold={gold}
-                  onActivate={() => handleActivateEffect(card.id)}
                   mode="activate"
                   isActive={activeEffects.some(effect => effect.card.id === card.id)}
                 />
@@ -385,25 +375,21 @@ const WeatherEffectCard: React.FC<WeatherEffectCardProps> = ({
         </button>
       )}
 
-      {mode === 'activate' && onActivate && (
-        <button
-          onClick={onActivate}
-          disabled={isActive}
+      {mode === 'activate' && (
+        <div
           style={{
             width: '100%',
             padding: '12px',
-            backgroundColor: isActive ? '#6B7280' : '#8B5CF6',
+            backgroundColor: '#4A5568',
             color: '#FFF',
-            border: 'none',
             borderRadius: '8px',
-            cursor: isActive ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            transition: 'background-color 0.2s'
+            textAlign: 'center',
+            fontSize: '14px',
+            fontWeight: 'bold'
           }}
         >
-          {isActive ? '✅ Aktif' : '⚡ Etkinleştir'}
-        </button>
+          {isActive ? '✅ Bu dalgada aktif' : '🌊 Dalga başlayınca otomatik etkinleşir'}
+        </div>
       )}
     </div>
   );

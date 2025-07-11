@@ -756,6 +756,10 @@ export const GAME_CONSTANTS = {
       damageMultiplier: 1.5,
       fireRateMultiplier: 0.8,
       speedMultiplier: 1.3,
+      missionRequirement: {
+        id: 'fire_mastery',
+        text: '20 düşman öldür (Günlük Görev)'
+      },
     },
     {
       name: 'Yakhar',

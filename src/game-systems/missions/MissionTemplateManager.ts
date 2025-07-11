@@ -112,6 +112,23 @@ export class MissionTemplateManager {
           }
         },
         {
+          name: 'Ateş Gücü Denemesi',
+          description: '20 düşman öldür ve Ateş Gücü 3 seviyesine ulaş',
+          category: 'combat' as const,
+          objective: {
+            type: 'kill_enemies' as const,
+            target: 20,
+            description: 'Görevsel eliminasyon',
+            trackingKey: 'totalEnemiesKilled'
+          },
+          reward: {
+            type: 'upgrade' as const,
+            amount: 1,
+            description: 'Ateş Gücü Seviye 4',
+            special: 'bullet'
+          }
+        },
+        {
           name: 'Dayanıklılık Testi',
           description: '15 wave tamamla',
           category: 'survival' as const,

@@ -130,6 +130,7 @@ export const initialState: GameState = {
   gameStartTime: Date.now(),
   dailyMissions: [],
   lastMissionRefresh: 0,
+  completedMissions: [],
   unlockedTowerTypes: [],
 
   // ✅ NEW: Environment & Terrain System for Issue #62
