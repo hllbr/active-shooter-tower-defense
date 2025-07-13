@@ -45,7 +45,7 @@ export const UpgradeScreen: React.FC = React.memo(() => {
 
       return () => clearTimeout(timer);
     }
-  }, []); // Sadece component mount olduğunda çalışsın
+  }, [clearAllEffects, clearAllEnemies, diceUsed, rollDice]);
 
   // Event handlers - Sadece tab change kaldı
   const handleTabChange = useCallback((tab: TabType) => {

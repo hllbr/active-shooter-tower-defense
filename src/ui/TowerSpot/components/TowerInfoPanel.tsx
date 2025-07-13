@@ -12,6 +12,10 @@ export const TowerInfoPanel: React.FC<TowerInfoPanelProps & { upgradeAnim?: bool
   upgradeMessage,
   canAffordUpgrade,
   onUpgrade,
+  canRepair,
+  canAffordRepair,
+  repairMessage,
+  onRepair,
   upgradeAnim = false
 }) => {
   if (!slot.tower) return null;
@@ -76,6 +80,27 @@ export const TowerInfoPanel: React.FC<TowerInfoPanelProps & { upgradeAnim?: bool
           }}
         >
           {upgradeMessage}
+        </text>
+      )}
+
+      {/* Repair button */}
+      {canRepair && (
+        <text
+          x={slot.x}
+          y={towerBottomY + 70}
+          fill={canAffordRepair ? '#3b82f6' : '#ff4444'}
+          fontSize={14}
+          fontWeight="bold"
+          textAnchor="middle"
+          style={{
+            cursor: canAffordRepair ? 'pointer' : 'not-allowed',
+            userSelect: 'none'
+          }}
+          onClick={() => {
+            if (canAffordRepair) onRepair(slotIdx);
+          }}
+        >
+          {repairMessage}
         </text>
       )}
     </>

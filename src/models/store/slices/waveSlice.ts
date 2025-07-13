@@ -79,6 +79,18 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
     // ✅ NEW: Start in-wave scaling tracking
     InWaveScalingManager.startWave(state.currentWave);
     
+    // ✅ NEW: Check for fire hazard
+    setTimeout(() => {
+      import('../../../game-systems/FireHazardManager').then(({ FireHazardManager }) => {
+        if (FireHazardManager.shouldTriggerFireHazard(state.currentWave)) {
+          const burningTowerId = FireHazardManager.startFireHazard(state.towerSlots);
+          if (burningTowerId) {
+            // Fire hazard started - no additional action needed
+          }
+        }
+      });
+    }, 2000); // Check for fire hazard 2 seconds after wave starts
+    
     setTimeout(() => {
       import('../../../game-systems/EnemySpawner').then(({ startEnemyWave }) => {
         startEnemyWave(state.currentWave);

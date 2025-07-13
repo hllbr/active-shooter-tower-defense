@@ -5,6 +5,7 @@ import { TargetFinder } from './TargetFinder';
 import BossManager from './BossManager';
 import { createManagedEffect } from '../effects-system/Effects';
 import { EnemyBehaviorSystem } from './EnemyBehaviorSystem';
+import { defenseTargetManager } from '../defense-systems/DefenseTargetManager';
 
 /**
  * Enhanced Movement class responsible for handling enemy movement and collision logic
@@ -13,6 +14,7 @@ import { EnemyBehaviorSystem } from './EnemyBehaviorSystem';
  * - Curved/angled movement patterns
  * - Visual effects on collision
  * - Performance optimizations
+ * - Defense target targeting when no towers are present
  */
 export class EnemyMovement {
   // Performance optimization: Cache target calculations
@@ -178,29 +180,29 @@ export class EnemyMovement {
    * Calculate avoidance vector from nearby towers
    */
   private static calculateAvoidanceVector(enemy: Enemy, towerSlots: TowerSlot[]): Position {
-    const avoidanceRadius = 120;
     let avoidanceX = 0;
     let avoidanceY = 0;
-    let avoidanceCount = 0;
+    const avoidanceRadius = 120;
 
     towerSlots.forEach(slot => {
-      if (slot.tower) {
-        const dx = enemy.position.x - slot.x;
-        const dy = enemy.position.y - slot.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < avoidanceRadius && distance > 0) {
-          const strength = (avoidanceRadius - distance) / avoidanceRadius;
-          avoidanceX += (dx / distance) * strength;
-          avoidanceY += (dy / distance) * strength;
-          avoidanceCount++;
-        }
+      if (!slot.tower) return;
+      
+      const dx = enemy.position.x - slot.x;
+      const dy = enemy.position.y - slot.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance < avoidanceRadius && distance > 0) {
+        const force = (avoidanceRadius - distance) / avoidanceRadius;
+        avoidanceX += (dx / distance) * force;
+        avoidanceY += (dy / distance) * force;
       }
     });
 
-    if (avoidanceCount > 0) {
-      avoidanceX /= avoidanceCount;
-      avoidanceY /= avoidanceCount;
+    // Normalize avoidance vector
+    const avoidanceLength = Math.sqrt(avoidanceX * avoidanceX + avoidanceY * avoidanceY);
+    if (avoidanceLength > 0) {
+      avoidanceX /= avoidanceLength;
+      avoidanceY /= avoidanceLength;
     }
 
     return { x: avoidanceX, y: avoidanceY };
@@ -281,37 +283,34 @@ export class EnemyMovement {
     return towerSlots.filter(slot => {
       const dx = slot.x - position.x;
       const dy = slot.y - position.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      return distance <= radius;
+      return Math.sqrt(dx * dx + dy * dy) <= radius;
     });
   }
 
   /**
-   * Handles continuous gold drops for special enemies
+   * Handle slot modifiers (walls, trenches, etc.)
    */
-  private static handleSpecialEnemyGoldDrop(enemy: Enemy, addGold: (amount: number) => void) {
+  private static handleSlotModifiers(targetSlot: TowerSlot): boolean {
+    if (targetSlot.modifier?.type === 'wall') {
+      // Wall blocks movement
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Handle special enemy gold drops
+   */
+  private static handleSpecialEnemyGoldDrop(enemy: Enemy, addGold: (amount: number) => void): void {
     if (enemy.isSpecial && enemy.lastGoldDrop) {
       const now = performance.now();
-      if (now - enemy.lastGoldDrop >= GAME_CONSTANTS.MICROBE_ENEMY.goldDropInterval) {
+      const timeSinceLastDrop = now - enemy.lastGoldDrop;
+      
+      if (timeSinceLastDrop >= 2000) { // Drop gold every 2 seconds
         addGold(enemy.goldValue);
         enemy.lastGoldDrop = now;
       }
     }
-  }
-
-  /**
-   * Handles slot modifiers (walls, trenches, etc.)
-   */
-  private static handleSlotModifiers(targetSlot: TowerSlot): boolean {
-    if (targetSlot.modifier) {
-      const mod = targetSlot.modifier;
-      if (mod.expiresAt && mod.expiresAt < performance.now()) {
-        targetSlot.modifier = undefined;
-      } else if (mod.type === 'wall') {
-        return true; // Block enemy
-      }
-    }
-    return false;
   }
 
   /**
@@ -361,6 +360,21 @@ export class EnemyMovement {
       // Create collision visual effect
       this.createCollisionEffect(enemy.position, enemy.type || 'basic');
 
+      // Check if this is a defense target collision (virtual tower with no damage/range)
+      if (targetSlot.tower && targetSlot.tower.damage === 0 && targetSlot.tower.range === 0) {
+        // Handle defense target collision
+        const currentTime = performance.now();
+        const collisionHandled = defenseTargetManager.handleEnemyCollision(enemy, currentTime);
+        
+        if (collisionHandled) {
+          // Enemy is destroyed when hitting defense target
+          actions.addGold(enemy.goldValue);
+          actions.removeEnemy(enemy.id);
+          return true;
+        }
+      }
+
+      // Handle regular tower collision
       if (targetSlot.tower) {
         const slotIdx = towerSlots.findIndex(
           (s) => s.x === targetSlot.x && s.y === targetSlot.y,
@@ -385,11 +399,11 @@ export class EnemyMovement {
   }
 
   /**
-   * Enhanced wall collision with improved knockback and effects
+   * Handle enhanced wall collision with knockback and stun
    */
   private static handleEnhancedWallCollision(
-    enemy: Enemy, 
-    slotIdx: number, 
+    enemy: Enemy,
+    slotIdx: number,
     movementData: {
       direction: Position;
       distance: number;
@@ -397,97 +411,64 @@ export class EnemyMovement {
       avoidanceVector: Position;
     },
     actions: {
+      damageTower: (slotIdx: number, damage: number) => void;
+      removeEnemy: (id: string) => void;
+      addGold: (amount: number) => void;
       hitWall: (slotIdx: number) => void;
       damageEnemy: (id: string, damage: number) => void;
       wallLevel: number;
     }
-  ) {
+  ): void {
+    const { direction } = movementData;
+    
+    // Apply knockback
+    const knockbackForce = 50;
+    enemy.position.x -= direction.x * knockbackForce;
+    enemy.position.y -= direction.y * knockbackForce;
+    
+    // Apply stun effect
+    enemy.frozenUntil = performance.now() + 1000; // 1 second stun
+    
+    // Damage the wall
     actions.hitWall(slotIdx);
-
-    // Apply wall collision damage
-    const wallDamage = GAME_CONSTANTS.WALL_SYSTEM.WALL_COLLISION_DAMAGE[actions.wallLevel] ?? 0;
-    if (wallDamage > 0) {
-      actions.damageEnemy(enemy.id, wallDamage);
-    }
-
-    // Enhanced knockback with curve consideration
-    const knockbackDistance = GAME_CONSTANTS.KNOCKBACK_DISTANCE * (1 + movementData.curveFactor);
-    const knockbackVector = {
-      x: -movementData.direction.x * knockbackDistance,
-      y: -movementData.direction.y * knockbackDistance
-    };
-
-    enemy.position.x += knockbackVector.x;
-    enemy.position.y += knockbackVector.y;
-
-    // Create wall impact effect
-    this.createWallImpactEffect(enemy.position);
-
-    // Apply stun
-    enemy.frozenUntil = performance.now() + GAME_CONSTANTS.KNOCKBACK_STUN_DURATION;
+    
+    // Damage the enemy
+    actions.damageEnemy(enemy.id, 10);
   }
 
   /**
    * Create collision visual effect
    */
-  private static createCollisionEffect(position: Position, enemyType: string) {
-    const effectType = this.getEffectTypeForEnemy(enemyType);
-    const duration = this.getEffectDurationForEnemy(enemyType);
-    
-    createManagedEffect(effectType, position, duration);
+  private static createCollisionEffect(position: Position, enemyType: string): void {
+    const effectType = this.getCollisionEffectType(enemyType);
+    createManagedEffect(effectType, position, 800);
   }
 
   /**
-   * Create wall impact visual effect
+   * Get collision effect type based on enemy type
    */
-  private static createWallImpactEffect(position: Position) {
-    createManagedEffect('wall_impact', position, 800);
-  }
-
-  /**
-   * Get appropriate effect type for enemy
-   */
-  private static getEffectTypeForEnemy(enemyType: string): string {
+  private static getCollisionEffectType(enemyType: string): string {
     switch (enemyType) {
-      case 'boss':
-      case 'DemonLord':
-      case 'DragonKing':
-        return 'boss_explosion';
-      case 'Ghost':
-      case 'Wraith':
-        return 'ghost_dissipate';
       case 'Tank':
-      case 'Golem':
+      case 'TankBoss':
         return 'heavy_impact';
+      case 'Ghost':
+      case 'GhostBoss':
+        return 'ghost_dissipate';
+      case 'Boss':
+        return 'boss_explosion';
       default:
         return 'enemy_explosion';
     }
   }
 
   /**
-   * Get effect duration for enemy type
+   * Clean up old cache entries
    */
-  private static getEffectDurationForEnemy(enemyType: string): number {
-    switch (enemyType) {
-      case 'boss':
-        return 1500;
-      case 'Tank':
-      case 'Golem':
-        return 1200;
-      default:
-        return 800;
-    }
-  }
-
-  /**
-   * Clean up old target cache entries
-   */
-  private static cleanupTargetCache() {
+  private static cleanupTargetCache(): void {
     const now = performance.now();
-    const maxAge = this.TARGET_CACHE_DURATION * 2;
-
     for (const [key, value] of this.targetCache.entries()) {
-      if (now - value.timestamp > maxAge) {
+      if (now - value.timestamp > this.TARGET_CACHE_DURATION * 2) {
         this.targetCache.delete(key);
       }
     }

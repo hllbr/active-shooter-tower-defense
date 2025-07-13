@@ -1,13 +1,20 @@
 import React from 'react';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { TowerRenderProps } from '../types';
+import { SpecializedTowerRenderer } from './SpecializedTowerRenderer';
 
 /**
  * Dynamic Tower Renderer
  * Single component that renders all tower levels using a switch statement
  * Optimized for performance and cross-platform compatibility
+ * Now includes specialized tower rendering for unique visual designs
  */
 export const TowerRenderer: React.FC<TowerRenderProps> = ({ slot, towerLevel }) => {
+  // Check if this is a specialized tower that needs unique rendering
+  if (slot.tower?.towerClass) {
+    return <SpecializedTowerRenderer slot={slot} towerLevel={towerLevel} />;
+  }
+
   const baseWidth = GAME_CONSTANTS.TOWER_SIZE + 8;
   const topWidth = GAME_CONSTANTS.TOWER_SIZE - 4;
   

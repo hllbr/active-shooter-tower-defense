@@ -5,8 +5,8 @@ import { spawnStrategy, performanceTracker, dynamicSpawnController } from '../sp
 import { waveManager } from '../WaveManager';
 import { EnemyFactory } from './EnemyFactory';
 import { SpawnPositionManager } from './SpawnPositionManager';
+import { DynamicGameStartManager } from '../DynamicGameStartManager';
 import type { Tower, TowerSlot, WaveEnemyConfig } from '../../models/gameTypes';
-import { Logger } from '../../utils/Logger';
 
 /**
  * Manager class responsible for handling wave-based enemy spawning
@@ -177,19 +177,10 @@ export class WaveSpawnManager {
   /**
    * Auto-places a starter tower if no towers exist
    */
-  private static autoPlaceStarterTower(towers: Tower[], towerSlots: TowerSlot[], buildTower: (index: number, free: boolean) => void) {
+  private static autoPlaceStarterTower(towers: Tower[], _towerSlots: TowerSlot[], _buildTower: (index: number, free: boolean) => void) {
     if (towers.length === 0) {
-      const emptySlots = towerSlots
-        .map((slot, index) => ({ slot, index }))
-        .filter(({ slot }) => slot.unlocked && !slot.tower);
-      
-      if (emptySlots.length > 0) {
-        // Choose random empty slot instead of first one for variety
-        const randomSlot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
-        buildTower(randomSlot.index, true); // Free tower placement
-      } else {
-        Logger.warn('⚠️ No unlocked slots available for auto tower placement!');
-      }
+      // Use dynamic game start system for first tower placement
+      DynamicGameStartManager.initializeDynamicGameStart();
     }
   }
 

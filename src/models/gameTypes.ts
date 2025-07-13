@@ -99,6 +99,16 @@ export interface Tower {
   spinUpLevel?: number;
   /** Maximum spin-up level */
   maxSpinUpLevel?: number;
+  
+  // ✅ NEW: Fire Hazard System
+  /** Fire hazard state */
+  fireHazard?: {
+    isBurning: boolean;
+    startTime: number;
+    timeLimit: number;
+    extinguisherClicked: boolean;
+  };
+  
   /** Beam focus damage multiplier */
   beamFocusMultiplier?: number;
   /** Target lock time for beam weapons */
@@ -323,6 +333,9 @@ export interface GameState {
   // Enhanced Resource System
   resourceTransactions: ResourceTransaction[];
   
+  // ✅ NEW: Defense Target System for Issue #65
+  defenseTarget: DefenseTarget;
+  
   // ✅ NEW: Environment & Terrain System for Issue #62
   terrainTiles: TerrainTile[];
   weatherState: WeatherState;
@@ -435,6 +448,50 @@ export interface GameState {
   lastMissionRefresh: number;
   completedMissions: string[];
   unlockedTowerTypes: string[];
+  
+  // ✅ NEW: Dynamic Game Start System
+  firstTowerInfo?: {
+    towerClass: TowerClass;
+    towerName: string;
+    slotIndex: number;
+  };
+}
+
+// ✅ NEW: Defense Target System
+export interface DefenseTarget {
+  id: string;
+  type: 'energy_core' | 'command_center' | 'resource_depot' | 'shield_generator';
+  position: Position;
+  size: number;
+  health: number;
+  maxHealth: number;
+  isActive: boolean;
+  isVisible: boolean;
+  isVulnerable: boolean;
+  
+  // Visual properties
+  color: string;
+  glowIntensity: number;
+  pulseRate: number;
+  
+  // Defense properties
+  shieldStrength: number;
+  maxShieldStrength: number;
+  shieldRegenRate: number;
+  lastShieldRegen: number;
+  
+  // Damage properties
+  damageResistance: number;
+  criticalVulnerability: number;
+  
+  // Effects
+  activeEffects: string[];
+  lastDamaged: number;
+  
+  // Visual indicators
+  showDamageIndicator: boolean;
+  damageIndicatorDuration: number;
+  damageIndicatorStartTime: number;
 }
 
 export interface PowerUpgrade {

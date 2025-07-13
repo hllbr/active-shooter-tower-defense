@@ -34,11 +34,22 @@ export const GAME_CONSTANTS = {
   TOWER_HEALTH: 100,
   TOWER_COST: 50,
   TOWER_UPGRADE_COST: 60,
+  TOWER_REPAIR_BASE_COST: 30,
   TOWER_MAX_LEVEL: 25,
   RELOCATE_COOLDOWN: 5000,
   BUILD_TILE_DISTANCE: 120,
   DISMANTLE_REFUND: 0.5,
   MAP_ACTIONS_PER_WAVE: 3,
+  
+  // ✅ NEW: Fire Hazard System
+  FIRE_HAZARD: {
+    PROBABILITY_PER_WAVE: 0.15, // 15% chance per wave
+    TIME_LIMIT: 7000, // 7 seconds to extinguish
+    CHECK_INTERVAL: 2000, // Check every 2 waves
+    ALARM_SOUND: 'alarm',
+    EXTINGUISH_SOUND: 'success',
+    DESTROY_SOUND: 'explosion-large',
+  },
   
   // Gelişmiş Action Sistemi
   ACTION_SYSTEM: {

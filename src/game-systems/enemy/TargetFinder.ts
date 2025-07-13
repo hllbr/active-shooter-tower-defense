@@ -1,6 +1,7 @@
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Position, Enemy, TowerSlot } from '../../models/gameTypes';
+import { defenseTargetManager } from '../defense-systems/DefenseTargetManager';
 
 /**
  * Enhanced Finder class responsible for finding the nearest target for enemies
@@ -8,6 +9,7 @@ import type { Position, Enemy, TowerSlot } from '../../models/gameTypes';
  * - Dynamic target selection based on enemy type
  * - Performance optimizations with spatial partitioning
  * - Advanced targeting logic for different enemy behaviors
+ * - Defense target targeting when no towers are present
  */
 export class TargetFinder {
   // Performance optimization: Cache for target calculations
@@ -17,6 +19,7 @@ export class TargetFinder {
   /**
    * Gets the nearest slot with a tower for an enemy to target
    * Enhanced with dynamic targeting based on enemy type
+   * Now includes defense target targeting when no towers are present
    */
   static getNearestSlot(pos: Position, enemy?: Enemy) {
     const cacheKey = `${Math.floor(pos.x / 50)}_${Math.floor(pos.y / 50)}_${enemy?.type || 'basic'}`;
@@ -30,11 +33,13 @@ export class TargetFinder {
 
     const slotsWithTowers = useGameStore.getState().towerSlots.filter((s) => s.unlocked && s.tower);
 
-    // If no towers, target center
+    // If no towers, target defense target (base/energy core)
     if (slotsWithTowers.length === 0) {
-      const centerTarget = this.getCenterTarget();
-      this.targetCache.set(cacheKey, { target: centerTarget, timestamp: now });
-      return centerTarget;
+      const defenseTarget = this.getDefenseTargetAsSlot();
+      if (defenseTarget) {
+        this.targetCache.set(cacheKey, { target: defenseTarget, timestamp: now });
+        return defenseTarget;
+      }
     }
 
     // Enhanced targeting based on enemy type
@@ -47,19 +52,53 @@ export class TargetFinder {
   }
 
   /**
-   * Get center target when no towers exist
+   * Get defense target as a TowerSlot for compatibility
    */
-  private static getCenterTarget() {
-    const centerX = GAME_CONSTANTS.CANVAS_WIDTH / 2;
-    const centerY = GAME_CONSTANTS.CANVAS_HEIGHT / 2;
+  private static getDefenseTargetAsSlot(): TowerSlot | null {
+    const defenseTarget = defenseTargetManager.getDefenseTarget();
+    if (!defenseTarget || !defenseTarget.isActive || !defenseTarget.isVulnerable) {
+      return null;
+    }
+
+    // Create a virtual tower slot for the defense target
     return {
-      x: centerX,
-      y: centerY,
+      x: defenseTarget.position.x,
+      y: defenseTarget.position.y,
       unlocked: true,
-      tower: null,
-      type: 'fixed' as const,
-      wasDestroyed: false,
-      modifier: undefined
+      tower: {
+        id: defenseTarget.id,
+        position: defenseTarget.position,
+        size: defenseTarget.size,
+        isActive: defenseTarget.isActive,
+        level: 1,
+        range: 0,
+        fireRate: 0,
+        lastFired: 0,
+        health: defenseTarget.health,
+        maxHealth: defenseTarget.maxHealth,
+        wallStrength: defenseTarget.shieldStrength,
+        specialAbility: 'none',
+        healthRegenRate: 0,
+        lastHealthRegen: 0,
+        specialCooldown: 0,
+        lastSpecialUse: 0,
+        multiShotCount: 0,
+        chainLightningJumps: 0,
+        freezeDuration: 0,
+        burnDuration: 0,
+        acidStack: 0,
+        quantumState: false,
+        nanoSwarmCount: 0,
+        psiRange: 0,
+        timeWarpSlow: 0,
+        spaceGravity: 0,
+        legendaryAura: false,
+        divineProtection: false,
+        cosmicEnergy: 0,
+        infinityLoop: false,
+        godModeActive: false,
+        damage: 0
+      }
     };
   }
 
@@ -90,74 +129,119 @@ export class TargetFinder {
   }
 
   /**
-   * Get nearest tower (basic targeting)
+   * Get nearest tower (fallback method)
    */
-  private static getNearestTower(pos: Position, slotsWithTowers: TowerSlot[]) {
-    let minDist = Infinity;
+  private static getNearestTower(pos: Position, slotsWithTowers: TowerSlot[]): TowerSlot {
     let nearest = slotsWithTowers[0];
-    
-    slotsWithTowers.forEach((slot) => {
-      const dx = slot.x - pos.x;
-      const dy = slot.y - pos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < minDist) {
-        minDist = dist;
+    let minDistance = Infinity;
+
+    for (const slot of slotsWithTowers) {
+      const distance = Math.sqrt(
+        Math.pow(pos.x - slot.x, 2) + Math.pow(pos.y - slot.y, 2)
+      );
+      if (distance < minDistance) {
+        minDistance = distance;
         nearest = slot;
       }
-    });
-    
+    }
+
     return nearest;
   }
 
   /**
-   * Get avoidance target (for enemies that avoid towers)
+   * Get avoidance target (for scout/avoid enemies)
    */
-  private static getAvoidanceTarget(pos: Position, slotsWithTowers: TowerSlot[]) {
-    // Find the least defended area
-    const defenseMap = this.createDefenseMap(slotsWithTowers);
-    return this.findLeastDefendedArea(pos, defenseMap);
+  private static getAvoidanceTarget(pos: Position, slotsWithTowers: TowerSlot[]): TowerSlot {
+    // Avoidance enemies prefer isolated towers
+    let bestTarget = slotsWithTowers[0];
+    let bestScore = -Infinity;
+
+    for (const slot of slotsWithTowers) {
+      const distance = Math.sqrt(
+        Math.pow(pos.x - slot.x, 2) + Math.pow(pos.y - slot.y, 2)
+      );
+      
+      // Count nearby towers
+      const nearbyTowers = slotsWithTowers.filter(otherSlot => {
+        const otherDistance = Math.sqrt(
+          Math.pow(slot.x - otherSlot.x, 2) + Math.pow(slot.y - otherSlot.y, 2)
+        );
+        return otherDistance < 150 && otherSlot !== slot;
+      }).length;
+
+      // Prefer isolated towers (fewer nearby towers)
+      const isolationScore = 100 - nearbyTowers * 20;
+      const distanceScore = Math.max(0, 200 - distance);
+      const totalScore = isolationScore + distanceScore;
+
+      if (totalScore > bestScore) {
+        bestScore = totalScore;
+        bestTarget = slot;
+      }
+    }
+
+    return bestTarget;
   }
 
   /**
-   * Get stealth target (for stealth enemies)
+   * Get stealth target (for assassin/stealth enemies)
    */
-  private static getStealthTarget(pos: Position, slotsWithTowers: TowerSlot[]) {
-    // Prefer isolated towers
-    const isolatedTowers = slotsWithTowers.filter(slot => {
-      const nearbyTowers = slotsWithTowers.filter(other => {
-        const dx = slot.x - other.x;
-        const dy = slot.y - other.y;
-        return Math.sqrt(dx * dx + dy * dy) < 200;
-      });
-      return nearbyTowers.length <= 2; // Isolated if 2 or fewer nearby towers
-    });
+  private static getStealthTarget(pos: Position, slotsWithTowers: TowerSlot[]): TowerSlot {
+    // Stealth enemies prefer weak or isolated towers
+    let bestTarget = slotsWithTowers[0];
+    let bestScore = -Infinity;
 
-    if (isolatedTowers.length > 0) {
-      return this.getNearestTower(pos, isolatedTowers);
+    for (const slot of slotsWithTowers) {
+      if (!slot.tower) continue;
+
+      const distance = Math.sqrt(
+        Math.pow(pos.x - slot.x, 2) + Math.pow(pos.y - slot.y, 2)
+      );
+      
+      // Prefer weak towers (low health)
+      const healthScore = Math.max(0, 100 - slot.tower.health);
+      const distanceScore = Math.max(0, 150 - distance);
+      const totalScore = healthScore + distanceScore;
+
+      if (totalScore > bestScore) {
+        bestScore = totalScore;
+        bestTarget = slot;
+      }
     }
 
-    return this.getNearestTower(pos, slotsWithTowers);
+    return bestTarget;
   }
 
   /**
    * Get tank target (for tank enemies)
    */
-  private static getTankTarget(pos: Position, slotsWithTowers: TowerSlot[]) {
-    // Tanks prefer the most direct path to center
+  private static getTankTarget(pos: Position, slotsWithTowers: TowerSlot[]): TowerSlot {
+    // Tank enemies prefer direct path to center
     const centerX = GAME_CONSTANTS.CANVAS_WIDTH / 2;
     const centerY = GAME_CONSTANTS.CANVAS_HEIGHT / 2;
     
-    // Find tower closest to the line between enemy and center
     let bestTarget = slotsWithTowers[0];
-    let bestScore = Infinity;
+    let bestScore = -Infinity;
 
-    slotsWithTowers.forEach(slot => {
-      const score = this.calculateDirectPathScore(pos, { x: centerX, y: centerY }, slot);
-      if (score < bestScore) {
-        bestScore = score;
+    for (const slot of slotsWithTowers) {
+      const distanceToEnemy = Math.sqrt(
+        Math.pow(pos.x - slot.x, 2) + Math.pow(pos.y - slot.y, 2)
+      );
+      
+      const distanceToCenter = Math.sqrt(
+        Math.pow(slot.x - centerX, 2) + Math.pow(slot.y - centerY, 2)
+      );
+      
+      // Prefer towers closer to center
+      const centerScore = Math.max(0, 200 - distanceToCenter);
+      const distanceScore = Math.max(0, 100 - distanceToEnemy);
+      const totalScore = centerScore + distanceScore;
+
+      if (totalScore > bestScore) {
+        bestScore = totalScore;
         bestTarget = slot;
       }
-    });
+    }
 
     return bestTarget;
   }
@@ -165,191 +249,86 @@ export class TargetFinder {
   /**
    * Get ghost target (for ghost enemies)
    */
-  private static getGhostTarget(pos: Position, slotsWithTowers: TowerSlot[]) {
-    // Ghosts prefer the path with least resistance
-    const pathScores = slotsWithTowers.map(slot => ({
-      slot,
-      score: this.calculatePathResistance(pos, slot, slotsWithTowers)
-    }));
+  private static getGhostTarget(pos: Position, slotsWithTowers: TowerSlot[]): TowerSlot {
+    // Ghost enemies prefer least resistance path
+    let bestTarget = slotsWithTowers[0];
+    let bestScore = -Infinity;
 
-    pathScores.sort((a, b) => a.score - b.score);
-    return pathScores[0].slot;
+    for (const slot of slotsWithTowers) {
+      const distance = Math.sqrt(
+        Math.pow(pos.x - slot.x, 2) + Math.pow(pos.y - slot.y, 2)
+      );
+      
+      // Count enemies near this tower (ghosts avoid crowded areas)
+      const nearbyEnemies = useGameStore.getState().enemies.filter(enemy => {
+        const enemyDistance = Math.sqrt(
+          Math.pow(enemy.position.x - slot.x, 2) + Math.pow(enemy.position.y - slot.y, 2)
+        );
+        return enemyDistance < 120;
+      }).length;
+
+      // Prefer less crowded areas
+      const crowdScore = Math.max(0, 50 - nearbyEnemies * 10);
+      const distanceScore = Math.max(0, 150 - distance);
+      const totalScore = crowdScore + distanceScore;
+
+      if (totalScore > bestScore) {
+        bestScore = totalScore;
+        bestTarget = slot;
+      }
+    }
+
+    return bestTarget;
   }
 
   /**
    * Get boss target (for boss enemies)
    */
-  private static getBossTarget(pos: Position, slotsWithTowers: TowerSlot[], enemy: Enemy) {
-    // Bosses target the strongest tower or the most strategic position
-    if (enemy.bossType === 'legendary' || enemy.bossType === 'major') {
-      // Target the highest level tower
-      const strongestTower = slotsWithTowers.reduce((strongest, current) => {
-        if (!current.tower || !strongest.tower) return current;
-        return current.tower.level > strongest.tower.level ? current : strongest;
-      });
-      return strongestTower;
-    }
+  private static getBossTarget(pos: Position, slotsWithTowers: TowerSlot[], _enemy: Enemy): TowerSlot {
+    // Boss enemies target strongest towers
+    let bestTarget = slotsWithTowers[0];
+    let bestScore = -Infinity;
 
-    // Regular boss targeting
-    return this.getNearestTower(pos, slotsWithTowers);
-  }
+    for (const slot of slotsWithTowers) {
+      if (!slot.tower) continue;
 
-  /**
-   * Create a defense map for avoidance calculations
-   */
-  private static createDefenseMap(slotsWithTowers: TowerSlot[]) {
-    const defenseMap = new Map<string, number>();
-    
-    slotsWithTowers.forEach(slot => {
-      const key = `${Math.floor(slot.x / 100)}_${Math.floor(slot.y / 100)}`;
-      const currentDefense = defenseMap.get(key) || 0;
-      defenseMap.set(key, currentDefense + (slot.tower?.level || 1));
-    });
-
-    return defenseMap;
-  }
-
-  /**
-   * Find least defended area
-   */
-  private static findLeastDefendedArea(_pos: Position, _defenseMap: Map<string, number>) {
-    // This is a simplified version - in a full implementation,
-    // you would analyze the defense map to find gaps
-    const { towerSlots } = useGameStore.getState();
-    const unlockedSlots = towerSlots.filter(s => s.unlocked);
-    
-    // Find unlocked slot with no tower
-    const emptySlot = unlockedSlots.find(s => !s.tower);
-    if (emptySlot) {
-      return emptySlot;
-    }
-
-    // Fallback to center
-    return this.getCenterTarget();
-  }
-
-  /**
-   * Calculate direct path score for tank targeting
-   */
-  private static calculateDirectPathScore(start: Position, end: Position, tower: TowerSlot): number {
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // Calculate distance from tower to the direct path line
-    const pathVector = { x: dx / distance, y: dy / distance };
-    const towerToStart = { x: tower.x - start.x, y: tower.y - start.y };
-    
-    // Project tower position onto path
-    const projection = towerToStart.x * pathVector.x + towerToStart.y * pathVector.y;
-    const projectedPoint = {
-      x: start.x + pathVector.x * projection,
-      y: start.y + pathVector.y * projection
-    };
-    
-    // Distance from tower to projected point
-    const towerToPath = Math.sqrt(
-      Math.pow(tower.x - projectedPoint.x, 2) + 
-      Math.pow(tower.y - projectedPoint.y, 2)
-    );
-    
-    return towerToPath;
-  }
-
-  /**
-   * Calculate path resistance for ghost targeting
-   */
-  private static calculatePathResistance(start: Position, target: TowerSlot, allTowers: TowerSlot[]): number {
-    const dx = target.x - start.x;
-    const dy = target.y - start.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    let resistance = 0;
-    allTowers.forEach(tower => {
-      if (tower === target) return;
-      
-      // Calculate distance from tower to the path line
-      const towerToStart = { x: tower.x - start.x, y: tower.y - start.y };
-      const pathVector = { x: dx / distance, y: dy / distance };
-      
-      const projection = towerToStart.x * pathVector.x + towerToStart.y * pathVector.y;
-      const projectedPoint = {
-        x: start.x + pathVector.x * projection,
-        y: start.y + pathVector.y * projection
-      };
-      
-      const towerToPath = Math.sqrt(
-        Math.pow(tower.x - projectedPoint.x, 2) + 
-        Math.pow(tower.y - projectedPoint.y, 2)
+      const distance = Math.sqrt(
+        Math.pow(pos.x - slot.x, 2) + Math.pow(pos.y - slot.y, 2)
       );
       
-      // Add resistance based on proximity to path
-      if (towerToPath < 100) {
-        resistance += (100 - towerToPath) * (tower.tower?.level || 1);
+      // Prefer strong towers (high level, high damage)
+      const strengthScore = slot.tower.level * 10 + slot.tower.damage;
+      const distanceScore = Math.max(0, 100 - distance);
+      const totalScore = strengthScore + distanceScore;
+
+      if (totalScore > bestScore) {
+        bestScore = totalScore;
+        bestTarget = slot;
       }
-    });
-    
-    return resistance;
+    }
+
+    return bestTarget;
   }
 
   /**
-   * Gets all slots within a certain radius of a position
+   * Get center target (fallback when no towers exist)
    */
-  static getSlotsInRadius(pos: Position, radius: number) {
-    const towerSlots = useGameStore.getState().towerSlots;
-    return towerSlots.filter(slot => {
-      const dx = slot.x - pos.x;
-      const dy = slot.y - pos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      return dist <= radius;
-    });
-  }
-
-  /**
-   * Gets the closest enemy to a position (for towers to target)
-   */
-  static getClosestEnemy(pos: Position) {
-    const enemies = useGameStore.getState().enemies;
-    if (enemies.length === 0) return null;
-
-    let closest = enemies[0];
-    let minDist = Infinity;
-
-    enemies.forEach(enemy => {
-      const dx = enemy.position.x - pos.x;
-      const dy = enemy.position.y - pos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < minDist) {
-        minDist = dist;
-        closest = enemy;
-      }
-    });
-
-    return closest;
-  }
-
-  /**
-   * Gets enemies within a certain radius of a position
-   */
-  static getEnemiesInRadius(pos: Position, radius: number) {
-    const enemies = useGameStore.getState().enemies;
-    return enemies.filter(enemy => {
-      const dx = enemy.position.x - pos.x;
-      const dy = enemy.position.y - pos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      return dist <= radius;
-    });
+  private static getCenterTarget(): TowerSlot {
+    return {
+      x: GAME_CONSTANTS.CANVAS_WIDTH / 2,
+      y: GAME_CONSTANTS.CANVAS_HEIGHT / 2,
+      unlocked: true,
+      tower: null
+    };
   }
 
   /**
    * Clean up old cache entries
    */
-  static cleanupCache() {
+  static cleanupCache(): void {
     const now = performance.now();
-    const maxAge = this.CACHE_DURATION * 2;
-
     for (const [key, value] of this.targetCache.entries()) {
-      if (now - value.timestamp > maxAge) {
+      if (now - value.timestamp > this.CACHE_DURATION) {
         this.targetCache.delete(key);
       }
     }

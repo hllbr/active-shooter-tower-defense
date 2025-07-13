@@ -1,10 +1,17 @@
 import React from 'react';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { VisualExtrasProps } from '../types';
+import { TowerEffectsRenderer } from './TowerEffectsRenderer';
 
 export const VisualExtrasRenderer: React.FC<VisualExtrasProps> = ({ slot }) => {
   if (!slot.tower) return null;
   
+  // Use specialized effects renderer for tower classes
+  if (slot.tower.towerClass) {
+    return <TowerEffectsRenderer slot={slot} />;
+  }
+  
+  // Economy tower indicator
   if (slot.tower.towerType === 'economy') {
     return (
       <text 
@@ -19,6 +26,7 @@ export const VisualExtrasRenderer: React.FC<VisualExtrasProps> = ({ slot }) => {
     );
   }
   
+  // Standard visual effects for non-specialized towers
   const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === slot.tower!.level);
   if (!visual) return null;
   

@@ -9,6 +9,7 @@ export interface TowerSlice {
   buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy', towerClass?: TowerClass) => void;
   unlockSlot: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
+  repairTower: (slotIdx: number) => void;
   removeTower: (slotIdx: number) => void;
   dismantleTower: (slotIdx: number) => void;
   moveTower: (fromIdx: number, toIdx: number) => void;
@@ -26,6 +27,7 @@ export interface TowerSlice {
   startSlotUnlockAnimation: (slotIdx: number) => void;
   finishSlotUnlockAnimation: (slotIdx: number) => void;
   clearRecentlyUnlockedSlots: () => void;
+  destroyTowerByFire: (slotIdx: number) => void;
 }
 
 export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _get, _api) => ({
@@ -58,6 +60,50 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: { ...slot.tower, health: newHealth } };
     return { towerSlots: newSlots };
+  }),
+
+  repairTower: (slotIdx) => set((state: Store) => {
+    const slot = state.towerSlots[slotIdx] as TowerSlot;
+    if (!slot.tower) return {};
+    
+    // Check if tower needs repair
+    if (slot.tower.health >= slot.tower.maxHealth) return {};
+    
+    // Calculate repair cost based on damage percentage
+    const damagePercentage = 1 - (slot.tower.health / slot.tower.maxHealth);
+    const baseRepairCost = GAME_CONSTANTS.TOWER_REPAIR_BASE_COST;
+    const repairCost = Math.ceil(baseRepairCost * damagePercentage);
+    
+    // Check if player can afford repair
+    if (state.gold < repairCost) return {};
+    
+    // Check energy cost
+    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower; // Use same energy cost as building
+    if (state.energy < energyCost) return {};
+    
+    // Repair the tower
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { 
+      ...slot, 
+      tower: { 
+        ...slot.tower, 
+        health: slot.tower.maxHealth 
+      } 
+    };
+    
+    // Play repair sound
+    setTimeout(() => {
+      import('../../../utils/sound').then(({ playContextualSound }) => {
+        playContextualSound('tower-upgrade');
+      });
+    }, 50);
+    
+    return { 
+      towerSlots: newSlots, 
+      gold: state.gold - repairCost,
+      energy: state.energy - energyCost,
+      totalGoldSpent: state.totalGoldSpent + repairCost
+    };
   }),
 
   removeTower: (slotIdx) => set((state: Store) => {
@@ -206,4 +252,21 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
   }),
 
   clearRecentlyUnlockedSlots: () => set(() => ({ recentlyUnlockedSlots: new Set<number>() })),
+  
+  destroyTowerByFire: (slotIdx: number) => set((state: Store) => {
+    const slot = state.towerSlots[slotIdx];
+    if (!slot.tower) return {};
+    
+    const newSlots = [...state.towerSlots];
+    newSlots[slotIdx] = { ...slot, tower: null, wasDestroyed: true };
+    const newTowers = state.towers.filter((t) => t.id !== slot.tower!.id);
+    const shouldGameOver = newTowers.length === 0 && state.isStarted && !state.isGameOver;
+    
+    if (shouldGameOver) {
+      import('../../../game-systems/EnemySpawner').then(({ stopEnemyWave }) => { stopEnemyWave(); });
+      setTimeout(() => { import('../../../utils/sound').then(({ playContextualSound }) => { playContextualSound('defeat'); }); }, 100);
+    }
+    
+    return { towerSlots: newSlots, towers: newTowers, lostTowerThisWave: true, isGameOver: shouldGameOver };
+  }),
 });

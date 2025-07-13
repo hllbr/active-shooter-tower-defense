@@ -1,4 +1,8 @@
 import './App.css';
+import './ui/TowerSpot/styles/towerSelectionPanel.css';
+import './ui/TowerSpot/styles/enhancedLockedZone.css';
+import './ui/TowerSpot/styles/simplifiedTowerControls.css';
+import './ui/TowerSpot/styles/fireHazard.css';
 import { GameBoard } from './ui/GameBoard';
 import { useState } from 'react';
 import { SettingsPanel } from './ui/settings/SettingsPanel';

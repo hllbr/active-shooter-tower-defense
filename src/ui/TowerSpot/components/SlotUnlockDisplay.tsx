@@ -1,11 +1,10 @@
 import React from 'react';
 import type { SlotUnlockProps } from '../types';
 import {
-  BaseLockedSlot,
+  EnhancedLockedSlot,
   LockBreakAnimation,
   ParticleSystem,
   SlotRevealCelebration,
-  UnlockButton,
   RecentlyUnlockedGlow
 } from './index';
 
@@ -22,12 +21,13 @@ export const SlotUnlockDisplay: React.FC<SlotUnlockProps> = ({
 
   return (
     <g>
-      {/* Base locked slot with lock icon */}
-      <BaseLockedSlot
+      {/* Enhanced locked slot with glowing borders and tooltips */}
+      <EnhancedLockedSlot
         slot={slot}
         slotIdx={slotIdx}
         canUnlock={canUnlock}
         isUnlocking={isUnlocking}
+        unlockCost={unlockCost}
         onUnlock={onUnlock}
       />
       
@@ -54,14 +54,6 @@ export const SlotUnlockDisplay: React.FC<SlotUnlockProps> = ({
         slot={slot}
         isRecentlyUnlocked={isRecentlyUnlocked}
         isUnlocking={isUnlocking}
-      />
-      
-      {/* Unlock button text */}
-      <UnlockButton
-        slotIdx={slotIdx}
-        unlockCost={unlockCost}
-        canUnlock={canUnlock}
-        onClick={() => onUnlock(slotIdx)}
       />
     </g>
   );

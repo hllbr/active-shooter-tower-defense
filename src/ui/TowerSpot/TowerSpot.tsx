@@ -2,16 +2,24 @@ import React from 'react';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import type { TowerSpotProps } from './types';
 import { useTowerSpotLogic } from './hooks/useTowerSpotLogic';
+import { useGameStore } from '../../models/store';
+import { useTowerMoveManager } from '../GameBoard/hooks/useTowerMoveManager';
 import {
   TowerRenderer,
   WallRenderer,
   ModifierRenderer,
   VisualExtrasRenderer,
-  TowerMenu,
-  TowerInfoPanel,
   SlotUnlockDisplay,
   DebugInfo,
-  ParticleSystem
+  ParticleSystem,
+  FirstTowerHighlight,
+  TowerHealthDisplay,
+  TowerSelectionPanel,
+  SimplifiedTowerControls,
+  FireHazardDisplay,
+  TowerMoveIcon,
+  TileActionIcon,
+  TileActionMenu
 } from './components';
 
 export const TowerSpot: React.FC<TowerSpotProps> = ({ 
@@ -21,9 +29,12 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
   isDragTarget, 
   draggedTowerSlotIdx 
 }) => {
+  // Move manager for hand icon functionality
+  const { getMoveStateForSlot, initiateMoveMode } = useTowerMoveManager();
+  const moveState = getMoveStateForSlot(slotIdx);
   const {
     // State
-    menuPos,
+    showTowerSelection,
     isUnlocking,
     isRecentlyUnlocked,
     canUnlock,
@@ -31,21 +42,35 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
     canUpgrade,
     upgradeInfo,
     canAffordUpgrade,
-    upgradeMessage,
-    currentTowerInfo,
-    towerBottomY,
+    canRepair,
+    canAffordRepair,
     debugInfo,
     shouldShowBuildText,
     wallLevel,
     
     // Handlers
-    handleContextMenu,
-    handleMenuClose,
-    handleBuildTower,
+    handleShowTowerSelection,
+    handleCloseTowerSelection,
+    handleSelectTower,
     handlePerformTileAction,
     handleUpgrade,
-    handleUnlock
+    handleRepair,
+    handleUnlock,
+    handleDelete
   } = useTowerSpotLogic(slot, slotIdx);
+
+  // Tile action state
+  const [showTileActionMenu, setShowTileActionMenu] = React.useState(false);
+  const actionsRemaining = useGameStore(s => s.actionsRemaining);
+  const canPerformAction = actionsRemaining > 0;
+
+  // Check if this is the first tower for tutorial highlight
+  const firstTowerInfo = useGameStore((s) => s.firstTowerInfo);
+  const isFirstTower = firstTowerInfo?.slotIndex === slotIdx;
+
+  // Health display hover state
+  const [showHealthDisplay, setShowHealthDisplay] = React.useState(false);
+  const [isTowerHovered, setIsTowerHovered] = React.useState(false);
 
   // --- YENİ: Build animasyonu için state ---
   const [showTowerVisible, setShowTowerVisible] = React.useState(true); // Kule görünür mü
@@ -81,17 +106,10 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
     prevTower.current = slot.tower;
   }, [slot.tower]);
 
-  // Yükseltme animasyonu ile ilgili tüm state ve kodları kaldırıyorum
-  // handleUpgradeWithEffect fonksiyonu doğrudan handleUpgrade'i çağıracak
-  const handleUpgradeWithEffect = React.useCallback(
-    (slotIdx: number) => {
-      handleUpgrade(slotIdx);
-    },
-    [handleUpgrade]
-  );
+
 
   return (
-    <g onContextMenu={handleContextMenu}>
+    <g>
       {/* --- YENİ: Toz bulutu efekti --- */}
       {showDust && (
         <ParticleSystem slot={slot} isUnlocking={false} showDust={true} />
@@ -112,7 +130,10 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
                 strokeWidth={2}
                 strokeDasharray="4 2"
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleBuildTower(slotIdx, 'attack')}
+                onClick={() => {
+                  console.log('DEBUG: handleShowTowerSelection called');
+                  handleShowTowerSelection();
+                }}
               />
               
               {/* Build indicator */}
@@ -126,7 +147,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
                   fontWeight="bold"
                   pointerEvents="none"
                 >
-                  İnşa Et
+                  Kule Seç
                 </text>
               )}
               
@@ -183,39 +204,99 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
                 onTowerDragStart(slotIdx, e);
               }
             }}
+            onMouseEnter={() => {
+              setShowHealthDisplay(true);
+              setIsTowerHovered(true);
+            }}
+            onMouseLeave={() => {
+              setShowHealthDisplay(false);
+              setIsTowerHovered(false);
+            }}
           >
             <TowerRenderer slot={slot} towerLevel={slot.tower.level} />
           </g>
           
+          {/* First tower tutorial highlight */}
+          {isFirstTower && firstTowerInfo && (
+            <FirstTowerHighlight
+              slotIndex={slotIdx}
+              towerClass={firstTowerInfo.towerClass}
+              towerName={firstTowerInfo.towerName}
+            />
+          )}
+          
           {/* Visual extras (above tower) */}
           <VisualExtrasRenderer slot={slot} />
+          
+          {/* Health display on hover */}
+          <TowerHealthDisplay slot={slot} isVisible={showHealthDisplay} />
+          
+          {/* Fire hazard display */}
+          <FireHazardDisplay slot={slot} slotIdx={slotIdx} />
+          
+          {/* Move icon */}
+          <TowerMoveIcon
+            slot={slot}
+            slotIdx={slotIdx}
+            onMoveInitiate={initiateMoveMode}
+            isHovered={isTowerHovered}
+            isSelected={false}
+            canMove={moveState.canMove}
+            moveCost={moveState.moveCost}
+            canAffordMove={moveState.canAffordMove}
+            cooldownRemaining={moveState.cooldownRemaining}
+          />
           
           {/* Debug information */}
           <DebugInfo slot={slot} debugInfo={debugInfo} />
           
-          {/* Tower info panel */}
-          <TowerInfoPanel
+          {/* Simplified tower controls */}
+          <SimplifiedTowerControls
             slot={slot}
             slotIdx={slotIdx}
-            currentTowerInfo={currentTowerInfo}
-            towerBottomY={towerBottomY}
             canUpgrade={canUpgrade}
             upgradeInfo={upgradeInfo}
-            upgradeMessage={upgradeMessage}
             canAffordUpgrade={canAffordUpgrade}
-            onUpgrade={handleUpgradeWithEffect}
+            onUpgrade={handleUpgrade}
+            canRepair={canRepair}
+            canAffordRepair={canAffordRepair}
+            repairCost={Math.ceil(GAME_CONSTANTS.TOWER_REPAIR_BASE_COST * (1 - (slot.tower.health / slot.tower.maxHealth)))}
+            onRepair={handleRepair}
+            onDelete={handleDelete}
+            isHovered={isTowerHovered}
+            isSelected={false}
           />
         </g>
       )}
       
-      {/* Context menu */}
-      <TowerMenu
-        menuPos={menuPos}
+      {/* Tile Action Icon */}
+      <TileActionIcon
+        slot={slot}
+        _slotIdx={slotIdx}
+        _onTileAction={handlePerformTileAction}
+        onShowMenu={() => setShowTileActionMenu(true)}
+        isHovered={isTowerHovered}
+        isSelected={false}
+        canPerformAction={canPerformAction}
+        actionsRemaining={actionsRemaining}
+      />
+      
+      {/* Tile Action Menu */}
+      <TileActionMenu
         slot={slot}
         slotIdx={slotIdx}
-        onClose={handleMenuClose}
-        onBuildTower={handleBuildTower}
-        onPerformTileAction={handlePerformTileAction}
+        onTileAction={handlePerformTileAction}
+        onClose={() => setShowTileActionMenu(false)}
+        isVisible={showTileActionMenu}
+        actionsRemaining={actionsRemaining}
+      />
+      
+      {/* Tower Selection Panel */}
+      <TowerSelectionPanel
+        isVisible={showTowerSelection}
+        onClose={handleCloseTowerSelection}
+        onSelectTower={handleSelectTower}
+        _slotIdx={slotIdx}
       />
     </g>
   );

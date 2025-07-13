@@ -68,6 +68,10 @@ export interface TowerInfoPanelProps {
   upgradeMessage: string;
   canAffordUpgrade: boolean;
   onUpgrade: (slotIdx: number) => void;
+  canRepair: boolean;
+  canAffordRepair: boolean;
+  repairMessage: string;
+  onRepair: (slotIdx: number) => void;
 }
 
 export interface SlotUnlockProps {

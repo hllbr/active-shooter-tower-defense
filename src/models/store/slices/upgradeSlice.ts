@@ -2,6 +2,7 @@ import { GAME_CONSTANTS } from '../../../utils/constants';
 import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
+import type { TowerClass } from '../../gameTypes';
 import { Logger } from '../../../utils/Logger';
 
 export interface UpgradeSlice {
@@ -16,7 +17,9 @@ export interface UpgradeSlice {
   purchaseIndividualDefenseUpgrade: (upgradeId: string, cost: number, maxLevel: number) => boolean;
   getIndividualDefenseUpgradeInfo: (upgradeId: string, maxLevel: number) => { currentLevel: number; maxLevel: number; canUpgrade: boolean; isMaxed: boolean; };
   unlockTowerType: (towerType: string) => void;
+  unlockAllTowerTypes: () => void;
   unlockSkin: (skinName: string) => void;
+  setFirstTowerInfo: (info: { towerClass: TowerClass; towerName: string; slotIndex: number }) => void;
   initializeAchievements: () => void;
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
   
@@ -199,4 +202,17 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
     const currentLevel = state.individualDefenseUpgrades[upgradeId] || 0;
     return { currentLevel, maxLevel, canUpgrade: currentLevel < maxLevel, isMaxed: currentLevel >= maxLevel };
   },
+
+  unlockAllTowerTypes: () => set((_state: Store) => {
+    const allTowerTypes = [
+      'sniper', 'gatling', 'laser', 'mortar', 'flamethrower', 'radar',
+      'supply_depot', 'shield_generator', 'repair_station', 'emp',
+      'stealth_detector', 'air_defense'
+    ];
+    return { unlockedTowerTypes: allTowerTypes };
+  }),
+
+  setFirstTowerInfo: (info) => set((_state: Store) => ({
+    firstTowerInfo: info
+  })),
 });
