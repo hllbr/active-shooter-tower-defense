@@ -640,9 +640,13 @@ export const GAME_CONSTANTS = {
     Tank: { speed: 60, hp: 200, damage: 20, color: '#94a3b8', behaviorTag: 'tank' },
     Ghost: { speed: 100, hp: 70, damage: 12, color: '#a78bfa', behaviorTag: 'ghost' },
     
+    // Enhanced Behavior Enemies (Wave 5+)
+    Fleer: { speed: 120, hp: 50, damage: 8, color: '#ff6b6b', behaviorTag: 'flee' },
+    Grouper: { speed: 70, hp: 150, damage: 18, color: '#4ecdc4', behaviorTag: 'group' },
+    Berserker: { speed: 90, hp: 180, damage: 25, color: '#ea580c', behaviorTag: 'rage' },
+    
     // Advanced Enemies (Wave 11-30)
     Assassin: { speed: 160, hp: 80, damage: 15, color: '#dc2626', behaviorTag: 'stealth' },
-    Berserker: { speed: 90, hp: 180, damage: 25, color: '#ea580c', behaviorTag: 'rage' },
     Shaman: { speed: 70, hp: 120, damage: 18, color: '#7c3aed', behaviorTag: 'healer' },
     Archer: { speed: 110, hp: 90, damage: 22, color: '#059669', behaviorTag: 'ranged' },
     

@@ -4,6 +4,7 @@ import type { Enemy, TowerSlot, Position } from '../../models/gameTypes';
 import { TargetFinder } from './TargetFinder';
 import BossManager from './BossManager';
 import { createManagedEffect } from '../effects-system/Effects';
+import { EnemyBehaviorSystem } from './EnemyBehaviorSystem';
 
 /**
  * Enhanced Movement class responsible for handling enemy movement and collision logic
@@ -29,6 +30,9 @@ export class EnemyMovement {
     if (isGameOver) {
       return;
     }
+    
+    // Update enemy behaviors first
+    EnemyBehaviorSystem.updateEnemyBehaviors();
     
     // Performance optimization: Batch process enemies
     enemies.forEach((enemy) => {
