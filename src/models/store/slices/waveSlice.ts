@@ -76,6 +76,11 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
   })),
 
   startWave: () => set((state: Store) => {
+    if (state.towers.length === 0) {
+      // Don't start the wave until the player has at least one tower
+      return {};
+    }
+
     // ✅ NEW: Start in-wave scaling tracking
     InWaveScalingManager.startWave(state.currentWave);
     

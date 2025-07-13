@@ -74,8 +74,6 @@ export class WaveSpawnManager {
     // 🎯 UPDATE: Configure spawn zones for current wave
     SpawnPositionManager.updateSpawnZonesForWave(wave);
 
-    // ✅ ENHANCED: Auto-place tower if no towers exist
-    WaveSpawnManager.autoPlaceStarterTower(towers, towerSlots, buildTower);
 
     // Start dynamic spawning system
     dynamicSpawnController.startWaveSpawning(wave);
