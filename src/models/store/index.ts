@@ -12,6 +12,7 @@ import { createMineSlice, type MineSlice } from './slices/mineSlice';
 import { createWaveSlice, type WaveSlice } from './slices/waveSlice';
 import { createEnergySlice, type EnergySlice, addEnemyKillListener, removeEnemyKillListener } from './slices/energySlice';
 import { createEconomySlice, type EconomySlice } from './slices/economySlice';
+import { createResourceSlice, type ResourceSlice } from './slices/resourceSlice';
 import { createUpgradeSlice, type UpgradeSlice } from './slices/upgradeSlice';
 import { createEnvironmentSlice, type EnvironmentSlice } from './slices/environmentSlice';
 import { createMissionSlice, type MissionSlice } from './slices/missionSlice';
@@ -24,6 +25,7 @@ export type Store = GameState &
   EnemySlice &
   TowerSlice &
   EconomySlice &
+  ResourceSlice &
   UpgradeSlice &
   EnvironmentSlice &
   MissionSlice & {
@@ -41,6 +43,7 @@ export const useGameStore = create<Store>((set, get, api) => ({
   ...createWaveSlice(set, get, api),
   ...createEnergySlice(set, get, api),
   ...createEconomySlice(set, get, api),
+  ...createResourceSlice(set, get, api),
   ...createUpgradeSlice(set, get, api),
   ...createEnvironmentSlice(set, get, api),
   ...createMissionSlice(set, get, api),

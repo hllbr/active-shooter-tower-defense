@@ -1,29 +1,37 @@
 import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
+import type { ResourceSource } from '../../gameTypes';
 import { Logger } from '../../../utils/Logger';
 
 export interface EconomySlice {
-  addGold: (amount: number) => void;
-  spendGold: (amount: number) => boolean;
-  setGold: (amount: number) => void;
+  addGold: (amount: number, source?: string) => void;
+  spendGold: (amount: number, source?: string) => boolean;
+  setGold: (amount: number, source?: string) => void;
   setEnergyBoostLevel: (level: number) => void;
   setMaxActionsLevel: (level: number) => void;
   setEliteModuleLevel: (level: number) => void;
-  purchaseTransaction: (amount: number, callback: () => void) => boolean;
+  purchaseTransaction: (amount: number, callback: () => void, source?: string) => boolean;
 }
 
 export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (set, _get, _api) => ({
-  addGold: (amount) => {
+  addGold: (amount, source = 'manual') => {
     const validation = securityManager.validateStateChange('addGold', {}, { gold: amount });
     if (!validation.valid) {
       Logger.warn('🔒 Security: addGold blocked:', validation.reason);
       return;
     }
-    set((state: Store) => ({ gold: state.gold + amount }));
+    
+    // Use the new resource system if available
+    const { addResource } = _get();
+    if (addResource) {
+      addResource(amount, source as ResourceSource, { originalAmount: amount });
+    } else {
+      set((state: Store) => ({ gold: state.gold + amount }));
+    }
   },
 
-  spendGold: (amount) => {
+  spendGold: (amount, source = 'purchase') => {
     const validation = securityManager.validateStateChange('spendGold', {}, { gold: amount });
     if (!validation.valid) {
       Logger.warn('🔒 Security: spendGold blocked:', validation.reason);
@@ -37,12 +45,17 @@ export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (se
       return false;
     }
     
-    set((state: Store) => ({
-      gold: state.gold - amount,
-      totalGoldSpent: state.totalGoldSpent + amount,
-    }));
-    
-    return true;
+    // Use the new resource system if available
+    const { spendResource } = _get();
+    if (spendResource) {
+      return spendResource(amount, source as ResourceSource, { originalAmount: amount });
+    } else {
+      set((state: Store) => ({
+        gold: state.gold - amount,
+        totalGoldSpent: state.totalGoldSpent + amount,
+      }));
+      return true;
+    }
   },
 
   setGold: (amount) => {

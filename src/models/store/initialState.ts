@@ -18,10 +18,14 @@ export const initialState: GameState = {
   enemiesRequired: GAME_CONSTANTS.getWaveEnemiesRequired(1),
   totalEnemiesKilled: 0,
   totalGoldSpent: 0,
+  totalGoldEarned: 0,
   fireUpgradesPurchased: 0,
   shieldUpgradesPurchased: 0,
   packagesPurchased: 0,
   defenseUpgradesPurchased: 0,
+  
+  // Enhanced Resource System
+  resourceTransactions: [],
   
   // CRITICAL FIX: Individual Upgrade Tracking (fixes sayaç problemi)
   individualFireUpgrades: {}, // Her fire upgrade tipi için ayrı sayaç

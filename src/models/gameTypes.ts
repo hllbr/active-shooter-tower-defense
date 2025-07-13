@@ -1,5 +1,15 @@
 import type { EnergyCooldownState } from '../game-systems/EnergyManager';
 
+export type ResourceSource = 'enemy' | 'passive' | 'structure' | 'wave' | 'bonus' | 'purchase' | 'refund' | 'achievement' | 'event' | 'alliance' | 'faction' | 'research' | 'loot' | 'boss' | 'mission' | 'challenge';
+
+export interface ResourceTransaction {
+  id: string;
+  amount: number;
+  source: ResourceSource;
+  timestamp: number;
+  metadata?: Record<string, unknown>;
+}
+
 export type Position = { x: number; y: number };
 
 export interface MineConfig {
@@ -304,10 +314,14 @@ export interface GameState {
   enemiesRequired: number;
   totalEnemiesKilled: number;
   totalGoldSpent: number;
+  totalGoldEarned: number;
   fireUpgradesPurchased: number;
   shieldUpgradesPurchased: number;
   packagesPurchased: number;
   defenseUpgradesPurchased: number;
+  
+  // Enhanced Resource System
+  resourceTransactions: ResourceTransaction[];
   
   // ✅ NEW: Environment & Terrain System for Issue #62
   terrainTiles: TerrainTile[];
