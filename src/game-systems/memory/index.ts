@@ -12,9 +12,7 @@ export { MemoryMonitor } from './MemoryMonitor';
 export { GlobalMemoryManager } from './GlobalMemoryManager';
 
 // Memory Testing System
-export { MemoryTester } from './MemoryTester';
-export { MemoryLeakTester } from './MemoryLeakTester';
-export { memoryTester, memoryLeakTester, testMemoryLeaks, startMemoryMonitoring } from './utils';
+export { globalMemoryManager, memoryMonitor, checkMemoryUsage, startMemoryMonitoring, getMemoryStats, forceCleanup } from './utils';
 export type { MemoryMetrics, MemoryTestResult, MemoryTrendAnalysis } from './types';
 
 // Import the class first, then create the instance

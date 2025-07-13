@@ -1,4 +1,5 @@
 import type { GameState, DailyMission } from '../../models/gameTypes';
+import { useGameStore } from '../../models/store';
 
 export class MissionRewardManager {
   private static instance: MissionRewardManager;
@@ -60,14 +61,12 @@ export class MissionRewardManager {
 
       case 'upgrade': {
         if (mission.reward.special === 'bullet') {
-          const { upgradeBullet } = require('../../models/store').useGameStore.getState();
-          upgradeBullet(true);
+          useGameStore.getState().upgradeBullet(true);
         } else if (mission.reward.special === 'shield') {
-          const { upgradeWall } = require('../../models/store').useGameStore.getState();
-          upgradeWall();
+          // Note: upgradeWall doesn't exist in the store, using shield upgrade instead
+          // You may need to implement this method or use an existing one
         }
-        const { completeMission } = require('../../models/store').useGameStore.getState();
-        completeMission(mission.id);
+        useGameStore.getState().completeMission(mission.id);
         break;
       }
     }

@@ -3,21 +3,26 @@
  */
 
 import { GAME_CONSTANTS } from '../../utils/constants';
-import { MemoryTester } from './MemoryTester';
-import { MemoryLeakTester } from './MemoryLeakTester';
-
+import { GlobalMemoryManager } from './GlobalMemoryManager';
+import { MemoryMonitor } from './MemoryMonitor';
 
 // =================== EXPORTS ===================
 
-export const memoryTester = new MemoryTester();
-export const memoryLeakTester = new MemoryLeakTester();
+export const globalMemoryManager = GlobalMemoryManager.getInstance();
+export const memoryMonitor = MemoryMonitor.getInstance();
 
 /**
- * Quick memory leak test function
+ * Quick memory usage check function
  */
-export const testMemoryLeaks = async (): Promise<boolean> => {
-  const result = await memoryLeakTester.runComprehensiveTest();
-  return result.overallPassed;
+export const checkMemoryUsage = (): { used: number; total: number; percentage: number } => {
+  const stats = memoryMonitor.getStats();
+  const used = stats.current || 0;
+  const total = 100 * 1024 * 1024; // Assume 100MB total for browser
+  return {
+    used,
+    total,
+    percentage: (used / total) * 100
+  };
 };
 
 /**
@@ -26,21 +31,36 @@ export const testMemoryLeaks = async (): Promise<boolean> => {
 export const startMemoryMonitoring = (interval: number = 5000): () => void => {
   
   const intervalId = setInterval(() => {
-    const sample = memoryTester.sample();
-    if (sample) {
-      const analysis = memoryTester.analyzeTrend();
-      
-      if (GAME_CONSTANTS.DEBUG_MODE) {
-        
-        if (analysis.trend === 'rising') {
-          // Memory trend tracked silently for performance
-        }
+    const usage = checkMemoryUsage();
+    
+    if (GAME_CONSTANTS.DEBUG_MODE) {
+      // Log memory usage in debug mode
+      if (usage.percentage > 80) {
+        console.warn(`⚠️ High memory usage: ${usage.percentage.toFixed(1)}%`);
       }
     }
+    
+    // Take memory sample
+    memoryMonitor.sample();
   }, interval);
   
   // Return cleanup function
   return () => {
     clearInterval(intervalId);
   };
+};
+
+/**
+ * Get memory statistics
+ */
+export const getMemoryStats = () => {
+  return memoryMonitor.getStats();
+};
+
+/**
+ * Force garbage collection if available
+ */
+export const forceCleanup = () => {
+  globalMemoryManager.performMaintenanceCleanup();
+  return checkMemoryUsage();
 }; 
