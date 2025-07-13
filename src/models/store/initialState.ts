@@ -1,4 +1,4 @@
-import type { GameState, TowerSlot } from '../gameTypes';
+import type { GameState, TowerSlot, WaveStatus } from '../gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { waveRules } from '../../config/waveRules';
 import { updateWaveTiles } from '../../game-systems/TowerPlacementManager';
@@ -52,8 +52,7 @@ export const initialState: GameState = {
   energyWarning: null,
   actionsRemaining: GAME_CONSTANTS.MAP_ACTIONS_PER_WAVE,
   prepRemaining: GAME_CONSTANTS.PREP_TIME,
-  isPreparing: false,
-  isPaused: false,
+  waveStatus: 'idle' as WaveStatus,
   waveStartTime: 0,
   lostTowerThisWave: false,
   lastUpdate: 0,

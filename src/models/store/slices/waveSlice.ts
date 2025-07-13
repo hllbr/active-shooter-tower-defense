@@ -1,8 +1,9 @@
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { updateWaveTiles } from '../../../game-systems/TowerPlacementManager';
-import { waveRules } from '../../../config/waveRules';
+import { ProceduralWaveGenerator, WavePerformanceTracker, InWaveScalingManager } from '../../../config/waveConfig';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
+import type { WaveStatus } from '../../gameTypes';
 
 export interface WaveSlice {
   nextWave: () => void;
@@ -12,13 +13,28 @@ export interface WaveSlice {
   resumePreparation: () => void;
   speedUpPreparation: (amount: number) => void;
   startWave: () => void;
+  completeWave: () => void;
 }
 
 export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _get, _api) => ({
   nextWave: () => set((state: Store) => {
     const newWave = state.currentWave + 1;
+    const playerPerformance = WavePerformanceTracker.getPlayerPerformance();
+    
+    // ✅ NEW: Generate dynamic wave configuration
+    const waveConfig = ProceduralWaveGenerator.generateWaveConfig(newWave, playerPerformance);
     const newEnemiesRequired = GAME_CONSTANTS.getWaveEnemiesRequired(newWave);
     const waveIncome = Math.floor(50 + (state.currentWave * 10));
+    
+    // ✅ NEW: Calculate adaptive preparation time
+    const prepTime = Math.max(
+      waveConfig.adaptiveTiming.minPrepTime,
+      Math.min(
+        waveConfig.adaptiveTiming.maxPrepTime,
+        waveConfig.adaptiveTiming.basePrepTime * waveConfig.adaptiveTiming.performanceMultiplier
+      )
+    );
+    
     return {
       currentWave: newWave,
       enemiesKilled: 0,
@@ -26,29 +42,33 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
       gold: state.gold + waveIncome,
       lostTowerThisWave: false,
       waveStartTime: performance.now(),
-      currentWaveModifier: waveRules[newWave] || null,
+      currentWaveModifier: waveConfig.modifier || undefined,
       towerSlots: updateWaveTiles(newWave, state.towerSlots),
+      waveStatus: 'idle' as WaveStatus,
+      prepRemaining: prepTime,
     };
   }),
 
   startPreparation: () => set(() => ({
-    isPreparing: true,
-    isPaused: false,
+    waveStatus: 'in_progress' as WaveStatus,
     prepRemaining: GAME_CONSTANTS.PREP_TIME,
   })),
 
   tickPreparation: (delta) => set((state: Store) => {
-    if (!state.isPreparing || state.isPaused) return {};
+    if (state.waveStatus !== 'in_progress') return {};
     const newRemaining = Math.max(0, state.prepRemaining - delta);
-    return { prepRemaining: newRemaining, isPreparing: newRemaining > 0 };
+    return { 
+      prepRemaining: newRemaining, 
+      waveStatus: newRemaining > 0 ? 'in_progress' : 'completed' as WaveStatus 
+    };
   }),
 
   pausePreparation: () => set((state: Store) =>
-    state.isPreparing ? { isPaused: true } : {}
+    state.waveStatus === 'in_progress' ? { waveStatus: 'idle' as WaveStatus } : {}
   ),
 
   resumePreparation: () => set((state: Store) =>
-    state.isPreparing ? { isPaused: false } : {}
+    state.waveStatus === 'idle' ? { waveStatus: 'in_progress' as WaveStatus } : {}
   ),
 
   speedUpPreparation: (amount) => set((state: Store) => ({
@@ -56,6 +76,9 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
   })),
 
   startWave: () => set((state: Store) => {
+    // ✅ NEW: Start in-wave scaling tracking
+    InWaveScalingManager.startWave(state.currentWave);
+    
     setTimeout(() => {
       import('../../../game-systems/EnemySpawner').then(({ startEnemyWave }) => {
         startEnemyWave(state.currentWave);
@@ -64,13 +87,25 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
         weatherEffectMarket.autoActivateEffects(state.currentWave);
       });
     }, 100);
+    
     return {
-      isPreparing: false,
-      isPaused: false,
-      isStarted: true,
+      waveStatus: 'in_progress' as WaveStatus,
       waveStartTime: performance.now(),
       lostTowerThisWave: false,
       prepRemaining: GAME_CONSTANTS.PREP_TIME,
+    };
+  }),
+
+  completeWave: () => set((state: Store) => {
+    // ✅ NEW: Record wave completion for performance tracking
+    const completionTime = performance.now() - state.waveStartTime;
+    WavePerformanceTracker.recordWaveCompletion(state.currentWave, completionTime);
+    
+    // ✅ NEW: Reset in-wave scaling
+    InWaveScalingManager.reset();
+    
+    return {
+      waveStatus: 'completed' as WaveStatus,
     };
   }),
 });

@@ -13,7 +13,7 @@ export const useTowerDrag = () => {
     towerSlots,
     isStarted,
     isRefreshing,
-    isPreparing,
+    waveStatus,
     energy,
     moveTower
   } = useGameStore();
@@ -47,7 +47,7 @@ export const useTowerDrag = () => {
   // Enhanced drag start with UX features
   const handleTowerDragStart = useCallback((slotIdx: number, event: React.MouseEvent | React.TouchEvent) => {
     const slot = towerSlots[slotIdx];
-    if (!slot.tower || !isStarted || isRefreshing || isPreparing) return;
+    if (!slot.tower || !isStarted || isRefreshing || waveStatus === 'idle') return;
     
     const now = performance.now();
     
@@ -134,7 +134,7 @@ export const useTowerDrag = () => {
     // Update drop zone animations
     updateDropZoneAnimations('highlight');
 
-  }, [towerSlots, isStarted, isRefreshing, isPreparing, energy, analyzeDropZones, showFeedback, updateDropZoneAnimations]);
+  }, [towerSlots, isStarted, isRefreshing, waveStatus, energy, analyzeDropZones, showFeedback, updateDropZoneAnimations]);
 
   // Handle hover changes
   const handleHoverChange = useCallback((hoveredSlot: number | null) => {

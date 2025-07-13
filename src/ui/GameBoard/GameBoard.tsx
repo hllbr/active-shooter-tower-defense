@@ -61,8 +61,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
     currentWave,
     isStarted,
     isRefreshing,
-    isPreparing,
-    isPaused,
+    waveStatus,
     prepRemaining,
     startWave,
     tickPreparation,
@@ -175,8 +174,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
   // Game timers management
   useGameTimers(
     isStarted,
-    isPreparing,
-    isPaused,
+    waveStatus,
     prepRemaining,
     startWave,
     tickPreparation,
@@ -185,7 +183,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
   );
 
   // Game loop management
-  useGameLoop(isStarted, isRefreshing, isPreparing, currentWave, environmentManagerRef.current);
+  useGameLoop(isStarted, isRefreshing, waveStatus, currentWave, environmentManagerRef.current);
 
   // Initialize game systems
   React.useEffect(() => {

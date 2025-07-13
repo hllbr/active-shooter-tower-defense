@@ -269,6 +269,9 @@ export interface WaveModifier {
   disableArea?: { x: number; y: number; radius: number };
 }
 
+// ✅ NEW: Wave Status Enum to replace multiple boolean flags
+export type WaveStatus = 'idle' | 'in_progress' | 'completed';
+
 export interface EnemyType {
   speed: number;
   hp: number;
@@ -343,8 +346,8 @@ export interface GameState {
   energyCooldownState?: EnergyCooldownState;
   actionsRemaining: number;
   prepRemaining: number;
-  isPreparing: boolean;
-  isPaused: boolean;
+  /** Wave status to replace multiple boolean flags */
+  waveStatus: WaveStatus;
   /** Timestamp when the current wave began */
   waveStartTime: number;
   /** Whether a tower was destroyed this wave */
