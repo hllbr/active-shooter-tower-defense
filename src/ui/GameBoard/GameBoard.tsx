@@ -23,6 +23,7 @@ import {
   GameArea
 } from './components';
 import { SpawnZoneDebugOverlay } from './components/overlays/SpawnZoneDebugOverlay';
+import { SynergyDisplay } from '../TowerSpot/components/SynergyDisplay';
 
 import { WeatherEffectsIndicator } from './components/overlays/WeatherEffectsIndicator';
 
@@ -242,6 +243,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
       
       {/* Debug overlays */}
       <SpawnZoneDebugOverlay />
+
+      {/* Synergy Display */}
+      <SynergyDisplay 
+        towerSlots={towerSlots}
+        isVisible={isStarted && !isRefreshing}
+      />
 
       {/* Lazy loaded UpgradeScreen with Suspense */}
       {isRefreshing && (

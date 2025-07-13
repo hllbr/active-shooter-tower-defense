@@ -26,4 +26,5 @@ export { LockBreakAnimation } from './LockBreakAnimation';
 export { ParticleSystem } from './ParticleSystem';
 export { SlotRevealCelebration } from './SlotRevealCelebration';
 export { UnlockButton } from './UnlockButton';
-export { RecentlyUnlockedGlow } from './RecentlyUnlockedGlow'; 
+export { RecentlyUnlockedGlow } from './RecentlyUnlockedGlow';
+export { SynergyDisplay } from './SynergyDisplay'; 
