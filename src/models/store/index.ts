@@ -32,10 +32,10 @@ export type Store = GameState &
     setRefreshing: (refreshing: boolean) => void;
   };
 
-export const useGameStore = create<Store>((set, get, api): Store => ({
+export const useGameStore = create<Store>((set, get, api) => ({
   ...initialState,
-  ...createTowerSlice(set, get, api),
   ...createEnemySlice(set, get, api),
+  ...createTowerSlice(set, get, api),
   ...createDiceSlice(set, get, api),
   ...createMineSlice(set, get, api),
   ...createWaveSlice(set, get, api),
@@ -45,17 +45,17 @@ export const useGameStore = create<Store>((set, get, api): Store => ({
   ...createEnvironmentSlice(set, get, api),
   ...createMissionSlice(set, get, api),
 
-  resetGame: () => set(() => ({ ...initialState, gameStartTime: Date.now() })),
+  resetGame: () => {
+    set(initialState);
+    energyManager.reset();
+  },
 
-  setStarted: (started) => set(() => ({ isStarted: started })),
-
-  setRefreshing: (refreshing) => set(() => ({
-    isRefreshing: refreshing,
-    isPreparing: false,
-    isPaused: false,
-  })),
+  setStarted: (started: boolean) => set({ isStarted: started }),
+  setRefreshing: (refreshing: boolean) => set({ isRefreshing: refreshing }),
 }));
 
+
+// Performance-optimized energy manager initialization
 try {
   const initialEnergy = initialState.energy || GAME_CONSTANTS.BASE_ENERGY || 100;
   const maxEnergy = initialState.maxEnergy || GAME_CONSTANTS.ENERGY_SYSTEM?.MAX_ENERGY_BASE || 100;
@@ -72,17 +72,35 @@ try {
     maxEnergy
   );
 
+  // Set up cooldown state listener for performance optimization
+  energyManager.onCooldownChange((cooldownState) => {
+    // Only update if the cooldown state actually changed
+    const currentState = useGameStore.getState();
+    if (currentState.energyCooldownState?.isActive !== cooldownState.isActive ||
+        currentState.energyCooldownState?.remainingTime !== cooldownState.remainingTime) {
+      useGameStore.setState({ energyCooldownState: cooldownState });
+    }
+  });
+
 } catch (error) {
   Logger.error('❌ Energy Manager initialization failed:', error);
   energyManager.reset();
 }
 
+// Performance-optimized wave completion handler
 waveManager.on('complete', () => {
   const { lostTowerThisWave, waveStartTime } = useGameStore.getState();
   let bonus = GAME_CONSTANTS.ENERGY_REGEN_WAVE;
+  
   if (!lostTowerThisWave) bonus += 5;
   if (performance.now() - waveStartTime < 60000) bonus += 5;
+  
   energyManager.add(bonus, 'waveComplete');
 });
+
+// Performance optimization: Cleanup old energy history periodically
+setInterval(() => {
+  energyManager.cleanup();
+}, 30000); // Clean up every 30 seconds
 
 export { addEnemyKillListener, removeEnemyKillListener };

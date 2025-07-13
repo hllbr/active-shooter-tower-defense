@@ -1,3 +1,5 @@
+import type { EnergyCooldownState } from '../game-systems/EnergyManager';
+
 export type Position = { x: number; y: number };
 
 export interface MineConfig {
@@ -338,6 +340,7 @@ export interface GameState {
   towerUpgradeListeners: TowerUpgradeListener[];
   energy: number;
   energyWarning?: string | null;
+  energyCooldownState?: EnergyCooldownState;
   actionsRemaining: number;
   prepRemaining: number;
   isPreparing: boolean;
