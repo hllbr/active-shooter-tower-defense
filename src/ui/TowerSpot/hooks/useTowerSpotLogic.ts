@@ -115,10 +115,30 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   };
 
   const handleSelectTower = (towerClass: TowerClass) => {
+    const towerCost = GAME_CONSTANTS.SPECIALIZED_TOWERS[towerClass]?.cost ?? GAME_CONSTANTS.TOWER_COST;
+    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower;
+
+    if (gold < towerCost) {
+      toast.warning('Yetersiz altın!');
+      playSound('error');
+      return;
+    }
+    if (energy < energyCost) {
+      toast.warning('Yetersiz enerji!');
+      playSound('error');
+      return;
+    }
+
     buildTower(slotIdx, false, 'attack', towerClass);
-    playSound('tower-create-sound');
-    toast.success('Kule inşa edildi!');
-    incrementChallenge('build');
+    const newSlot = useGameStore.getState().towerSlots[slotIdx];
+    if (newSlot.tower && newSlot.tower.towerClass === towerClass) {
+      playSound('tower-create-sound');
+      toast.success('Kule inşa edildi!');
+      incrementChallenge('build');
+    } else {
+      toast.error('Kule inşa edilemedi!');
+      playSound('error');
+    }
     setShowTowerSelection(false);
   };
 
