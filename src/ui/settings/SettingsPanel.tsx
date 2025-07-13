@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { performanceSettings } from '../../utils/settings/PerformanceSettings';
 import { PerformanceModeSelector } from './PerformanceModeSelector';
 import { getSettings, saveSettings } from '../../utils/settings';
-import { updateAllSoundVolumes } from '../../utils/sound';
+import { enhancedAudioManager } from '../../utils/sound/EnhancedAudioManager';
 import './SettingsPanel.css';
 
 interface SettingsPanelProps {
@@ -16,29 +16,36 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
 
   const currentPerformanceMode = performanceSettings.getMode();
 
-  if (!isOpen) {
-    return null;
-  }
-
-  const handleVolumeChange = (type: 'sfxVolume' | 'musicVolume', value: number) => {
+  const handleVolumeChange = useCallback((type: 'sfxVolume' | 'musicVolume', value: number) => {
     const newSettings = { ...settings, [type]: value };
     setSettingsState(newSettings);
-    saveSettings(newSettings);
-    updateAllSoundVolumes();
-  };
+    
+    // Use enhanced audio manager for smooth transitions
+    if (type === 'sfxVolume') {
+      enhancedAudioManager.updateSFXVolume(value);
+    } else {
+      enhancedAudioManager.updateMusicVolume(value);
+    }
+  }, [settings]);
 
-  const handleMuteToggle = () => {
-    const newSettings = { ...settings, mute: !settings.mute };
+  const handleMuteToggle = useCallback(() => {
+    const newMuteState = !settings.mute;
+    const newSettings = { ...settings, mute: newMuteState };
     setSettingsState(newSettings);
-    saveSettings(newSettings);
-    updateAllSoundVolumes();
-  };
+    
+    // Use enhanced audio manager for immediate mute toggle
+    enhancedAudioManager.toggleMute();
+  }, [settings]);
 
-  const testDiceSound = () => {
+  const testDiceSound = useCallback(() => {
     import('../../utils/sound').then(({ playSoundForTest }) => {
       playSoundForTest('dice-roll'); // Cooldown bypass ile test
     });
-  };
+  }, []);
+
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <>
@@ -185,7 +192,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
                   setSettingsState(defaultSettings);
                   saveSettings(defaultSettings);
                   performanceSettings.setMode('normal');
-                  updateAllSoundVolumes();
+                  
+                  // Use enhanced audio manager for smooth reset
+                  enhancedAudioManager.updateSFXVolume(defaultSettings.sfxVolume);
+                  enhancedAudioManager.updateMusicVolume(defaultSettings.musicVolume);
                 }
               }}
             >
@@ -202,8 +212,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
         </div>
       </div>
 
+      {/* Performance Mode Selector Modal */}
       {showPerformanceSelector && (
-        <PerformanceModeSelector 
+        <PerformanceModeSelector
           onClose={() => setShowPerformanceSelector(false)}
         />
       )}

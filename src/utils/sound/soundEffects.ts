@@ -1,7 +1,7 @@
 import { musicManager } from './musicManager';
 import { getSettings } from '../settings';
-import { GAME_CONSTANTS } from '../constants';
 import { useGameStore } from '../../models/store';
+import { enhancedAudioManager } from './EnhancedAudioManager';
 
 
 export const audioCache: Record<string, HTMLAudioElement> = {};
@@ -141,7 +141,9 @@ const SOUND_CATEGORIES = {
   ]
 } as const;
 
-const isGameSceneSound = (sound: string) => SOUND_CATEGORIES.GAME_SCENE.includes(sound);
+const isGameSceneSound = (sound: string): boolean => {
+  return (SOUND_CATEGORIES.GAME_SCENE as readonly string[]).includes(sound);
+};
 
 /**
  * Ses için cooldown kontrolü yapar
@@ -163,15 +165,10 @@ function recordSoundPlayed(soundName: string): void {
 
 // Volume ayarlarını gerçek zamanlı güncellemek için
 export function updateAllSoundVolumes(): void {
+  // Use enhanced audio manager for smooth transitions
   const settings = getSettings();
-  const targetVolume = settings.mute ? 0 : settings.sfxVolume;
-  
-  // Cache'deki tüm ses dosyalarının volume'unu güncelle
-  soundCache.forEach(audio => {
-    if (audio) {
-      audio.volume = targetVolume;
-    }
-  });
+  enhancedAudioManager.updateSFXVolume(settings.sfxVolume);
+  enhancedAudioManager.updateMusicVolume(settings.musicVolume);
 }
 
 // Test fonksiyonu - volume ayarlarının çalışıp çalışmadığını kontrol et
@@ -190,9 +187,6 @@ export function playSound(sound: string): void {
 
   // 🔊 COOLDOWN CHECK: Ses çok sık çalınıyorsa engelle
   if (!canPlaySound(sound)) {
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-      console.log(`🔇 Sound "${sound}" blocked due to cooldown`);
-    }
     return;
   }
   
@@ -201,11 +195,11 @@ export function playSound(sound: string): void {
     if (!audio) {
       audio = new Audio(`/assets/sounds/${sound}.wav`);
       soundCache.set(sound, audio);
+      // Register with enhanced audio manager
+      enhancedAudioManager.addAudioElement(sound, audio);
     }
     
-    // Her ses çalınırken güncel ayarları al
-    const settings = getSettings();
-    audio.volume = settings.mute ? 0 : settings.sfxVolume;
+    // Volume is now managed by enhanced audio manager
     audio.currentTime = 0;
     
     const playPromise = audio.play();
@@ -213,14 +207,8 @@ export function playSound(sound: string): void {
       playPromise.then(() => {
         // Ses başarıyla çalındığında cooldown kaydet
         recordSoundPlayed(sound);
-        if (GAME_CONSTANTS.DEBUG_MODE) {
-          console.log(`🔊 Sound "${sound}" played successfully`);
-        }
       }).catch(() => {
         missingSounds.add(sound);
-        if (GAME_CONSTANTS.DEBUG_MODE) {
-          console.log(`❌ Sound "${sound}" failed to play`);
-        }
       });
     }
   } catch {
@@ -240,25 +228,19 @@ export function playSoundForTest(sound: string): void {
     if (!audio) {
       audio = new Audio(`/assets/sounds/${sound}.wav`);
       soundCache.set(sound, audio);
+      // Register with enhanced audio manager
+      enhancedAudioManager.addAudioElement(sound, audio);
     }
     
-    // Her ses çalınırken güncel ayarları al
-    const settings = getSettings();
-    audio.volume = settings.mute ? 0 : settings.sfxVolume;
+    // Volume is now managed by enhanced audio manager
     audio.currentTime = 0;
     
     const playPromise = audio.play();
     if (playPromise) {
       playPromise.then(() => {
         // Test modu için cooldown kaydetme
-        if (GAME_CONSTANTS.DEBUG_MODE) {
-          console.log(`🔊 Test sound "${sound}" played successfully (cooldown bypassed)`);
-        }
       }).catch(() => {
         missingSounds.add(sound);
-        if (GAME_CONSTANTS.DEBUG_MODE) {
-          console.log(`❌ Test sound "${sound}" failed to play`);
-        }
       });
     }
   } catch {
@@ -315,10 +297,6 @@ export function pauseGameSceneSounds(): void {
   
   // Stop background music (this is game scene)
   musicManager.stop();
-  
-  if (GAME_CONSTANTS.DEBUG_MODE) {
-    // Debug logging for game scene sound pausing can be added here
-  }
 }
 
 /**
@@ -331,35 +309,9 @@ export function resumeGameSceneSounds(): void {
       startBackgroundMusic();
     }, 500); // Small delay to prevent audio overlap
   });
-  
-  if (GAME_CONSTANTS.DEBUG_MODE) {
-    // Debug logging for game scene sound resuming can be added here
-  }
 }
 
-/**
- * 🔊 COOLDOWN SYSTEM: Debug function to check sound cooldowns
- */
-export function debugSoundCooldowns(): void {
-  console.log('🔊 Active Sound Cooldowns:');
-  const now = Date.now();
-  
-  soundLastPlayed.forEach((lastPlayed, soundName) => {
-    const cooldownDuration = SOUND_COOLDOWN_DURATIONS[soundName] || SOUND_COOLDOWN_DURATIONS.default;
-    const timeSinceLastPlayed = now - lastPlayed;
-    const canPlay = timeSinceLastPlayed >= cooldownDuration;
-    
-    console.log(`  ${soundName}: ${canPlay ? '✅ Ready' : '⏳ Cooldown'} (${timeSinceLastPlayed}ms/${cooldownDuration}ms)`);
-  });
-}
 
-/**
- * 🔊 COOLDOWN SYSTEM: Reset all cooldowns (for testing)
- */
-export function resetSoundCooldowns(): void {
-  soundLastPlayed.clear();
-  console.log('🔊 All sound cooldowns reset');
-}
 
 export function getMissingSounds(): string[] {
   return Array.from(missingSounds);
@@ -375,26 +327,4 @@ export function validateSounds(): { available: string[]; missing: string[] } {
   return { available, missing };
 }
 
-/**
- * 🔍 DEBUG: Show sound categories for testing
- */
-export function debugSoundCategories(): void {
-  console.log('🔊 Sound Categories:');
-  console.log('  GAME_SCENE:', SOUND_CATEGORIES.GAME_SCENE);
-  console.log('  UI_MARKET:', SOUND_CATEGORIES.UI_MARKET);
-  console.log('🔊 Sound Cooldown Durations:');
-  console.log(SOUND_COOLDOWN_DURATIONS);
-}
 
-// Add debug functions to window for console access
-if (typeof window !== 'undefined') {
-  const win = window as Window & { 
-    debugSoundCategories?: () => void;
-    debugSoundCooldowns?: () => void;
-    resetSoundCooldowns?: () => void;
-  };
-  
-  win.debugSoundCategories = debugSoundCategories;
-  win.debugSoundCooldowns = debugSoundCooldowns;
-  win.resetSoundCooldowns = resetSoundCooldowns;
-}
