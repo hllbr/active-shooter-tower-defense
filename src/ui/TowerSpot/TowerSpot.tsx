@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import type { TowerSpotProps } from './types';
 import { useTowerSpotLogic } from './hooks/useTowerSpotLogic';
@@ -109,6 +110,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
 
 
   return (
+    <>
     <g>
       {/* --- YENİ: Toz bulutu efekti --- */}
       {showDust && (
@@ -291,22 +293,20 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
         actionsRemaining={actionsRemaining}
       />
       
-      {/* Tower Selection Panel */}
-      <foreignObject
-        x={0}
-        y={0}
-        width="100%"
-        height="100%"
-        style={{ pointerEvents: 'auto' }}
-      >
+      
+      {/* Tower Selection Panel is rendered via portal */}
+    </g>
+    {showTowerSelection &&
+      createPortal(
         <TowerSelectionPanel
           isVisible={showTowerSelection}
           onClose={handleCloseTowerSelection}
           onSelectTower={handleSelectTower}
           _slotIdx={slotIdx}
-        />
-      </foreignObject>
-    </g>
+        />,
+        document.body
+      )}
+    </>
   );
 };
 
