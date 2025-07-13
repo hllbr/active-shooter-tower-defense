@@ -12,7 +12,7 @@ export const initialState: GameState = {
   enemies: [],
   bullets: [],
   effects: [],
-  gold: 100,
+  gold: 200,
   bulletLevel: 1,
   currentWave: 1,
   enemiesKilled: 0,
