@@ -57,6 +57,19 @@ export class MissionRewardManager {
         }
         break;
       }
+
+      case 'upgrade': {
+        if (mission.reward.special === 'bullet') {
+          const { upgradeBullet } = require('../../models/store').useGameStore.getState();
+          upgradeBullet(true);
+        } else if (mission.reward.special === 'shield') {
+          const { upgradeWall } = require('../../models/store').useGameStore.getState();
+          upgradeWall();
+        }
+        const { completeMission } = require('../../models/store').useGameStore.getState();
+        completeMission(mission.id);
+        break;
+      }
     }
 
     return updates;

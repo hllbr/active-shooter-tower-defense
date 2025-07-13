@@ -413,6 +413,7 @@ export interface GameState {
   // Daily Missions System
   dailyMissions: DailyMission[];
   lastMissionRefresh: number;
+  completedMissions: string[];
   unlockedTowerTypes: string[];
 }
 
@@ -553,7 +554,7 @@ export interface MissionObjective {
 }
 
 export interface MissionReward {
-  type: 'gold' | 'energy' | 'actions' | 'experience' | 'unlock';
+  type: 'gold' | 'energy' | 'actions' | 'experience' | 'unlock' | 'upgrade';
   amount: number;
   description: string;
   special?: string; // Special rewards like unlocks

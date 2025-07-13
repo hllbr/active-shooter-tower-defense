@@ -42,15 +42,6 @@ export const WeatherMarketContent: React.FC = () => {
     }
   };
 
-  const handleActivateEffect = (cardId: string) => {
-    const success = weatherEffectMarket.activateEffect(cardId);
-    if (success) {
-      setActiveEffects(weatherEffectMarket.getActiveEffects());
-      playSound('energy-recharge');
-    } else {
-      playSound('error');
-    }
-  };
 
   const formatTime = (ms: number): string => {
     const seconds = Math.floor(ms / 1000);
@@ -165,7 +156,6 @@ export const WeatherMarketContent: React.FC = () => {
                 key={card.id}
                 card={card}
                 gold={gold}
-                onActivate={() => handleActivateEffect(card.id)}
                 mode="activate"
                 isActive={activeEffects.some(effect => effect.card.id === card.id)}
               />
@@ -189,7 +179,6 @@ interface WeatherEffectCardProps {
   card: WeatherEffectCard;
   gold: number;
   onPurchase?: () => void;
-  onActivate?: () => void;
   mode: 'purchase' | 'activate';
   isActive?: boolean;
 }
@@ -198,7 +187,6 @@ const WeatherEffectCard: React.FC<WeatherEffectCardProps> = ({
   card,
   gold,
   onPurchase,
-  onActivate,
   mode,
   isActive = false
 }) => {
@@ -285,28 +273,42 @@ const WeatherEffectCard: React.FC<WeatherEffectCardProps> = ({
         </div>
       </div>
 
-      {/* Action Button */}
-      <button
-        onClick={mode === 'purchase' ? onPurchase : onActivate}
-        disabled={!isAvailable}
-        style={{
-          width: '100%',
-          padding: '10px',
-          backgroundColor: isAvailable ? (mode === 'purchase' ? '#10B981' : '#3B82F6') : '#4A5568',
-          color: '#FFF',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: isAvailable ? 'pointer' : 'not-allowed',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          transition: 'background-color 0.2s'
-        }}
-      >
-        {mode === 'purchase' 
-          ? (canAfford ? '💰 Satın Al' : '💸 Yetersiz Altın')
-          : (isActive ? '⏳ Aktif' : '⚡ Aktifleştir')
-        }
-      </button>
+      {/* Action Button or Info */}
+      {mode === 'purchase' ? (
+        <button
+          onClick={onPurchase}
+          disabled={!isAvailable}
+          style={{
+            width: '100%',
+            padding: '10px',
+            backgroundColor: isAvailable ? '#10B981' : '#4A5568',
+            color: '#FFF',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: isAvailable ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          {canAfford ? '💰 Satın Al' : '💸 Yetersiz Altın'}
+        </button>
+      ) : (
+        <div
+          style={{
+            width: '100%',
+            padding: '10px',
+            backgroundColor: '#4A5568',
+            color: '#FFF',
+            borderRadius: '6px',
+            textAlign: 'center',
+            fontSize: '13px',
+            fontWeight: 'bold'
+          }}
+        >
+          {isActive ? '✅ Bu dalgada aktif' : '🌊 Dalga başlayınca otomatik etkinleşir'}
+        </div>
+      )}
     </div>
   );
 }; 
