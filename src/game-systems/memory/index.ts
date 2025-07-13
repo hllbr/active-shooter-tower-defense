@@ -11,6 +11,13 @@ export { LifecycleManager } from './LifecycleManager';
 export { MemoryMonitor } from './MemoryMonitor';
 export { GlobalMemoryManager } from './GlobalMemoryManager';
 
+// Advanced Object Pooling System
+export { AdvancedObjectPool } from './AdvancedObjectPool';
+export { AdvancedBulletPool, advancedBulletPool } from './AdvancedBulletPool';
+export { AdvancedEffectPool, advancedEffectPool } from './AdvancedEffectPool';
+export { AdvancedEnemyPool, advancedEnemyPool } from './AdvancedEnemyPool';
+export { AdvancedPoolManager, advancedPoolManager } from './AdvancedPoolManager';
+
 // Memory Testing System
 export { globalMemoryManager, memoryMonitor, checkMemoryUsage, startMemoryMonitoring, getMemoryStats, forceCleanup } from './utils';
 export type { MemoryMetrics, MemoryTestResult, MemoryTrendAnalysis } from './types';

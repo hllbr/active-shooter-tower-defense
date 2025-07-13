@@ -128,7 +128,7 @@ export class EnhancedEnemySpawner {
    * Creates enemy with in-wave scaling applied
    */
   private static createScaledEnemy(wave: number, enemyType: string, scalingFactors: { speedMultiplier: number; healthMultiplier: number; spawnRateMultiplier: number }): Enemy {
-    const baseEnemy = EnemyFactory.createEnemy(wave, enemyType as string);
+    const baseEnemy = EnemyFactory.createEnemy(wave, enemyType as keyof typeof GAME_CONSTANTS.ENEMY_TYPES);
     
     // ✅ NEW: Apply in-wave scaling
     return {
