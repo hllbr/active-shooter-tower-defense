@@ -34,11 +34,22 @@ export const GAME_CONSTANTS = {
   TOWER_HEALTH: 100,
   TOWER_COST: 50,
   TOWER_UPGRADE_COST: 60,
+  TOWER_REPAIR_BASE_COST: 30,
   TOWER_MAX_LEVEL: 25,
   RELOCATE_COOLDOWN: 5000,
   BUILD_TILE_DISTANCE: 120,
   DISMANTLE_REFUND: 0.5,
   MAP_ACTIONS_PER_WAVE: 3,
+  
+  // ✅ NEW: Fire Hazard System
+  FIRE_HAZARD: {
+    PROBABILITY_PER_WAVE: 0.15, // 15% chance per wave
+    TIME_LIMIT: 7000, // 7 seconds to extinguish
+    CHECK_INTERVAL: 2000, // Check every 2 waves
+    ALARM_SOUND: 'alarm',
+    EXTINGUISH_SOUND: 'success',
+    DESTROY_SOUND: 'explosion-large',
+  },
   
   // Gelişmiş Action Sistemi
   ACTION_SYSTEM: {
@@ -640,9 +651,13 @@ export const GAME_CONSTANTS = {
     Tank: { speed: 60, hp: 200, damage: 20, color: '#94a3b8', behaviorTag: 'tank' },
     Ghost: { speed: 100, hp: 70, damage: 12, color: '#a78bfa', behaviorTag: 'ghost' },
     
+    // Enhanced Behavior Enemies (Wave 5+)
+    Fleer: { speed: 120, hp: 50, damage: 8, color: '#ff6b6b', behaviorTag: 'flee' },
+    Grouper: { speed: 70, hp: 150, damage: 18, color: '#4ecdc4', behaviorTag: 'group' },
+    Berserker: { speed: 90, hp: 180, damage: 25, color: '#ea580c', behaviorTag: 'rage' },
+    
     // Advanced Enemies (Wave 11-30)
     Assassin: { speed: 160, hp: 80, damage: 15, color: '#dc2626', behaviorTag: 'stealth' },
-    Berserker: { speed: 90, hp: 180, damage: 25, color: '#ea580c', behaviorTag: 'rage' },
     Shaman: { speed: 70, hp: 120, damage: 18, color: '#7c3aed', behaviorTag: 'healer' },
     Archer: { speed: 110, hp: 90, damage: 22, color: '#059669', behaviorTag: 'ranged' },
     

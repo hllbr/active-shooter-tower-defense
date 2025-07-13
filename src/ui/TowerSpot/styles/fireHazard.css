@@ -1,0 +1,200 @@
+/* Fire Hazard Animation Styles */
+
+/* Fire Animation */
+.fire-hazard-animation {
+  pointer-events: none;
+}
+
+/* Fire Base Animation */
+.fire-base {
+  animation: fireFlicker 0.8s ease-in-out infinite alternate;
+}
+
+/* Fire Flames Animation */
+.fire-flame-1 {
+  animation: fireFlicker 0.6s ease-in-out infinite alternate;
+}
+
+.fire-flame-2 {
+  animation: fireFlicker 0.7s ease-in-out infinite alternate;
+  animation-delay: 0.2s;
+}
+
+.fire-flame-3 {
+  animation: fireFlicker 0.5s ease-in-out infinite alternate;
+  animation-delay: 0.4s;
+}
+
+/* Smoke Particles Animation */
+.smoke-particle-1 {
+  animation: smokeRise 3s ease-out infinite;
+}
+
+.smoke-particle-2 {
+  animation: smokeRise 2.5s ease-out infinite;
+  animation-delay: 0.5s;
+}
+
+.smoke-particle-3 {
+  animation: smokeRise 2s ease-out infinite;
+  animation-delay: 1s;
+}
+
+/* Time Bar Animation */
+.time-bar {
+  transition: width 0.1s ease-out;
+}
+
+/* Extinguisher Button Styles */
+.extinguisher-button {
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.extinguisher-button:hover .extinguisher-hover {
+  opacity: 0.3;
+  animation: extinguisherPulse 0.5s ease-in-out infinite alternate;
+}
+
+.extinguisher-button:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.extinguisher-button:active {
+  transform: scale(0.95);
+}
+
+/* Extinguishing State */
+.extinguisher-button.extinguishing {
+  animation: extinguishingEffect 1s ease-out;
+}
+
+/* Fire Warning Animation */
+.fire-warning {
+  animation: criticalWarning 0.5s ease-in-out infinite alternate;
+}
+
+/* Keyframe Animations */
+@keyframes fireFlicker {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes smokeRise {
+  0% {
+    opacity: 0.6;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translateY(-10px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(1.5);
+  }
+}
+
+@keyframes extinguisherPulse {
+  0% {
+    opacity: 0.3;
+    stroke-width: 1;
+  }
+  100% {
+    opacity: 0.6;
+    stroke-width: 2;
+  }
+}
+
+@keyframes extinguishingEffect {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes criticalWarning {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Performance Optimizations */
+.fire-hazard-animation * {
+  will-change: transform, opacity;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .fire-base,
+  .fire-flame-1,
+  .fire-flame-2,
+  .fire-flame-3 {
+    animation: none;
+  }
+  
+  .smoke-particle-1,
+  .smoke-particle-2,
+  .smoke-particle-3 {
+    animation: none;
+  }
+  
+  .extinguisher-button:hover {
+    transform: none;
+  }
+  
+  .fire-warning {
+    animation: none;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .fire-base {
+    fill: #ff0000;
+  }
+  
+  .fire-flame-1 {
+    fill: #ff6600;
+  }
+  
+  .fire-flame-2 {
+    fill: #ff8800;
+  }
+  
+  .fire-flame-3 {
+    fill: #ffaa00;
+  }
+  
+  .extinguisher-button circle {
+    stroke-width: 3;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .extinguisher-button {
+    transform: scale(0.9);
+  }
+  
+  .extinguisher-button:hover {
+    transform: scale(1);
+  }
+} 

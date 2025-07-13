@@ -94,7 +94,7 @@ export class BossManager {
       shieldStrength: bossDefinition.specialMechanics.hasShield ? scaledHealth * 0.3 : 0,
       shieldRegenRate: bossDefinition.specialMechanics.hasShield ? 10 : 0,
       rageMode: false,
-      fleeThreshold: bossDefinition.specialMechanics.canFlee ? 0.1 : 0,
+      fleeThreshold: bossDefinition.specialMechanics.canFlee ? 0.15 : 0, // Increased flee threshold
       isFleeing: false,
     };
 

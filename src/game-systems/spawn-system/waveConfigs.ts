@@ -21,9 +21,11 @@ export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
     spawnRateAcceleration: 0.95,
     maxEnemiesPerWave: 12,
     enemyComposition: [
-      { type: 'Basic', weight: 50, minWave: 1, maxConcurrent: -1 },
-      { type: 'Scout', weight: 30, minWave: 1, maxConcurrent: 4 },
-      { type: 'Tank', weight: 20, minWave: 6, maxConcurrent: 2 }
+      { type: 'Basic', weight: 40, minWave: 1, maxConcurrent: -1 },
+      { type: 'Scout', weight: 25, minWave: 1, maxConcurrent: 4 },
+      { type: 'Tank', weight: 20, minWave: 6, maxConcurrent: 2 },
+      { type: 'Fleer', weight: 10, minWave: 5, maxConcurrent: 2 },
+      { type: 'Grouper', weight: 5, minWave: 7, maxConcurrent: 1 }
     ],
     bossConfig: {
       spawnChance: 0.15,
@@ -44,10 +46,13 @@ export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
     spawnRateAcceleration: 0.93,
     maxEnemiesPerWave: 16,
     enemyComposition: [
-      { type: 'Basic', weight: 30, minWave: 1, maxConcurrent: -1 },
-      { type: 'Scout', weight: 35, minWave: 1, maxConcurrent: 6 },
-      { type: 'Tank', weight: 25, minWave: 1, maxConcurrent: 3 },
-      { type: 'Ghost', weight: 10, minWave: 11, maxConcurrent: 2 }
+      { type: 'Basic', weight: 25, minWave: 1, maxConcurrent: -1 },
+      { type: 'Scout', weight: 30, minWave: 1, maxConcurrent: 6 },
+      { type: 'Tank', weight: 20, minWave: 1, maxConcurrent: 3 },
+      { type: 'Ghost', weight: 10, minWave: 11, maxConcurrent: 2 },
+      { type: 'Fleer', weight: 8, minWave: 5, maxConcurrent: 3 },
+      { type: 'Grouper', weight: 5, minWave: 7, maxConcurrent: 2 },
+      { type: 'Berserker', weight: 2, minWave: 12, maxConcurrent: 1 }
     ],
     bossConfig: {
       spawnChance: 0.25,
@@ -68,10 +73,13 @@ export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
     spawnRateAcceleration: 0.91,
     maxEnemiesPerWave: 20,
     enemyComposition: [
-      { type: 'Basic', weight: 20, minWave: 1, maxConcurrent: -1 },
-      { type: 'Scout', weight: 30, minWave: 1, maxConcurrent: 8 },
-      { type: 'Tank', weight: 30, minWave: 1, maxConcurrent: 4 },
-      { type: 'Ghost', weight: 20, minWave: 1, maxConcurrent: 4 }
+      { type: 'Basic', weight: 15, minWave: 1, maxConcurrent: -1 },
+      { type: 'Scout', weight: 25, minWave: 1, maxConcurrent: 8 },
+      { type: 'Tank', weight: 25, minWave: 1, maxConcurrent: 4 },
+      { type: 'Ghost', weight: 15, minWave: 1, maxConcurrent: 4 },
+      { type: 'Fleer', weight: 10, minWave: 5, maxConcurrent: 4 },
+      { type: 'Grouper', weight: 8, minWave: 7, maxConcurrent: 3 },
+      { type: 'Berserker', weight: 2, minWave: 12, maxConcurrent: 2 }
     ],
     bossConfig: {
       spawnChance: 0.35,
@@ -92,10 +100,13 @@ export const WAVE_SPAWN_CONFIGS: Record<string, WaveSpawnConfig> = {
     spawnRateAcceleration: 0.89,
     maxEnemiesPerWave: 25,
     enemyComposition: [
-      { type: 'Basic', weight: 15, minWave: 1, maxConcurrent: -1 },
-      { type: 'Scout', weight: 25, minWave: 1, maxConcurrent: 10 },
-      { type: 'Tank', weight: 35, minWave: 1, maxConcurrent: 6 },
-      { type: 'Ghost', weight: 25, minWave: 1, maxConcurrent: 6 }
+      { type: 'Basic', weight: 10, minWave: 1, maxConcurrent: -1 },
+      { type: 'Scout', weight: 20, minWave: 1, maxConcurrent: 10 },
+      { type: 'Tank', weight: 30, minWave: 1, maxConcurrent: 6 },
+      { type: 'Ghost', weight: 20, minWave: 1, maxConcurrent: 6 },
+      { type: 'Fleer', weight: 12, minWave: 5, maxConcurrent: 5 },
+      { type: 'Grouper', weight: 6, minWave: 7, maxConcurrent: 4 },
+      { type: 'Berserker', weight: 2, minWave: 12, maxConcurrent: 3 }
     ],
     bossConfig: {
       spawnChance: 0.45,

@@ -231,7 +231,7 @@ interface WeatherEffectCardProps {
   card: WeatherEffectCard;
   gold: number;
   onPurchase?: () => void;
-  onActivate?: () => void;
+  _onActivate?: () => void;
   mode: 'purchase' | 'activate';
   isActive?: boolean;
 }
@@ -240,7 +240,7 @@ const WeatherEffectCard: React.FC<WeatherEffectCardProps> = ({
   card,
   gold,
   onPurchase,
-  onActivate,
+  _onActivate,
   mode,
   isActive = false
 }) => {

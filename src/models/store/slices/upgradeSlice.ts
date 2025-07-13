@@ -2,6 +2,7 @@ import { GAME_CONSTANTS } from '../../../utils/constants';
 import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
+import type { TowerClass } from '../../gameTypes';
 import { Logger } from '../../../utils/Logger';
 
 export interface UpgradeSlice {
@@ -16,9 +17,18 @@ export interface UpgradeSlice {
   purchaseIndividualDefenseUpgrade: (upgradeId: string, cost: number, maxLevel: number) => boolean;
   getIndividualDefenseUpgradeInfo: (upgradeId: string, maxLevel: number) => { currentLevel: number; maxLevel: number; canUpgrade: boolean; isMaxed: boolean; };
   unlockTowerType: (towerType: string) => void;
+  unlockAllTowerTypes: () => void;
   unlockSkin: (skinName: string) => void;
+  setFirstTowerInfo: (info: { towerClass: TowerClass; towerName: string; slotIndex: number }) => void;
   initializeAchievements: () => void;
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
+  
+  // ✅ NEW: Enhanced upgrade features
+  undoUpgrade: () => boolean;
+  applyBatchUpgrades: (upgradeIds: string[]) => { success: boolean; applied: string[]; errors: string[] };
+  getUpgradeCategory: (upgradeId: string) => 'active' | 'passive' | 'conditional' | null;
+  getUpgradeHistory: () => Array<{ upgradeId: string; level: number; cost: number; timestamp: number }>;
+  clearUpgradeHistory: () => void;
 }
 
 export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (set, get, _api) => ({
@@ -96,6 +106,38 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
     return { playerProfile: { ...state.playerProfile, unlockedCosmetics: [...state.playerProfile.unlockedCosmetics, skinName] } };
   }),
 
+  // ✅ NEW: Enhanced upgrade features implementation
+  undoUpgrade: () => {
+    // Simple undo implementation for now
+    Logger.log('🔄 Undo upgrade requested');
+    return false; // Placeholder - will be implemented with UpgradeManager
+  },
+
+  applyBatchUpgrades: (upgradeIds) => {
+    Logger.log(`🤖 Batch upgrade requested for: ${upgradeIds.join(', ')}`);
+    return {
+      success: false,
+      applied: [],
+      errors: ['Batch upgrades not yet implemented']
+    };
+  },
+
+  getUpgradeCategory: (upgradeId) => {
+    // Simple category mapping
+    if (upgradeId.includes('energy')) return 'passive';
+    if (upgradeId.includes('fire')) return 'active';
+    if (upgradeId.includes('shield')) return 'conditional';
+    return null;
+  },
+
+  getUpgradeHistory: () => {
+    return []; // Placeholder - will be implemented with UpgradeManager
+  },
+
+  clearUpgradeHistory: () => {
+    Logger.log('🧹 Clear upgrade history requested');
+  },
+
   purchaseIndividualFireUpgrade: (upgradeId, cost, maxLevel) => {
     const state = get();
     const currentLevel = state.individualFireUpgrades[upgradeId] || 0;
@@ -160,4 +202,17 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
     const currentLevel = state.individualDefenseUpgrades[upgradeId] || 0;
     return { currentLevel, maxLevel, canUpgrade: currentLevel < maxLevel, isMaxed: currentLevel >= maxLevel };
   },
+
+  unlockAllTowerTypes: () => set((_state: Store) => {
+    const allTowerTypes = [
+      'sniper', 'gatling', 'laser', 'mortar', 'flamethrower', 'radar',
+      'supply_depot', 'shield_generator', 'repair_station', 'emp',
+      'stealth_detector', 'air_defense'
+    ];
+    return { unlockedTowerTypes: allTowerTypes };
+  }),
+
+  setFirstTowerInfo: (info) => set((_state: Store) => ({
+    firstTowerInfo: info
+  })),
 });

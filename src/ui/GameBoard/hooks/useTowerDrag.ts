@@ -6,6 +6,7 @@ import { useDragFeedback } from './useDragFeedback';
 import { useDropZoneAnalysis } from './useDropZoneAnalysis';
 import { useSvgRectCache } from './useSvgRectCache';
 import { useDragEventHandlers } from './useDragEventHandlers';
+import { useTowerMoveManager } from './useTowerMoveManager';
 import { toast } from 'react-toastify';
 
 export const useTowerDrag = () => {
@@ -13,10 +14,12 @@ export const useTowerDrag = () => {
     towerSlots,
     isStarted,
     isRefreshing,
-    isPreparing,
-    energy,
-    moveTower
+    waveStatus,
+    energy
   } = useGameStore();
+
+  // Move manager integration
+  const { moveState, executeMove, cancelMoveMode } = useTowerMoveManager();
 
   // Enhanced drag state with UX features
   const [dragState, setDragState] = useState<DragState>({
@@ -44,10 +47,15 @@ export const useTowerDrag = () => {
   const { dropZones, analyzeDropZones, updateDropZoneAnimations, clearDropZones } = useDropZoneAnalysis();
   const { getSvgRect } = useSvgRectCache();
 
-  // Enhanced drag start with UX features
+  // Enhanced drag start with UX features - only works when move mode is active
   const handleTowerDragStart = useCallback((slotIdx: number, event: React.MouseEvent | React.TouchEvent) => {
     const slot = towerSlots[slotIdx];
-    if (!slot.tower || !isStarted || isRefreshing || isPreparing) return;
+    if (!slot.tower || !isStarted || isRefreshing || waveStatus === 'idle') return;
+    
+    // Only allow dragging if move mode is active for this slot
+    if (!moveState.isMoveMode || moveState.moveSlotIdx !== slotIdx) {
+      return;
+    }
     
     const now = performance.now();
     
@@ -134,22 +142,24 @@ export const useTowerDrag = () => {
     // Update drop zone animations
     updateDropZoneAnimations('highlight');
 
-  }, [towerSlots, isStarted, isRefreshing, isPreparing, energy, analyzeDropZones, showFeedback, updateDropZoneAnimations]);
+  }, [towerSlots, isStarted, isRefreshing, waveStatus, energy, analyzeDropZones, showFeedback, updateDropZoneAnimations]);
 
   // Handle hover changes
   const handleHoverChange = useCallback((hoveredSlot: number | null) => {
     updateDropZoneAnimations('highlight', hoveredSlot);
   }, [updateDropZoneAnimations]);
 
-  // Handle drop
+  // Handle drop - use move manager
   const handleDrop = useCallback((targetSlotIdx: number, invalidReason: string) => {
     if (targetSlotIdx !== -1) {
-      moveTower(dragState.draggedTowerSlotIdx!, targetSlotIdx);
-      toast.success('Kule başarıyla taşındı!');
+      const success = executeMove(targetSlotIdx);
+      if (!success) {
+        toast.error('Cannot move tower here!');
+      }
     } else if (invalidReason) {
-      toast.error('Kule buraya taşınamaz!');
+      toast.error('Cannot move tower here!');
     } else {
-      toast.error('Kule buraya taşınamaz!');
+      toast.error('Cannot move tower here!');
     }
 
     // Reset all states
@@ -173,8 +183,10 @@ export const useTowerDrag = () => {
       touchStartPosition: null,
     });
 
+    // Cancel move mode
+    cancelMoveMode();
     clearDropZones();
-  }, [dragState, moveTower, clearDropZones]);
+  }, [dragState, executeMove, cancelMoveMode, clearDropZones]);
 
   // Event handlers
   const { handleMouseMove, handleMouseUp } = useDragEventHandlers(

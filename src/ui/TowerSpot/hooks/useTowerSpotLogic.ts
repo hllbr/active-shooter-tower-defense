@@ -3,7 +3,7 @@ import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { getTargetEnemy, TargetingMode } from '../../../game-systems/TowerManager';
 import { formatProfessional } from '../../../utils/formatters';
-import type { TowerSlot, Enemy } from '../../../models/gameTypes';
+import type { TowerSlot, Enemy, TowerClass } from '../../../models/gameTypes';
 import type { TowerUpgradeInfo } from '../types';
 import { playSound } from '../../../utils/sound/soundEffects';
 import { useChallenge } from '../../challenge/hooks/useChallenge';
@@ -13,6 +13,8 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const gold = useGameStore((s) => s.gold);
   const buildTower = useGameStore((s) => s.buildTower);
   const upgradeTower = useGameStore((s) => s.upgradeTower);
+  const repairTower = useGameStore((s) => s.repairTower);
+  const removeTower = useGameStore((s) => s.removeTower);
   const unlockSlot = useGameStore((s) => s.unlockSlot);
   const maxTowers = useGameStore((s) => s.maxTowers);
   const wallLevel = useGameStore((s) => s.wallLevel);
@@ -27,6 +29,7 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
 
   // Menu state
   const [menuPos, setMenuPos] = React.useState<{x:number;y:number}|null>(null);
+  const [showTowerSelection, setShowTowerSelection] = React.useState(false);
 
   // Animation states
   const isUnlocking = unlockingSlots.has(slotIdx);
@@ -59,6 +62,22 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
         : `Yetersiz Enerji (${energyCost})`
     : '';
 
+  // Repair logic
+  const canRepair = Boolean(slot.tower && slot.tower.health < slot.tower.maxHealth);
+  const damagePercentage = slot.tower ? 1 - (slot.tower.health / slot.tower.maxHealth) : 0;
+  const repairCost = Math.ceil(GAME_CONSTANTS.TOWER_REPAIR_BASE_COST * damagePercentage);
+  const repairEnergyCost = GAME_CONSTANTS.ENERGY_COSTS.buildTower;
+  const hasEnoughGoldForRepair = gold >= repairCost;
+  const hasEnoughEnergyForRepair = energy >= repairEnergyCost;
+  const canAffordRepair = Boolean(canRepair && hasEnoughGoldForRepair && hasEnoughEnergyForRepair);
+  const repairMessage = canRepair
+    ? canAffordRepair
+      ? `🔧 Tamir (${formatProfessional(repairCost, 'currency')}💰)`
+      : !hasEnoughGoldForRepair
+        ? `Yetersiz Altın (${formatProfessional(repairCost, 'currency')}💰)`
+        : `Yetersiz Enerji (${repairEnergyCost})`
+    : '';
+
   // Current tower info
   const currentTowerInfo: TowerUpgradeInfo | null = slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level - 1] : null;
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
@@ -86,6 +105,22 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   };
 
   const handleMenuClose = () => setMenuPos(null);
+
+  const handleShowTowerSelection = () => {
+    setShowTowerSelection(true);
+  };
+
+  const handleCloseTowerSelection = () => {
+    setShowTowerSelection(false);
+  };
+
+  const handleSelectTower = (towerClass: TowerClass) => {
+    buildTower(slotIdx, false, 'attack', towerClass);
+    playSound('tower-create-sound');
+    toast.success('Kule inşa edildi!');
+    incrementChallenge('build');
+    setShowTowerSelection(false);
+  };
 
   const handleBuildTower = (slotIdx: number, type: 'attack' | 'economy' = 'attack') => {
     buildTower(slotIdx, false, type);
@@ -115,24 +150,50 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
     toast.success('Kule yükseltildi!');
   };
 
+  const handleRepair = (slotIdx: number) => {
+    if (!canRepair) {
+      toast.error('Kule tamir edilemez!');
+      return;
+    }
+    if (!canAffordRepair) {
+      if (!hasEnoughGoldForRepair) {
+        toast.warning('Yetersiz altın!');
+      } else if (!hasEnoughEnergyForRepair) {
+        toast.warning('Yetersiz enerji!');
+      }
+      return;
+    }
+    repairTower(slotIdx);
+    toast.success('Kule tamir edildi!');
+  };
+
   const handleUnlock = (slotIdx: number) => {
     if (!canUnlock) {
       if (!(gold >= unlockCost)) {
-        toast.warning('Yetersiz altın!');
+        toast.warning(`Not enough gold! You need ${formatProfessional(unlockCost, 'currency')} to unlock this zone.`);
+        playSound('error');
       } else if (!(energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower)) {
         toast.warning('Yetersiz enerji!');
+        playSound('error');
       } else {
         toast.error('Slot açılamaz!');
+        playSound('error');
       }
       return;
     }
     unlockSlot(slotIdx);
-    toast.success('Slot açıldı!');
+    toast.success('Zone unlocked! New build area available.');
+    playSound('unlock');
+  };
+
+  const handleDelete = (slotIdx: number) => {
+    removeTower(slotIdx);
   };
 
   return {
     // State
     menuPos,
+    showTowerSelection,
     isUnlocking,
     isRecentlyUnlocked,
     canBuild,
@@ -142,6 +203,9 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
     upgradeInfo,
     canAffordUpgrade,
     upgradeMessage,
+    canRepair,
+    canAffordRepair,
+    repairMessage,
     currentTowerInfo,
     towerBottomY,
     debugInfo,
@@ -151,9 +215,14 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
     // Handlers
     handleContextMenu,
     handleMenuClose,
+    handleShowTowerSelection,
+    handleCloseTowerSelection,
+    handleSelectTower,
     handleBuildTower,
     handlePerformTileAction,
     handleUpgrade,
-    handleUnlock
+    handleRepair,
+    handleUnlock,
+    handleDelete
   };
 }; 

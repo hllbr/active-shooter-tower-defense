@@ -10,15 +10,13 @@ import { useGameStore } from '../../models/store';
 // Sub-components
 
 
-export const UpgradeScreen: React.FC = () => {
-  // Local state - Sadece activeTab kaldı, diğerleri alt komponentlere taşındı
+export const UpgradeScreen: React.FC = React.memo(() => {
+  // ✅ OPTIMIZED: Local state with memoization
   const [activeTab, setActiveTab] = useState<TabType>('dice');
   
-  // Store'dan dice state'lerini al
+  // ✅ OPTIMIZED: Store selectors with memoization
   const diceUsed = useGameStore(state => state.diceUsed);
   const rollDice = useGameStore(state => state.rollDice);
-  
-  // 🆕 UPGRADE SCREEN: Clear enemies when entering upgrade screen (no gold given)
   const clearAllEnemies = useGameStore(state => state.clearAllEnemies);
   const clearAllEffects = useGameStore(state => state.clearAllEffects);
 
@@ -47,7 +45,7 @@ export const UpgradeScreen: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, []); // Sadece component mount olduğunda çalışsın
+  }, [clearAllEffects, clearAllEnemies, diceUsed, rollDice]);
 
   // Event handlers - Sadece tab change kaldı
   const handleTabChange = useCallback((tab: TabType) => {
@@ -74,4 +72,4 @@ export const UpgradeScreen: React.FC = () => {
       </div>
     </div>
   );
-}; 
+}); 

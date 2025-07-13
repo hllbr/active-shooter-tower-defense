@@ -8,14 +8,14 @@ import { waveManager } from '../../../game-systems/WaveManager';
 export const useGameLoop = (
   isStarted: boolean,
   isRefreshing: boolean,
-  isPreparing: boolean,
+  waveStatus: string,
   currentWave: number,
   environmentManager: SimplifiedEnvironmentManager | null
 ) => {
   const loopStopper = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    if (!isStarted || isRefreshing || isPreparing) {
+    if (!isStarted || isRefreshing || waveStatus !== 'in_progress') {
       stopEnemyWave();
       stopContinuousSpawning();
       loopStopper.current?.();
@@ -38,5 +38,5 @@ export const useGameLoop = (
       loopStopper.current?.();
       loopStopper.current = null;
     };
-  }, [isStarted, isRefreshing, isPreparing, currentWave, environmentManager]);
+  }, [isStarted, isRefreshing, waveStatus, currentWave, environmentManager]);
 }; 

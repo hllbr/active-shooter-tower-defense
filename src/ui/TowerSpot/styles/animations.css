@@ -244,3 +244,36 @@
   transform-origin: var(--cx, 0px) var(--cy, 0px);
 }
 
+/* Tower move tooltip animations */
+@keyframes moveTooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tower-move-tooltip {
+  animation: moveTooltipFadeIn 0.2s ease-out;
+}
+
+/* Tile action tooltip animations */
+.tile-action-tooltip {
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+/* Menu slide in animation */
+@keyframes menuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+

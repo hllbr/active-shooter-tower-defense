@@ -1,0 +1,203 @@
+/* Enhanced Locked Zone Styles */
+
+/* Locked Zone Pulse Animation */
+@keyframes lockedZonePulse {
+  0% {
+    stroke-opacity: 0.6;
+    filter: brightness(1);
+  }
+  50% {
+    stroke-opacity: 1;
+    filter: brightness(1.2);
+  }
+  100% {
+    stroke-opacity: 0.6;
+    filter: brightness(1);
+  }
+}
+
+/* Unlock Shake Animation */
+@keyframes unlockShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* Lock Glow Animation */
+@keyframes lockGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.8));
+  }
+}
+
+/* Lock Break Animation */
+@keyframes lockBreak {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+/* Cost Glow Animation */
+@keyframes costGlow {
+  0%, 100% {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  50% {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 8px rgba(243, 156, 18, 0.6);
+  }
+}
+
+/* Tooltip Fade In Animation */
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Locked Zone Tooltip Styles */
+.locked-zone-tooltip {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid #4a90e2;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  max-width: 280px;
+  backdrop-filter: blur(8px);
+}
+
+.tooltip-content {
+  color: #ecf0f1;
+}
+
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tooltip-icon {
+  font-size: 16px;
+}
+
+.tooltip-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a90e2;
+}
+
+.tooltip-description {
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  color: #bdc3c7;
+}
+
+.tooltip-status {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: center;
+  background: rgba(74, 144, 226, 0.1);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+}
+
+/* Enhanced Visual States */
+.locked-zone-available {
+  stroke: #4ade80;
+  stroke-width: 3;
+  stroke-dasharray: 6 3;
+  animation: lockedZonePulse 2s ease-in-out infinite;
+}
+
+.locked-zone-unavailable {
+  stroke: #6b7280;
+  stroke-width: 2;
+  stroke-dasharray: 4 2;
+  opacity: 0.7;
+}
+
+.locked-zone-unlocking {
+  stroke: #FFD700;
+  stroke-width: 3;
+  animation: unlockShake 0.3s ease-in-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .locked-zone-tooltip {
+    max-width: 240px;
+    padding: 12px;
+  }
+  
+  .tooltip-title {
+    font-size: 13px;
+  }
+  
+  .tooltip-description {
+    font-size: 12px;
+  }
+  
+  .tooltip-status {
+    font-size: 11px;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .locked-zone-tooltip {
+    border-width: 3px;
+    background: #000000;
+  }
+  
+  .tooltip-title {
+    color: #ffffff;
+  }
+  
+  .tooltip-description {
+    color: #cccccc;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .locked-zone-available {
+    animation: none;
+  }
+  
+  .lockGlow {
+    animation: none;
+  }
+  
+  .costGlow {
+    animation: none;
+  }
+  
+  .lockedZonePulse {
+    animation: none;
+  }
+} 

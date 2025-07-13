@@ -1,4 +1,4 @@
-import { getSettings } from '../settings';
+import { enhancedAudioManager } from './EnhancedAudioManager';
 
 class SmartMusicManager {
   private isPlaying = false;
@@ -11,8 +11,10 @@ class SmartMusicManager {
     try {
       this.audio = new Audio(`/assets/sounds/${track}.wav`);
       this.audio.loop = true;
-      const settings = getSettings();
-      this.audio.volume = settings.mute ? 0 : settings.musicVolume;
+      
+      // Register with enhanced audio manager for smooth volume transitions
+      enhancedAudioManager.setMusicAudio(this.audio);
+      
       const playPromise = this.audio.play();
       if (playPromise) {
         playPromise.then(() => {
@@ -43,10 +45,8 @@ class SmartMusicManager {
   }
 
   updateSettings(): void {
-    if (this.audio) {
-      const settings = getSettings();
-      this.audio.volume = settings.mute ? 0 : settings.musicVolume;
-    }
+    // Volume is now managed by enhanced audio manager
+    // This method is kept for backward compatibility
   }
 
   getStatus(): { isPlaying: boolean; currentTrack: string | null } {
@@ -83,5 +83,6 @@ export function getMusicStatus(): { isPlaying: boolean; currentTrack: string | n
 }
 
 export function updateMusicSettings(): void {
-  musicManager.updateSettings();
+  // Volume is now managed by enhanced audio manager
+  // This method is kept for backward compatibility
 }

@@ -4,11 +4,19 @@ import type { Enemy, WaveModifier } from '../../models/gameTypes';
 import { spawnStrategy } from '../spawn-system';
 import { getRandomSpawnPosition } from './index';
 import BossManager from './BossManager';
+import { EnemyBehaviorSystem } from './EnemyBehaviorSystem';
 
 /**
  * Factory class responsible for creating different types of enemies
  */
 export class EnemyFactory {
+  /**
+   * Initialize the enemy factory and behavior system
+   */
+  static initialize(): void {
+    EnemyBehaviorSystem.initialize();
+  }
+
   /**
    * Creates an enemy with dynamic spawning integration
    */

@@ -2,8 +2,12 @@ import type { Tower, TowerSlot, Enemy, Position } from '../../models/gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { towerSynergyManager } from '../tower-system/TowerSynergyManager';
 import { defenseSystemManager } from '../defense-systems';
+import { autoUpgradeManager } from './AutoUpgradeManager';
+import { autoPlacementSystem } from './AutoPlacementSystem';
+import { autoTargeting } from './AutoTargeting';
 
-import { analyzeThreatLevel, calculateCoverageScore, calculateDefensiveValue, generatePlacementReason, calculatePriority, ThreatAnalysis } from "./helpers/analysisHelpers";
+import { analyzeThreatLevel, calculateCoverageScore, calculateDefensiveValue, generatePlacementReason, calculatePriority } from "./helpers/analysisHelpers";
+import type { ThreatAnalysis } from "./helpers/analysisHelpers";
 interface PlacementSuggestion {
   slotIndex: number;
   towerClass: string;
@@ -363,6 +367,94 @@ export class AIManager {
       defense: defenseSuggestions,
       priority
     };
+  }
+
+  /**
+   * Execute automated actions based on current game state
+   */
+  public executeAutomatedActions(): void {
+    // Execute auto placement
+    if (autoPlacementSystem.isAutoPlacementActive()) {
+      autoPlacementSystem.executeAutoPlacement();
+    }
+    
+    // Execute auto upgrades
+    if (autoUpgradeManager.isAutoUpgradeActive()) {
+      autoUpgradeManager.executeAutoUpgrade();
+    }
+  }
+
+  /**
+   * Get automation status for all systems
+   */
+  public getAutomationStatus(): {
+    placement: boolean;
+    upgrade: boolean;
+    targeting: boolean;
+  } {
+    return {
+      placement: autoPlacementSystem.isAutoPlacementActive(),
+      upgrade: autoUpgradeManager.isAutoUpgradeActive(),
+      targeting: autoTargeting.isAutoTargetingActive()
+    };
+  }
+
+  /**
+   * Set automation status for all systems
+   */
+  public setAutomationStatus(status: {
+    placement?: boolean;
+    upgrade?: boolean;
+    targeting?: boolean;
+  }): void {
+    if (status.placement !== undefined) {
+      autoPlacementSystem.setActive(status.placement);
+    }
+    if (status.upgrade !== undefined) {
+      autoUpgradeManager.setActive(status.upgrade);
+    }
+    if (status.targeting !== undefined) {
+      autoTargeting.setActive(status.targeting);
+    }
+  }
+
+  /**
+   * Handle manual intervention across all automation systems
+   */
+  public handleManualIntervention(): void {
+    autoPlacementSystem.handleManualIntervention();
+    autoUpgradeManager.handleManualIntervention();
+    autoTargeting.handleManualIntervention();
+  }
+
+  /**
+   * Get optimal target for a tower using auto targeting
+   */
+  public getOptimalTarget(tower: Tower, enemies: Enemy[]): Enemy | null {
+    return autoTargeting.selectOptimalTarget(tower, enemies);
+  }
+
+  /**
+   * Get upgrade recommendations using auto upgrade system
+   */
+  public getUpgradeRecommendations(): ReturnType<typeof autoUpgradeManager.getUpgradeRecommendations> {
+    return autoUpgradeManager.getUpgradeRecommendations();
+  }
+
+  /**
+   * Get placement recommendations using auto placement system
+   */
+  public getPlacementRecommendations(): ReturnType<typeof autoPlacementSystem.getPlacementRecommendations> {
+    return autoPlacementSystem.getPlacementRecommendations();
+  }
+
+  /**
+   * Reset all automation systems
+   */
+  public resetAutomation(): void {
+    autoPlacementSystem.reset();
+    autoUpgradeManager.reset();
+    autoTargeting.reset();
   }
 
 }

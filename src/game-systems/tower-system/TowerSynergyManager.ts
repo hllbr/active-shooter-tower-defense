@@ -1,9 +1,9 @@
 import type { Tower, TowerSlot, Position } from '../../models/gameTypes';
 
 /**
- * Tower Synergy Manager
- * Manages tower combinations, synergy bonuses, and strategic positioning
- * Implements Issue #54 tower synergy requirements
+ * Enhanced Tower Synergy Manager
+ * Manages tower combinations, synergy bonuses, strategic positioning, and UI display
+ * Implements Issue #54 tower synergy requirements with active synergy tracking
  */
 export class TowerSynergyManager {
   private static instance: TowerSynergyManager;
@@ -41,6 +41,95 @@ export class TowerSynergyManager {
     }
     
     return bonuses;
+  }
+
+  /**
+   * Get active synergies for display in UI
+   */
+  public getActiveSynergies(towerSlots: TowerSlot[]): Array<{
+    towerId: string;
+    towerClass: string;
+    synergies: Array<{
+      partnerClass: string;
+      bonuses: { damage?: number; range?: number; fireRate?: number };
+      description: string;
+    }>;
+  }> {
+    const activeSynergies: Array<{
+      towerId: string;
+      towerClass: string;
+      synergies: Array<{
+        partnerClass: string;
+        bonuses: { damage?: number; range?: number; fireRate?: number };
+        description: string;
+      }>;
+    }> = [];
+
+    for (const slot of towerSlots) {
+      if (!slot.tower || !slot.tower.towerClass) continue;
+
+      const nearbyTowers = this.getNearbyTowers(slot.tower, towerSlots, 200);
+      const synergies: Array<{
+        partnerClass: string;
+        bonuses: { damage?: number; range?: number; fireRate?: number };
+        description: string;
+      }> = [];
+
+      for (const nearbyTower of nearbyTowers) {
+        if (!nearbyTower.towerClass) continue;
+
+        const synergyBonus = this.getSynergyBonus(slot.tower!.towerClass!, nearbyTower.towerClass);
+        if (synergyBonus) {
+          synergies.push({
+            partnerClass: nearbyTower.towerClass,
+            bonuses: synergyBonus,
+            description: this.getSynergyDescription(slot.tower!.towerClass!, nearbyTower.towerClass)
+          });
+        }
+      }
+
+      if (synergies.length > 0) {
+        activeSynergies.push({
+          towerId: slot.tower!.id,
+          towerClass: slot.tower!.towerClass!,
+          synergies
+        });
+      }
+    }
+
+    return activeSynergies;
+  }
+
+  /**
+   * Get synergy description for UI display
+   */
+  private getSynergyDescription(towerClass1: string, towerClass2: string): string {
+    const descriptions: Record<string, string> = {
+      'sniper_radar': 'Spotter-Sniper: Enhanced targeting and critical hits',
+      'gatling_supply_depot': 'Supply-Artillery: Sustained rapid fire',
+      'laser_shield_generator': 'Protected Firepower: Shielded laser beams',
+      'mortar_radar': 'Guided Artillery: Precision mortar strikes',
+      'flamethrower_supply_depot': 'Fuel Supply: Extended flame duration',
+      'mortar_stealth_detector': 'Target Marking: Revealed enemy targeting',
+      'radar_sniper': 'Enhanced Targeting: Critical hit enablement',
+      'supply_depot_gatling': 'Ammo Supply: Sustained gatling fire',
+      'shield_generator_repair_station': 'Defense Network: Coordinated protection',
+      'shield_generator_shield_generator': 'Shield Network: Reinforced barriers',
+      'repair_station_repair_station': 'Repair Network: Accelerated healing',
+      'shield_generator_laser': 'Protected Firepower: Shielded laser beams',
+      'emp_stealth_detector': 'Electronic Warfare: Disruption and detection',
+      'stealth_detector_sniper': 'Target Acquisition: Precision ghost hunting',
+      'air_defense_radar': 'Air Superiority: Enhanced aerial targeting',
+      'sniper_supply_depot': 'Precision Support: Enhanced sniper accuracy',
+      'mortar_shield_generator': 'Protected Artillery: Shielded mortar fire',
+      'gatling_repair_station': 'Sustained Fire: Continuous gatling operation',
+      'flamethrower_emp': 'Disruption Combo: Fire and electronic warfare'
+    };
+
+    const key1 = `${towerClass1}_${towerClass2}`;
+    const key2 = `${towerClass2}_${towerClass1}`;
+    
+    return descriptions[key1] || descriptions[key2] || 'Synergy Bonus';
   }
 
   /**
@@ -272,6 +361,57 @@ export class TowerSynergyManager {
     };
     
     return synergies[towerClass] || [];
+  }
+
+  /**
+   * Get synergy visual effects for rendering
+   */
+  public getSynergyVisualEffects(towerSlots: TowerSlot[]): Array<{
+    position: Position;
+    color: string;
+    radius: number;
+    opacity: number;
+    type: 'synergy' | 'positioning';
+  }> {
+    const effects: Array<{
+      position: Position;
+      color: string;
+      radius: number;
+      opacity: number;
+      type: 'synergy' | 'positioning';
+    }> = [];
+
+    for (const slot of towerSlots) {
+      if (!slot.tower) continue;
+
+      // Add synergy glow effects
+      const activeSynergies = this.getActiveSynergies(towerSlots);
+      const towerSynergies = activeSynergies.find(s => s.towerId === slot.tower!.id);
+      
+      if (towerSynergies && towerSynergies.synergies.length > 0) {
+        effects.push({
+          position: slot.tower.position,
+          color: '#00FFFF', // Cyan for synergy
+          radius: 30,
+          opacity: 0.6,
+          type: 'synergy'
+        });
+      }
+
+      // Add positioning bonus effects
+      const positioningBonus = this.getPositioningBonus(slot.tower, slot.tower.position, towerSlots);
+      if (positioningBonus.damage > 0 || positioningBonus.range > 0 || positioningBonus.fireRate > 0) {
+        effects.push({
+          position: slot.tower.position,
+          color: '#FFD700', // Gold for positioning
+          radius: 25,
+          opacity: 0.4,
+          type: 'positioning'
+        });
+      }
+    }
+
+    return effects;
   }
 }
 

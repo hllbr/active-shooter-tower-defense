@@ -1,0 +1,121 @@
+/* Simplified Tower Controls Styles */
+
+/* Tooltip Fade In Animation */
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Icon Hover Effects */
+.tower-control-icon {
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.tower-control-icon:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.tower-control-icon:active {
+  transform: scale(0.95);
+}
+
+/* Disabled State */
+.tower-control-icon.disabled {
+  opacity: 0.5;
+  filter: grayscale(1) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  cursor: not-allowed;
+}
+
+.tower-control-icon.disabled:hover {
+  transform: none;
+  filter: grayscale(1) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Tooltip Styles */
+.tower-control-tooltip {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid #4a90e2;
+  border-radius: 8px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  font-family: 'Arial', sans-serif;
+  white-space: nowrap;
+  z-index: 1000;
+}
+
+/* Icon Color States */
+.tower-control-icon.upgrade {
+  color: #4ade80;
+}
+
+.tower-control-icon.upgrade:hover {
+  color: #22c55e;
+}
+
+.tower-control-icon.upgrade.disabled {
+  color: #ff4444;
+}
+
+.tower-control-icon.repair {
+  color: #3b82f6;
+}
+
+.tower-control-icon.repair:hover {
+  color: #2563eb;
+}
+
+.tower-control-icon.repair.disabled {
+  color: #ff4444;
+}
+
+.tower-control-icon.delete {
+  color: #ff4444;
+}
+
+.tower-control-icon.delete:hover {
+  color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tower-control-tooltip {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .tower-control-tooltip {
+    border-width: 3px;
+    background: #000000;
+  }
+  
+  .tower-control-icon {
+    filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3));
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .tower-control-icon {
+    transition: none;
+  }
+  
+  .tower-control-icon:hover {
+    transform: none;
+  }
+  
+  .tower-control-icon:active {
+    transform: none;
+  }
+} 
