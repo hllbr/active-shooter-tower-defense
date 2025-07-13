@@ -448,6 +448,9 @@ export interface GameState {
   lastMissionRefresh: number;
   completedMissions: string[];
   unlockedTowerTypes: string[];
+
+  /** Currently selected tower slot index, or null if none selected */
+  selectedSlot: number | null;
   
   // ✅ NEW: Dynamic Game Start System
   firstTowerInfo?: {

@@ -33,6 +33,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
   // Move manager for hand icon functionality
   const { getMoveStateForSlot, initiateMoveMode } = useTowerMoveManager();
   const moveState = getMoveStateForSlot(slotIdx);
+  const selectedSlot = useGameStore(s => s.selectedSlot);
+  const selectSlot = useGameStore(s => s.selectSlot);
   const {
     // State
     showTowerSelection,
@@ -72,6 +74,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
   // Health display hover state
   const [showHealthDisplay, setShowHealthDisplay] = React.useState(false);
   const [isTowerHovered, setIsTowerHovered] = React.useState(false);
+  const isSelected = selectedSlot === slotIdx;
 
   // --- YENİ: Build animasyonu için state ---
   const [showTowerVisible, setShowTowerVisible] = React.useState(true); // Kule görünür mü
@@ -111,7 +114,12 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
 
   return (
     <>
-    <g>
+    <g
+      onMouseDown={(e) => {
+        selectSlot(slotIdx);
+        e.stopPropagation();
+      }}
+    >
       {/* --- YENİ: Toz bulutu efekti --- */}
       {showDust && (
         <ParticleSystem slot={slot} isUnlocking={false} showDust={true} />
@@ -242,7 +250,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             slotIdx={slotIdx}
             onMoveInitiate={initiateMoveMode}
             isHovered={isTowerHovered}
-            isSelected={false}
+            isSelected={isSelected}
             canMove={moveState.canMove}
             moveCost={moveState.moveCost}
             canAffordMove={moveState.canAffordMove}
@@ -266,7 +274,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             onRepair={handleRepair}
             onDelete={handleDelete}
             isHovered={isTowerHovered}
-            isSelected={false}
+            isSelected={isSelected}
           />
         </g>
       )}
@@ -278,7 +286,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
         _onTileAction={handlePerformTileAction}
         onShowMenu={() => setShowTileActionMenu(true)}
         isHovered={isTowerHovered}
-        isSelected={false}
+        isSelected={isSelected}
         canPerformAction={canPerformAction}
         actionsRemaining={actionsRemaining}
       />

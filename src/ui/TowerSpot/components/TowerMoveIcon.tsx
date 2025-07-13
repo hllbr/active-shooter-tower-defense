@@ -108,7 +108,10 @@ export const TowerMoveIcon: React.FC<TowerMoveIconProps> = ({
           filter: canMove ? 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' : 'grayscale(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))',
           transition: 'all 0.2s ease'
         }}
-        onClick={handleMoveClick}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleMoveClick();
+        }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >

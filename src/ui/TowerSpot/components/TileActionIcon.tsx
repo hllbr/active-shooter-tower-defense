@@ -95,7 +95,10 @@ export const TileActionIcon: React.FC<TileActionIconProps> = ({
           filter: canPerformAction ? 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' : 'grayscale(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))',
           transition: 'all 0.2s ease'
         }}
-        onClick={handleActionClick}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleActionClick();
+        }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >

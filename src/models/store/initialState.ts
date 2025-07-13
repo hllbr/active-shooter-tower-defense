@@ -118,6 +118,7 @@ export const initialState: GameState = {
   prepRemaining: GAME_CONSTANTS.PREP_TIME,
   waveStatus: 'idle' as WaveStatus,
   waveStartTime: 0,
+  selectedSlot: null,
   lostTowerThisWave: false,
   lastUpdate: 0,
 
