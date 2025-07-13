@@ -54,9 +54,15 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
     prepRemaining: GAME_CONSTANTS.PREP_TIME,
   })),
 
-  tickPreparation: (delta) => set((state: Store) => {
+  tickPreparation: (delta) => set((state: Store & { startWave: () => void }) => {
     if (state.waveStatus !== 'in_progress') return {};
     const newRemaining = Math.max(0, state.prepRemaining - delta);
+    // Eğer hazırlık süresi bitti ise otomatik olarak startWave çağır
+    if (newRemaining <= 0) {
+      setTimeout(() => {
+        state.startWave();
+      }, 0);
+    }
     return { 
       prepRemaining: newRemaining, 
       waveStatus: newRemaining > 0 ? 'in_progress' : 'completed' as WaveStatus 

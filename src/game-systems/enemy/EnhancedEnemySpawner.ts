@@ -3,7 +3,7 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import { ProceduralWaveGenerator, WavePerformanceTracker, InWaveScalingManager } from '../../config/waveConfig';
 import { EnemyFactory } from './EnemyFactory';
 import { SpawnPositionManager } from './SpawnPositionManager';
-import type { Tower, TowerSlot, WaveEnemyConfig, Enemy } from '../../models/gameTypes';
+import type { WaveEnemyConfig, Enemy } from '../../models/gameTypes';
 import type { DynamicWaveConfig } from '../../config/waveConfig';
 
 /**
@@ -20,7 +20,7 @@ export class EnhancedEnemySpawner {
    * Starts enhanced enemy wave spawning with dynamic configuration
    */
   static startEnemyWave(wave: number) {
-    const { towers, towerSlots, buildTower } = useGameStore.getState();
+    // Kullanılmayan değişkenler kaldırıldı (towers, towerSlots, buildTower)
 
     // ✅ NEW: Generate dynamic wave configuration
     const playerPerformance = WavePerformanceTracker.getPlayerPerformance();
@@ -30,7 +30,7 @@ export class EnhancedEnemySpawner {
     SpawnPositionManager.updateSpawnZonesForWave(wave);
 
     // ✅ ENHANCED: Auto-place tower if no towers exist
-    this.autoPlaceStarterTower(towers, towerSlots, buildTower);
+    this.autoPlaceStarterTower();
 
     // Clear any existing interval
     if (this.spawnInterval) clearInterval(this.spawnInterval);
@@ -168,7 +168,8 @@ export class EnhancedEnemySpawner {
   /**
    * Auto-places starter tower if no towers exist
    */
-  private static autoPlaceStarterTower(towers: Tower[], towerSlots: TowerSlot[], buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy') => void) {
+  private static autoPlaceStarterTower() {
+    const { towers, towerSlots, buildTower } = useGameStore.getState();
     if (towers.length === 0) {
       // Find first unlocked slot
       const firstUnlockedSlot = towerSlots.findIndex(slot => slot.unlocked && !slot.tower);

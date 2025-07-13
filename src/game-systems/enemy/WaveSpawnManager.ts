@@ -69,7 +69,7 @@ export class WaveSpawnManager {
    * Starts enemy wave spawning with KILL-BASED completion system
    */
   static startEnemyWave(wave: number) {
-    const { addEnemy, towers, towerSlots, buildTower, currentWaveModifier } = useGameStore.getState();
+    const { addEnemy, currentWaveModifier } = useGameStore.getState();
 
     // 🎯 UPDATE: Configure spawn zones for current wave
     SpawnPositionManager.updateSpawnZonesForWave(wave);
