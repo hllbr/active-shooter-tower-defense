@@ -4,6 +4,7 @@ import { updateMineCollisions } from './MineManager';
 import { useGameStore } from '../models/store';
 import { stateTracker, performanceMonitor, GameStateSelectors } from './StateOptimizer';
 import { SimplifiedEnvironmentManager } from './environment/SimplifiedEnvironmentManager';
+import { aiManager } from './ai-automation';
 
 // Performance metrics for monitoring
 interface GameLoopMetrics {
@@ -61,6 +62,11 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
       updateTowerFire();
       updateBullets(deltaTime);
       updateMineCollisions();
+      
+      // Execute automated AI actions
+      if (gameLoopMetrics.totalFrames % 30 === 0) { // Every 30 frames (about 2 seconds at 60fps)
+        aiManager.executeAutomatedActions();
+      }
       
       // Update simplified environment (minimal processing)
       if (gameLoopMetrics.totalFrames % 10 === 0) {

@@ -19,6 +19,13 @@ export interface UpgradeSlice {
   unlockSkin: (skinName: string) => void;
   initializeAchievements: () => void;
   triggerAchievementEvent: (eventType: string, eventData?: unknown) => void;
+  
+  // ✅ NEW: Enhanced upgrade features
+  undoUpgrade: () => boolean;
+  applyBatchUpgrades: (upgradeIds: string[]) => { success: boolean; applied: string[]; errors: string[] };
+  getUpgradeCategory: (upgradeId: string) => 'active' | 'passive' | 'conditional' | null;
+  getUpgradeHistory: () => Array<{ upgradeId: string; level: number; cost: number; timestamp: number }>;
+  clearUpgradeHistory: () => void;
 }
 
 export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (set, get, _api) => ({
@@ -95,6 +102,38 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
     if (state.playerProfile.unlockedCosmetics.includes(skinName)) return {};
     return { playerProfile: { ...state.playerProfile, unlockedCosmetics: [...state.playerProfile.unlockedCosmetics, skinName] } };
   }),
+
+  // ✅ NEW: Enhanced upgrade features implementation
+  undoUpgrade: () => {
+    // Simple undo implementation for now
+    Logger.log('🔄 Undo upgrade requested');
+    return false; // Placeholder - will be implemented with UpgradeManager
+  },
+
+  applyBatchUpgrades: (upgradeIds) => {
+    Logger.log(`🤖 Batch upgrade requested for: ${upgradeIds.join(', ')}`);
+    return {
+      success: false,
+      applied: [],
+      errors: ['Batch upgrades not yet implemented']
+    };
+  },
+
+  getUpgradeCategory: (upgradeId) => {
+    // Simple category mapping
+    if (upgradeId.includes('energy')) return 'passive';
+    if (upgradeId.includes('fire')) return 'active';
+    if (upgradeId.includes('shield')) return 'conditional';
+    return null;
+  },
+
+  getUpgradeHistory: () => {
+    return []; // Placeholder - will be implemented with UpgradeManager
+  },
+
+  clearUpgradeHistory: () => {
+    Logger.log('🧹 Clear upgrade history requested');
+  },
 
   purchaseIndividualFireUpgrade: (upgradeId, cost, maxLevel) => {
     const state = get();

@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import type { UpgradeCardProps } from './types';
 import { DiscountBadge } from './DiscountBadge';
 import { calculateDiscountedCost } from './utils';
-// import { playSound } from '../../../utils/sound/soundEffects'; // REMOVED: Use dynamic import
 
-export const UpgradeCard: React.FC<UpgradeCardProps> = ({ upgrade, gold, diceResult, discountMultiplier }) => {
+export const UpgradeCard: React.FC<UpgradeCardProps> = React.memo(({ upgrade, gold, diceResult, discountMultiplier }) => {
   const {
     name,
     description,
@@ -18,11 +17,13 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ upgrade, gold, diceRes
     additionalInfo
   } = upgrade;
 
-  const isMaxed = currentLevel >= maxLevel;
-  const finalCost = calculateDiscountedCost(baseCost, diceResult, discountMultiplier);
-  const canAfford = gold >= finalCost && !isMaxed;
+  // ✅ OPTIMIZED: Memoized calculations
+  const isMaxed = useMemo(() => currentLevel >= maxLevel, [currentLevel, maxLevel]);
+  const finalCost = useMemo(() => calculateDiscountedCost(baseCost, diceResult, discountMultiplier), [baseCost, diceResult, discountMultiplier]);
+  const canAfford = useMemo(() => gold >= finalCost && !isMaxed, [gold, finalCost, isMaxed]);
 
-  const handleUpgrade = () => {
+  // ✅ OPTIMIZED: Memoized event handler
+  const handleUpgrade = useCallback(() => {
     if (canAfford) {
       try {
         onUpgrade();
@@ -43,7 +44,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ upgrade, gold, diceRes
         playSound('error');
       });
     }
-  };
+  }, [canAfford, onUpgrade]);
 
   // Get rarity color based on affordability and state
   const getRarityColor = (): string => {
@@ -210,4 +211,4 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = ({ upgrade, gold, diceRes
       </button>
     </div>
   );
-}; 
+}); 
