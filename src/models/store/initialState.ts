@@ -12,7 +12,7 @@ export const initialState: GameState = {
   enemies: [],
   bullets: [],
   effects: [],
-  gold: 100,
+  gold: 200,
   bulletLevel: 1,
   currentWave: 1,
   enemiesKilled: 0,
@@ -118,6 +118,7 @@ export const initialState: GameState = {
   prepRemaining: GAME_CONSTANTS.PREP_TIME,
   waveStatus: 'idle' as WaveStatus,
   waveStartTime: 0,
+  selectedSlot: null,
   lostTowerThisWave: false,
   lastUpdate: 0,
 

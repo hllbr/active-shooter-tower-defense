@@ -40,11 +40,15 @@ const TowerControlIcon: React.FC<TowerControlIconProps> = ({
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
-  const handleClick = useCallback(() => {
-    if (!isDisabled) {
-      onClick();
-    }
-  }, [isDisabled, onClick]);
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!isDisabled) {
+        onClick();
+      }
+    },
+    [isDisabled, onClick]
+  );
 
   const handleMouseEnter = useCallback(() => {
     setShowTooltip(true);

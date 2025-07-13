@@ -52,14 +52,16 @@ export const GameArea: React.FC<GameAreaProps> = ({
   const brightness = isMobile ? 1.0 : 1.04;
 
   return (
-    <svg 
-      width={width} 
-      height={height} 
+    <svg
+      width={width}
+      height={height}
       style={{ display: 'block', position: 'absolute', top: 0, left: 0 }}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
+      onMouseDown={() => useGameStore.getState().selectSlot(null)}
+      onTouchStart={() => useGameStore.getState().selectSlot(null)}
     >
       <rect x={0} y={0} width={width} height={height} fill={ambientColor} opacity={overlayOpacity} />
 

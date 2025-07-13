@@ -6,6 +6,10 @@ import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
 
 export interface TowerSlice {
+  /** Currently selected tower slot index */
+  selectedSlot: number | null;
+  /** Set which slot is selected, or clear selection with null */
+  selectSlot: (slotIdx: number | null) => void;
   buildTower: (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy', towerClass?: TowerClass) => void;
   unlockSlot: (slotIdx: number) => void;
   damageTower: (slotIdx: number, dmg: number) => void;
@@ -31,6 +35,8 @@ export interface TowerSlice {
 }
 
 export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _get, _api) => ({
+  selectedSlot: null,
+  selectSlot: (slotIdx) => set({ selectedSlot: slotIdx }),
   buildTower: (slotIdx, free = false, towerType = 'attack', towerClass?: TowerClass) =>
     set((state: Store) => buildTowerAction(state, slotIdx, free, towerType, towerClass)),
 

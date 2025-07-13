@@ -15,7 +15,7 @@ interface TowerIconProps {
   towerData: typeof GAME_CONSTANTS.SPECIALIZED_TOWERS[TowerClass];
   isSelected: boolean;
   onSelect: () => void;
-  onHover: (towerData: typeof GAME_CONSTANTS.SPECIALIZED_TOWERS[TowerClass]) => void;
+  onHover: (towerData: typeof GAME_CONSTANTS.SPECIALIZED_TOWERS[TowerClass], event: React.MouseEvent<HTMLDivElement>) => void;
   onLeave: () => void;
 }
 
@@ -41,7 +41,7 @@ const TowerIcon: React.FC<TowerIconProps> = ({
     <div
       className={`tower-icon ${isSelected ? 'selected' : ''}`}
       onClick={onSelect}
-      onMouseEnter={() => onHover(towerData)}
+      onMouseEnter={(e) => onHover(towerData, e)}
       onMouseLeave={onLeave}
     >
       <div className="tower-icon-symbol">
@@ -162,7 +162,7 @@ export const TowerSelectionPanel: React.FC<TowerSelectionPanelProps> = ({
     onClose();
   }, [onSelectTower, onClose]);
 
-  const handleTowerHover = useCallback((towerData: typeof GAME_CONSTANTS.SPECIALIZED_TOWERS[TowerClass], event: React.MouseEvent) => {
+  const handleTowerHover = useCallback((towerData: typeof GAME_CONSTANTS.SPECIALIZED_TOWERS[TowerClass], event: React.MouseEvent<HTMLDivElement>) => {
     setTooltipData(towerData);
     setTooltipPosition({ x: event.clientX, y: event.clientY });
   }, []);
@@ -182,8 +182,6 @@ export const TowerSelectionPanel: React.FC<TowerSelectionPanelProps> = ({
 
   return (
     <>
-      {/* DEBUG: Panel Render Test */}
-      <div style={{position:'fixed',top:0,left:0,zIndex:2000,color:'red',background:'#fff',fontWeight:'bold',padding:'4px'}}>DEBUG: TowerSelectionPanel Rendered | Tower Types: {Object.keys(GAME_CONSTANTS.SPECIALIZED_TOWERS).join(', ')}</div>
       {/* Backdrop */}
       <div 
         className="tower-selection-backdrop"
@@ -223,7 +221,7 @@ export const TowerSelectionPanel: React.FC<TowerSelectionPanelProps> = ({
                       towerData={towerData}
                       isSelected={selectedTower === towerClass}
                       onSelect={() => handleTowerSelect(towerClass)}
-                      onHover={(data) => handleTowerHover(data, event as unknown as React.MouseEvent)}
+                      onHover={(data, e) => handleTowerHover(data, e)}
                       onLeave={handleTowerLeave}
                     />
                   );
