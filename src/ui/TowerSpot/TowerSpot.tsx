@@ -110,11 +110,28 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
     prevTower.current = slot.tower;
   }, [slot.tower]);
 
+  // --- YENİ: Fire origin ref ---
+  const svgGroupRef = React.useRef<SVGGElement>(null);
 
+  // Kule ateşleme için: data-fire-origin noktasının ekran pozisyonunu bul
+  React.useImperativeHandle(slot.fireOriginRef, () => ({
+    getFireOriginPosition: () => {
+      if (!svgGroupRef.current) return null;
+      const fireOrigin = svgGroupRef.current.querySelector('[data-fire-origin="true"]');
+      if (!fireOrigin) return null;
+      const bbox = (fireOrigin as SVGGraphicsElement).getBBox();
+      // SVG koordinatlarını döndür
+      return {
+        x: bbox.x + bbox.width / 2,
+        y: bbox.y + bbox.height / 2
+      };
+    }
+  }), [slot.tower]);
 
   return (
     <>
     <g
+      ref={svgGroupRef}
       onMouseDown={(e) => {
         selectSlot(slotIdx);
         e.stopPropagation();

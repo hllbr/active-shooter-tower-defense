@@ -505,6 +505,12 @@ export const GAME_CONSTANTS = {
       stealthDetectionRange: 400,
       cost: 150,
       description: 'Increases nearby tower accuracy, reveals stealth',
+      areaEffectType: 'heal',
+      areaEffectRadius: 100,
+      areaEffectPower: 8,
+      areaEffectDuration: 15000,
+      areaEffectActive: true,
+      areaEffectDecayTimer: 15000,
       upgradePaths: {
         surveillance: { stealthDetectionRange: 600, supportRadius: 250 },
         coordination: { supportIntensity: 1.5, supportRadius: 300 },
@@ -522,6 +528,12 @@ export const GAME_CONSTANTS = {
       supportIntensity: 1.2, // 20% reload speed bonus
       cost: 200,
       description: 'Enhances nearby towers, provides resources',
+      areaEffectType: 'heal',
+      areaEffectRadius: 100,
+      areaEffectPower: 6,
+      areaEffectDuration: 12000,
+      areaEffectActive: true,
+      areaEffectDecayTimer: 12000,
       upgradePaths: {
         logistics: { supportIntensity: 1.4, repairRate: 10 },
         armory: { supportIntensity: 1.3, supportRadius: 300 },
@@ -541,6 +553,12 @@ export const GAME_CONSTANTS = {
       supportRadius: 150,
       cost: 250,
       description: 'Provides shield protection to nearby towers',
+      areaEffectType: 'heal',
+      areaEffectRadius: 90,
+      areaEffectPower: 10,
+      areaEffectDuration: 18000,
+      areaEffectActive: true,
+      areaEffectDecayTimer: 18000,
       upgradePaths: {
         personal: { shieldStrength: 800, shieldRegenRate: 15 },
         area: { supportRadius: 200, shieldStrength: 1000 },
@@ -558,6 +576,12 @@ export const GAME_CONSTANTS = {
       supportRadius: 200,
       cost: 180,
       description: 'Repairs damaged towers automatically',
+      areaEffectType: 'heal',
+      areaEffectRadius: 120,
+      areaEffectPower: 12,
+      areaEffectDuration: 20000,
+      areaEffectActive: true,
+      areaEffectDecayTimer: 20000,
       upgradePaths: {
         drone: { repairRate: 75, supportRadius: 250 },
         nanobots: { repairRate: 25, supportRadius: 400 }, // Continuous repair
@@ -576,6 +600,12 @@ export const GAME_CONSTANTS = {
       areaOfEffect: 100,
       cost: 300,
       description: 'Disables enemy electronics',
+      areaEffectType: 'poison',
+      areaEffectRadius: 90,
+      areaEffectPower: 7,
+      areaEffectDuration: 10000,
+      areaEffectActive: true,
+      areaEffectDecayTimer: 10000,
       upgradePaths: {
         pulse: { empDuration: 5000, areaOfEffect: 150 },
         overload: { damage: 100, empDuration: 4000 },
@@ -594,6 +624,12 @@ export const GAME_CONSTANTS = {
       supportIntensity: 1.4, // Bonus damage to revealed enemies
       cost: 200,
       description: 'Reveals stealth enemies, marks targets',
+      areaEffectType: 'poison',
+      areaEffectRadius: 80,
+      areaEffectPower: 5,
+      areaEffectDuration: 9000,
+      areaEffectActive: true,
+      areaEffectDecayTimer: 9000,
       upgradePaths: {
         scanner: { stealthDetectionRange: 500, supportRadius: 350 },
         tracker: { supportIntensity: 1.8, stealthDetectionRange: 400 },
@@ -610,11 +646,35 @@ export const GAME_CONSTANTS = {
       projectilePenetration: 1,
       cost: 320,
       description: 'Specialized against flying enemies',
+      areaEffectType: 'fire',
+      areaEffectRadius: 100,
+      areaEffectPower: 9,
+      areaEffectDuration: 12000,
+      areaEffectActive: true,
+      areaEffectDecayTimer: 12000,
       upgradePaths: {
         interceptor: { projectilePenetration: 3, range: 500 },
         flak: { areaOfEffect: 80, damage: 150 },
         guided: { criticalChance: 0.3, manualTargeting: true }
       }
+    },
+    economy: {
+      name: 'Gold Mine',
+      category: 'support',
+      baseDamage: 0,
+      baseRange: 0,
+      baseFireRate: 0,
+      supportRadius: 0,
+      supportIntensity: 0,
+      cost: 100,
+      description: 'Generates gold each wave',
+      areaEffectType: 'heal',
+      areaEffectRadius: 60,
+      areaEffectPower: 4,
+      areaEffectDuration: 8000,
+      areaEffectActive: true,
+      areaEffectDecayTimer: 8000,
+      upgradePaths: {}
     }
   },
 

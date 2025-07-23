@@ -29,6 +29,8 @@ export interface UpgradeSlice {
   getUpgradeCategory: (upgradeId: string) => 'active' | 'passive' | 'conditional' | null;
   getUpgradeHistory: () => Array<{ upgradeId: string; level: number; cost: number; timestamp: number }>;
   clearUpgradeHistory: () => void;
+  purchaseSupportTowerUpgrade: (upgradeId: string, cost: number, maxLevel: number) => boolean;
+  getSupportTowerUpgradeInfo: (upgradeId: string, maxLevel: number) => { currentLevel: number; maxLevel: number; canUpgrade: boolean; isMaxed: boolean; };
 }
 
 export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (set, get, _api) => ({
@@ -215,4 +217,21 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
   setFirstTowerInfo: (info) => set((_state: Store) => ({
     firstTowerInfo: info
   })),
+
+  purchaseSupportTowerUpgrade: (upgradeId, cost, maxLevel) => {
+    const state = get();
+    const currentLevel = state.supportTowerUpgrades[upgradeId] || 0;
+    if (currentLevel >= maxLevel || state.gold < cost) return false;
+    set({
+      supportTowerUpgrades: { ...state.supportTowerUpgrades, [upgradeId]: currentLevel + 1 },
+      gold: state.gold - cost,
+      totalGoldSpent: state.totalGoldSpent + cost,
+    });
+    return true;
+  },
+  getSupportTowerUpgradeInfo: (upgradeId, maxLevel) => {
+    const state = get();
+    const currentLevel = state.supportTowerUpgrades[upgradeId] || 0;
+    return { currentLevel, maxLevel, canUpgrade: currentLevel < maxLevel, isMaxed: currentLevel >= maxLevel };
+  },
 });

@@ -22,7 +22,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   
   const currentWave = useGameStore((s: Store) => s.currentWave);
   const isRefreshing = useGameStore((s: Store) => s.isRefreshing);
-  const isPreparing = useGameStore((s: Store) => s.isPreparing);
+  // const isPreparing = useGameStore((s: Store) => s.isPreparing); // REMOVE: unused
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -51,11 +51,17 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       
       // 🎮 Resume game scene sounds after upgrade
       setTimeout(() => {
-        import('../../utils/sound').then(({ resumeGameSceneSounds }) => {
+        import('../../utils/sound/soundEffects').then(({ resumeGameSceneSounds }) => {
           resumeGameSceneSounds();
         });
       }, 100);
       
+      // HAVA DURUMU: Yükseltme ekranı kapandıktan sonra hava efektlerini başlat
+      import('../../game-systems/market/WeatherEffectMarket').then(({ weatherEffectMarket }) => {
+        const currentWave = useGameStore.getState().currentWave;
+        weatherEffectMarket.autoActivateEffects(currentWave);
+      });
+
       setRefreshing(false);
       
       if (onContinueCallback) {
@@ -107,7 +113,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     (window as unknown as { debugContinueButton: () => void }).debugContinueButton = () => {
       // Debug state available via debugContinueButton()
     };
-  }, [isRefreshing, isProcessing, isDisabled, currentWave, isPreparing]);
+  }, [isRefreshing, isProcessing, isDisabled, currentWave]);
 
   return (
     <button

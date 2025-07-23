@@ -275,6 +275,15 @@ export const keyframeStyles = `
       opacity: 0;
     }
   }
+  /* Radar Tower Animasyonları */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes pulse {
+    0% { opacity: 0.3; transform: scale(1); }
+    100% { opacity: 0.8; transform: scale(1.1); }
+  }
 `;
 
 // Stil sabitleri

@@ -25,7 +25,6 @@ import {
 import { SpawnZoneDebugOverlay } from './components/overlays/SpawnZoneDebugOverlay';
 import { SynergyDisplay } from '../TowerSpot/components/SynergyDisplay';
 
-import { WeatherEffectsIndicator } from './components/overlays/WeatherEffectsIndicator';
 
 // Import enhanced hooks
 import { 
@@ -107,7 +106,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
   // 🎮 UPGRADE SCREEN: Stop only game scene sounds when upgrade screen opens
   useEffect(() => {
     if (isRefreshing) {
-      import('../../utils/sound').then(({ pauseGameSceneSounds }) => {
+      import('../../utils/sound/soundEffects').then(({ pauseGameSceneSounds }) => {
         pauseGameSceneSounds();
       });
     }
@@ -233,8 +232,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
 
 
       {/* Weather Effects Indicator */}
-      <WeatherEffectsIndicator />
-
       
               {/* Conditional renderer based on performance settings */}
         <ConditionalRenderer />
@@ -271,6 +268,36 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
         timeOfDay={'day'}
         isMobile={isMobile}
       />
+      {/* Area Effect Overlays for Support Towers */}
+      <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}>
+        {towerSlots.map((slot) => {
+          const t = slot.tower;
+          if (!t || !t.areaEffectActive || !t.areaEffectType || !t.areaEffectRadius) return null;
+          // Convert game coords to screen coords (assume 1:1 for now, adjust if needed)
+          const left = t.position.x - t.areaEffectRadius;
+          const top = t.position.y - t.areaEffectRadius;
+          const size = t.areaEffectRadius * 2;
+          let className = '';
+          if (t.areaEffectType === 'heal') className = 'area-effect-heal';
+          else if (t.areaEffectType === 'poison') className = 'area-effect-poison';
+          else if (t.areaEffectType === 'fire') className = 'area-effect-fire';
+          return (
+            <div
+              key={`area-effect-${t.id}`}
+              className={className}
+              style={{
+                position: 'absolute',
+                left,
+                top,
+                width: size,
+                height: size,
+                zIndex: 3,
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }; 

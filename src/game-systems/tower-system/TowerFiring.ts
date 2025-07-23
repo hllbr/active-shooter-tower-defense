@@ -23,8 +23,19 @@ export class TowerFiringSystem {
     bulletType: { speedMultiplier: number; damageMultiplier: number; color: string },
     addBullet: (bullet: Bullet) => void,
     addEffect?: (effect: Effect) => void,
-    damageEnemy?: (id: string, damage: number) => void
+    damageEnemy?: (id: string, damage: number) => void,
+    slot?: TowerSlot
   ): void {
+    // Mermi çıkış pozisyonunu fireOriginRef ile al
+    let fireOrigin = { x: tower.position.x, y: tower.position.y };
+    if (slot && slot.fireOriginRef && slot.fireOriginRef.current) {
+      const ref = slot.fireOriginRef.current as SVGGElement & { getFireOriginPosition?: () => { x: number; y: number } };
+      const getFireOriginPosition = ref.getFireOriginPosition;
+      if (typeof getFireOriginPosition === 'function') {
+        const pos = getFireOriginPosition();
+        if (pos) fireOrigin = pos;
+      }
+    }
     // CRITICAL FIX: Apply upgrade effects to bullet damage and speed
     const baseDamage = tower.damage * bulletType.damageMultiplier;
     const baseSpeed = GAME_CONSTANTS.BULLET_SPEED * bulletType.speedMultiplier;
@@ -38,19 +49,19 @@ export class TowerFiringSystem {
     // Enhanced firing mechanics based on tower class
     switch (tower.towerClass) {
       case 'gatling':
-        this.fireGatlingTower(tower, enemy, damage, speed, bulletType.color, addBullet, addEffect, damageEnemy);
+        this.fireGatlingTower(tower, enemy, damage, speed, bulletType.color, addBullet, addEffect, damageEnemy, fireOrigin);
         break;
       case 'laser':
-        this.fireLaserTower(tower, enemy, damage, speed, bulletType.color, addBullet, addEffect, damageEnemy);
+        this.fireLaserTower(tower, enemy, damage, speed, bulletType.color, addBullet, addEffect, damageEnemy, fireOrigin);
         break;
       case 'mortar':
-        this.fireMortarTower(tower, enemy, damage, speed, bulletType.color, addBullet, addEffect, damageEnemy);
+        this.fireMortarTower(tower, enemy, damage, speed, bulletType.color, addBullet, addEffect, damageEnemy, fireOrigin);
         break;
       case 'flamethrower':
-        this.fireFlamethrowerTower(tower, enemy, damage, speed, bulletType.color, addBullet, addEffect, damageEnemy);
+        this.fireFlamethrowerTower(tower, enemy, damage, speed, bulletType.color, addBullet, addEffect, damageEnemy, fireOrigin);
         break;
       default:
-        this.fireStandardTower(tower, enemy, damage, speed, bulletType.color, addBullet);
+        this.fireStandardTower(tower, enemy, damage, speed, bulletType.color, addBullet, fireOrigin);
         break;
     }
     
@@ -75,11 +86,12 @@ export class TowerFiringSystem {
     damage: number,
     speed: number,
     color: string,
-    addBullet: (bullet: Bullet) => void
+    addBullet: (bullet: Bullet) => void,
+    fireOrigin: { x: number; y: number }
   ): void {
     const bullet = bulletPool.createBullet(
-      { x: tower.position.x, y: tower.position.y },
-      getDirection(tower.position, enemy.position),
+      fireOrigin,
+      getDirection(fireOrigin, enemy.position),
       damage,
       speed,
       color,
@@ -101,12 +113,14 @@ export class TowerFiringSystem {
     color: string,
     addBullet: (bullet: Bullet) => void,
     addEffect?: (effect: Effect) => void,
-    _damageEnemy?: (id: string, damage: number) => void
+    _damageEnemy?: (id: string, damage: number) => void,
+    fireOrigin?: { x: number; y: number }
   ): void {
+    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
     // Primary target
     const primaryBullet = bulletPool.createBullet(
-      { x: tower.position.x, y: tower.position.y },
-      getDirection(tower.position, enemy.position),
+      origin,
+      getDirection(origin, enemy.position),
       damage * 0.8, // Reduced damage for dual targeting
       speed,
       color,
@@ -122,8 +136,8 @@ export class TowerFiringSystem {
       const secondaryTarget = this.findSecondaryTarget(tower, enemy);
       if (secondaryTarget) {
         const secondaryBullet = bulletPool.createBullet(
-          { x: tower.position.x, y: tower.position.y },
-          getDirection(tower.position, secondaryTarget.position),
+          origin,
+          getDirection(origin, secondaryTarget.position),
           damage * 0.6, // Further reduced damage for secondary target
           speed * 0.9,
           '#FFD700', // Gold color for secondary projectile
@@ -159,15 +173,17 @@ export class TowerFiringSystem {
     color: string,
     addBullet: (bullet: Bullet) => void,
     addEffect?: (effect: Effect) => void,
-    _damageEnemy?: (id: string, damage: number) => void
+    _damageEnemy?: (id: string, damage: number) => void,
+    fireOrigin?: { x: number; y: number }
   ): void {
+    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
     // Laser beam with penetration
     const penetration = tower.projectilePenetration || 1;
     const beamDamage = damage * (1 + (penetration - 1) * 0.3); // Damage increases with penetration
     
     const laserBullet = bulletPool.createBullet(
-      { x: tower.position.x, y: tower.position.y },
-      getDirection(tower.position, enemy.position),
+      origin,
+      getDirection(origin, enemy.position),
       beamDamage,
       speed * 2, // Faster laser projectiles
       '#00FFFF', // Cyan color for laser
@@ -201,12 +217,14 @@ export class TowerFiringSystem {
     color: string,
     addBullet: (bullet: Bullet) => void,
     addEffect?: (effect: Effect) => void,
-    damageEnemy?: (id: string, damage: number) => void
+    damageEnemy?: (id: string, damage: number) => void,
+    fireOrigin?: { x: number; y: number }
   ): void {
+    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
     // Mortar shell with arc trajectory
     const mortarBullet = bulletPool.createBullet(
-      { x: tower.position.x, y: tower.position.y },
-      getDirection(tower.position, enemy.position),
+      origin,
+      getDirection(origin, enemy.position),
       damage * 1.5, // Increased damage for AOE
       speed * 0.7, // Slower but more powerful
       '#8B4513', // Brown color for mortar shell
@@ -249,16 +267,18 @@ export class TowerFiringSystem {
     color: string,
     addBullet: (bullet: Bullet) => void,
     addEffect?: (effect: Effect) => void,
-    damageEnemy?: (id: string, damage: number) => void
+    damageEnemy?: (id: string, damage: number) => void,
+    fireOrigin?: { x: number; y: number }
   ): void {
+    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
     // Chain fire: damage spreads to nearby enemies
     const chainRadius = 60;
     const chainDamage = damage * 0.7;
     
     // Primary target
     const primaryBullet = bulletPool.createBullet(
-      { x: tower.position.x, y: tower.position.y },
-      getDirection(tower.position, enemy.position),
+      origin,
+      getDirection(origin, enemy.position),
       damage,
       speed,
       '#FF4500', // Orange-red for fire
@@ -358,6 +378,110 @@ export class TowerFiringSystem {
     towerSlots.forEach((slot) => {
       const tower = slot.tower;
       if (!tower) return;
+
+      // --- AREA EFFECTS FOR NON-ATTACKING TOWERS ---
+      const supportClasses = [
+        'radar', 'supply_depot', 'shield_generator', 'repair_station',
+        'emp', 'stealth_detector', 'air_defense', 'economy'
+      ];
+      if (supportClasses.includes(tower.towerClass || '') && tower.areaEffectType && tower.areaEffectActive) {
+        // Area effect tick (every 500ms)
+        const tickInterval = 500;
+        if (!tower.areaEffectLastTick || now - tower.areaEffectLastTick >= tickInterval) {
+          tower.areaEffectLastTick = now;
+          // Find targets in area
+          if (tower.areaEffectType === 'heal') {
+            // Heal self or nearby towers
+            tower.health = Math.min(tower.maxHealth, tower.health + (tower.areaEffectPower || 5));
+            // Optionally: heal nearby towers as well
+            towerSlots.forEach(s2 => {
+              if (s2.tower && s2.tower.id !== tower.id) {
+                const dx = s2.tower.position.x - tower.position.x;
+                const dy = s2.tower.position.y - tower.position.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist <= (tower.areaEffectRadius || 80)) {
+                  s2.tower.health = Math.min(s2.tower.maxHealth, s2.tower.health + (tower.areaEffectPower || 5));
+                }
+              }
+            });
+            // Visual effect
+            addEffect({
+              id: `heal-circle-${tower.id}-${now}`,
+              position: tower.position,
+              radius: tower.areaEffectRadius || 80,
+              color: '#00FFAA',
+              life: 400,
+              maxLife: 400,
+              type: 'heal_area',
+              opacity: 0.25
+            });
+          } else if (tower.areaEffectType === 'poison') {
+            // Poison enemies in area
+            enemies.forEach(enemy => {
+              const dx = enemy.position.x - tower.position.x;
+              const dy = enemy.position.y - tower.position.y;
+              const dist = Math.sqrt(dx*dx + dy*dy);
+              if (dist <= (tower.areaEffectRadius || 80)) {
+                damageEnemy(enemy.id, tower.areaEffectPower || 4);
+                // Optionally: add poison debuff to enemy
+              }
+            });
+            // Visual effect
+            addEffect({
+              id: `poison-cloud-${tower.id}-${now}`,
+              position: tower.position,
+              radius: tower.areaEffectRadius || 80,
+              color: '#44FF44',
+              life: 400,
+              maxLife: 400,
+              type: 'poison_area',
+              opacity: 0.18
+            });
+          } else if (tower.areaEffectType === 'fire') {
+            // Fire damage to enemies in area
+            enemies.forEach(enemy => {
+              const dx = enemy.position.x - tower.position.x;
+              const dy = enemy.position.y - tower.position.y;
+              const dist = Math.sqrt(dx*dx + dy*dy);
+              if (dist <= (tower.areaEffectRadius || 80)) {
+                damageEnemy(enemy.id, tower.areaEffectPower || 6);
+              }
+            });
+            // Visual effect
+            addEffect({
+              id: `fire-ring-${tower.id}-${now}`,
+              position: tower.position,
+              radius: tower.areaEffectRadius || 80,
+              color: '#FF6600',
+              life: 400,
+              maxLife: 400,
+              type: 'fire_area',
+              opacity: 0.22
+            });
+          }
+        }
+        // Decay logic: if not upgraded/repaired, effect decays and tower is destroyed
+        if (tower.areaEffectDuration && tower.areaEffectDecayTimer !== undefined) {
+          tower.areaEffectDecayTimer -= (now - (tower.areaEffectLastTick || now));
+          if (tower.areaEffectDecayTimer <= 0) {
+            tower.areaEffectActive = false;
+            // Optionally: destroy tower
+            tower.health = 0;
+            // Visual effect for destruction
+            addEffect({
+              id: `area-decay-${tower.id}-${now}`,
+              position: tower.position,
+              radius: tower.areaEffectRadius || 80,
+              color: '#888888',
+              life: 600,
+              maxLife: 600,
+              type: 'decay_area',
+              opacity: 0.3
+            });
+          }
+        }
+        return; // Skip firing logic for support towers
+      }
 
       if (modifier?.disableTowerType && tower.specialAbility === modifier.disableTowerType) return;
       if (modifier?.disableArea) {
@@ -499,7 +623,7 @@ export class TowerFiringSystem {
         speedMultiplier: bulletType.speedMultiplier,
         damageMultiplier: damageMultiplier,
         color: bulletType.color,
-      }, addBullet, addEffect, damageEnemy);
+      }, addBullet, addEffect, damageEnemy, slot);
     });
   }
 }

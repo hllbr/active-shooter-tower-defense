@@ -83,7 +83,15 @@ export function buildTowerAction(
     stealthDetectionRange: specializedTowerData?.stealthDetectionRange ?? 0,
     manualTargeting: false,
     upgradePath: '',
-    synergyBonuses: { damage: 0, range: 0, fireRate: 0 }
+    synergyBonuses: { damage: 0, range: 0, fireRate: 0 },
+    // Area effect properties for support towers
+    areaEffectType: specializedTowerData?.areaEffectType ?? null,
+    areaEffectRadius: specializedTowerData?.areaEffectRadius ?? 0,
+    areaEffectPower: specializedTowerData?.areaEffectPower ?? 0,
+    areaEffectDuration: specializedTowerData?.areaEffectDuration ?? 0,
+    areaEffectActive: specializedTowerData?.areaEffectActive ?? false,
+    areaEffectLastTick: undefined,
+    areaEffectDecayTimer: specializedTowerData?.areaEffectDecayTimer ?? 0,
   };
 
   const newSlots = [...state.towerSlots];
