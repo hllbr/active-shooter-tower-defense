@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { VisualExtrasProps } from '../types';
+import { playSound } from '../../../utils/sound/soundEffects';
 
 /**
  * Tower Effects Renderer
@@ -237,6 +238,16 @@ const MortarEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 const FlamethrowerEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
   const scale = usePulseAnimation(1100, 0.93, 1.09);
   const r = (slot.tower?.areaEffectRadius || (GAME_CONSTANTS.TOWER_SIZE + 15)) * scale;
+  const [played, setPlayed] = useState(false);
+  useEffect(() => {
+    if (slot.tower?.areaEffectActive && !played) {
+      playSound('explosion-small');
+      setPlayed(true);
+    }
+    if (!slot.tower?.areaEffectActive && played) {
+      setPlayed(false);
+    }
+  }, [slot.tower?.areaEffectActive, played]);
   return (
     <g>
       {/* Fire Aura (animated, red/orange) */}
@@ -371,6 +382,16 @@ const SupplyDepotEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 const ShieldGeneratorEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
   const scale = usePulseAnimation(1200, 0.95, 1.08);
   const r = (slot.tower?.areaEffectRadius || (GAME_CONSTANTS.TOWER_SIZE + 30)) * scale;
+  const [played, setPlayed] = useState(false);
+  useEffect(() => {
+    if (slot.tower?.areaEffectActive && !played) {
+      playSound('shield-activate');
+      setPlayed(true);
+    }
+    if (!slot.tower?.areaEffectActive && played) {
+      setPlayed(false);
+    }
+  }, [slot.tower?.areaEffectActive, played]);
   return (
     <g>
       {/* Shield Aura (animated, blue) */}
@@ -421,6 +442,16 @@ const ShieldGeneratorEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 const RepairStationEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
   const scale = usePulseAnimation(1400, 0.92, 1.08);
   const r = (slot.tower?.areaEffectRadius || (GAME_CONSTANTS.TOWER_SIZE + 25)) * scale;
+  const [played, setPlayed] = useState(false);
+  useEffect(() => {
+    if (slot.tower?.areaEffectActive && !played) {
+      playSound('energy-recharge');
+      setPlayed(true);
+    }
+    if (!slot.tower?.areaEffectActive && played) {
+      setPlayed(false);
+    }
+  }, [slot.tower?.areaEffectActive, played]);
   return (
     <g>
       {/* Healing Pulse (animated, green) */}

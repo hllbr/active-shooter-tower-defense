@@ -11,6 +11,7 @@ import { DefenseUpgrades } from '../game/upgrades/DefenseUpgrades';
 import { UpgradePackages } from '../game/upgrades/UpgradePackages';
 import { PowerMarket } from '../game/upgrades/PowerMarket';
 import { WeatherMarketContent } from '../game/market/WeatherMarketContent';
+import { AuraUpgrades } from '../game/upgrades/AuraUpgrades';
 
 // Tab specific components
 
@@ -29,6 +30,7 @@ export const UpgradeTabContent: React.FC<TabContentProps> = ({ activeTab }) => {
           <div style={tabStyles.coreTabContainer}>
             <FireUpgrades/>
             <ShieldUpgrades />
+            <AuraUpgrades />
             {bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length && <DefenseUpgrades />}
           </div>
         );
