@@ -40,6 +40,7 @@ export type Store = GameState &
      * Set the first tower placed state (for wave spawn gating)
      */
     setFirstTowerPlaced: (placed: boolean) => void;
+    setGameReadyForWaves: (ready: boolean) => void;
   };
 
 export const useGameStore = create<Store>((set, get, api) => ({
@@ -73,6 +74,7 @@ export const useGameStore = create<Store>((set, get, api) => ({
    * Set the first tower placed state (for wave spawn gating)
    */
   setFirstTowerPlaced: (placed: boolean) => set({ isFirstTowerPlaced: placed }),
+  setGameReadyForWaves: (ready: boolean) => set({ gameReadyForWaves: ready }),
 }));
 
 

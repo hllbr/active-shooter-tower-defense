@@ -233,7 +233,14 @@ export function logPerformanceStats() {
     if (win.performance && win.performance.memory) {
       mem = (win.performance.memory.usedJSHeapSize / 1048576).toFixed(2);
     }
-    // eslint-disable-next-line no-console
     console.log(`[PERF] FPS: ${fps} | Memory: ${mem} MB | Enemies:`, useGameStore.getState().enemies.length);
   }
 } 
+
+const store = useGameStore;
+store.subscribe((state, prevState) => {
+  if (!prevState.gameReadyForWaves && state.gameReadyForWaves) {
+    // Start wave spawning logic here, e.g.:
+    // WaveSpawnManager.startEnemyWave(state.currentWave);
+  }
+}); 

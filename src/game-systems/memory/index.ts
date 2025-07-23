@@ -5,7 +5,6 @@
 export { CleanupManager } from './CleanupManager';
 export { cleanupManager } from './CleanupManager';
 export { ObjectPool } from './ObjectPool';
-export { BulletPool } from './BulletPool';
 export { EffectPool } from './EffectPool';
 export { LifecycleManager } from './LifecycleManager';
 export { MemoryMonitor } from './MemoryMonitor';

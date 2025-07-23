@@ -209,6 +209,7 @@ export const initialState: GameState = {
 
   // Track if the first tower has been placed (for wave spawn gating)
   isFirstTowerPlaced: false,
+  gameReadyForWaves: false,
 
   supportTowerUpgrades: {
     radar_area_radius: 0,

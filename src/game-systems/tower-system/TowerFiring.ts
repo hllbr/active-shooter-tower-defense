@@ -2,7 +2,7 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Enemy, Tower, Bullet, Effect, TowerSlot } from '../../models/gameTypes';
 import { playSound } from '../../utils/sound';
 import { upgradeEffectsManager } from '../UpgradeEffects';
-import { bulletPool } from '../bullet-system/BulletPool';
+import { advancedBulletPool } from '../memory/AdvancedBulletPool';
 import { getDirection, getTargetEnemy, TargetingMode } from '../targeting-system/TargetingSystem';
 import { specialAbilitiesManager } from './SpecialAbilities';
 import { towerSynergyManager } from './TowerSynergyManager';
@@ -82,21 +82,20 @@ export class TowerFiringSystem {
    * Standard tower firing (single target)
    */
   private fireStandardTower(
-    tower: Tower,
+    _tower: Tower,
     enemy: Enemy,
     damage: number,
     speed: number,
-    color: string,
+    _color: string,
     addBullet: (bullet: Bullet) => void,
     fireOrigin: { x: number; y: number }
   ): void {
-    const bullet = bulletPool.createBullet(
+    const bullet = advancedBulletPool.createBullet(
       fireOrigin,
       getDirection(fireOrigin, enemy.position),
       damage,
       speed,
-      color,
-      0,
+      '#FF0000', // Default color for standard bullets
       enemy.id
     );
     
@@ -107,42 +106,40 @@ export class TowerFiringSystem {
    * Gatling tower firing (dual-target with rapid fire)
    */
   private fireGatlingTower(
-    tower: Tower,
+    _tower: Tower,
     enemy: Enemy,
     damage: number,
     speed: number,
-    color: string,
+    _color: string,
     addBullet: (bullet: Bullet) => void,
     addEffect?: (effect: Effect) => void,
     _damageEnemy?: (id: string, damage: number) => void,
     fireOrigin?: { x: number; y: number }
   ): void {
-    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
+    const origin = fireOrigin || { x: _tower.position.x, y: _tower.position.y };
     // Primary target
-    const primaryBullet = bulletPool.createBullet(
+    const primaryBullet = advancedBulletPool.createBullet(
       origin,
       getDirection(origin, enemy.position),
       damage * 0.8, // Reduced damage for dual targeting
       speed,
-      color,
-      0,
+      '#FFD700', // Gold color for secondary projectile
       enemy.id
     );
     
     addBullet(primaryBullet);
     
     // Secondary target (if available)
-    if (tower.multiShotCount && tower.multiShotCount > 1) {
+    if (_tower.multiShotCount && _tower.multiShotCount > 1) {
       // Find secondary target within range
-      const secondaryTarget = this.findSecondaryTarget(tower, enemy);
+      const secondaryTarget = this.findSecondaryTarget(_tower, enemy);
       if (secondaryTarget) {
-        const secondaryBullet = bulletPool.createBullet(
+        const secondaryBullet = advancedBulletPool.createBullet(
           origin,
           getDirection(origin, secondaryTarget.position),
           damage * 0.6, // Further reduced damage for secondary target
           speed * 0.9,
           '#FFD700', // Gold color for secondary projectile
-          0,
           secondaryTarget.id
         );
         
@@ -154,7 +151,7 @@ export class TowerFiringSystem {
     if (addEffect) {
       addEffect({
         id: `${Date.now()}-gatling-spin`,
-        position: tower.position,
+        position: _tower.position,
         radius: 20,
         color: '#FF6B35',
         life: 200,
@@ -167,28 +164,27 @@ export class TowerFiringSystem {
    * Laser tower firing (beam weapon with penetration)
    */
   private fireLaserTower(
-    tower: Tower,
+    _tower: Tower,
     enemy: Enemy,
     damage: number,
     speed: number,
-    color: string,
+    _color: string,
     addBullet: (bullet: Bullet) => void,
     addEffect?: (effect: Effect) => void,
     _damageEnemy?: (id: string, damage: number) => void,
     fireOrigin?: { x: number; y: number }
   ): void {
-    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
+    const origin = fireOrigin || { x: _tower.position.x, y: _tower.position.y };
     // Laser beam with penetration
-    const penetration = tower.projectilePenetration || 1;
+    const penetration = _tower.projectilePenetration || 1;
     const beamDamage = damage * (1 + (penetration - 1) * 0.3); // Damage increases with penetration
     
-    const laserBullet = bulletPool.createBullet(
+    const laserBullet = advancedBulletPool.createBullet(
       origin,
       getDirection(origin, enemy.position),
       beamDamage,
       speed * 2, // Faster laser projectiles
       '#00FFFF', // Cyan color for laser
-      penetration - 1,
       enemy.id
     );
     
@@ -198,7 +194,7 @@ export class TowerFiringSystem {
     if (addEffect) {
       addEffect({
         id: `${Date.now()}-laser-beam`,
-        position: tower.position,
+        position: _tower.position,
         radius: 5,
         color: '#00FFFF',
         life: 150,
@@ -211,25 +207,24 @@ export class TowerFiringSystem {
    * Mortar tower firing (AOE explosion)
    */
   private fireMortarTower(
-    tower: Tower,
+    _tower: Tower,
     enemy: Enemy,
     damage: number,
     speed: number,
-    color: string,
+    _color: string,
     addBullet: (bullet: Bullet) => void,
     addEffect?: (effect: Effect) => void,
     damageEnemy?: (id: string, damage: number) => void,
     fireOrigin?: { x: number; y: number }
   ): void {
-    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
+    const origin = fireOrigin || { x: _tower.position.x, y: _tower.position.y };
     // Mortar shell with arc trajectory
-    const mortarBullet = bulletPool.createBullet(
+    const mortarBullet = advancedBulletPool.createBullet(
       origin,
       getDirection(origin, enemy.position),
       damage * 1.5, // Increased damage for AOE
       speed * 0.7, // Slower but more powerful
       '#8B4513', // Brown color for mortar shell
-      0,
       enemy.id
     );
     
@@ -238,7 +233,7 @@ export class TowerFiringSystem {
     // AOE explosion effect on impact
     if (addEffect && damageEnemy) {
       setTimeout(() => {
-        const explosionRadius = tower.areaOfEffect || 80;
+        const explosionRadius = _tower.areaOfEffect || 80;
         const explosionDamage = damage * 0.8;
         
         // Create explosion effect
@@ -261,29 +256,28 @@ export class TowerFiringSystem {
    * Flamethrower tower firing (chain fire)
    */
   private fireFlamethrowerTower(
-    tower: Tower,
+    _tower: Tower,
     enemy: Enemy,
     damage: number,
     speed: number,
-    color: string,
+    _color: string,
     addBullet: (bullet: Bullet) => void,
     addEffect?: (effect: Effect) => void,
     damageEnemy?: (id: string, damage: number) => void,
     fireOrigin?: { x: number; y: number }
   ): void {
-    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
+    const origin = fireOrigin || { x: _tower.position.x, y: _tower.position.y };
     // Chain fire: damage spreads to nearby enemies
     const chainRadius = 60;
     const chainDamage = damage * 0.7;
     
     // Primary target
-    const primaryBullet = bulletPool.createBullet(
+    const primaryBullet = advancedBulletPool.createBullet(
       origin,
       getDirection(origin, enemy.position),
       damage,
       speed,
       '#FF4500', // Orange-red for fire
-      0,
       enemy.id
     );
     

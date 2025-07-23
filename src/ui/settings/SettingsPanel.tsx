@@ -4,6 +4,7 @@ import { PerformanceModeSelector } from './PerformanceModeSelector';
 import { getSettings, saveSettings } from '../../utils/settings';
 import { enhancedAudioManager } from '../../utils/sound/EnhancedAudioManager';
 import './SettingsPanel.css';
+import { useGameStore } from '../../models/store';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -11,10 +12,16 @@ interface SettingsPanelProps {
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
+  const setPaused = useGameStore(state => state.setPaused);
   const [showPerformanceSelector, setShowPerformanceSelector] = useState(false);
   const [settings, setSettingsState] = useState(getSettings());
 
   const currentPerformanceMode = performanceSettings.getMode();
+
+  React.useEffect(() => {
+    if (isOpen) setPaused(true);
+    return () => setPaused(false);
+  }, [isOpen, setPaused]);
 
   const handleVolumeChange = useCallback((type: 'sfxVolume' | 'musicVolume', value: number) => {
     const newSettings = { ...settings, [type]: value };

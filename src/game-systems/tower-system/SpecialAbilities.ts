@@ -2,7 +2,7 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Effect, Enemy, Tower } from '../../models/gameTypes';
 import { energyManager } from '../EnergyManager';
 import { getEnemiesInRange, getDirection } from '../targeting-system/TargetingSystem';
-import { bulletPool } from '../bullet-system/BulletPool';
+import { advancedBulletPool } from '../memory/AdvancedBulletPool';
 
 /**
  * Special ability handler for towers
@@ -97,7 +97,7 @@ export class SpecialAbilitiesManager {
     // Multi-shot: Shoot at multiple enemies using bullet pool
     const targets = enemiesInRange.slice(0, tower.multiShotCount);
     targets.forEach(enemy => {
-      bulletPool.createBullet(
+      advancedBulletPool.createBullet(
         { x: tower.position.x, y: tower.position.y },
         getDirection(tower.position, enemy.position),
         tower.damage,

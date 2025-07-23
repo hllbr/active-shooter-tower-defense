@@ -6,7 +6,6 @@ import { stateTracker, performanceMonitor, GameStateSelectors } from './StateOpt
 import { SimplifiedEnvironmentManager } from './environment/SimplifiedEnvironmentManager';
 import { aiManager } from './ai-automation';
 import { FireHazardManager } from './FireHazardManager';
-import { logPerformanceStats } from './enemy/WaveSpawnManager';
 
 // Performance metrics for monitoring
 interface GameLoopMetrics {
@@ -46,11 +45,8 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
     
     // Only update if enough time has passed
     if (deltaTime >= targetFrameTime) {
-      // ✅ CRITICAL FIX: Stop game loop updates if game is over, paused, OR in upgrade screen
-      // PERFORMANCE: This prevents unnecessary updates during upgrade screen or pause,
-      // improving battery life and reducing CPU usage when game is paused
+      // CRITICAL FIX: Stop game loop updates if game is over, paused, OR in upgrade screen
       if (state.isGameOver || state.isRefreshing || state.isPaused) {
-        // Still request animation frame to show screen, but don't update game logic
         frameId = requestAnimationFrame(loop);
         return;
       }
@@ -137,9 +133,9 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
       lastStateSnapshot.bulletCount = currentBulletCount;
       
       // At the end of each tick, log performance stats (debug only)
-      if (window && window['GAME_CONSTANTS'] && window['GAME_CONSTANTS'].DEBUG_MODE) {
-        logPerformanceStats();
-      }
+      // if (window && window['GAME_CONSTANTS'] && window['GAME_CONSTANTS'].DEBUG_MODE) {
+      //   logPerformanceStats();
+      // }
       
       // Calculate performance metrics
       gameLoopMetrics.avgDelta = (gameLoopMetrics.avgDelta * 0.9) + (deltaTime * 0.1);

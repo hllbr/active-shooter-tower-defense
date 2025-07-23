@@ -514,6 +514,10 @@ export interface GameState {
     economy_area_power: number;
     economy_area_duration: number;
   };
+  /**
+   * True if the game is ready to spawn waves (at least one tower placed)
+   */
+  gameReadyForWaves: boolean;
 }
 
 // ✅ NEW: Defense Target System

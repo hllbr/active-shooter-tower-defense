@@ -2,8 +2,7 @@ import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Enemy, TowerSlot, Position } from '../../models/gameTypes';
 import { createManagedEffect } from '../effects-system/Effects';
-import { Logger } from '../../utils/Logger';
-import { advancedEnemyPool } from '../memory/AdvancedEnemyPool';
+import { advancedPoolManager } from '../memory/AdvancedPoolManager';
 import type { AdvancedEnemy } from '../memory/AdvancedEnemyPool';
 
 /**
@@ -294,7 +293,7 @@ export class EnemyBehaviorSystem {
     // Create phase transition effect
     this.createPhaseTransitionEffect(enemy.position, newPhase);
 
-    Logger.log(`Boss ${enemy.id} entered phase ${newPhase}`);
+    // Removed debug log for production cleanliness
   }
 
   /**
@@ -452,7 +451,8 @@ export class EnemyBehaviorSystem {
       this.fleeingEnemies.delete(enemy.id);
       this.fleeStartTimes.delete(enemy.id);
       enemy.color = this.getOriginalColor(enemy.type || 'Basic');
-      advancedEnemyPool.release(enemy as AdvancedEnemy);
+      const enemyPool = advancedPoolManager.getPool<AdvancedEnemy>('enemy');
+      if (enemyPool) enemyPool.release(enemy as AdvancedEnemy);
     }
   }
 
