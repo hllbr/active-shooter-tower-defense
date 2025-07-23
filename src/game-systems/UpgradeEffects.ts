@@ -93,23 +93,3 @@ export class UpgradeEffectsManager {
 
 // Create singleton instance
 export const upgradeEffectsManager = UpgradeEffectsManager.getInstance();
-
-// Original visual effects system (keep for backward compatibility)
-export function initUpgradeEffects() {
-  // Kule yükseltme efektleri devre dışı bırakıldı
-  // const { addTowerUpgradeListener, addEffect } = useGameStore.getState();
-  // const listener: TowerUpgradeListener = (tower, _oldLevel, newLevel) => {
-  //   const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === newLevel);
-  //   if (visual?.effect) {
-  //     addEffect({
-  //       id: `${Date.now()}-${Math.random()}`,
-  //       position: tower.position,
-  //       radius: 40,
-  //       color: '#88f',
-  //       life: 600,
-  //       maxLife: 600,
-  //     });
-  //   }
-  // };
-  // addTowerUpgradeListener(listener);
-}

@@ -3,7 +3,6 @@
  */
 
 import { CleanupManager } from './CleanupManager';
-import { BulletPool } from './BulletPool';
 import { EffectPool } from './EffectPool';
 import { LifecycleManager } from './LifecycleManager';
 import { MemoryMonitor } from './MemoryMonitor';
@@ -12,7 +11,6 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 export class GlobalMemoryManager {
   private static instance: GlobalMemoryManager;
   private cleanupManager: CleanupManager;
-  private bulletPool: BulletPool;
   private effectPool: EffectPool;
   private lifecycleManager: LifecycleManager;
   private memoryMonitor: MemoryMonitor;
@@ -20,7 +18,6 @@ export class GlobalMemoryManager {
   
   private constructor() {
     this.cleanupManager = CleanupManager.getInstance();
-    this.bulletPool = new BulletPool();
     this.effectPool = new EffectPool();
     this.lifecycleManager = LifecycleManager.getInstance();
     this.memoryMonitor = MemoryMonitor.getInstance();
@@ -80,7 +77,6 @@ export class GlobalMemoryManager {
     this.lifecycleManager.cleanupStale();
     
     // Release unused objects from pools
-    this.bulletPool.clear();
     this.effectPool.clear();
     
     // Force garbage collection if available
@@ -93,7 +89,6 @@ export class GlobalMemoryManager {
   performFullCleanup(): void {
     this.stopMonitoring();
     this.cleanupManager.cleanup();
-    this.bulletPool.clear();
     this.effectPool.clear();
     this.performMaintenanceCleanup();
   }
@@ -105,21 +100,18 @@ export class GlobalMemoryManager {
     memory: ReturnType<MemoryMonitor['getStats']>;
     cleanup: ReturnType<CleanupManager['getDiagnostics']>;
     lifecycle: ReturnType<LifecycleManager['getStats']>;
-    bullets: ReturnType<BulletPool['getStats']>;
     effects: ReturnType<EffectPool['getStats']>;
   } {
     return {
       memory: this.memoryMonitor.getStats(),
       cleanup: this.cleanupManager.getDiagnostics(),
       lifecycle: this.lifecycleManager.getStats(),
-      bullets: this.bulletPool.getStats(),
       effects: this.effectPool.getStats()
     };
   }
   
   // Public accessors
   get cleanup() { return this.cleanupManager; }
-  get bullets() { return this.bulletPool; }
   get effects() { return this.effectPool; }
   get lifecycle() { return this.lifecycleManager; }
   get monitor() { return this.memoryMonitor; }

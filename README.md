@@ -105,3 +105,42 @@ The game is built using a component-based architecture with the following key sy
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+# Tower Upgrade Flow: Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant UI as TowerSelectionPanel/TowerInfoPanel
+    participant Store as Zustand Store
+    participant TowerFiring as TowerFiringSystem
+    participant Synergy as TowerSynergyManager
+    participant Targeting as TargetingSystem
+    participant Test as TowerUpgradeTests
+
+    UI->>Store: Calls upgradeTower(slotIdx)
+    Store->>Store: Updates tower state (level, stats)
+    Store->>Store: Notifies towerUpgradeListeners (onTowerUpgraded)
+    Store->>Synergy: Calls updateAllSynergyBonuses()
+    Store->>Targeting: (if needed) triggers retargeting
+    Store->>TowerFiring: (if needed) updates firing logic
+    Store->>UI: State change triggers UI re-render
+    Test->>Store: Verifies tower stats and UI after upgrade
+```
+
+## Why is this upgrade flow necessary?
+
+This sequence ensures that **tower upgrades are immediately and consistently reflected across all game systems**:
+
+- **Immediate State Update:** When the UI triggers an upgrade, the store updates the tower's level and stats atomically.
+- **Event-Driven Synchronization:** The store notifies all registered listeners (`towerUpgradeListeners`), so systems like synergy, targeting, and firing logic can react instantly.
+- **Synergy & Targeting Consistency:** Synergy bonuses and targeting logic are recalculated right after the upgrade, preventing any desynchronization or stale state.
+- **UI Reactivity:** The UI re-renders automatically in response to state changes, ensuring the player always sees the correct tower stats and effects.
+- **Testability:** Automated tests (e.g., `TowerUpgradeTests`) can verify that upgrades propagate correctly, making the system robust against regressions.
+
+### Importance
+- **Gameplay Fairness:** Prevents situations where a tower appears upgraded in the UI but is not actually stronger in-game, or vice versa.
+- **Performance:** Event-driven updates avoid unnecessary recalculations and re-renders, optimizing both CPU usage and user experience.
+- **Maintainability:** Centralizing upgrade logic and using listeners makes it easy to extend or modify upgrade effects without breaking other systems.
+- **Testing:** The clear, event-driven flow enables reliable automated tests, which are essential for preventing bugs as the game evolves.
+
+> **In summary:** This flow is critical for a responsive, bug-free, and maintainable tower defense game, ensuring upgrades are always in sync across gameplay, visuals, and tests.

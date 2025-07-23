@@ -24,6 +24,13 @@ export class GameStateSelectors {
   }
   
   /**
+   * Check if the game is globally paused
+   */
+  public static isPaused(state: GameState): boolean {
+    return !!state.isPaused;
+  }
+  
+  /**
    * Get critical game objects count for performance decisions
    */
   public static getObjectCounts(state: GameState): ObjectCounts {
@@ -52,5 +59,12 @@ export class GameStateSelectors {
     if (totalObjects < 10) return 'low';
     if (totalObjects < 50) return 'medium';
     return 'high';
+  }
+
+  /**
+   * Check if the game is ready to spawn waves (at least one tower placed)
+   */
+  public static isGameReadyForWaves(state: GameState): boolean {
+    return !!state.gameReadyForWaves;
   }
 } 

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { VisualExtrasProps } from '../types';
+import { playSound } from '../../../utils/sound/soundEffects';
 
 /**
  * Tower Effects Renderer
@@ -235,27 +236,45 @@ const MortarEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 
 // Flamethrower Effects - Fire particles, heat waves, burn indicators
 const FlamethrowerEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+  const scale = usePulseAnimation(1100, 0.93, 1.09);
+  const r = (slot.tower?.areaEffectRadius || (GAME_CONSTANTS.TOWER_SIZE + 15)) * scale;
+  const [played, setPlayed] = useState(false);
+  useEffect(() => {
+    if (slot.tower?.areaEffectActive && !played) {
+      playSound('explosion-small');
+      setPlayed(true);
+    }
+    if (!slot.tower?.areaEffectActive && played) {
+      setPlayed(false);
+    }
+  }, [slot.tower?.areaEffectActive, played]);
   return (
     <g>
-      {/* Heat Waves */}
+      {/* Fire Aura (animated, red/orange) */}
       <circle
         cx={slot.x}
         cy={slot.y}
-        r={GAME_CONSTANTS.TOWER_SIZE + 15}
+        r={r}
+        fill="#f56565"
+        opacity={0.13}
+        style={{ filter: 'blur(2.5px)' }}
+      />
+      <circle
+        cx={slot.x}
+        cy={slot.y}
+        r={r}
         fill="none"
         stroke="#f56565"
-        strokeWidth={1}
+        strokeWidth={2}
         strokeDasharray="2 3"
-        opacity={0.3}
+        opacity={0.38}
       />
-      
       {/* Fire Cone */}
       <path
         d={`M ${slot.x - 8} ${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 20} L ${slot.x - 15} ${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 35} L ${slot.x + 15} ${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 35} L ${slot.x + 8} ${slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 20} Z`}
         fill="#f56565"
         opacity={0.2}
       />
-      
       {/* Fuel Gauge */}
       <rect
         x={slot.x - 10}
@@ -361,20 +380,39 @@ const SupplyDepotEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 
 // Shield Generator Effects - Shield bubbles, protection indicators, barrier effects
 const ShieldGeneratorEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+  const scale = usePulseAnimation(1200, 0.95, 1.08);
+  const r = (slot.tower?.areaEffectRadius || (GAME_CONSTANTS.TOWER_SIZE + 30)) * scale;
+  const [played, setPlayed] = useState(false);
+  useEffect(() => {
+    if (slot.tower?.areaEffectActive && !played) {
+      playSound('shield-activate');
+      setPlayed(true);
+    }
+    if (!slot.tower?.areaEffectActive && played) {
+      setPlayed(false);
+    }
+  }, [slot.tower?.areaEffectActive, played]);
   return (
     <g>
-      {/* Shield Bubble */}
+      {/* Shield Aura (animated, blue) */}
       <circle
         cx={slot.x}
         cy={slot.y}
-        r={GAME_CONSTANTS.TOWER_SIZE + 30}
+        r={r}
+        fill="#38b2ac"
+        opacity={0.12}
+        style={{ filter: 'blur(3px)' }}
+      />
+      <circle
+        cx={slot.x}
+        cy={slot.y}
+        r={r}
         fill="none"
         stroke="#38b2ac"
         strokeWidth={2}
         strokeDasharray="6 3"
-        opacity={0.4}
+        opacity={0.38}
       />
-      
       {/* Protection Field */}
       <circle
         cx={slot.x}
@@ -385,7 +423,6 @@ const ShieldGeneratorEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
         strokeWidth={1}
         opacity={0.6}
       />
-      
       {/* Shield Icon */}
       <text
         x={slot.x + 15}
@@ -403,20 +440,39 @@ const ShieldGeneratorEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 
 // Repair Station Effects - Healing pulses, repair indicators, medical effects
 const RepairStationEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+  const scale = usePulseAnimation(1400, 0.92, 1.08);
+  const r = (slot.tower?.areaEffectRadius || (GAME_CONSTANTS.TOWER_SIZE + 25)) * scale;
+  const [played, setPlayed] = useState(false);
+  useEffect(() => {
+    if (slot.tower?.areaEffectActive && !played) {
+      playSound('energy-recharge');
+      setPlayed(true);
+    }
+    if (!slot.tower?.areaEffectActive && played) {
+      setPlayed(false);
+    }
+  }, [slot.tower?.areaEffectActive, played]);
   return (
     <g>
-      {/* Healing Pulse */}
+      {/* Healing Pulse (animated, green) */}
       <circle
         cx={slot.x}
         cy={slot.y}
-        r={GAME_CONSTANTS.TOWER_SIZE + 25}
+        r={r}
+        fill="#38a169"
+        opacity={0.13}
+        style={{ filter: 'blur(2.5px)' }}
+      />
+      <circle
+        cx={slot.x}
+        cy={slot.y}
+        r={r}
         fill="none"
         stroke="#38a169"
         strokeWidth={2}
         strokeDasharray="4 4"
-        opacity={0.4}
+        opacity={0.38}
       />
-      
       {/* Medical Cross */}
       <text
         x={slot.x + 15}
@@ -428,7 +484,6 @@ const RepairStationEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
       >
         ⚕️
       </text>
-      
       {/* Healing Aura */}
       <circle
         cx={slot.x}
@@ -613,3 +668,22 @@ const StandardEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
     </g>
   );
 }; 
+
+// Utility for animated pulsing
+function usePulseAnimation(duration = 1200, min = 0.7, max = 1.1) {
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    let running = true;
+    const start = performance.now();
+    function animate(now: number) {
+      if (!running) return;
+      const t = ((now - start) % duration) / duration;
+      const s = min + (max - min) * 0.5 * (1 + Math.sin(2 * Math.PI * t));
+      setScale(s);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+    return () => { running = false; };
+  }, [duration, min, max]);
+  return scale;
+} 

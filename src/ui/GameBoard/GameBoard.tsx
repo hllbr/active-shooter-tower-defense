@@ -1,7 +1,6 @@
-import React, { Suspense, lazy, useEffect, useRef } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
-import { initUpgradeEffects } from '../../game-systems/UpgradeEffects';
 import { useChallenge } from '../challenge/hooks/useChallenge';
 
 import { useTheme } from '../theme/ThemeProvider';
@@ -25,7 +24,6 @@ import {
 import { SpawnZoneDebugOverlay } from './components/overlays/SpawnZoneDebugOverlay';
 import { SynergyDisplay } from '../TowerSpot/components/SynergyDisplay';
 
-import { WeatherEffectsIndicator } from './components/overlays/WeatherEffectsIndicator';
 
 // Import enhanced hooks
 import { 
@@ -55,7 +53,7 @@ const LoadingFallback: React.FC = () => (
   </div>
 );
 
-export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick, onChallengeClick }) => {
+export const GameBoard: React.FC<GameBoardProps> = React.memo(({ className, onSettingsClick, onChallengeClick }) => {
   const {
     towerSlots,
     currentWave,
@@ -107,7 +105,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
   // 🎮 UPGRADE SCREEN: Stop only game scene sounds when upgrade screen opens
   useEffect(() => {
     if (isRefreshing) {
-      import('../../utils/sound').then(({ pauseGameSceneSounds }) => {
+      import('../../utils/sound/soundEffects').then(({ pauseGameSceneSounds }) => {
         pauseGameSceneSounds();
       });
     }
@@ -187,11 +185,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
 
   // Initialize game systems
   React.useEffect(() => {
-    initUpgradeEffects();
     initializeAchievements();
   }, [initializeAchievements]);
 
   const { width, height } = dimensions;
+  // Memoize props for GameArea
+  const memoizedTowerSlots = useMemo(() => towerSlots, [towerSlots]);
+  const memoizedDragState = useMemo(() => dragState, [dragState]);
+  const memoizedDropZones = useMemo(() => dropZones, [dropZones]);
+  const memoizedFeedback = useMemo(() => feedback, [feedback]);
+  const memoizedHandleMouseMove = useCallback(handleMouseMove, [handleMouseMove]);
+  const memoizedHandleMouseUp = useCallback(handleMouseUp, [handleMouseUp]);
+  const memoizedHandleTouchMove = useCallback(handleTouchMove, [handleTouchMove]);
+  const memoizedHandleTouchEnd = useCallback(handleTouchEnd, [handleTouchEnd]);
+  const memoizedHandleTowerDragStart = useCallback(handleTowerDragStart, [handleTowerDragStart]);
 
   // --- Mobil algılama ---
   const isMobile = typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || /Mobi|Android/i.test(navigator.userAgent));
@@ -233,8 +240,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
 
 
       {/* Weather Effects Indicator */}
-      <WeatherEffectsIndicator />
-
       
               {/* Conditional renderer based on performance settings */}
         <ConditionalRenderer />
@@ -259,18 +264,48 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
       <GameArea
         width={width}
         height={height}
-        towerSlots={towerSlots}
-        dragState={dragState}
-        dropZones={dropZones}
-        feedback={feedback}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTowerDragStart={handleTowerDragStart}
+        towerSlots={memoizedTowerSlots}
+        dragState={memoizedDragState}
+        dropZones={memoizedDropZones}
+        feedback={memoizedFeedback}
+        onMouseMove={memoizedHandleMouseMove}
+        onMouseUp={memoizedHandleMouseUp}
+        onTouchMove={memoizedHandleTouchMove}
+        onTouchEnd={memoizedHandleTouchEnd}
+        onTowerDragStart={memoizedHandleTowerDragStart}
         timeOfDay={'day'}
         isMobile={isMobile}
       />
+      {/* Area Effect Overlays for Support Towers */}
+      <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}>
+        {towerSlots.map((slot) => {
+          const t = slot.tower;
+          if (!t || !t.areaEffectActive || !t.areaEffectType || !t.areaEffectRadius) return null;
+          // Convert game coords to screen coords (assume 1:1 for now, adjust if needed)
+          const left = t.position.x - t.areaEffectRadius;
+          const top = t.position.y - t.areaEffectRadius;
+          const size = t.areaEffectRadius * 2;
+          let className = '';
+          if (t.areaEffectType === 'heal') className = 'area-effect-heal';
+          else if (t.areaEffectType === 'poison') className = 'area-effect-poison';
+          else if (t.areaEffectType === 'fire') className = 'area-effect-fire';
+          return (
+            <div
+              key={`area-effect-${t.id}`}
+              className={className}
+              style={{
+                position: 'absolute',
+                left,
+                top,
+                width: size,
+                height: size,
+                zIndex: 3,
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        })}
+      </div>
     </div>
   );
-}; 
+}); 

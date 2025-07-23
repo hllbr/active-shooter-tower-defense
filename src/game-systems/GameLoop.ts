@@ -45,11 +45,8 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
     
     // Only update if enough time has passed
     if (deltaTime >= targetFrameTime) {
-      // ✅ CRITICAL FIX: Stop game loop updates if game is over OR in upgrade screen
-      // PERFORMANCE: This prevents unnecessary updates during upgrade screen,
-      // improving battery life and reducing CPU usage when game is paused
-      if (state.isGameOver || state.isRefreshing) {
-        // Still request animation frame to show screen, but don't update game logic
+      // CRITICAL FIX: Stop game loop updates if game is over, paused, OR in upgrade screen
+      if (state.isGameOver || state.isRefreshing || state.isPaused) {
         frameId = requestAnimationFrame(loop);
         return;
       }
@@ -134,6 +131,11 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
       // Update state snapshot
       lastStateSnapshot.enemyCount = currentEnemyCount;
       lastStateSnapshot.bulletCount = currentBulletCount;
+      
+      // At the end of each tick, log performance stats (debug only)
+      // if (window && window['GAME_CONSTANTS'] && window['GAME_CONSTANTS'].DEBUG_MODE) {
+      //   logPerformanceStats();
+      // }
       
       // Calculate performance metrics
       gameLoopMetrics.avgDelta = (gameLoopMetrics.avgDelta * 0.9) + (deltaTime * 0.1);

@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 
-import { bulletPool } from '../../../game-systems/bullet-system/BulletPool';
+import { advancedBulletPool } from '../../../game-systems/memory/AdvancedBulletPool';
 
 export const useGameEffects = (unlockingSlots: Set<number>) => {
   // Screen shake effect
@@ -65,14 +65,14 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
   useEffect(() => {
     return () => {
 
-      bulletPool.clear();
+      advancedBulletPool.clear();
       
       if (screenShakeTimerRef.current) {
         clearTimeout(screenShakeTimerRef.current);
       }
       
       if (GAME_CONSTANTS.DEBUG_MODE) {
-        const _bulletStats = bulletPool.getStats();
+        const _bulletStats = advancedBulletPool.getStats();
       }
     };
   }, []);

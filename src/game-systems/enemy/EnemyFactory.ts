@@ -5,6 +5,7 @@ import { spawnStrategy } from '../spawn-system';
 import { getRandomSpawnPosition } from './index';
 import BossManager from './BossManager';
 import { EnemyBehaviorSystem } from './EnemyBehaviorSystem';
+import { advancedEnemyPool } from '../memory/AdvancedEnemyPool';
 
 /**
  * Factory class responsible for creating different types of enemies
@@ -21,13 +22,11 @@ export class EnemyFactory {
    * Creates an enemy with dynamic spawning integration
    */
   static createEnemy(wave: number, type: keyof typeof GAME_CONSTANTS.ENEMY_TYPES = 'Basic'): Enemy {
-    const { currentWaveModifier, enemies } = useGameStore.getState();
-    const id = `${Date.now()}-${Math.random()}`;
-    
+    const enemies = useGameStore.getState().enemies;
     // Use dynamic spawn system for intelligent enemy type selection
     const dynamicType = spawnStrategy.selectEnemyType(wave, enemies);
     const finalType = type === 'Basic' ? dynamicType : type;
-    
+
     // Check for advanced boss spawn (new system)
     const shouldSpawnAdvancedBoss = BossManager.shouldSpawnBoss(wave);
     if (shouldSpawnAdvancedBoss) {
@@ -37,10 +36,7 @@ export class EnemyFactory {
         return advancedBoss;
       }
     }
-    
-    // Check for basic boss spawn (legacy system)
-    const shouldBeBoss = spawnStrategy.shouldSpawnBoss(wave, enemies.length);
-    
+
     // Special enemy spawn logic for waves 10+
     let isSpecial = false;
     if (wave >= 10) {
@@ -50,11 +46,41 @@ export class EnemyFactory {
       const totalChance = baseChance + waveBonus;
       isSpecial = Math.random() < totalChance;
     }
-    
+
     if (isSpecial && finalType === 'Basic') {
-      return this.createSpecialEnemy(wave, id, currentWaveModifier);
+      // Use pool for special enemy (Yadama/Microbe)
+      const position = getRandomSpawnPosition();
+      const microbe = GAME_CONSTANTS.MICROBE_ENEMY;
+      const enemy = advancedEnemyPool.createEnemy(
+        position,
+        microbe.health,
+        microbe.speed,
+        microbe.size,
+        microbe.baseGoldDrop,
+        microbe.color,
+        8, // microbe damage
+        'Basic',
+        undefined // bossType
+      );
+      // ... set special properties as needed ...
+      return enemy;
     } else {
-      return this.createStandardEnemy(wave, finalType, id, currentWaveModifier, shouldBeBoss);
+      // Use pool for standard enemy
+      const position = getRandomSpawnPosition();
+      const config = GAME_CONSTANTS.ENEMY_TYPES[finalType] || { hp: 100, damage: 10, color: '#ff0000', speed: 1 };
+      const enemy = advancedEnemyPool.createEnemy(
+        position,
+        config.hp,
+        config.speed,
+        20,
+        10,
+        config.color,
+        config.damage,
+        finalType,
+        undefined // bossType
+      );
+      // ... set properties based on type, boss, etc. ...
+      return enemy;
     }
   }
 

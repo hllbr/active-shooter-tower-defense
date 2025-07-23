@@ -365,9 +365,9 @@ export class UpgradeManager {
   }
 
   /**
-   * Apply single upgrade
+   * Apply single upgrade (atomic, FIFO)
    */
-  public applyUpgrade(upgradeId: string): boolean {
+  public async applyUpgrade(upgradeId: string): Promise<boolean> {
     const config = this.getUpgradeConfig(upgradeId);
     if (!config) {
       Logger.error(`❌ Upgrade config not found: ${upgradeId}`);
@@ -381,21 +381,22 @@ export class UpgradeManager {
     }
 
     const cost = this.calculateUpgradeCost(config, currentLevel);
-    const { spendGold } = useGameStore.getState();
+    const { purchaseTransaction } = useGameStore.getState();
 
-    if (!spendGold(cost, 'upgrade')) {
-      Logger.warn(`⚠️ Insufficient gold for upgrade: ${upgradeId}`);
-      return false;
+    // Use atomic, FIFO transaction
+    const success = await purchaseTransaction(cost, () => {
+      // Apply upgrade effects based on config
+      this.applyUpgradeEffects(config, currentLevel + 1);
+      // Record in history
+      this.recordUpgrade(upgradeId, currentLevel + 1, cost);
+    }, 'upgrade');
+
+    if (success) {
+      Logger.log(`✅ Applied upgrade: ${config.name} (Level ${currentLevel + 1})`);
+    } else {
+      Logger.warn(`⚠️ Failed to apply upgrade: ${config.name}`);
     }
-
-    // Apply upgrade effects based on config
-    this.applyUpgradeEffects(config, currentLevel + 1);
-
-    // Record in history
-    this.recordUpgrade(upgradeId, currentLevel + 1, cost);
-
-    Logger.log(`✅ Applied upgrade: ${config.name} (Level ${currentLevel + 1})`);
-    return true;
+    return success;
   }
 
   /**
@@ -474,9 +475,9 @@ export class UpgradeManager {
   }
 
   /**
-   * Apply batch upgrades
+   * Apply batch upgrades (atomic, FIFO)
    */
-  public applyBatchUpgrades(upgradeIds: string[]): BatchUpgradeResult {
+  public async applyBatchUpgrades(upgradeIds: string[]): Promise<BatchUpgradeResult> {
     const result: BatchUpgradeResult = {
       success: false,
       upgradesApplied: [],
@@ -504,26 +505,33 @@ export class UpgradeManager {
     }
 
     // Check if we can afford all upgrades
-    const { gold } = useGameStore.getState();
+    const { gold, purchaseTransaction } = useGameStore.getState();
     if (totalCost > gold) {
       result.errors.push(`Insufficient gold for batch upgrade. Required: ${totalCost}, Available: ${gold}`);
       return result;
     }
 
-    // Apply all upgrades
-    for (const upgradeId of upgradeIds) {
-      const success = this.applyUpgrade(upgradeId);
-      if (success) {
+    // Use atomic, FIFO transaction for all upgrades
+    const success = await purchaseTransaction(totalCost, () => {
+      for (const upgradeId of upgradeIds) {
+        const config = this.getUpgradeConfig(upgradeId);
+        if (!config) continue;
+        const currentLevel = this.getCurrentUpgradeLevel(upgradeId);
+        if (currentLevel >= config.maxLevel) continue;
+        this.applyUpgradeEffects(config, currentLevel + 1);
+        this.recordUpgrade(upgradeId, currentLevel + 1, this.calculateUpgradeCost(config, currentLevel));
         result.upgradesApplied.push(upgradeId);
-      } else {
-        result.errors.push(`Failed to apply upgrade: ${upgradeId}`);
       }
-    }
+    }, 'batch_upgrade');
 
-    result.success = result.upgradesApplied.length > 0;
+    result.success = success && result.upgradesApplied.length > 0;
     result.totalCost = totalCost;
 
-    Logger.log(`🤖 Batch upgrade applied: ${result.upgradesApplied.length} upgrades, ${totalCost} gold spent`);
+    if (success) {
+      Logger.log(`🤖 Batch upgrade applied: ${result.upgradesApplied.length} upgrades, ${totalCost} gold spent`);
+    } else {
+      result.errors.push('Batch upgrade transaction failed');
+    }
     return result;
   }
 

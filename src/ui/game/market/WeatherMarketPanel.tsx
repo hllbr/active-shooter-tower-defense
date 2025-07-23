@@ -15,6 +15,7 @@ interface WeatherMarketPanelProps {
 
 export const WeatherMarketPanel: React.FC<WeatherMarketPanelProps> = ({ isOpen, onClose }) => {
   const { gold } = useGameStore();
+  const setPaused = useGameStore(state => state.setPaused);
   const [availableCards, setAvailableCards] = useState<WeatherEffectCard[]>([]);
   const [ownedCards, setOwnedCards] = useState<WeatherEffectCard[]>([]);
   const [activeTab, setActiveTab] = useState<'market' | 'owned'>('market');
@@ -37,6 +38,11 @@ export const WeatherMarketPanel: React.FC<WeatherMarketPanelProps> = ({ isOpen, 
 
     return () => clearInterval(interval);
   }, []);
+
+  React.useEffect(() => {
+    if (isOpen) setPaused(true);
+    return () => setPaused(false);
+  }, [isOpen, setPaused]);
 
   const handlePurchaseCard = (cardId: string) => {
     const success = weatherEffectMarket.purchaseCard(cardId);

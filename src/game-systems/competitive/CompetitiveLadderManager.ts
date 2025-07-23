@@ -40,6 +40,8 @@ export class CompetitiveLadderManager {
   private static instance: CompetitiveLadderManager;
   private ladder!: CompetitiveLadder;
   private playerScores: Map<string, PlayerScore> = new Map();
+  private lastRankingsUpdate: number = 0;
+  private lastPlayerScoresChange: number = 0;
 
   private constructor() {
     this.initializeCompetitiveSystem();
@@ -117,6 +119,7 @@ export class CompetitiveLadderManager {
     };
 
     this.playerScores.set(`${playerId}_${category}`, playerScore);
+    this.lastPlayerScoresChange = Date.now();
     this.updateRankings();
     return true;
   }
@@ -133,6 +136,7 @@ export class CompetitiveLadderManager {
     
     // Update alliance rankings
     this.ladder.rankings.alliance = this.calculateAllianceRankings();
+    this.lastRankingsUpdate = Date.now();
   }
 
   /**
@@ -209,6 +213,10 @@ export class CompetitiveLadderManager {
     category?: keyof CompetitiveLadder['categories'],
     limit: number = 100
   ): PlayerRanking[] {
+    // Invalidate cache if playerScores changed since last update
+    if (this.lastPlayerScoresChange > this.lastRankingsUpdate) {
+      this.updateRankings();
+    }
     if (category) {
       return this.ladder.rankings.global
         .filter(ranking => ranking.category === category)

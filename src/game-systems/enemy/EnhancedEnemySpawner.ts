@@ -20,6 +20,9 @@ export class EnhancedEnemySpawner {
    * Starts enhanced enemy wave spawning with dynamic configuration
    */
   static startEnemyWave(wave: number) {
+    const state = useGameStore.getState();
+    // Only spawn if the first tower has been placed
+    if (!state.isFirstTowerPlaced) return;
     // Kullanılmayan değişkenler kaldırıldı (towers, towerSlots, buildTower)
 
     // ✅ NEW: Generate dynamic wave configuration
@@ -66,10 +69,12 @@ export class EnhancedEnemySpawner {
    * Starts enhanced spawning with in-wave scaling
    */
   private static startEnhancedSpawning(wave: number) {
+    const state = useGameStore.getState();
+    // Only spawn if the first tower has been placed
+    if (!state.isFirstTowerPlaced) return;
     if (!this.currentWaveConfig) return;
 
     const spawnNext = () => {
-      const state = useGameStore.getState();
       
       // ✅ CRITICAL FIX: Stop spawning if game is over
       if (state.isGameOver) {

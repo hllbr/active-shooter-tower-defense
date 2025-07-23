@@ -47,8 +47,8 @@ export class WaveSpawnManager {
     WaveSpawnManager.continuousSpawnInterval = window.setInterval(() => {
       const state = useGameStore.getState();
       
-      // Sadece oyun başlatılmışsa ve yükseltme ekranında değilse düşman yarat
-      if (state.isStarted && !state.isRefreshing) {
+      // Only spawn if the first tower has been placed
+      if (state.isStarted && !state.isRefreshing && !state.isPaused && state.isFirstTowerPlaced) {
         const enemy = EnemyFactory.createEnemy(state.currentWave, 'Basic');
         state.addEnemy(enemy);
       }
@@ -69,7 +69,10 @@ export class WaveSpawnManager {
    * Starts enemy wave spawning with KILL-BASED completion system
    */
   static startEnemyWave(wave: number) {
-    const { addEnemy, currentWaveModifier } = useGameStore.getState();
+    const state = useGameStore.getState();
+    // Only spawn if the first tower has been placed
+    if (!state.isFirstTowerPlaced) return;
+    const { addEnemy, currentWaveModifier } = state;
 
     // 🎯 UPDATE: Configure spawn zones for current wave
     SpawnPositionManager.updateSpawnZonesForWave(wave);
@@ -95,8 +98,8 @@ export class WaveSpawnManager {
     const spawnNext = () => {
       const state = useGameStore.getState();
       
-      // ✅ CRITICAL FIX: Stop spawning if game is over
-      if (state.isGameOver) {
+      // Stop spawning if game is over or paused
+      if (state.isGameOver || state.isPaused) {
         if (WaveSpawnManager.spawnInterval) {
           clearInterval(WaveSpawnManager.spawnInterval);
           WaveSpawnManager.spawnInterval = null;
@@ -211,4 +214,33 @@ export class WaveSpawnManager {
       else return 'Basic';
     }
   }
+}
+
+// Centralized performance monitoring (debug only)
+let frameCount: number = 0;
+let lastFpsLog: number = performance.now();
+export function logPerformanceStats() {
+  const debugMode = typeof window !== 'undefined' && 'GAME_CONSTANTS' in window && Boolean((window as unknown as { [key: string]: unknown })['GAME_CONSTANTS'] && (window as unknown as { [key: string]: { DEBUG_MODE?: boolean } })['GAME_CONSTANTS'].DEBUG_MODE);
+  if (!debugMode) return;
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFpsLog > 1000) {
+    const fps = frameCount;
+    frameCount = 0;
+    lastFpsLog = now;
+    let mem: string | number = 'N/A';
+    const win = window as unknown as { performance?: { memory?: { usedJSHeapSize: number } } };
+    if (win.performance && win.performance.memory) {
+      mem = (win.performance.memory.usedJSHeapSize / 1048576).toFixed(2);
+    }
+    console.log(`[PERF] FPS: ${fps} | Memory: ${mem} MB | Enemies:`, useGameStore.getState().enemies.length);
+  }
 } 
+
+const store = useGameStore;
+store.subscribe((state, prevState) => {
+  if (!prevState.gameReadyForWaves && state.gameReadyForWaves) {
+    // Start wave spawning logic here, e.g.:
+    // WaveSpawnManager.startEnemyWave(state.currentWave);
+  }
+}); 

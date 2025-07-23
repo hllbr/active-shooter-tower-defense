@@ -4,7 +4,7 @@ import { waveRules } from '../../config/waveRules';
 import { updateWaveTiles } from '../../game-systems/TowerPlacementManager';
 import { defenseTargetManager } from '../../game-systems/defense-systems/DefenseTargetManager';
 
-export const initialSlots: TowerSlot[] = updateWaveTiles(1, []);
+export const initialSlots: TowerSlot[] = updateWaveTiles(1, []).map(slot => ({ ...slot, locked: false }));
 
 export const initialState: GameState = {
   towers: [],
@@ -203,6 +203,40 @@ export const initialState: GameState = {
   lastMissionRefresh: 0,
   completedMissions: [],
   unlockedTowerTypes: [],
+
+  // Global pause state for UI-based pausing (e.g., upgrade screen)
+  isPaused: false,
+
+  // Track if the first tower has been placed (for wave spawn gating)
+  isFirstTowerPlaced: false,
+  gameReadyForWaves: false,
+
+  supportTowerUpgrades: {
+    radar_area_radius: 0,
+    radar_area_power: 0,
+    radar_area_duration: 0,
+    supply_depot_area_radius: 0,
+    supply_depot_area_power: 0,
+    supply_depot_area_duration: 0,
+    shield_generator_area_radius: 0,
+    shield_generator_area_power: 0,
+    shield_generator_area_duration: 0,
+    repair_station_area_radius: 0,
+    repair_station_area_power: 0,
+    repair_station_area_duration: 0,
+    emp_area_radius: 0,
+    emp_area_power: 0,
+    emp_area_duration: 0,
+    stealth_detector_area_radius: 0,
+    stealth_detector_area_power: 0,
+    stealth_detector_area_duration: 0,
+    air_defense_area_radius: 0,
+    air_defense_area_power: 0,
+    air_defense_area_duration: 0,
+    economy_area_radius: 0,
+    economy_area_power: 0,
+    economy_area_duration: 0,
+  },
 };
 
 // Initialize defense target manager

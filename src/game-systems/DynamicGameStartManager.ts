@@ -41,10 +41,13 @@ export class DynamicGameStartManager {
    * Initialize dynamic game start with random tower placement
    */
   static initializeDynamicGameStart(): void {
-    const { towerSlots, buildTower, unlockAllTowerTypes, setFirstTowerInfo } = useGameStore.getState();
+    const { towerSlots, buildTower, unlockAllTowerTypes, setFirstTowerInfo, gameReadyForWaves } = useGameStore.getState();
 
     // Unlock all tower types from the beginning
     unlockAllTowerTypes();
+
+    // Only trigger wave spawning if gameReadyForWaves is true
+    if (!gameReadyForWaves) return;
 
     // Place random tower on random valid position
     this.placeRandomStarterTower(towerSlots, buildTower, setFirstTowerInfo);

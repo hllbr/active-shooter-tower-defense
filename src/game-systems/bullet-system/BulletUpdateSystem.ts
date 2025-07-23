@@ -1,6 +1,6 @@
 import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Bullet, Enemy, Effect } from '../../models/gameTypes';
-import { bulletPool } from './BulletPool';
+import { advancedPoolManager } from '../memory/AdvancedPoolManager';
 import { collisionManager } from '../CollisionDetection';
 
 
@@ -43,10 +43,13 @@ export class BulletUpdateSystem {
       if (bullet) {
         removeBullet(bulletId);
         // Return to pool for reuse
-        try {
-          bulletPool.release(bullet);
-        } catch {
-          // Error silently handled for performance
+        const bulletPool = advancedPoolManager.getPool<Bullet>('bullet');
+        if (bulletPool) {
+          try {
+            bulletPool.release(bullet);
+          } catch {
+            // Error silently handled for performance
+          }
         }
       }
     });
@@ -62,10 +65,13 @@ export class BulletUpdateSystem {
         
         // Remove bullet and return to pool
         removeBullet(bullet.id);
-        try {
-          bulletPool.release(bullet);
-        } catch {
-          // Error silently handled for performance
+        const bulletPool2 = advancedPoolManager.getPool<Bullet>('bullet');
+        if (bulletPool2) {
+          try {
+            bulletPool2.release(bullet);
+          } catch {
+            // Error silently handled for performance
+          }
         }
         
         // Apply bullet effects
@@ -95,14 +101,16 @@ export class BulletUpdateSystem {
    * Get bullet pool statistics
    */
   getBulletPoolStats() {
-    return bulletPool.getStats();
+    const bulletPool = advancedPoolManager.getPool<Bullet>('bullet');
+    return bulletPool ? bulletPool.getStats() : {};
   }
 
   /**
    * Clear all bullets from the pool
    */
   clearBulletPool(): void {
-    bulletPool.clear();
+    const bulletPool = advancedPoolManager.getPool<Bullet>('bullet');
+    if (bulletPool) bulletPool.clear();
   }
 }
 

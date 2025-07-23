@@ -6,6 +6,7 @@ import { AdvancedObjectPool } from './AdvancedObjectPool';
 import { advancedBulletPool } from './AdvancedBulletPool';
 import { advancedEffectPool } from './AdvancedEffectPool';
 import { advancedEnemyPool } from './AdvancedEnemyPool';
+import { AdvancedPerformanceProfiler } from '../performance/AdvancedProfiler';
 
 export interface PoolManagerStats {
   totalPools: number;
@@ -161,6 +162,31 @@ export class AdvancedPoolManager {
     for (const pool of this.pools.values()) {
       (pool as AdvancedObjectPool<{ reset(): void; isActive: boolean }>).releaseAll();
     }
+  }
+  
+  /**
+   * Profile all pools using AdvancedPerformanceProfiler
+   */
+  profileAllPools(profiler: AdvancedPerformanceProfiler): void {
+    profiler.startMonitoring();
+    const beforeStats = this.getStats();
+    profiler.recordMetric({
+      name: 'PoolStatsBefore',
+      value: beforeStats.totalActiveObjects,
+      timestamp: performance.now(),
+      category: 'memory',
+      severity: 'info'
+    });
+    // ... run test or simulation here ...
+    const afterStats = this.getStats();
+    profiler.recordMetric({
+      name: 'PoolStatsAfter',
+      value: afterStats.totalActiveObjects,
+      timestamp: performance.now(),
+      category: 'memory',
+      severity: 'info'
+    });
+    profiler.stopMonitoring();
   }
   
   /**

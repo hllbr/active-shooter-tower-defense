@@ -19,6 +19,11 @@ export interface AdvancedEnemy {
   slowFactor: number;
   isDead: boolean;
   lastDamageTime: number;
+  goldValue: number;
+  color: string;
+  damage: number;
+  type?: string;
+  bossType?: 'legendary' | 'mini' | 'major' | undefined;
   reset(): void;
 }
 
@@ -41,6 +46,11 @@ export class AdvancedEnemyPool {
         slowFactor: 1,
         isDead: false,
         lastDamageTime: 0,
+        goldValue: 10,
+        color: '#ff0000',
+        damage: 10,
+        type: 'Basic',
+        bossType: undefined,
         reset() {
           this.position = { x: 0, y: 0 };
           this.size = 20;
@@ -54,6 +64,11 @@ export class AdvancedEnemyPool {
           this.slowFactor = 1;
           this.isDead = false;
           this.lastDamageTime = 0;
+          this.goldValue = 10;
+          this.color = '#ff0000';
+          this.damage = 10;
+          this.type = 'Basic';
+          this.bossType = undefined;
         }
       }),
       resetObject: (enemy) => enemy.reset(),
@@ -90,7 +105,12 @@ export class AdvancedEnemyPool {
     position: { x: number; y: number },
     health: number = 100,
     speed: number = 1,
-    size: number = 20
+    size: number = 20,
+    goldValue: number = 10,
+    color: string = '#ff0000',
+    damage: number = 10,
+    type: string = 'Basic',
+    bossType?: 'legendary' | 'mini' | 'major' | undefined
   ): AdvancedEnemy {
     const enemy = this.acquire();
     enemy.id = `enemy_${Date.now()}_${Math.random()}`;
@@ -103,6 +123,11 @@ export class AdvancedEnemyPool {
     enemy.isDead = false;
     enemy.pathIndex = 0;
     enemy.lastDamageTime = performance.now();
+    enemy.goldValue = goldValue;
+    enemy.color = color;
+    enemy.damage = damage;
+    enemy.type = type;
+    enemy.bossType = bossType;
     return enemy;
   }
   

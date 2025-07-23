@@ -19,6 +19,13 @@ export const UpgradeScreen: React.FC = React.memo(() => {
   const rollDice = useGameStore(state => state.rollDice);
   const clearAllEnemies = useGameStore(state => state.clearAllEnemies);
   const clearAllEffects = useGameStore(state => state.clearAllEffects);
+  const setPaused = useGameStore(state => state.setPaused);
+
+  // Pause game on mount, resume on unmount
+  useEffect(() => {
+    setPaused(true);
+    return () => setPaused(false);
+  }, [setPaused]);
 
   // Yükseltme ekranı açıldığında düşmanları temizle ve zar otomatik at
   useEffect(() => {

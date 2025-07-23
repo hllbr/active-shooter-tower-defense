@@ -43,12 +43,15 @@ export class AchievementEventProcessor {
         
         // Check if achievement is completed
         if (newProgress >= achievement.target && !achievement.completed) {
-          achievement.completed = true;
-          achievement.completedAt = Date.now();
-          newlyCompleted.push(achievement);
-
-          // Process achievement completion and rewards
-          updatedProfile = this.rewardManager.processAchievementCompletion(achievement, updatedProfile);
+          // Validation: Only unlock if validate returns true (or is not present)
+          const isValid = typeof achievement.validate === 'function' ? achievement.validate(gameState, eventData) : true;
+          if (isValid) {
+            achievement.completed = true;
+            achievement.completedAt = Date.now();
+            newlyCompleted.push(achievement);
+            // Process achievement completion and rewards
+            updatedProfile = this.rewardManager.processAchievementCompletion(achievement, updatedProfile);
+          }
         }
       }
     });

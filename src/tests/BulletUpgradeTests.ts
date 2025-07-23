@@ -21,6 +21,7 @@ export class BulletUpgradeTests {
     await this.testSingleUpgrade();
     await this.testProgressionLogic();
     await this.testIgnorakProblem();
+    await this.testTowerUpgradeSync();
 
     this.printResults();
   }
@@ -169,6 +170,55 @@ export class BulletUpgradeTests {
     } catch (error) {
       this.testResults.push({
         name: 'Ignorak Problem Test',
+        passed: false,
+        details: `Error: ${error}`
+      });
+    }
+  }
+
+  private async testTowerUpgradeSync(): Promise<void> {
+    console.log('🧪 Testing Tower Upgrade Synchronization...');
+    try {
+      const store = useGameStore.getState();
+      // Place a tower if none exists
+      if (store.towers.length === 0) {
+        store.addGold(1000);
+        store.buildTower(0, false, 'attack');
+      }
+      const slotIdx = store.towerSlots.findIndex(s => s.tower);
+      if (slotIdx === -1) {
+        this.testResults.push({
+          name: 'Tower Upgrade Sync',
+          passed: false,
+          details: 'No tower found to upgrade.'
+        });
+        return;
+      }
+      const towerBefore = { ...store.towerSlots[slotIdx].tower };
+      store.addGold(1000);
+      store.upgradeTower(slotIdx);
+      // Wait a tick for listeners and state to update
+      await new Promise(res => setTimeout(res, 50));
+      const towerAfter = store.towerSlots[slotIdx].tower;
+      if (!towerAfter) {
+        this.testResults.push({
+          name: 'Tower Upgrade Sync',
+          passed: false,
+          details: 'Tower missing after upgrade.'
+        });
+        return;
+      }
+      const damageUpdated = towerAfter.damage !== towerBefore.damage || towerAfter.level !== towerBefore.level;
+      const fireRateUpdated = towerAfter.fireRate !== towerBefore.fireRate;
+      const synergyUpdated = JSON.stringify(towerAfter.synergyBonuses) !== JSON.stringify(towerBefore.synergyBonuses);
+      this.testResults.push({
+        name: 'Tower Upgrade Sync',
+        passed: damageUpdated && fireRateUpdated,
+        details: `Damage: ${towerBefore.damage}→${towerAfter.damage}, FireRate: ${towerBefore.fireRate}→${towerAfter.fireRate}, Synergy: ${synergyUpdated}`
+      });
+    } catch (error) {
+      this.testResults.push({
+        name: 'Tower Upgrade Sync',
         passed: false,
         details: `Error: ${error}`
       });

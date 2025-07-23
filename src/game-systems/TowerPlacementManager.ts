@@ -1,5 +1,6 @@
 import { GAME_CONSTANTS } from '../utils/constants';
 import type { TowerSlot } from '../models/gameTypes';
+import { useGameStore } from '../models/store';
 
 export const updateWaveTiles = (wave: number, currentSlots: TowerSlot[]): TowerSlot[] => {
   if (wave === 1) {
@@ -15,3 +16,10 @@ export const updateWaveTiles = (wave: number, currentSlots: TowerSlot[]): TowerS
   // For all subsequent waves, do not change the tower slots.
   return currentSlots;
 };
+
+export function placeTower(_slotIndex: number, _tower: unknown) {
+  const store = useGameStore.getState();
+  if (!store.gameReadyForWaves) {
+    store.setGameReadyForWaves(true);
+  }
+}

@@ -21,6 +21,7 @@ export class EnemyBehaviorTest {
     this.setupTestEnvironment();
     
     // Run individual tests
+    this.testNoSpawnBeforeFirstTower();
     this.testFleeBehavior();
     this.testGroupAttackBehavior();
     this.testBossPhaseTransitions();
@@ -44,6 +45,28 @@ export class EnemyBehaviorTest {
     store.enemies = [];
     store.towerSlots = [];
     store.towers = [];
+  }
+
+  /**
+   * Test that no enemies spawn before the first tower is placed
+   */
+  private static testNoSpawnBeforeFirstTower(): void {
+    console.log('  Testing No Spawn Before First Tower...');
+    try {
+      const store = useGameStore.getState();
+      store.isFirstTowerPlaced = false;
+      store.enemies = [];
+      // Simulate wave start
+      import('../game-systems/enemy/WaveSpawnManager').then(({ WaveSpawnManager }) => {
+        WaveSpawnManager.startEnemyWave(1);
+        setTimeout(() => {
+          const noEnemies = store.enemies.length === 0;
+          this.addTestResult('No Spawn Before First Tower', noEnemies, noEnemies ? 'No enemies spawned before first tower placed' : 'Enemies spawned before first tower placed');
+        }, 100);
+      });
+    } catch (error) {
+      this.addTestResult('No Spawn Before First Tower', false, `Error: ${error}`);
+    }
   }
 
   /**

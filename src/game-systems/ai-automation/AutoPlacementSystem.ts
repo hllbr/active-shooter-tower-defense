@@ -115,7 +115,7 @@ export class AutoPlacementSystem {
     const enemyPaths = this.analyzeEnemyPaths(enemies);
     
     // Find available slots
-    const availableSlots = towerSlots.filter(slot => slot.unlocked && !slot.tower);
+    const availableSlots = towerSlots.filter(slot => slot.unlocked && !slot.tower && !slot.locked);
     
     for (const slot of availableSlots) {
       const slotIndex = towerSlots.indexOf(slot);
@@ -533,7 +533,7 @@ export class AutoPlacementSystem {
     }
 
     // Execute placement
-    buildTower(topPlacement.slotIndex, false, 'attack', topPlacement.towerClass as TowerClass);
+    buildTower(topPlacement.slotIndex, false, 'attack', topPlacement.towerClass as TowerClass, false);
     this.lastPlacementTime = performance.now();
     Logger.log(`🤖 Auto placed ${topPlacement.towerClass} (${topPlacement.reason})`);
     return true;

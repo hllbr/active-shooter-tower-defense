@@ -1,4 +1,5 @@
 import type { Tower, TowerSlot, Position } from '../../models/gameTypes';
+import { FactionManager } from '../faction/FactionManager';
 
 /**
  * Enhanced Tower Synergy Manager
@@ -40,6 +41,11 @@ export class TowerSynergyManager {
       }
     }
     
+    // Apply faction bonuses
+    const factionBonuses = this.getFactionBonuses();
+    bonuses.damage += factionBonuses.damage;
+    bonuses.range += factionBonuses.range;
+    bonuses.fireRate += factionBonuses.fireRate;
     return bonuses;
   }
 
@@ -361,6 +367,27 @@ export class TowerSynergyManager {
     };
     
     return synergies[towerClass] || [];
+  }
+
+  /**
+   * Get faction bonuses for the current player (simplified: applies to all towers)
+   */
+  private getFactionBonuses(): { damage: number; range: number; fireRate: number } {
+    // In a real implementation, you would get the current playerId from auth/session
+    // For demo, just use the first active faction
+    const factionManager = FactionManager.getInstance();
+    const factions = factionManager.getAllFactions();
+    if (factions.length === 0) return { damage: 0, range: 0, fireRate: 0 };
+    // Example: apply all passive ability bonuses from the first active faction
+    const faction = factions[0];
+    let damage = 0, range = 0, fireRate = 0;
+    for (const ability of faction.abilities) {
+      if (ability.effect === 'damage_bonus_20') damage += 0.2;
+      if (ability.effect === 'range_bonus_25') range += 0.25;
+      if (ability.effect === 'attack_speed_15') fireRate += 0.15;
+      // Add more mappings as needed
+    }
+    return { damage, range, fireRate };
   }
 
   /**

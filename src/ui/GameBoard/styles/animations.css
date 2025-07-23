@@ -220,6 +220,60 @@
   transition: all 0.3s ease;
 }
 
+/* === AREA EFFECT VISUALS FOR SUPPORT TOWERS === */
+@keyframes areaEffectPulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+    filter: blur(2px);
+  }
+}
+
+.area-effect-heal {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00FFAA55 60%, #00FFAA22 100%);
+  box-shadow: 0 0 24px 8px #00FFAA66;
+  animation: areaEffectPulse 1.2s infinite;
+  border: 2px solid #00FFAA99;
+}
+
+.area-effect-poison {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, #44FF4455 60%, #44FF4422 100%);
+  box-shadow: 0 0 24px 8px #44FF4466;
+  animation: areaEffectPulse 1.3s infinite;
+  border: 2px dashed #44FF4499;
+}
+
+.area-effect-fire {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, #FF660055 60%, #FF660022 100%);
+  box-shadow: 0 0 32px 12px #FF660088;
+  animation: areaEffectPulse 1.1s infinite;
+  border: 2px solid #FF660099;
+}
+
+/* Optional: fade out for decay */
+@keyframes areaEffectFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.area-effect-fadeout {
+  animation: areaEffectFadeOut 0.8s forwards;
+}
+
 /* Mobile Touch Optimizations */
 @media (hover: none) and (pointer: coarse) {
   .drop-zone-valid,

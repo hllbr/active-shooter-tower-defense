@@ -1,4 +1,5 @@
 import type { EnergyCooldownState } from '../game-systems/EnergyManager';
+import type React from 'react';
 
 export type ResourceSource = 'enemy' | 'passive' | 'structure' | 'wave' | 'bonus' | 'purchase' | 'refund' | 'achievement' | 'event' | 'alliance' | 'faction' | 'research' | 'loot' | 'boss' | 'mission' | 'challenge';
 
@@ -133,6 +134,20 @@ export interface Tower {
   upgradePath?: string;
   /** Synergy bonuses from nearby towers */
   synergyBonuses?: { damage?: number; range?: number; fireRate?: number; };
+  /** Area effect type for support towers */
+  areaEffectType?: 'heal' | 'poison' | 'fire' | null;
+  /** Area effect radius in pixels */
+  areaEffectRadius?: number;
+  /** Area effect power (heal per tick, poison damage, etc.) */
+  areaEffectPower?: number;
+  /** Area effect duration in ms (if temporary) */
+  areaEffectDuration?: number;
+  /** Area effect active flag */
+  areaEffectActive?: boolean;
+  /** Last tick time for area effect */
+  areaEffectLastTick?: number;
+  /** Timer for effect decay (if not upgraded/repaired) */
+  areaEffectDecayTimer?: number;
 }
 
 export interface TowerSlot {
@@ -145,6 +160,10 @@ export interface TowerSlot {
   modifier?: TileModifier;
   /** Indicates that a tower existed here and was destroyed */
   wasDestroyed?: boolean;
+  // --- YENİ: Ateşleme çıkış noktası için ref ---
+  fireOriginRef?: React.RefObject<SVGGElement>;
+  /** Manuel yerleşim kilidi */
+  locked?: boolean;
 }
 
 export interface TileModifier {
@@ -449,6 +468,17 @@ export interface GameState {
   completedMissions: string[];
   unlockedTowerTypes: string[];
 
+  /**
+   * Global pause state for UI-based pausing (e.g., upgrade screen)
+   * When true, all game logic and actions should be paused.
+   */
+  isPaused: boolean;
+
+  /**
+   * True if the player has placed their first tower (enables first wave spawn)
+   */
+  isFirstTowerPlaced: boolean;
+
   /** Currently selected tower slot index, or null if none selected */
   selectedSlot: number | null;
   
@@ -458,6 +488,36 @@ export interface GameState {
     towerName: string;
     slotIndex: number;
   };
+  supportTowerUpgrades: {
+    radar_area_radius: number;
+    radar_area_power: number;
+    radar_area_duration: number;
+    supply_depot_area_radius: number;
+    supply_depot_area_power: number;
+    supply_depot_area_duration: number;
+    shield_generator_area_radius: number;
+    shield_generator_area_power: number;
+    shield_generator_area_duration: number;
+    repair_station_area_radius: number;
+    repair_station_area_power: number;
+    repair_station_area_duration: number;
+    emp_area_radius: number;
+    emp_area_power: number;
+    emp_area_duration: number;
+    stealth_detector_area_radius: number;
+    stealth_detector_area_power: number;
+    stealth_detector_area_duration: number;
+    air_defense_area_radius: number;
+    air_defense_area_power: number;
+    air_defense_area_duration: number;
+    economy_area_radius: number;
+    economy_area_power: number;
+    economy_area_duration: number;
+  };
+  /**
+   * True if the game is ready to spawn waves (at least one tower placed)
+   */
+  gameReadyForWaves: boolean;
 }
 
 // ✅ NEW: Defense Target System
@@ -535,6 +595,8 @@ export interface Achievement {
   series?: string; // Achievement series ID
   rewards: AchievementReward;
   tracking: AchievementTracking;
+  /** Optional validation function for custom logic */
+  validate?: (gameState: GameState, eventData?: unknown) => boolean;
 }
 
 export interface AchievementReward {
@@ -729,6 +791,13 @@ export interface SpecializedTowerConfig {
   manualTargeting?: boolean;
   multiShotCount?: number;
   acidStack?: number;
+  // Area effect properties for support towers
+  areaEffectType?: 'heal' | 'poison' | 'fire' | null;
+  areaEffectRadius?: number;
+  areaEffectPower?: number;
+  areaEffectDuration?: number;
+  areaEffectActive?: boolean;
+  areaEffectDecayTimer?: number;
 }
 
 export type TowerClass = 'sniper' | 'gatling' | 'laser' | 'mortar' | 'flamethrower' | 'radar' | 'supply_depot' | 'shield_generator' | 'repair_station' | 'emp' | 'stealth_detector' | 'air_defense';

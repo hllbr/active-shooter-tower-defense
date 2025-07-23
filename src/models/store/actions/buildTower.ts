@@ -8,7 +8,8 @@ export function buildTowerAction(
   slotIdx: number,
   free = false,
   towerType: 'attack' | 'economy' = 'attack',
-  towerClass?: TowerClass
+  towerClass?: TowerClass,
+  manual = true // NEW: default true, auto-placement will set false
 ): Partial<Store> {
   const slot = state.towerSlots[slotIdx];
   if (!slot || slot.tower) return {};
@@ -83,11 +84,19 @@ export function buildTowerAction(
     stealthDetectionRange: specializedTowerData?.stealthDetectionRange ?? 0,
     manualTargeting: false,
     upgradePath: '',
-    synergyBonuses: { damage: 0, range: 0, fireRate: 0 }
+    synergyBonuses: { damage: 0, range: 0, fireRate: 0 },
+    // Area effect properties for support towers
+    areaEffectType: specializedTowerData?.areaEffectType ?? null,
+    areaEffectRadius: specializedTowerData?.areaEffectRadius ?? 0,
+    areaEffectPower: specializedTowerData?.areaEffectPower ?? 0,
+    areaEffectDuration: specializedTowerData?.areaEffectDuration ?? 0,
+    areaEffectActive: specializedTowerData?.areaEffectActive ?? false,
+    areaEffectLastTick: undefined,
+    areaEffectDecayTimer: specializedTowerData?.areaEffectDecayTimer ?? 0,
   };
 
   const newSlots = [...state.towerSlots];
-  newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
+  newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false, locked: manual ? true : slot.locked };
   state.towerUpgradeListeners.forEach(fn => fn(newTower, 0, 1));
 
   setTimeout(() => {
@@ -96,10 +105,15 @@ export function buildTowerAction(
     });
   }, 50);
 
+  // If this is the first tower placed, set isFirstTowerPlaced to true
+  const isFirstTowerPlaced = state.isFirstTowerPlaced || false;
+  const willBeFirstTower = !isFirstTowerPlaced && state.towers.length === 0;
+
   return {
     towerSlots: newSlots,
     towers: [...state.towers, newTower],
     gold: state.gold - finalCost,
     totalGoldSpent: state.totalGoldSpent + finalCost,
+    ...(willBeFirstTower ? { isFirstTowerPlaced: true } : {}),
   };
 }

@@ -3,7 +3,7 @@ import { useGameStore } from '../../../../models/store';
 import { GAME_CONSTANTS } from '../../../../utils/constants';
 
 export const StartScreen: React.FC = () => {
-  const { isStarted, setStarted, startPreparation } = useGameStore();
+  const { isStarted, setStarted, startPreparation, isFirstTowerPlaced } = useGameStore();
 
   if (isStarted) return null;
 
@@ -46,6 +46,23 @@ export const StartScreen: React.FC = () => {
       }}>
         Shooter Tower Defense
       </span>
+      {/* Info message for first tower placement */}
+      {!isFirstTowerPlaced && (
+        <span style={{
+          color: '#ffd700',
+          fontSize: 28,
+          fontWeight: 'bold',
+          background: 'rgba(0,0,0,0.4)',
+          padding: '16px 32px',
+          borderRadius: 12,
+          marginBottom: 24,
+        }}>
+          Place your first tower to begin<br />
+          <span style={{ fontSize: 20, color: '#fff' }}>
+            İlk kuleni yerleştir, oyun başlasın
+          </span>
+        </span>
+      )}
       <span style={{ 
         color: '#fff', 
         fontSize: 40, 

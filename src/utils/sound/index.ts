@@ -3,7 +3,7 @@ export { enhancedAudioManager, updateSFXVolume, updateMusicVolume, toggleMute, g
 
 // Legacy exports for backward compatibility
 export { playSound, playSoundForTest, playContextualSound, updateAllSoundVolumes } from './soundEffects';
-export { musicManager, startBackgroundMusic, stopBackgroundMusic, transitionMusic, getMusicStatus, updateMusicSettings } from './musicManager';
+export { musicManager, startBackgroundMusic, stopBackgroundMusic, transitionMusic, getMusicStatus } from './musicManager';
 
 // Convenience exports
 export const playTowerBuildSound = () => import('./soundEffects').then(m => m.playTowerBuildSound());
