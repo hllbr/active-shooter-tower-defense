@@ -24,7 +24,8 @@ export const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
       condition: 'currentWave >= target',
       trackingFunction: 'trackWaveProgress',
       triggerEvents: ['wave_completed']
-    }
+    },
+    validate: (gameState) => gameState.currentWave >= 10
   },
   {
     id: 'wave_survivor_25',
@@ -46,7 +47,8 @@ export const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
       condition: 'currentWave >= target',
       trackingFunction: 'trackWaveProgress',
       triggerEvents: ['wave_completed']
-    }
+    },
+    validate: (gameState) => gameState.currentWave >= 25
   },
   {
     id: 'wave_survivor_50',
@@ -69,7 +71,8 @@ export const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
       condition: 'currentWave >= target',
       trackingFunction: 'trackWaveProgress',
       triggerEvents: ['wave_completed']
-    }
+    },
+    validate: (gameState) => gameState.currentWave >= 50
   },
   {
     id: 'wave_survivor_100',
@@ -91,7 +94,8 @@ export const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
       condition: 'currentWave >= target',
       trackingFunction: 'trackWaveProgress',
       triggerEvents: ['wave_completed']
-    }
+    },
+    validate: (gameState) => gameState.currentWave >= 100
   },
 
   // UPGRADE CATEGORY
@@ -115,7 +119,8 @@ export const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
       condition: 'fireUpgradesPurchased >= target',
       trackingFunction: 'trackFireUpgrades',
       triggerEvents: ['fire_upgrade_purchased']
-    }
+    },
+    validate: (gameState) => gameState.fireUpgradesPurchased >= 5
   },
   {
     id: 'fire_master_15',
@@ -138,7 +143,8 @@ export const ACHIEVEMENT_DEFINITIONS: Achievement[] = [
       condition: 'fireUpgradesPurchased >= target',
       trackingFunction: 'trackFireUpgrades',
       triggerEvents: ['fire_upgrade_purchased']
-    }
+    },
+    validate: (gameState) => gameState.fireUpgradesPurchased >= 15
   },
   {
     id: 'shield_defender_5',

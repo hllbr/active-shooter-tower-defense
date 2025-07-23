@@ -162,6 +162,8 @@ export interface TowerSlot {
   wasDestroyed?: boolean;
   // --- YENİ: Ateşleme çıkış noktası için ref ---
   fireOriginRef?: React.RefObject<SVGGElement>;
+  /** Manuel yerleşim kilidi */
+  locked?: boolean;
 }
 
 export interface TileModifier {
@@ -589,6 +591,8 @@ export interface Achievement {
   series?: string; // Achievement series ID
   rewards: AchievementReward;
   tracking: AchievementTracking;
+  /** Optional validation function for custom logic */
+  validate?: (gameState: GameState, eventData?: unknown) => boolean;
 }
 
 export interface AchievementReward {

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useRef } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { useChallenge } from '../challenge/hooks/useChallenge';
@@ -53,7 +53,7 @@ const LoadingFallback: React.FC = () => (
   </div>
 );
 
-export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick, onChallengeClick }) => {
+export const GameBoard: React.FC<GameBoardProps> = React.memo(({ className, onSettingsClick, onChallengeClick }) => {
   const {
     towerSlots,
     currentWave,
@@ -189,6 +189,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
   }, [initializeAchievements]);
 
   const { width, height } = dimensions;
+  // Memoize props for GameArea
+  const memoizedTowerSlots = useMemo(() => towerSlots, [towerSlots]);
+  const memoizedDragState = useMemo(() => dragState, [dragState]);
+  const memoizedDropZones = useMemo(() => dropZones, [dropZones]);
+  const memoizedFeedback = useMemo(() => feedback, [feedback]);
+  const memoizedHandleMouseMove = useCallback(handleMouseMove, [handleMouseMove]);
+  const memoizedHandleMouseUp = useCallback(handleMouseUp, [handleMouseUp]);
+  const memoizedHandleTouchMove = useCallback(handleTouchMove, [handleTouchMove]);
+  const memoizedHandleTouchEnd = useCallback(handleTouchEnd, [handleTouchEnd]);
+  const memoizedHandleTowerDragStart = useCallback(handleTowerDragStart, [handleTowerDragStart]);
 
   // --- Mobil algılama ---
   const isMobile = typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || /Mobi|Android/i.test(navigator.userAgent));
@@ -254,15 +264,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
       <GameArea
         width={width}
         height={height}
-        towerSlots={towerSlots}
-        dragState={dragState}
-        dropZones={dropZones}
-        feedback={feedback}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTowerDragStart={handleTowerDragStart}
+        towerSlots={memoizedTowerSlots}
+        dragState={memoizedDragState}
+        dropZones={memoizedDropZones}
+        feedback={memoizedFeedback}
+        onMouseMove={memoizedHandleMouseMove}
+        onMouseUp={memoizedHandleMouseUp}
+        onTouchMove={memoizedHandleTouchMove}
+        onTouchEnd={memoizedHandleTouchEnd}
+        onTowerDragStart={memoizedHandleTowerDragStart}
         timeOfDay={'day'}
         isMobile={isMobile}
       />
@@ -298,4 +308,4 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
       </div>
     </div>
   );
-}; 
+}); 

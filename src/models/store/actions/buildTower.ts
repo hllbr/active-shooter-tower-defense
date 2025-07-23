@@ -8,7 +8,8 @@ export function buildTowerAction(
   slotIdx: number,
   free = false,
   towerType: 'attack' | 'economy' = 'attack',
-  towerClass?: TowerClass
+  towerClass?: TowerClass,
+  manual = true // NEW: default true, auto-placement will set false
 ): Partial<Store> {
   const slot = state.towerSlots[slotIdx];
   if (!slot || slot.tower) return {};
@@ -95,7 +96,7 @@ export function buildTowerAction(
   };
 
   const newSlots = [...state.towerSlots];
-  newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false };
+  newSlots[slotIdx] = { ...slot, tower: newTower, wasDestroyed: false, locked: manual ? true : slot.locked };
   state.towerUpgradeListeners.forEach(fn => fn(newTower, 0, 1));
 
   setTimeout(() => {

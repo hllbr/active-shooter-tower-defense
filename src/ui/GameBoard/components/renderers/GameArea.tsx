@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { TowerSpot } from '../../../TowerSpot';
 import { TowerDragVisualization } from './TowerDragVisualization';
 import { useGameStore } from '../../../../models/store';
@@ -21,7 +21,7 @@ interface GameAreaProps {
   isMobile?: boolean;
 }
 
-export const GameArea: React.FC<GameAreaProps> = ({
+export const GameArea: React.FC<GameAreaProps> = React.memo(({
   width,
   height,
   towerSlots,
@@ -37,19 +37,21 @@ export const GameArea: React.FC<GameAreaProps> = ({
   isMobile = false,
 }) => {
   const { enemies, bullets, mines } = useGameStore();
-  
-  const ambientColors: Record<string, string> = {
+  const ambientColors: Record<string, string> = useMemo(() => ({
     dawn: '#FFE4B5',
     day: '#FFFFFF',
     dusk: '#FF6347',
     night: '#191970',
-  };
-  
+  }), []);
   const ambientColor = ambientColors[timeOfDay] || '#FFFFFF';
   const overlayOpacity = isMobile ? 0.09 : 0.18;
   const saturation = isMobile ? 1.0 : 1.1;
   const contrast = isMobile ? 1.0 : 1.08;
   const brightness = isMobile ? 1.0 : 1.04;
+
+  // Memoize event handlers if needed (example)
+  const handleMouseDown = useCallback(() => useGameStore.getState().selectSlot(null), []);
+  const handleTouchStart = useCallback(() => useGameStore.getState().selectSlot(null), []);
 
   return (
     <svg
@@ -60,8 +62,8 @@ export const GameArea: React.FC<GameAreaProps> = ({
       onMouseUp={onMouseUp}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      onMouseDown={() => useGameStore.getState().selectSlot(null)}
-      onTouchStart={() => useGameStore.getState().selectSlot(null)}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       <rect x={0} y={0} width={width} height={height} fill={ambientColor} opacity={overlayOpacity} />
 
@@ -149,4 +151,4 @@ export const GameArea: React.FC<GameAreaProps> = ({
       </g>
     </svg>
   );
-}; 
+}); 

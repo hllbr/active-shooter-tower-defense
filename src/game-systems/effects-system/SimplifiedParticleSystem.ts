@@ -3,6 +3,8 @@
  * High-performance, minimal particle effects for optimal performance
  */
 
+import { LifecycleManager } from '../memory/LifecycleManager';
+
 export interface SimpleParticle {
   id: string;
   x: number;
@@ -30,6 +32,7 @@ export class SimplifiedParticleSystem {
   private particles: SimpleParticle[] = [];
   private maxParticles = 50; // Strict limit for performance
   private particleId = 0;
+  private lifecycle = LifecycleManager.getInstance();
 
   // Default configurations for different effect types
   private static readonly CONFIGS: Record<string, ParticleConfig> = {
@@ -123,8 +126,16 @@ export class SimplifiedParticleSystem {
         opacity: 1
       };
 
+      this.lifecycle.track(particle.id, particle, 'particle');
       this.particles.push(particle);
     }
+  }
+
+  /**
+   * Destroy a particle and untrack it from the lifecycle manager
+   */
+  private destroyParticle(particle: SimpleParticle): void {
+    this.lifecycle.untrack(particle.id);
   }
 
   /**
@@ -150,6 +161,7 @@ export class SimplifiedParticleSystem {
       
       // Remove dead particles
       if (particle.life <= 0) {
+        this.destroyParticle(particle);
         this.particles.splice(i, 1);
       }
     }
@@ -187,6 +199,10 @@ export class SimplifiedParticleSystem {
    * Clear all particles
    */
   clear(): void {
+    // Destroy all particles and untrack them
+    for (const particle of this.particles) {
+      this.destroyParticle(particle);
+    }
     this.particles.length = 0;
   }
 

@@ -4,7 +4,7 @@ import { waveRules } from '../../config/waveRules';
 import { updateWaveTiles } from '../../game-systems/TowerPlacementManager';
 import { defenseTargetManager } from '../../game-systems/defense-systems/DefenseTargetManager';
 
-export const initialSlots: TowerSlot[] = updateWaveTiles(1, []);
+export const initialSlots: TowerSlot[] = updateWaveTiles(1, []).map(slot => ({ ...slot, locked: false }));
 
 export const initialState: GameState = {
   towers: [],

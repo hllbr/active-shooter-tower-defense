@@ -38,8 +38,8 @@ export interface TowerSlice {
 export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _get, _api) => ({
   selectedSlot: null,
   selectSlot: (slotIdx) => set({ selectedSlot: slotIdx }),
-  buildTower: (slotIdx, free = false, towerType = 'attack', towerClass?: TowerClass) =>
-    set((state: Store) => buildTowerAction(state, slotIdx, free, towerType, towerClass)),
+  buildTower: (slotIdx, free = false, towerType = 'attack', towerClass?: TowerClass, manual = true) =>
+    set((state: Store) => buildTowerAction(state, slotIdx, free, towerType, towerClass, manual)),
 
   unlockSlot: (slotIdx) => set((state: Store) => unlockSlotAction(state, slotIdx)),
 
@@ -142,8 +142,8 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
     };
 
     const newSlots = [...state.towerSlots];
-    newSlots[toIdx] = { ...toSlot, tower: movedTower };
-    newSlots[fromIdx] = { ...fromSlot, tower: null };
+    newSlots[toIdx] = { ...toSlot, tower: movedTower, locked: true };
+    newSlots[fromIdx] = { ...fromSlot, tower: null, locked: false };
 
     const updatedTowers = state.towers.map(t =>
       t.id === movedTower.id ? movedTower : t

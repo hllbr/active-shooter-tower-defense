@@ -20,7 +20,7 @@ export function unlockSlotAction(state: Store, slotIdx: number): Partial<Store> 
   }
 
   const newSlots = [...state.towerSlots];
-  newSlots[slotIdx] = { ...slot, unlocked: true };
+  newSlots[slotIdx] = { ...slot, unlocked: true, locked: false };
 
 
   setTimeout(() => {
