@@ -81,8 +81,3 @@ export function transitionMusic(to: 'game' | 'victory' | 'silence'): void {
 export function getMusicStatus(): { isPlaying: boolean; currentTrack: string | null } {
   return musicManager.getStatus();
 }
-
-export function updateMusicSettings(): void {
-  // Volume is now managed by enhanced audio manager
-  // This method is kept for backward compatibility
-}

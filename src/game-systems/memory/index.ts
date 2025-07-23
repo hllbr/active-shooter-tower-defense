@@ -62,11 +62,4 @@ export const createManagedEventListener = (
   element.addEventListener(event, handler, options);
   memoryManager.cleanup.registerEventListener(id, element, event, handler, description);
   return id;
-};
-
-// React Hook for automatic cleanup (placeholder for React integration)
-export const useMemoryCleanup = (cleanupFn: () => void, _deps: unknown[] = []) => {
-  // Note: This would need React import in actual usage
-  // For now, we'll just return the cleanup function
-  return cleanupFn;
 }; 

@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useEffect, useRef } from 'react';
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
-import { initUpgradeEffects } from '../../game-systems/UpgradeEffects';
 import { useChallenge } from '../challenge/hooks/useChallenge';
 
 import { useTheme } from '../theme/ThemeProvider';
@@ -186,7 +185,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ className, onSettingsClick
 
   // Initialize game systems
   React.useEffect(() => {
-    initUpgradeEffects();
     initializeAchievements();
   }, [initializeAchievements]);
 
