@@ -4,6 +4,7 @@ import { buildTowerAction } from '../actions/buildTower';
 import { unlockSlotAction } from '../actions/unlockSlot';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
+import { towerSynergyManager } from '../../../game-systems/tower-system/TowerSynergyManager';
 
 export interface TowerSlice {
   /** Currently selected tower slot index */
@@ -186,6 +187,21 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
     const upgraded = { ...slot.tower, level: currentLevel + 1 };
     const newSlots = [...state.towerSlots];
     newSlots[slotIdx] = { ...slot, tower: upgraded };
+    // Immediately update synergies after upgrade
+    setTimeout(() => {
+      towerSynergyManager.updateAllSynergyBonuses(newSlots);
+    }, 0);
+    // Notify listeners (batched)
+    setTimeout(() => {
+      const listeners = state.towerUpgradeListeners || [];
+      listeners.forEach(fn => {
+        try {
+          fn(upgraded, currentLevel, upgraded.level);
+        } catch {
+          // Silent fail for listener errors
+        }
+      });
+    }, 0);
     setTimeout(() => { import('../../../utils/sound').then(({ playContextualSound }) => { playContextualSound('tower-upgrade'); }); }, 50);
     return { towerSlots: newSlots, gold: state.gold - cost, totalGoldSpent: state.totalGoldSpent + cost };
   }),

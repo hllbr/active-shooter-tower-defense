@@ -32,6 +32,14 @@ export type Store = GameState &
     resetGame: () => void;
     setStarted: (started: boolean) => void;
     setRefreshing: (refreshing: boolean) => void;
+    /**
+     * Set the global pause state (UI-based pause, e.g., upgrade screen)
+     */
+    setPaused: (paused: boolean) => void;
+    /**
+     * Set the first tower placed state (for wave spawn gating)
+     */
+    setFirstTowerPlaced: (placed: boolean) => void;
   };
 
 export const useGameStore = create<Store>((set, get, api) => ({
@@ -55,6 +63,16 @@ export const useGameStore = create<Store>((set, get, api) => ({
 
   setStarted: (started: boolean) => set({ isStarted: started }),
   setRefreshing: (refreshing: boolean) => set({ isRefreshing: refreshing }),
+
+  /**
+   * Set the global pause state (UI-based pause, e.g., upgrade screen)
+   */
+  setPaused: (paused: boolean) => set({ isPaused: paused }),
+
+  /**
+   * Set the first tower placed state (for wave spawn gating)
+   */
+  setFirstTowerPlaced: (placed: boolean) => set({ isFirstTowerPlaced: placed }),
 }));
 
 

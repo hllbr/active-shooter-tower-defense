@@ -134,8 +134,8 @@ export function startOptimizedGameLoop(existingManager?: EnvironmentManager) {
     
     // Only update if enough time has passed
     if (deltaTime >= targetFrameTime) {
-      // Stop game loop updates if game is over
-      if (state.isGameOver) {
+      // Stop game loop updates if game is over or paused
+      if (state.isGameOver || state.isPaused) {
         frameId = requestAnimationFrame(loop);
         return;
       }

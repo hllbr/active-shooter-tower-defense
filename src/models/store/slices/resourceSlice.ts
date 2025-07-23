@@ -40,6 +40,21 @@ export interface ResourceStats {
   averagePerSource: Record<ResourceSource, number>;
 }
 
+// Event system for resource updates
+const resourceUpdateListeners = new Set<(gold: number) => void>();
+
+export function onResourceUpdated(listener: (gold: number) => void) {
+  resourceUpdateListeners.add(listener);
+}
+
+export function offResourceUpdated(listener: (gold: number) => void) {
+  resourceUpdateListeners.delete(listener);
+}
+
+function emitResourceUpdated(gold: number) {
+  resourceUpdateListeners.forEach((listener) => listener(gold));
+}
+
 export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (set, get, _api) => ({
   addResource: (amount, source, metadata) => {
     const validation = securityManager.validateStateChange('addResource', {}, { gold: amount });
@@ -61,7 +76,7 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
       totalGoldEarned: (state.totalGoldEarned || 0) + amount,
       resourceTransactions: [...(state.resourceTransactions || []), transaction]
     }));
-
+    emitResourceUpdated(get().gold + amount);
     Logger.log(`💰 Resource added: ${amount} from ${source}`, metadata);
   },
 
@@ -91,7 +106,7 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
       totalGoldSpent: state.totalGoldSpent + amount,
       resourceTransactions: [...(state.resourceTransactions || []), transaction]
     }));
-
+    emitResourceUpdated(get().gold - amount);
     Logger.log(`💸 Resource spent: ${amount} on ${source}`, metadata);
     return true;
   },
@@ -115,7 +130,7 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
       gold: amount,
       resourceTransactions: [...(state.resourceTransactions || []), transaction]
     }));
-
+    emitResourceUpdated(amount);
     Logger.log(`🔄 Resource set: ${amount} via ${source}`, metadata);
   },
 

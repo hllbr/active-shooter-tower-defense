@@ -466,6 +466,17 @@ export interface GameState {
   completedMissions: string[];
   unlockedTowerTypes: string[];
 
+  /**
+   * Global pause state for UI-based pausing (e.g., upgrade screen)
+   * When true, all game logic and actions should be paused.
+   */
+  isPaused: boolean;
+
+  /**
+   * True if the player has placed their first tower (enables first wave spawn)
+   */
+  isFirstTowerPlaced: boolean;
+
   /** Currently selected tower slot index, or null if none selected */
   selectedSlot: number | null;
   

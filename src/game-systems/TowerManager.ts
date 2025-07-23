@@ -80,6 +80,7 @@ export function updateTowerFire() {
     state.bulletLevel,
     state.wallLevel,
     state.isGameOver,
+    state.isPaused,
     state.addBullet,
     state.addEffect,
     state.damageEnemy,

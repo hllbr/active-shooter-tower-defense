@@ -15,6 +15,9 @@ import {
   calculateDistance,
   getDirection as utilGetDirection
 } from './helpers/selection';
+import { useGameStore } from '../../models/store';
+import { TowerTypeConfig } from '../tower-system/TowerTypeConfig';
+import type { TargetingPriority } from '../tower-system/TowerTypeConfig';
 
 /**
  * Advanced targeting modes for strategic gameplay
@@ -222,6 +225,27 @@ export class EliteTargetingStrategy implements ITargetingStrategy {
 
 export const eliteTargeting = new EliteTargetingStrategy();
 
+// Add a listener for tower upgrades to refresh targeting logic
+const store = useGameStore.getState();
+if (store && store.addTowerUpgradeListener) {
+  store.addTowerUpgradeListener((_tower, _oldLevel, _newLevel) => {
+    // Optionally, refresh targeting caches or logic here
+    // (No-op if all logic is derived from state)
+  });
+}
+
+// In-memory cache for current targets per tower
+const towerTargetCache: Record<string, string | null> = {};
+
+function shouldSwitchTarget(tower: Tower, currentTarget: Enemy | null, enemies: Enemy[], range: number): boolean {
+  if (!currentTarget) return true;
+  if (!currentTarget.isActive || currentTarget.health <= 0) return true;
+  const dist = Math.hypot(currentTarget.position.x - tower.position.x, currentTarget.position.y - tower.position.y);
+  if (dist > range) return true;
+  // Optionally: add more logic (e.g., if currentTarget is out of line of sight)
+  return false;
+}
+
 // =================== PUBLIC UTILITY FUNCTIONS ===================
 
 export function getDirection(from: Position, to: Position) {
@@ -234,8 +258,8 @@ export function getDirection(from: Position, to: Position) {
  * Enhanced enemy targeting with strategic options
  */
 export function getTargetEnemy(
-  tower: Tower, 
-  enemies: Enemy[], 
+  tower: Tower,
+  enemies: Enemy[],
   mode: TargetingMode = TargetingMode.NEAREST,
   options?: Partial<TargetingOptions>
 ): { enemy: Enemy | null, distance: number, threatScore?: number } {
@@ -244,25 +268,43 @@ export function getTargetEnemy(
     range: tower.range * (tower.rangeMultiplier ?? 1),
     ...options
   };
-  
-  const selectedEnemy = eliteTargeting.selectTarget(tower, enemies, targetingOptions);
-  
-  if (!selectedEnemy) {
+
+  // Use config-based targeting priorities
+  const config = tower.towerClass ? TowerTypeConfig[tower.towerClass] : undefined;
+  const priorities: TargetingPriority[] = config?.targetingPriority || [mode as TargetingPriority];
+
+  // Smooth switching: only switch if current target is dead or out of range
+  const cacheKey = tower.id;
+  const currentTargetId = towerTargetCache[cacheKey] || null;
+  const currentTarget = currentTargetId ? enemies.find(e => e.id === currentTargetId) || null : null;
+  const range = targetingOptions.range || (tower.range * (tower.rangeMultiplier ?? 1));
+  if (!shouldSwitchTarget(tower, currentTarget, enemies, range)) {
+    return {
+      enemy: currentTarget,
+      distance: Math.hypot(currentTarget!.position.x - tower.position.x, currentTarget!.position.y - tower.position.y),
+      threatScore: undefined
+    };
+  }
+
+  // Try each priority in order
+  let selectedEnemy: Enemy | null = null;
+  for (const priority of priorities) {
+    selectedEnemy = eliteTargeting.selectTarget(tower, enemies, { ...targetingOptions, mode: priority as TargetingMode });
+    if (selectedEnemy) break;
+  }
+  if (selectedEnemy) {
+    towerTargetCache[cacheKey] = selectedEnemy.id;
+    const distance = Math.hypot(selectedEnemy.position.x - tower.position.x, selectedEnemy.position.y - tower.position.y);
+    let threatScore: number | undefined;
+    if (priorities.includes('threat_assessment')) {
+      const threat = eliteTargeting.assessThreat(selectedEnemy, tower);
+      threatScore = threat.threatScore;
+    }
+    return { enemy: selectedEnemy, distance, threatScore };
+  } else {
+    towerTargetCache[cacheKey] = null;
     return { enemy: null, distance: Infinity };
   }
-  
-  const distance = Math.hypot(
-    selectedEnemy.position.x - tower.position.x,
-    selectedEnemy.position.y - tower.position.y
-  );
-  
-  let threatScore: number | undefined;
-  if (mode === TargetingMode.THREAT_ASSESSMENT) {
-    const threat = eliteTargeting.assessThreat(selectedEnemy, tower);
-    threatScore = threat.threatScore;
-  }
-  
-  return { enemy: selectedEnemy, distance, threatScore };
 }
 
 /**

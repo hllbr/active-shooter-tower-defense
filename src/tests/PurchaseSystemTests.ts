@@ -574,6 +574,59 @@ export class PurchaseSystemTests {
 
     return results;
   }
+
+  /**
+   * Test resource transaction queue atomicity and ordering
+   */
+  public async testResourceTransactionQueue(): Promise<void> {
+    console.log('🧪 Testing Resource Transaction Queue...');
+    const store = useGameStore.getState();
+    store.setGold(1000);
+    const results: Array<{ name: string; passed: boolean; details: string }> = [];
+
+    // Queue multiple transactions rapidly
+    const tx1 = store.purchaseTransaction(200, () => { store.setGold(store.gold - 200); }, 'test1');
+    const tx2 = store.purchaseTransaction(300, () => { store.setGold(store.gold - 300); }, 'test2');
+    const tx3 = store.purchaseTransaction(400, () => { store.setGold(store.gold - 400); }, 'test3');
+
+    const [r1, r2, r3] = await Promise.all([tx1, tx2, tx3]);
+    const goldAfter = useGameStore.getState().gold;
+    results.push({
+      name: 'FIFO Transaction Order',
+      passed: r1 && r2 && r3 && goldAfter === 100,
+      details: `Expected gold: 100, Actual: ${goldAfter}`
+    });
+
+    // Edge case: insufficient funds in the middle
+    store.setGold(500);
+    const tx4 = store.purchaseTransaction(300, () => { store.setGold(store.gold - 300); }, 'test4');
+    const tx5 = store.purchaseTransaction(300, () => { store.setGold(store.gold - 300); }, 'test5');
+    const [r4, r5] = await Promise.all([tx4, tx5]);
+    const goldAfterEdge = useGameStore.getState().gold;
+    results.push({
+      name: 'Insufficient Funds Handling',
+      passed: r4 && !r5 && goldAfterEdge === 200,
+      details: `Expected gold: 200, Actual: ${goldAfterEdge}`
+    });
+
+    // UI sync: gold in store matches after transaction
+    store.setGold(1000);
+    await store.purchaseTransaction(500, () => { store.setGold(store.gold - 500); }, 'ui_sync');
+    const goldUI = useGameStore.getState().gold;
+    results.push({
+      name: 'UI Sync After Transaction',
+      passed: goldUI === 500,
+      details: `Expected gold: 500, Actual: ${goldUI}`
+    });
+
+    // Print results
+    results.forEach(test => {
+      const status = test.passed ? '✅' : '❌';
+      console.log(`${status} ${test.name}: ${test.details}`);
+    });
+    const passed = results.filter(r => r.passed).length;
+    console.log(`\n🧪 Resource Transaction Queue: ${passed}/${results.length} tests passed`);
+  }
 }
 
 // Export singleton instance for easy access

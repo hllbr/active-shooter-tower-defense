@@ -6,6 +6,7 @@ import BossManager from './BossManager';
 import { createManagedEffect } from '../effects-system/Effects';
 import { EnemyBehaviorSystem } from './EnemyBehaviorSystem';
 import { defenseTargetManager } from '../defense-systems/DefenseTargetManager';
+import { advancedEnemyPool } from '../memory/AdvancedEnemyPool';
 
 /**
  * Enhanced Movement class responsible for handling enemy movement and collision logic
@@ -25,19 +26,35 @@ export class EnemyMovement {
    * Updates movement for all active enemies
    */
   static updateEnemyMovement() {
-    const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall, damageEnemy, wallLevel, isGameOver } =
+    const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall, damageEnemy, wallLevel, isGameOver, isPaused } =
       useGameStore.getState();
     
-    // ✅ CRITICAL FIX: Stop enemy movement if game is over
-    if (isGameOver) {
+    // ✅ CRITICAL FIX: Stop enemy movement if game is over or paused
+    if (isGameOver || isPaused) {
       return;
     }
     
     // Update enemy behaviors first
     EnemyBehaviorSystem.updateEnemyBehaviors();
     
+    // Batch calculation cache for this tick
+    const distanceCache: Record<string, number> = {};
+    const targetCache: Record<string, TowerSlot | null> = {};
+    
     // Performance optimization: Batch process enemies
     enemies.forEach((enemy) => {
+      // Cache distance to nearest tower for this tick
+      if (!distanceCache[enemy.id]) {
+        const targetSlot = this.getDynamicTarget(enemy, towerSlots);
+        targetCache[enemy.id] = targetSlot;
+        if (targetSlot) {
+          const dx = targetSlot.x - enemy.position.x;
+          const dy = targetSlot.y - enemy.position.y;
+          distanceCache[enemy.id] = Math.sqrt(dx * dx + dy * dy);
+        } else {
+          distanceCache[enemy.id] = 0;
+        }
+      }
       this.updateSingleEnemyMovement(enemy, { towerSlots, damageTower, removeEnemy, addGold, hitWall, damageEnemy, wallLevel });
     });
 
@@ -99,6 +116,8 @@ export class EnemyMovement {
 
     // Handle collision with target
     if (this.handleTargetCollision(enemy, targetSlot, towerSlots, movementData, { damageTower, removeEnemy, addGold, hitWall, damageEnemy, wallLevel })) {
+      // Return enemy to pool after removal
+      advancedEnemyPool.release(enemy as unknown as import('../memory/AdvancedEnemyPool').AdvancedEnemy);
       return;
     }
 

@@ -104,10 +104,15 @@ export function buildTowerAction(
     });
   }, 50);
 
+  // If this is the first tower placed, set isFirstTowerPlaced to true
+  const isFirstTowerPlaced = state.isFirstTowerPlaced || false;
+  const willBeFirstTower = !isFirstTowerPlaced && state.towers.length === 0;
+
   return {
     towerSlots: newSlots,
     towers: [...state.towers, newTower],
     gold: state.gold - finalCost,
     totalGoldSpent: state.totalGoldSpent + finalCost,
+    ...(willBeFirstTower ? { isFirstTowerPlaced: true } : {}),
   };
 }

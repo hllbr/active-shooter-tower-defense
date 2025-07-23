@@ -3,6 +3,8 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Enemy, TowerSlot, Position } from '../../models/gameTypes';
 import { createManagedEffect } from '../effects-system/Effects';
 import { Logger } from '../../utils/Logger';
+import { advancedEnemyPool } from '../memory/AdvancedEnemyPool';
+import type { AdvancedEnemy } from '../memory/AdvancedEnemyPool';
 
 /**
  * Enhanced Enemy Behavior System
@@ -450,6 +452,7 @@ export class EnemyBehaviorSystem {
       this.fleeingEnemies.delete(enemy.id);
       this.fleeStartTimes.delete(enemy.id);
       enemy.color = this.getOriginalColor(enemy.type || 'Basic');
+      advancedEnemyPool.release(enemy as AdvancedEnemy);
     }
   }
 

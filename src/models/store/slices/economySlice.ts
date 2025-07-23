@@ -3,6 +3,7 @@ import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
 import type { ResourceSource } from '../../gameTypes';
 import { Logger } from '../../../utils/Logger';
+import { transactionQueue } from '../TransactionQueue';
 
 export interface EconomySlice {
   addGold: (amount: number, source?: string) => void;
@@ -11,7 +12,7 @@ export interface EconomySlice {
   setEnergyBoostLevel: (level: number) => void;
   setMaxActionsLevel: (level: number) => void;
   setEliteModuleLevel: (level: number) => void;
-  purchaseTransaction: (amount: number, callback: () => void, source?: string) => boolean;
+  purchaseTransaction: (amount: number, callback: () => void, source?: string) => Promise<boolean>;
 }
 
 export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (set, _get, _api) => ({
@@ -72,39 +73,25 @@ export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (se
   setEliteModuleLevel: (level) => set(() => ({ eliteModuleLevel: level })),
 
   purchaseTransaction: (amount, callback) => {
-    const validation = securityManager.validateStateChange('purchaseTransaction', {}, { gold: amount });
-    if (!validation.valid) {
-      Logger.warn('🔒 Security: purchaseTransaction blocked:', validation.reason);
-      return false;
-    }
-    
-    // Double-check gold availability in atomic transaction
-    const currentGold = _get().gold;
-    if (currentGold < amount) {
-      Logger.warn('❌ Insufficient gold for transaction:', { required: amount, available: currentGold });
-      return false;
-    }
-    
-    try {
-      // Atomic transaction: spend gold first, then execute callback
-      set((state: Store) => ({
-        gold: state.gold - amount,
-        totalGoldSpent: state.totalGoldSpent + amount,
-      }));
-      
-      // Execute the upgrade logic
-      callback();
-      
-      Logger.log(`✅ Purchase transaction successful: ${amount} gold spent`);
-      return true;
-    } catch (error) {
-      // If callback fails, rollback the gold spending
-      Logger.error('❌ Purchase transaction failed, rolling back:', error);
-      set((state: Store) => ({
-        gold: state.gold + amount,
-        totalGoldSpent: state.totalGoldSpent - amount,
-      }));
-      return false;
-    }
+    return transactionQueue.queueResourceTransaction(async () => {
+      const { spendResource } = _get();
+      // Atomic spend
+      const spent = spendResource ? spendResource(amount, 'purchase', { originalAmount: amount }) : false;
+      if (!spent) {
+        Logger.warn('❌ Transaction failed: insufficient funds');
+        return false;
+      }
+      try {
+        await Promise.resolve(callback());
+        Logger.log(`✅ Purchase transaction successful: ${amount} gold spent`);
+        return true;
+      } catch (error) {
+        // Rollback if callback fails
+        const { addResource } = _get();
+        if (addResource) addResource(amount, 'refund', { originalAmount: amount });
+        Logger.error('❌ Purchase transaction failed, rolled back:', error);
+        return false;
+      }
+    });
   },
 });

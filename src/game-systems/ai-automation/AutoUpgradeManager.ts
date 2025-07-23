@@ -328,9 +328,9 @@ export class AutoUpgradeManager {
   }
 
   /**
-   * Execute auto upgrade for the highest priority tower
+   * Execute auto upgrade for the highest priority tower (atomic, FIFO)
    */
-  public executeAutoUpgrade(): boolean {
+  public async executeAutoUpgrade(): Promise<boolean> {
     if (!this.isActive) return false;
 
     // Check cooldown
@@ -338,27 +338,26 @@ export class AutoUpgradeManager {
       return false;
     }
 
-    const { towerSlots, spendGold } = useGameStore.getState();
+    const { towerSlots, purchaseTransaction } = useGameStore.getState();
     const priorities = this.calculateUpgradePriorities(towerSlots);
 
     if (priorities.length === 0) return false;
 
     const topPriority = priorities[0];
-    
+
     // Double-check affordability
-    if (!this.canAfford(topPriority.tower)) {
+    const upgradeCost = this.calculateUpgradeCost(topPriority.tower);
+    if (upgradeCost > useGameStore.getState().gold) {
       return false;
     }
 
-    // Execute upgrade
-    const upgradeCost = this.calculateUpgradeCost(topPriority.tower);
-    const success = spendGold(upgradeCost, 'auto_upgrade');
-    
-    if (success) {
-      // Apply upgrade effects
+    // Use atomic, FIFO transaction
+    const success = await purchaseTransaction(upgradeCost, () => {
       this.applyUpgrade(topPriority.tower);
       this.lastUpgradeTime = performance.now();
-      
+    }, 'auto_upgrade');
+
+    if (success) {
       Logger.log(`🤖 Auto upgraded ${topPriority.tower.towerClass || 'tower'} (${topPriority.reason})`);
       return true;
     }

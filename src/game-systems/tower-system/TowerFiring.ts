@@ -7,6 +7,7 @@ import { getDirection, getTargetEnemy, TargetingMode } from '../targeting-system
 import { specialAbilitiesManager } from './SpecialAbilities';
 import { towerSynergyManager } from './TowerSynergyManager';
 import { defenseSystemManager } from '../defense-systems';
+import { useGameStore } from '../../models/store';
 
 /**
  * Enhanced Tower Firing System
@@ -349,6 +350,7 @@ export class TowerFiringSystem {
     bulletLevel: number,
     wallLevel: number,
     isGameOver: boolean,
+    isPaused: boolean,
     addBullet: (bullet: Bullet) => void,
     addEffect: (effect: Effect) => void,
     damageEnemy: (id: string, damage: number) => void,
@@ -356,8 +358,8 @@ export class TowerFiringSystem {
     globalWallActive: boolean,
     wallRegenerationActive: boolean
   ): void {
-    // ✅ CRITICAL FIX: Stop tower firing if game is over
-    if (isGameOver) {
+    // ✅ CRITICAL FIX: Stop tower firing if game is over or paused
+    if (isGameOver || isPaused) {
       return;
     }
     
@@ -630,3 +632,14 @@ export class TowerFiringSystem {
 
 // Global tower firing system instance
 export const towerFiringSystem = new TowerFiringSystem(); 
+
+// Add a listener for tower upgrades to refresh firing logic
+const store = useGameStore.getState();
+if (store && store.addTowerUpgradeListener) {
+  store.addTowerUpgradeListener((_tower, _oldLevel, _newLevel) => {
+    // Optionally, recalculate or refresh any cached firing logic here
+    // For now, this is a placeholder for future optimizations
+    // Example: clear any firing cooldowns or update derived stats
+    // (No-op if all logic is derived from state)
+  });
+} 

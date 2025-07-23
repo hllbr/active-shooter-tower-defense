@@ -16,14 +16,23 @@ export class UpgradeScreenTest {
     
     const store = useGameStore.getState();
     
-    // Check upgrade screen state
-    
     // Test opening upgrade screen
     store.setRefreshing(true);
+    // Simulate opening the upgrade screen (would mount UpgradeScreen in UI)
+    store.setPaused(true);
     
     const opened = useGameStore.getState().isRefreshing;
-    Logger.log(`Upgrade screen opened: ${opened}`);
+    const pausedWhenOpen = useGameStore.getState().isPaused;
+    Logger.log(`Upgrade screen opened: ${opened}, game paused: ${pausedWhenOpen}`);
     
-    return opened;
+    // Test closing upgrade screen
+    store.setRefreshing(false);
+    // Simulate closing the upgrade screen (would unmount UpgradeScreen in UI)
+    store.setPaused(false);
+    const closed = !useGameStore.getState().isRefreshing;
+    const pausedWhenClosed = useGameStore.getState().isPaused;
+    Logger.log(`Upgrade screen closed: ${closed}, game paused: ${pausedWhenClosed}`);
+    
+    return opened && pausedWhenOpen && closed && !pausedWhenClosed;
   }
 } 

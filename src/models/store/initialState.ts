@@ -203,6 +203,13 @@ export const initialState: GameState = {
   lastMissionRefresh: 0,
   completedMissions: [],
   unlockedTowerTypes: [],
+
+  // Global pause state for UI-based pausing (e.g., upgrade screen)
+  isPaused: false,
+
+  // Track if the first tower has been placed (for wave spawn gating)
+  isFirstTowerPlaced: false,
+
   supportTowerUpgrades: {
     radar_area_radius: 0,
     radar_area_power: 0,
