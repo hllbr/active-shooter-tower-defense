@@ -8,6 +8,7 @@ import { playSound } from '../../utils/sound/soundEffects';
 import { toast } from 'react-toastify';
 import { Logger } from '../../utils/Logger';
 import type { Enemy } from '../../models/gameTypes';
+import { weatherManager } from '../weather';
 
 export interface WeatherEffectCard {
   id: string;
@@ -289,10 +290,14 @@ export class WeatherEffectMarket {
         break;
     }
 
-    // Update weather state for visual effects
+    // Update weather state for visual effects using WeatherManager
+    const weatherType = this.getWeatherTypeFromEffect(effect.type);
+    weatherManager.addWeatherEffect(weatherType, effect.intensity, card.duration);
+    
+    // Update store state
     gameState.updateWeatherState({
       ...gameState.weatherState,
-      currentWeather: this.getWeatherTypeFromEffect(effect.type),
+      currentWeather: weatherType,
       weatherIntensity: effect.intensity,
       startTime: performance.now(),
       duration: card.duration

@@ -2,6 +2,7 @@ import { GamePauseManager } from '../../game-systems/GamePauseManager';
 import { useGameStore } from '../../models/store';
 import { WaveSpawnManager } from '../../game-systems/enemy/WaveSpawnManager';
 import { aiManager } from '../../game-systems/ai-automation';
+import { weatherManager } from '../../game-systems/weather';
 
 /**
  * Validates that the pause system is properly integrated and working
@@ -53,6 +54,19 @@ export function validatePauseSystem(): {
       issues.push('WaveSpawnManager.isSpawningActive method is missing');
     }
 
+    // Test 6: Check if WeatherManager has required methods
+    if (typeof weatherManager.pause !== 'function') {
+      issues.push('WeatherManager.pause method is missing');
+    }
+
+    if (typeof weatherManager.resume !== 'function') {
+      issues.push('WeatherManager.resume method is missing');
+    }
+
+    if (typeof weatherManager.isWeatherPaused !== 'function') {
+      issues.push('WeatherManager.isWeatherPaused method is missing');
+    }
+
     if (typeof WaveSpawnManager.stopEnemyWave !== 'function') {
       issues.push('WaveSpawnManager.stopEnemyWave method is missing');
     }
@@ -89,6 +103,7 @@ export function validatePauseSystem(): {
       recommendations.push('✅ Sound system integration is working');
       recommendations.push('✅ AI automation pause/resume is working');
       recommendations.push('✅ Enemy spawning pause/resume is working');
+      recommendations.push('✅ Weather system pause/resume is working');
     } else {
       recommendations.push('🔧 Fix the issues listed above');
       recommendations.push('🔧 Ensure all imports are correct');

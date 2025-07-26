@@ -83,7 +83,7 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
         // Only update environment every 10 frames for performance
         const environmentState = environmentManager.getEnvironmentState();
         useGameStore.setState({
-          weatherState: environmentState.weatherState,
+          weatherState: environmentState.weatherState, // Now managed by WeatherManager
           timeOfDayState: environmentState.timeOfDayState
         });
       }

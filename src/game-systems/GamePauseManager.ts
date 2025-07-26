@@ -3,6 +3,7 @@ import { WaveSpawnManager } from './enemy/WaveSpawnManager';
 import { pauseGameSceneSounds, resumeGameSceneSounds } from '../utils/sound/soundEffects';
 import { dynamicSpawnController } from './spawn-system';
 import { aiManager } from './ai-automation';
+import { weatherManager } from './weather';
 
 /**
  * GamePauseManager - Centralized pause state management
@@ -47,6 +48,9 @@ export class GamePauseManager {
     // Stop AI automation
     aiManager.pauseAutomation();
 
+    // Pause weather system
+    weatherManager.pause();
+
     this.isCurrentlyPaused = true;
   }
 
@@ -83,6 +87,9 @@ export class GamePauseManager {
       }
     }
 
+    // Resume weather system
+    weatherManager.resume();
+
     this.isCurrentlyPaused = false;
     this.pauseStateSnapshot = null;
   }
@@ -100,6 +107,11 @@ export class GamePauseManager {
   static reset(): void {
     this.isCurrentlyPaused = false;
     this.pauseStateSnapshot = null;
+    
+    // Reset weather system if it was paused
+    if (weatherManager.isWeatherPaused()) {
+      weatherManager.resume();
+    }
   }
 
   /**
