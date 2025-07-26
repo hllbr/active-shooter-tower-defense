@@ -247,6 +247,10 @@ export interface Bullet {
   typeIndex: number;
   targetId?: string;
   life: number;
+  // Piercing bullet properties
+  piercing?: boolean;
+  maxTargets?: number;
+  targetsHit?: number;
 }
 
 export interface Effect {

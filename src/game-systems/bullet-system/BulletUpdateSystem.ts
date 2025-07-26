@@ -60,19 +60,13 @@ export class BulletUpdateSystem {
       enemies,
       deltaTime,
       (bullet, enemy, collisionResult) => {
+        // ✅ NEW: Handle piercing bullets
+        const isPiercing = bullet.piercing || false;
+        const maxTargets = bullet.maxTargets || 1;
+        const targetsHit = bullet.targetsHit || 0;
+        
         // Apply damage
         damageEnemy(enemy.id, bullet.damage);
-        
-        // Remove bullet and return to pool
-        removeBullet(bullet.id);
-        const bulletPool2 = advancedPoolManager.getPool<Bullet>('bullet');
-        if (bulletPool2) {
-          try {
-            bulletPool2.release(bullet);
-          } catch {
-            // Error silently handled for performance
-          }
-        }
         
         // Apply bullet effects
         const bulletType = GAME_CONSTANTS.BULLET_TYPES[bullet.typeIndex];
@@ -90,6 +84,28 @@ export class BulletUpdateSystem {
             life: 200,
             maxLife: 200,
           });
+        }
+        
+        // Handle piercing logic
+        if (isPiercing && targetsHit < maxTargets) {
+          // Increment targets hit
+          bullet.targetsHit = targetsHit + 1;
+          
+          // Don't remove bullet yet if it can pierce more targets
+          if (bullet.targetsHit < maxTargets) {
+            return; // Continue with the bullet
+          }
+        }
+        
+        // Remove bullet and return to pool (for non-piercing or max targets reached)
+        removeBullet(bullet.id);
+        const bulletPool2 = advancedPoolManager.getPool<Bullet>('bullet');
+        if (bulletPool2) {
+          try {
+            bulletPool2.release(bullet);
+          } catch {
+            // Error silently handled for performance
+          }
         }
         
         // Debug mode collision logging can be added here if needed

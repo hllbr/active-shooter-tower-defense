@@ -8,6 +8,7 @@ import { specialAbilitiesManager } from './SpecialAbilities';
 import { towerSynergyManager } from './TowerSynergyManager';
 import { defenseSystemManager } from '../defense-systems';
 import { useGameStore } from '../../models/store';
+import { fireModeManager } from './FireModeManager';
 
 /**
  * Enhanced Tower Firing System
@@ -46,6 +47,15 @@ export class TowerFiringSystem {
       baseSpeed,
       1 // state.bulletLevel
     );
+    
+    // ✅ NEW: Check for active fire modes first
+    const activeFireModes = fireModeManager.getActiveFireModes();
+    if (activeFireModes.length > 0) {
+      // Use the first active fire mode
+      const activeMode = activeFireModes[0];
+      this.executeFireMode(activeMode.id, tower, enemy, damage, speed, addBullet, addEffect, damageEnemy, fireOrigin);
+      return;
+    }
     
     // Enhanced firing mechanics based on tower class
     switch (tower.towerClass) {
@@ -296,6 +306,39 @@ export class TowerFiringSystem {
       
       // Chain damage to nearby enemies
       this.chainDamageToNearbyEnemies(enemy.position, chainRadius, chainDamage, damageEnemy);
+    }
+  }
+
+  /**
+   * Execute a specific fire mode
+   */
+  private executeFireMode(
+    modeId: string,
+    tower: Tower,
+    enemy: Enemy,
+    damage: number,
+    speed: number,
+    addBullet: (bullet: Bullet) => void,
+    addEffect?: (effect: Effect) => void,
+    damageEnemy?: (id: string, damage: number) => void,
+    fireOrigin?: { x: number; y: number }
+  ): void {
+    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
+
+    switch (modeId) {
+      case 'spreadShot':
+        fireModeManager.executeSpreadShot(tower, enemy, damage, speed, addBullet, addEffect || (() => {}), origin);
+        break;
+      case 'chainLightning':
+        fireModeManager.executeChainLightning(tower, enemy, damage, speed, addBullet, addEffect || (() => {}), damageEnemy || (() => {}), origin);
+        break;
+      case 'piercingShot':
+        fireModeManager.executePiercingShot(tower, enemy, damage, speed, addBullet, addEffect || (() => {}), origin);
+        break;
+      default:
+        // Fallback to standard firing
+        this.fireStandardTower(tower, enemy, damage, speed, '#FF0000', addBullet, origin);
+        break;
     }
   }
 

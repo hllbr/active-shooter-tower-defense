@@ -1082,14 +1082,35 @@ export const GAME_CONSTANTS = {
     utility: {
       emp: {
         name: 'EMP Mine',
-        description: 'Disables enemy electronics and shields',
-        damage: 50,
-        radius: 100,
-        cost: 180,
+        description: 'Stuns enemies for a short duration',
+        damage: 30,
+        radius: 80,
+        cost: 200,
         triggerCondition: 'proximity' as const,
         empDuration: 3000,
-        effects: ['disable_electronics', 'disable_shields'],
+        effects: ['stun', 'disable_electronics'],
         icon: '⚡'
+      },
+      sticky: {
+        name: 'Sticky Mine',
+        description: 'Attaches to slow-moving enemies and explodes after delay',
+        damage: 80,
+        radius: 60,
+        cost: 150,
+        triggerCondition: 'proximity' as const,
+        duration: 2000,
+        effects: ['attach', 'delayed_explosion'],
+        icon: '🕷️'
+      },
+      chainReaction: {
+        name: 'Chain Reaction Mine',
+        description: 'Triggers nearby mines for chain explosion effect',
+        damage: 50,
+        radius: 100,
+        cost: 300,
+        triggerCondition: 'proximity' as const,
+        effects: ['chain_reaction', 'area_damage'],
+        icon: '💥'
       },
       smoke: {
         name: 'Smoke Mine',
