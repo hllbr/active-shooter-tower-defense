@@ -129,7 +129,8 @@ export class TowerSynergyManager {
       'sniper_supply_depot': 'Precision Support: Enhanced sniper accuracy',
       'mortar_shield_generator': 'Protected Artillery: Shielded mortar fire',
       'gatling_repair_station': 'Sustained Fire: Continuous gatling operation',
-      'flamethrower_emp': 'Disruption Combo: Fire and electronic warfare'
+      'flamethrower_emp': 'Disruption Combo: Fire and electronic warfare',
+      'sniper_emp': 'EMP Rounds: Sniper shots disable enemy shields'
     };
 
     const key1 = `${towerClass1}_${towerClass2}`;
@@ -198,6 +199,7 @@ export class TowerSynergyManager {
       'mortar_shield_generator': { damage: 0.2, fireRate: 0.1 }, // Protected artillery
       'gatling_repair_station': { fireRate: 0.2, damage: 0.1 }, // Sustained fire
       'flamethrower_emp': { damage: 0.3, fireRate: 0.15 }, // Disruption combo
+      'sniper_emp': { damage: 0.4, range: 0.15 } // EMP rounds synergy
     };
     
     // Check both directions

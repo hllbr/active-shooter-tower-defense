@@ -189,6 +189,10 @@ export interface Enemy {
   behaviorTag?: string;
   /** Enemy type name */
   type?: string;
+  /** Timestamp of last ranged attack */
+  lastShotTime?: number;
+  /** Cooldown between ranged attacks */
+  rangedCooldown?: number;
   
   // ✅ NEW: Advanced Boss System for Issue #56
   /** Boss type for multi-phase boss mechanics */

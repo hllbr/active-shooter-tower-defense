@@ -27,7 +27,7 @@ export interface DynamicWaveConfig {
 // ✅ NEW: Procedural Wave Generation
 export class ProceduralWaveGenerator {
   private static readonly BASE_ENEMY_TYPES = ['Basic', 'Scout', 'Tank', 'Ghost'];
-  private static readonly ADVANCED_ENEMY_TYPES = ['Assassin', 'Berserker', 'Shaman', 'Archer'];
+  private static readonly ADVANCED_ENEMY_TYPES = ['Assassin', 'Berserker', 'Shaman', 'Archer', 'ZigZag'];
   private static readonly ELITE_ENEMY_TYPES = ['Demon', 'Wraith', 'Golem', 'Phoenix'];
   private static readonly BOSS_TYPES = ['TankBoss', 'GhostBoss', 'DemonLord', 'DragonKing', 'LichKing', 'VoidGod', 'UltimateGod'];
 

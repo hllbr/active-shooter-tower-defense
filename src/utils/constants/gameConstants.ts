@@ -720,6 +720,8 @@ export const GAME_CONSTANTS = {
     Assassin: { speed: 160, hp: 80, damage: 15, color: '#dc2626', behaviorTag: 'stealth' },
     Shaman: { speed: 70, hp: 120, damage: 18, color: '#7c3aed', behaviorTag: 'healer' },
     Archer: { speed: 110, hp: 90, damage: 22, color: '#059669', behaviorTag: 'ranged' },
+    /** New zigzagging ranged enemy */
+    ZigZag: { speed: 100, hp: 80, damage: 20, color: '#ff77aa', behaviorTag: 'zigzag' },
     
     // Elite Enemies (Wave 31-60)
     Demon: { speed: 120, hp: 250, damage: 35, color: '#991b1b', behaviorTag: 'fire' },
@@ -865,6 +867,10 @@ export const GAME_CONSTANTS = {
       speedMultiplier: 1.7,
     },
   ] as const satisfies BulletTypeData[],
+  /** Default color for enemy projectiles */
+  ENEMY_BULLET_COLOR: '#ff8800',
+  /** Default cooldown between enemy ranged attacks */
+  ENEMY_RANGED_COOLDOWN: 1500,
   BULLET_UPGRADE_COST: 300,
   WALL_COST: 150,
   WALL_SHIELDS: [

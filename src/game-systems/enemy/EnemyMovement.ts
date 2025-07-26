@@ -7,6 +7,7 @@ import { createManagedEffect } from '../effects-system/Effects';
 import { EnemyBehaviorSystem } from './EnemyBehaviorSystem';
 import { defenseTargetManager } from '../defense-systems/DefenseTargetManager';
 import { advancedEnemyPool } from '../memory/AdvancedEnemyPool';
+import { advancedBulletPool } from '../memory/AdvancedBulletPool';
 
 /**
  * Enhanced Movement class responsible for handling enemy movement and collision logic
@@ -123,6 +124,9 @@ export class EnemyMovement {
 
     // Apply enhanced movement with curved patterns
     this.applyEnhancedMovement(enemy, movementData);
+
+    // Handle ranged attacks for certain enemies
+    this.handleRangedAttack(enemy, towerSlots);
   }
 
   /**
@@ -184,8 +188,13 @@ export class EnemyMovement {
 
     // Normalize final direction
     const dirLength = Math.sqrt(finalDirection.x * finalDirection.x + finalDirection.y * finalDirection.y);
-    finalDirection.x /= dirLength;
-    finalDirection.y /= dirLength;
+    if (dirLength > 0) {
+      finalDirection.x /= dirLength;
+      finalDirection.y /= dirLength;
+    } else {
+      finalDirection.x = 0;
+      finalDirection.y = 0;
+    }
 
     return {
       direction: finalDirection,
@@ -292,6 +301,17 @@ export class EnemyMovement {
 
     enemy.position.x += moveX;
     enemy.position.y += moveY;
+
+    // Extra zigzag pattern for specialized enemies
+    if (enemy.behaviorTag === 'zigzag') {
+      const perpX = -direction.y;
+      const perpY = direction.x;
+      const amplitude = 30;
+      const time = performance.now();
+      const offset = Math.sin(time / 200) * amplitude * 0.016;
+      enemy.position.x += perpX * offset;
+      enemy.position.y += perpY * offset;
+    }
   }
 
   /**
@@ -453,6 +473,32 @@ export class EnemyMovement {
     
     // Damage the enemy
     actions.damageEnemy(enemy.id, 10);
+  }
+
+  /**
+   * Allow ranged enemies to shoot at towers
+   */
+  private static handleRangedAttack(enemy: Enemy, towerSlots: TowerSlot[]): void {
+    if (enemy.behaviorTag !== 'ranged' && enemy.behaviorTag !== 'zigzag') {
+      return;
+    }
+
+    const now = performance.now();
+    const cooldown = enemy.rangedCooldown ?? GAME_CONSTANTS.ENEMY_RANGED_COOLDOWN;
+    if (enemy.lastShotTime && now - enemy.lastShotTime < cooldown) return;
+
+    const target = TargetFinder.getNearestSlot(enemy.position, enemy);
+    if (target && target.tower) {
+      enemy.lastShotTime = now;
+      const bullet = advancedBulletPool.createBullet(
+        enemy.position,
+        { x: target.x, y: target.y },
+        enemy.damage * 0.5,
+        GAME_CONSTANTS.BULLET_SPEED * 0.8,
+        GAME_CONSTANTS.ENEMY_BULLET_COLOR
+      );
+      useGameStore.getState().addBullet(bullet);
+    }
   }
 
   /**
