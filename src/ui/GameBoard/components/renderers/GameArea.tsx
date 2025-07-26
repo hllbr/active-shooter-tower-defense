@@ -4,6 +4,7 @@ import { TowerDragVisualization } from './TowerDragVisualization';
 import { useGameStore } from '../../../../models/store';
 import type { TowerSlot } from '../../../../models/gameTypes';
 import type { DragState, DropZoneState, DragFeedback } from '../../types';
+import { HealthBarRenderer, BossHealthBarStyles } from './helpers/HealthBarRenderer';
 
 interface GameAreaProps {
   width: number;
@@ -112,19 +113,24 @@ export const GameArea: React.FC<GameAreaProps> = React.memo(({
           feedback={feedback}
         />
 
-        {/* Simplified Game Elements */}
+        {/* Enhanced Game Elements with Health Bars */}
         {/* Enemies */}
         {enemies.map((enemy) => (
-          <circle
-            key={enemy.id}
-            cx={enemy.position?.x || 0}
-            cy={enemy.position?.y || 0}
-            r={enemy.size || 8}
-            fill={enemy.type === 'boss' ? '#DC2626' : '#EF4444'}
-            stroke="#000"
-            strokeWidth="1"
-            opacity={0.9}
-          />
+          <g key={enemy.id}>
+            {/* Health Bar for all enemies */}
+            {HealthBarRenderer.render(enemy)}
+            
+            {/* Enemy body */}
+            <circle
+              cx={enemy.position?.x || 0}
+              cy={enemy.position?.y || 0}
+              r={enemy.size || 8}
+              fill={enemy.bossType ? '#DC2626' : '#EF4444'}
+              stroke="#000"
+              strokeWidth="1"
+              opacity={0.9}
+            />
+          </g>
         ))}
 
         {/* Bullets */}
@@ -153,6 +159,7 @@ export const GameArea: React.FC<GameAreaProps> = React.memo(({
           />
         ))}
       </g>
+      <style>{BossHealthBarStyles}</style>
     </svg>
   );
 }); 

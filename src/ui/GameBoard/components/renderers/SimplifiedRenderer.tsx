@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGameStore } from '../../../../models/store';
 import type { Enemy, Bullet, Effect, Mine } from '../../../../models/gameTypes';
+import { HealthBarRenderer, BossHealthBarStyles } from './helpers/HealthBarRenderer';
 
 /**
  * 🎯 Simplified Renderer - Clean & Performance Optimized
@@ -28,29 +29,8 @@ export const SimplifiedRenderer: React.FC = () => {
         
         return (
           <g key={enemy.id}>
-            {/* Health bar for bosses only */}
-            {enemy.bossType && (
-              <>
-                <rect
-                  x={enemy.position.x - enemy.size * 0.6}
-                  y={enemy.position.y - enemy.size / 2 - 20}
-                  width={enemy.size * 1.2}
-                  height={6}
-                  fill="#2D3748"
-                  stroke="#1A202C"
-                  strokeWidth={1}
-                  rx={2}
-                />
-                <rect
-                  x={enemy.position.x - enemy.size * 0.6}
-                  y={enemy.position.y - enemy.size / 2 - 20}
-                  width={enemy.size * 1.2 * (enemy.health / enemy.maxHealth)}
-                  height={6}
-                  fill={enemy.health > enemy.maxHealth * 0.3 ? "#E53E3E" : "#C53030"}
-                  rx={2}
-                />
-              </>
-            )}
+            {/* Enhanced Health Bar for all enemies */}
+            {HealthBarRenderer.render(enemy)}
             
             {/* Enemy body - simple circle */}
             <circle
@@ -194,6 +174,7 @@ export const SimplifiedRenderer: React.FC = () => {
           </text>
         </g>
       ))}
+      <style>{BossHealthBarStyles}</style>
     </svg>
   );
 }; 

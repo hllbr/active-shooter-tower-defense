@@ -2,55 +2,10 @@ import React from 'react';
 import type { Enemy } from '../../../../../models/gameTypes';
 import { GAME_CONSTANTS } from '../../../../../utils/constants';
 
+import { HealthBarRenderer } from './HealthBarRenderer';
+
 export const HealthBar: React.FC<{ enemy: Enemy }> = ({ enemy }) => {
-  const healthPercent = enemy.health / enemy.maxHealth;
-  const barWidth = enemy.size * (enemy.bossType ? 1.5 : 1);
-  const barHeight = enemy.bossType ? 8 : GAME_CONSTANTS.ENEMY_HEALTHBAR_HEIGHT;
-  const yOffset = enemy.size / 2 + 12;
-
-  let healthColor: string = GAME_CONSTANTS.HEALTHBAR_GOOD;
-  if (healthPercent < 0.3) {
-    healthColor = GAME_CONSTANTS.HEALTHBAR_BAD;
-  } else if (healthPercent < 0.6) {
-    healthColor = '#ff8c00';
-  }
-
-  return (
-    <g>
-      <rect
-        x={enemy.position.x - barWidth / 2}
-        y={enemy.position.y - yOffset}
-        width={barWidth}
-        height={barHeight}
-        fill={GAME_CONSTANTS.HEALTHBAR_BG}
-        stroke="#000"
-        strokeWidth={1}
-        rx={2}
-      />
-      <rect
-        x={enemy.position.x - barWidth / 2}
-        y={enemy.position.y - yOffset}
-        width={barWidth * healthPercent}
-        height={barHeight}
-        fill={healthColor}
-        rx={2}
-      />
-      {enemy.bossType && (
-        <text
-          x={enemy.position.x}
-          y={enemy.position.y - yOffset + barHeight + 12}
-          textAnchor="middle"
-          fill="#fff"
-          fontSize="10"
-          fontWeight="bold"
-          stroke="#000"
-          strokeWidth={0.5}
-        >
-          {Math.ceil(enemy.health)}/{enemy.maxHealth}
-        </text>
-      )}
-    </g>
-  );
+  return HealthBarRenderer.render(enemy);
 };
 
 export const StatusIndicators: React.FC<{ enemy: Enemy }> = ({ enemy }) => {

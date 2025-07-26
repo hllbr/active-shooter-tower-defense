@@ -1013,8 +1013,9 @@ export const GAME_CONSTANTS = {
   // UI
   GOLD_COLOR: '#FFD700',
   HEALTHBAR_BG: '#333',
-  HEALTHBAR_GOOD: '#00ff00',
-  HEALTHBAR_BAD: '#ff3333',
+  HEALTHBAR_GOOD: '#00ff00', // Green for 100%–50% HP
+  HEALTHBAR_BAD: '#ff0000', // Red for 19% and below
+  HEALTHBAR_WARNING: '#ffff00', // Yellow for 49%–20% HP
   UI_FONT: 'bold 28px Arial',
   UI_FONT_BIG: 'bold 48px Arial',
   UI_SHADOW: '1px 1px 2px #333',

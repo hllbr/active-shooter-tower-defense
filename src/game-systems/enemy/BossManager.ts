@@ -3,6 +3,7 @@ import { selectBossForWave, type BossDefinition } from './BossDefinitions';
 import { useGameStore } from '../../models/store';
 import { playSound } from '../../utils/sound';
 import { Logger } from '../../utils/Logger';
+import { BossPhaseManager } from './BossPhaseManager';
 import {
   executeChargeAttack,
   executeGroundSlam,
@@ -34,6 +35,7 @@ export class BossManager {
     this.cinematicTimers.clear();
     this.bossAbilityTimers.clear();
     this.minionSpawnTimers.clear();
+    BossPhaseManager.initialize();
   }
 
   /**
@@ -174,8 +176,8 @@ export class BossManager {
     const definition = this.activeBosses.get(boss.id);
     if (!definition) return;
 
-    // Check for phase transitions
-    this.checkPhaseTransition(boss, definition);
+    // Use new BossPhaseManager for phase transitions
+    BossPhaseManager.updateBossPhase(boss);
 
     // Update shield regeneration
     if (definition.specialMechanics.hasShield && boss.shieldStrength! > 0) {
@@ -205,88 +207,7 @@ export class BossManager {
     }
   }
 
-  /**
-   * Check and handle phase transitions
-   */
-  private static checkPhaseTransition(boss: Enemy, definition: BossDefinition) {
-    const currentPhase = boss.bossPhase || 1;
-    const nextPhase = currentPhase + 1;
-    
-    if (nextPhase <= definition.phases.length) {
-      const nextPhaseData = definition.phases[nextPhase - 1];
-      const healthPercentage = boss.health / boss.maxHealth;
-      
-      if (healthPercentage <= nextPhaseData.healthThreshold) {
-        this.triggerPhaseTransition(boss, definition, nextPhase);
-      }
-    }
-  }
 
-  /**
-   * Trigger boss phase transition
-   */
-  private static triggerPhaseTransition(boss: Enemy, definition: BossDefinition, newPhase: number) {
-    const { addEffect } = useGameStore.getState();
-    const phaseData = definition.phases[newPhase - 1];
-    
-    // Stop current abilities
-    const currentTimer = this.bossAbilityTimers.get(boss.id);
-    if (currentTimer) {
-      clearTimeout(currentTimer);
-      this.bossAbilityTimers.delete(boss.id);
-    }
-
-    // Set cinematic state
-    boss.cinematicState = 'phase_transition';
-    boss.cinematicStartTime = performance.now();
-    boss.isInvulnerable = true;
-
-    // Play phase transition sound
-    playSound('boss-phase-transition');
-
-    // Show phase transition message
-
-    // Create phase transition effect
-    addEffect({
-      id: `boss_phase_effect_${boss.id}`,
-      position: boss.position,
-      radius: boss.size * 3,
-      color: '#9333ea',
-      life: definition.cinematicData.phaseTransitionDuration,
-      maxLife: definition.cinematicData.phaseTransitionDuration,
-      type: 'phase_transition',
-      opacity: 0.9,
-      scale: 3.0,
-    });
-
-    // Apply phase changes
-    boss.bossPhase = newPhase;
-    boss.bossAbilities = phaseData.abilities;
-    
-    // Apply behavior changes
-    if (phaseData.behaviorChanges) {
-      const changes = phaseData.behaviorChanges;
-      if (changes.speedMultiplier) {
-        boss.speed = Math.floor(boss.speed * changes.speedMultiplier);
-      }
-      if (changes.damageMultiplier) {
-        boss.damage = Math.floor(boss.damage * changes.damageMultiplier);
-      }
-      if (changes.newBehaviorTag) {
-        boss.behaviorTag = changes.newBehaviorTag;
-      }
-    }
-
-    // Set timer to complete phase transition
-    const timer = setTimeout(() => {
-      boss.isInvulnerable = false;
-      boss.cinematicState = 'normal';
-      this.startBossAbilityLoop(boss, definition);
-      this.cinematicTimers.delete(boss.id);
-    }, definition.cinematicData.phaseTransitionDuration);
-
-    this.cinematicTimers.set(boss.id, timer);
-  }
 
   /**
    * Execute a random boss ability

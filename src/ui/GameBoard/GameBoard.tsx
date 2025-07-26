@@ -160,7 +160,7 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ className, onSe
   } = useTowerDrag();
 
   // Game effects management
-  const { screenShake, dimensions } = useGameEffects(unlockingSlots);
+  const { screenShake, screenShakeIntensity, dimensions } = useGameEffects(unlockingSlots);
 
   // Game timers management
   useGameTimers(
@@ -206,7 +206,7 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ className, onSe
       style={{ 
         ...containerStyle,
         background: environmentManagerRef.current?.getEnvironmentState().backgroundGradient || GAME_CONSTANTS.CANVAS_BG,
-        animation: screenShake ? 'screen-shake 0.6s ease-in-out' : 'none',
+        animation: screenShake ? `screen-shake-${screenShakeIntensity} 0.6s ease-in-out` : 'none',
         transform: isInCinematicMode ? cameraTransform : 'none',
         filter: 'none', // Disable post-processing for performance
         transition: isReducedMotion ? 'none' : 'transform 0.3s ease-out, background 0.5s ease-out',
@@ -217,6 +217,23 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ className, onSe
 
       <style>
         {keyframeStyles}
+        {`
+          @keyframes screen-shake-5 {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+          }
+          @keyframes screen-shake-10 {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+          }
+          @keyframes screen-shake-15 {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-15px); }
+            75% { transform: translateX(15px); }
+          }
+        `}
       </style>
       
       {/* UI Components */}
