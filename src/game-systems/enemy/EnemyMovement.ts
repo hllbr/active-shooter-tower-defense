@@ -1,6 +1,6 @@
 import { useGameStore } from '../../models/store';
 import { GAME_CONSTANTS } from '../../utils/constants';
-import type { Enemy, TowerSlot, Position } from '../../models/gameTypes';
+import type { Enemy, TowerSlot, Position, Bullet } from '../../models/gameTypes';
 import { TargetFinder } from './TargetFinder';
 import BossManager from './BossManager';
 import { createManagedEffect } from '../effects-system/Effects';
@@ -108,6 +108,15 @@ export class EnemyMovement {
 
     // Calculate dynamic direction with curved movement
     const movementData = this.calculateDynamicMovement(enemy, targetSlot, towerSlots);
+
+    // Ranged enemies shoot when in range
+    if (enemy.ranged && movementData.distance <= (enemy.attackRange ?? 200)) {
+      this.fireAtTower(enemy, targetSlot);
+      // Hold position when comfortably within range to kite towers
+      if (movementData.distance <= (enemy.attackRange ?? 200) * 0.9) {
+        return;
+      }
+    }
     
     // Handle avoid behavior
     if (this.handleAvoidBehavior(enemy, towerSlots)) {
@@ -482,6 +491,36 @@ export class EnemyMovement {
   }
 
   /**
+   * Fire a projectile at a target tower
+   */
+  private static fireAtTower(enemy: Enemy, targetSlot: TowerSlot): void {
+    const { addEnemyBullet } = useGameStore.getState();
+    const now = performance.now();
+    if (enemy.lastShot && enemy.shootCooldown && now - enemy.lastShot < enemy.shootCooldown) {
+      return;
+    }
+    const dx = targetSlot.x - enemy.position.x;
+    const dy = targetSlot.y - enemy.position.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist === 0) return;
+    enemy.lastShot = now;
+    const bullet: Bullet = {
+      id: `eb-${now}-${Math.random()}`,
+      position: { x: enemy.position.x, y: enemy.position.y },
+      size: 8,
+      isActive: true,
+      speed: 200,
+      damage: enemy.damage,
+      direction: { x: dx / dist, y: dy / dist },
+      color: '#ff9c00',
+      typeIndex: 0,
+      life: 3000,
+      source: 'enemy'
+    };
+    addEnemyBullet(bullet);
+  }
+
+  /**
    * Clean up old cache entries
    */
   private static cleanupTargetCache(): void {
@@ -492,4 +531,5 @@ export class EnemyMovement {
       }
     }
   }
-} 
+}
+

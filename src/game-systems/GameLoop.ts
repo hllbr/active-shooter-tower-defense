@@ -1,4 +1,5 @@
 import { updateTowerFire, updateBullets } from './TowerManager';
+import { enemyProjectileSystem } from './bullet-system';
 import { updateEnemyMovement } from './EnemySpawner';
 import { updateMineCollisions } from './MineManager';
 import { useGameStore } from '../models/store';
@@ -59,6 +60,7 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
       updateEnemyMovement();
       updateTowerFire();
       updateBullets(deltaTime);
+      enemyProjectileSystem.updateEnemyProjectiles(deltaTime);
       updateMineCollisions();
       
       // ✅ NEW: Check fire hazard time limits
