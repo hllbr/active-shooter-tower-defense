@@ -20,7 +20,7 @@ export const TowerMoveIcon: React.FC<TowerMoveIconProps> = ({
   slot,
   slotIdx,
   onMoveInitiate,
-  isHovered,
+  _isHovered,
   isSelected,
   canMove,
   moveCost,
@@ -60,9 +60,9 @@ export const TowerMoveIcon: React.FC<TowerMoveIconProps> = ({
 
   if (!slot.tower) return null;
 
-  // Only show move icon when tower is hovered or selected
-  const shouldShowIcon = isHovered || isSelected;
-  if (!shouldShowIcon) return null;
+  // Only show move icon when tower is selected (click behavior)
+  // Hover no longer shows move icon
+  if (!isSelected) return null;
 
   const towerCenterX = slot.x;
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
@@ -92,7 +92,7 @@ export const TowerMoveIcon: React.FC<TowerMoveIconProps> = ({
   }
 
   return (
-    <>
+    <g data-tower-controls={slotIdx}>
       {/* Move Icon */}
       <text
         x={moveIconX}
@@ -145,6 +145,6 @@ export const TowerMoveIcon: React.FC<TowerMoveIconProps> = ({
           </div>
         </foreignObject>
       )}
-    </>
+    </g>
   );
 }; 

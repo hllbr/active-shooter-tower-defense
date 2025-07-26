@@ -20,7 +20,7 @@ export const TileActionIcon: React.FC<TileActionIconProps> = ({
   _slotIdx,
   _onTileAction,
   onShowMenu,
-  isHovered,
+  _isHovered,
   isSelected,
   canPerformAction,
   actionsRemaining
@@ -52,9 +52,9 @@ export const TileActionIcon: React.FC<TileActionIconProps> = ({
     setShowTooltip(false);
   }, []);
 
-  // Only show action icon when slot is hovered or selected
-  const shouldShowIcon = isHovered || isSelected;
-  if (!shouldShowIcon) return null;
+  // Only show action icon when slot is selected (click behavior)
+  // Hover no longer shows action icon
+  if (!isSelected) return null;
 
   const slotCenterX = slot.x;
   const slotBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
@@ -79,7 +79,7 @@ export const TileActionIcon: React.FC<TileActionIconProps> = ({
   }
 
   return (
-    <>
+    <g data-tower-controls={slotIdx}>
       {/* Tile Action Icon */}
       <text
         x={actionIconX}
@@ -132,6 +132,6 @@ export const TileActionIcon: React.FC<TileActionIconProps> = ({
           </div>
         </foreignObject>
       )}
-    </>
+    </g>
   );
 }; 

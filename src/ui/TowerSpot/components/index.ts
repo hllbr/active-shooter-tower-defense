@@ -36,4 +36,5 @@ export { SimplifiedTowerControls } from './SimplifiedTowerControls';
 export { FireHazardDisplay } from './FireHazardDisplay';
 export { TowerMoveIcon } from './TowerMoveIcon';
 export { TileActionIcon } from './TileActionIcon';
-export { TileActionMenu } from './TileActionMenu'; 
+export { TileActionMenu } from './TileActionMenu';
+export { TowerTooltip } from './TowerTooltip'; 

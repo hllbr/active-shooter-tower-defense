@@ -123,7 +123,7 @@ export const SimplifiedTowerControls: React.FC<SimplifiedTowerControlsProps> = (
   repairCost,
   onRepair,
   onDelete,
-  isHovered,
+  _isHovered,
   isSelected
 }) => {
   const handleUpgrade = useCallback(() => {
@@ -152,9 +152,9 @@ export const SimplifiedTowerControls: React.FC<SimplifiedTowerControlsProps> = (
 
   if (!slot.tower) return null;
 
-  // Only show controls when tower is hovered or selected
-  const shouldShowControls = isHovered || isSelected;
-  if (!shouldShowControls) return null;
+  // Only show controls when tower is selected (click behavior)
+  // Hover no longer shows upgrade/repair controls
+  if (!isSelected) return null;
 
   const towerCenterX = slot.x;
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
@@ -167,7 +167,7 @@ export const SimplifiedTowerControls: React.FC<SimplifiedTowerControlsProps> = (
   const iconY = towerBottomY + 25;
 
   return (
-    <>
+    <g data-tower-controls={slotIdx}>
       {/* Upgrade Icon */}
       {canUpgrade && (
         <TowerControlIcon
@@ -206,6 +206,6 @@ export const SimplifiedTowerControls: React.FC<SimplifiedTowerControlsProps> = (
         tooltip="Delete tower"
         onClick={handleDelete}
       />
-    </>
+    </g>
   );
 }; 

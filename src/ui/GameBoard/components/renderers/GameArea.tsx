@@ -50,8 +50,12 @@ export const GameArea: React.FC<GameAreaProps> = React.memo(({
   const brightness = isMobile ? 1.0 : 1.04;
 
   // Memoize event handlers if needed (example)
-  const handleMouseDown = useCallback(() => useGameStore.getState().selectSlot(null), []);
-  const handleTouchStart = useCallback(() => useGameStore.getState().selectSlot(null), []);
+  const handleMouseDown = useCallback(() => {
+    // Global click handler for deselection is now handled by TowerInteractionManager
+  }, []);
+  const handleTouchStart = useCallback(() => {
+    // Global touch handler for deselection is now handled by TowerInteractionManager
+  }, []);
 
   return (
     <svg
