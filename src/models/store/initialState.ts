@@ -11,6 +11,7 @@ export const initialState: GameState = {
   towerSlots: initialSlots,
   enemies: [],
   bullets: [],
+  enemyBullets: [],
   effects: [],
   gold: 200,
   bulletLevel: 1,

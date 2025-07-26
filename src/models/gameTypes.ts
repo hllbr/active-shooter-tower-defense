@@ -233,6 +233,15 @@ export interface Enemy {
   fleeThreshold?: number;
   /** Boss is fleeing */
   isFleeing?: boolean;
+
+  /** Whether this enemy can attack from range */
+  ranged?: boolean;
+  /** Maximum range for ranged attacks */
+  attackRange?: number;
+  /** Cooldown between ranged attacks */
+  shootCooldown?: number;
+  /** Timestamp of last ranged attack */
+  lastShot?: number;
 }
 
 export interface Bullet {
@@ -247,6 +256,8 @@ export interface Bullet {
   typeIndex: number;
   targetId?: string;
   life: number;
+  /** Source of the bullet for collision logic */
+  source?: 'tower' | 'enemy';
 }
 
 export interface Effect {
@@ -317,6 +328,9 @@ export interface EnemyType {
   damage: number;
   color: string;
   behaviorTag?: string;
+  ranged?: boolean;
+  attackRange?: number;
+  shootCooldown?: number;
 }
 
 export interface WaveEnemyConfig {
@@ -335,6 +349,8 @@ export interface GameState {
   towerSlots: TowerSlot[];
   enemies: Enemy[];
   bullets: Bullet[];
+  /** Projectiles fired by enemies */
+  enemyBullets: Bullet[];
   effects: Effect[];
   gold: number;
   bulletLevel: number;

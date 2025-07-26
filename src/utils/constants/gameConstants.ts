@@ -720,6 +720,8 @@ export const GAME_CONSTANTS = {
     Assassin: { speed: 160, hp: 80, damage: 15, color: '#dc2626', behaviorTag: 'stealth' },
     Shaman: { speed: 70, hp: 120, damage: 18, color: '#7c3aed', behaviorTag: 'healer' },
     Archer: { speed: 110, hp: 90, damage: 22, color: '#059669', behaviorTag: 'ranged' },
+    Sharpshooter: { speed: 100, hp: 80, damage: 15, color: '#f59e0b', behaviorTag: 'ranged', ranged: true, attackRange: 250, shootCooldown: 1500 },
+    Splitter: { speed: 95, hp: 100, damage: 14, color: '#22c55e', behaviorTag: 'split' },
     
     // Elite Enemies (Wave 31-60)
     Demon: { speed: 120, hp: 250, damage: 35, color: '#991b1b', behaviorTag: 'fire' },
@@ -1369,4 +1371,5 @@ if (typeof window !== 'undefined') {
   };
   globalWindow.toggleDebugMode = toggleDebugMode;
   globalWindow.toggleSpawnZoneDebug = toggleSpawnZoneDebug;
-} 
+}
+

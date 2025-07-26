@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { Enemy, Bullet, Effect } from '../../gameTypes';
 import { GAME_CONSTANTS } from '../../../utils/constants';
+import { EnemyFactory } from '../../../game-systems/enemy/EnemyFactory';
 import type { Store } from '../index';
 
 export interface EnemySlice {
@@ -9,6 +10,8 @@ export interface EnemySlice {
   damageEnemy: (enemyId: string, dmg: number) => void;
   addBullet: (bullet: Bullet) => void;
   removeBullet: (bulletId: string) => void;
+  addEnemyBullet: (bullet: Bullet) => void;
+  removeEnemyBullet: (bulletId: string) => void;
   addEffect: (effect: Effect) => void;
   removeEffect: (effectId: string) => void;
   clearAllEnemies: () => void;
@@ -24,8 +27,16 @@ export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, g
     bullets: [...state.bullets, bullet]
   })),
 
+  addEnemyBullet: (bullet) => set((state: Store) => ({
+    enemyBullets: [...(state.enemyBullets || []), bullet]
+  })),
+
   removeBullet: (bulletId) => set((state: Store) => ({
     bullets: state.bullets.filter((b) => b.id !== bulletId)
+  })),
+
+  removeEnemyBullet: (bulletId) => set((state: Store) => ({
+    enemyBullets: (state.enemyBullets || []).filter((b) => b.id !== bulletId)
   })),
 
   addEffect: (effect) => set((state: Store) => ({
@@ -44,7 +55,8 @@ export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, g
   // 🆕 UPGRADE SCREEN: Clear all effects for clean slate
   clearAllEffects: () => set((_state: Store) => ({
     effects: [],
-    bullets: [] // Also clear bullets for complete cleanup
+    bullets: [], // Also clear bullets for complete cleanup
+    enemyBullets: []
   })),
 
   removeEnemy: (enemyId) => set((state: Store) => {
@@ -146,6 +158,19 @@ export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, g
           get().damageTower(idx, enemyObj.damage);
         }
       });
+    }
+
+    if (enemyObj && enemyObj.health - dmg <= 0 && enemyObj.behaviorTag === 'split') {
+      const { addEnemy, currentWave } = get();
+      for (let i = 0; i < 2; i++) {
+        const newEnemy = EnemyFactory.createEnemy(currentWave, 'Basic');
+        newEnemy.position = { ...enemyObj.position };
+        newEnemy.size = Math.max(10, enemyObj.size * 0.7);
+        newEnemy.health = enemyObj.maxHealth / 2;
+        newEnemy.maxHealth = newEnemy.health;
+        newEnemy.goldValue = Math.max(1, Math.floor(enemyObj.goldValue / 2));
+        addEnemy(newEnemy);
+      }
     }
   },
 });

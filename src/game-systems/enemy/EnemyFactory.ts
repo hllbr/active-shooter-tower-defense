@@ -144,6 +144,12 @@ export class EnemyFactory {
       behaviorTag: def.behaviorTag,
       type: finalType,
     } as Enemy;
+
+    if (def.ranged) {
+      enemy.ranged = true;
+      enemy.attackRange = def.attackRange ?? 200;
+      enemy.shootCooldown = def.shootCooldown ?? 1500;
+    }
     
     // Apply boss modifications if needed
     if (shouldBeBoss) {
@@ -168,4 +174,4 @@ export class EnemyFactory {
     enemy.color = enemy.color.replace('#', '#2d'); // Make darker
     return enemy;
   }
-} 
+}
