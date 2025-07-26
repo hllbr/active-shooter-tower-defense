@@ -1,6 +1,7 @@
 import React from 'react';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { SlotUnlockDisplay } from './SlotUnlockDisplay';
+import { gameFlowManager } from '../../../game-systems/GameFlowManager';
 import type { EmptySlotRendererProps } from '../types';
 
 export const EmptySlotRenderer: React.FC<EmptySlotRendererProps> = ({
@@ -15,41 +16,49 @@ export const EmptySlotRenderer: React.FC<EmptySlotRendererProps> = ({
   onUnlock,
   onBuildTower
 }) => {
+  // Get build UI state from GameFlowManager
+  const buildUIState = gameFlowManager.getBuildUIState(slotIdx);
+  
   if (slot.unlocked) {
     return (
-      <g style={{ cursor: 'pointer' }}>
-        {/* Basic slot circle - always clickable */}
+      <g style={{ cursor: buildUIState.isDisabled ? 'not-allowed' : 'pointer' }}>
+        {/* Basic slot circle with disabled state */}
         <circle
           cx={slot.x}
           cy={slot.y}
           r={GAME_CONSTANTS.TOWER_SIZE / 2}
-          fill="rgba(100, 100, 100, 0.2)"
-          stroke="#888888"
+          fill={buildUIState.isDisabled ? "rgba(100, 100, 100, 0.1)" : "rgba(100, 100, 100, 0.2)"}
+          stroke={buildUIState.isDisabled ? "#666666" : "#888888"}
           strokeWidth={2}
           strokeDasharray="4 2"
-          style={{ cursor: 'pointer' }}
+          style={{ 
+            cursor: buildUIState.isDisabled ? 'not-allowed' : 'pointer',
+            opacity: buildUIState.isDisabled ? 0.5 : 1
+          }}
           onClick={() => {
-            if (onBuildTower) onBuildTower(slotIdx, 'attack');
+            if (!buildUIState.isDisabled && onBuildTower) {
+              onBuildTower(slotIdx, 'attack');
+            }
           }}
         />
         
-        {/* Build indicator */}
+        {/* Build indicator with disabled state */}
         {shouldShowBuildText && (
           <text
             x={slot.x}
             y={slot.y + 4}
             textAnchor="middle"
             fontSize={12}
-            fill="#4ade80"
+            fill={buildUIState.isDisabled ? "#666666" : "#4ade80"}
             fontWeight="bold"
             pointerEvents="none"
           >
-            İnşa Et
+            {buildUIState.isDisabled ? buildUIState.tooltip : 'İnşa Et'}
           </text>
         )}
         
         {/* Drag target highlight */}
-        {isDragTarget && (
+        {isDragTarget && !buildUIState.isDisabled && (
           <circle
             cx={slot.x}
             cy={slot.y}

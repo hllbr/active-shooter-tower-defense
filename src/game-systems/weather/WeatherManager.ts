@@ -7,7 +7,7 @@
 import { useGameStore } from '../../models/store';
 import { Effects } from '../Effects';
 import { playSound } from '../../utils/sound/soundEffects';
-import { Logger } from '../../utils/Logger';
+// Logger import removed for production
 import type { WeatherState } from '../../models/gameTypes';
 
 export interface WeatherEffect {
@@ -319,7 +319,7 @@ export class WeatherManager {
     // Stop weather sounds
     this.stopWeatherSounds();
     
-    Logger.log('Weather system paused');
+    // Weather system paused
   }
 
   /**
@@ -363,7 +363,7 @@ export class WeatherManager {
     // Resume weather sounds
     this.resumeWeatherSounds();
     
-    Logger.log('Weather system resumed');
+    // Weather system resumed
   }
 
   /**
@@ -374,7 +374,7 @@ export class WeatherManager {
     // This is just for logging and state management
     for (const sound of this.weatherSounds.values()) {
       if (sound.isActive) {
-        Logger.log(`Weather sound paused: ${sound.soundName}`);
+        // Weather sound paused
       }
     }
   }
@@ -385,7 +385,7 @@ export class WeatherManager {
   private resumeWeatherSounds(): void {
     for (const sound of this.weatherSounds.values()) {
       if (sound.isActive && !sound.isPaused) {
-        Logger.log(`Weather sound resumed: ${sound.soundName}`);
+        // Weather sound resumed
         // Sound will be resumed by the sound system when game resumes
       }
     }
@@ -435,7 +435,7 @@ export class WeatherManager {
       }
     }
     
-    Logger.log(`Weather effect added: ${type} (intensity: ${intensity})`);
+    // Weather effect added
     return effectId;
   }
 

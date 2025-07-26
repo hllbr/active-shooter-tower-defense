@@ -1,7 +1,7 @@
 import type { Enemy } from '../../models/gameTypes';
 import { useGameStore } from '../../models/store';
 import { playSound } from '../../utils/sound';
-import { Logger } from '../../utils/Logger';
+
 
 /**
  * Boss Phase Manager
@@ -76,7 +76,7 @@ export class BossPhaseManager {
     this.phaseTransitionTimers.set(boss.id, timer);
 
     // Log phase transition
-    Logger.log(`Boss ${boss.id} entered phase ${newPhase}`);
+    // Boss phase logging removed for production optimization
   }
 
   /**

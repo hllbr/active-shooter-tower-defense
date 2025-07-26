@@ -69,9 +69,7 @@ export class GlobalMemoryManager {
    * Perform maintenance cleanup
    */
   performMaintenanceCleanup(): void {
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-      // Debug logging for maintenance cleanup can be added here
-    }
+    // Debug logging removed for production optimization
     
     // Clean up stale objects
     this.lifecycleManager.cleanupStale();

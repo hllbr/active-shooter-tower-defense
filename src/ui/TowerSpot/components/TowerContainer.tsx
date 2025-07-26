@@ -1,12 +1,12 @@
 import React from 'react';
 import type { TowerSlot } from '../../../models/gameTypes';
-import type { TowerUpgradeInfo, DebugInfoProps } from '../types';
+import type { TowerUpgradeInfo } from '../types';
 import {
   ModifierRenderer,
   WallRenderer,
   TowerRenderer,
   VisualExtrasRenderer,
-  DebugInfo,
+
   TowerInfoPanel
 } from './';
 
@@ -14,7 +14,6 @@ interface TowerContainerProps {
   slot: TowerSlot;
   slotIdx: number;
   wallLevel: number;
-  debugInfo: DebugInfoProps['debugInfo'];
   currentTowerInfo: TowerUpgradeInfo | null;
   towerBottomY: number;
   canUpgrade: boolean;
@@ -28,7 +27,7 @@ export const TowerContainer: React.FC<TowerContainerProps> = ({
   slot,
   slotIdx,
   wallLevel,
-  debugInfo,
+  
   currentTowerInfo,
   towerBottomY,
   canUpgrade,
@@ -51,8 +50,7 @@ export const TowerContainer: React.FC<TowerContainerProps> = ({
       {/* Visual extras (above tower) */}
       <VisualExtrasRenderer slot={slot} />
       
-      {/* Debug information */}
-      <DebugInfo slot={slot} debugInfo={debugInfo} />
+      {/* Debug information removed for production optimization */}
       
       {/* Tower info panel */}
       <TowerInfoPanel

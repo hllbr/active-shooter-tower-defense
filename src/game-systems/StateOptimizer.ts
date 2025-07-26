@@ -63,10 +63,7 @@ class SimplePerformanceMonitor {
   }
 
   logPerformance(): void {
-    if (this.updateCount > 0) {
-      const _skipRate = (this.skippedCount / this.updateCount * 100).toFixed(1);
-      // Performance monitoring: updates skipped for optimization
-    }
+    // Performance logging removed for production optimization
   }
 }
 

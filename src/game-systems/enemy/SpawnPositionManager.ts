@@ -12,19 +12,6 @@ export class SpawnPositionManager {
    * This replaces the old edge-based spawning system
    */
   static getRandomSpawnPosition(): Position {
-    if (GAME_CONSTANTS.SPAWN_ZONES.PERFORMANCE_LOGGING) {
-      const _startTime = performance.now();
-      const position = spawnZoneManager.getRandomSpawnPosition();
-      const _endTime = performance.now();
-      
-      // Log performance occasionally (every 100th call)
-      if (Math.random() < 0.01) {
-        // Performance logging can be added here
-      }
-      
-      return position;
-    }
-    
     // Use the new zone-based spawning system
     return spawnZoneManager.getRandomSpawnPosition();
   }

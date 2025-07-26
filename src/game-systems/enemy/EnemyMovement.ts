@@ -37,6 +37,8 @@ export class EnemyMovement {
     // Update enemy behaviors first
     EnemyBehaviorSystem.updateEnemyBehaviors();
     
+    // Target validation removed - enemies use dynamic targeting
+    
     // Batch calculation cache for this tick
     const distanceCache: Record<string, number> = {};
     const targetCache: Record<string, TowerSlot | null> = {};
@@ -480,6 +482,8 @@ export class EnemyMovement {
         return 'enemy_explosion';
     }
   }
+
+  // Target validation methods removed for production optimization
 
   /**
    * Clean up old cache entries

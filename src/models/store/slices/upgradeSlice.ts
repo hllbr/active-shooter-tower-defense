@@ -3,7 +3,7 @@ import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
 import type { TowerClass } from '../../gameTypes';
-import { Logger } from '../../../utils/Logger';
+// Logger import removed for production
 
 export interface UpgradeSlice {
   upgradeBullet: (free?: boolean) => void;
@@ -60,15 +60,15 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
   purchasePackage: (packageId, cost, maxAllowed) => {
     const validation = securityManager.validateStateChange('purchasePackage', {}, { packageId, cost, maxAllowed });
     if (!validation.valid) {
-      Logger.warn('🔒 Security: purchasePackage blocked:', validation.reason);
+      // Security: purchasePackage blocked
       return false;
     }
     if (!packageId || typeof packageId !== 'string') {
-      Logger.warn('🔒 Security: Invalid package ID:', packageId);
+      // Security: Invalid package ID
       return false;
     }
     if (cost <= 0 || cost > 10000) {
-      Logger.warn('🔒 Security: Invalid package cost:', cost);
+      // Security: Invalid package cost
       return false;
     }
     const state = get();
@@ -111,12 +111,12 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
   // ✅ NEW: Enhanced upgrade features implementation
   undoUpgrade: () => {
     // Simple undo implementation for now
-    Logger.log('🔄 Undo upgrade requested');
+    // Undo upgrade requested
     return false; // Placeholder - will be implemented with UpgradeManager
   },
 
   applyBatchUpgrades: (upgradeIds) => {
-    Logger.log(`🤖 Batch upgrade requested for: ${upgradeIds.join(', ')}`);
+    // Batch upgrade requested
     return {
       success: false,
       applied: [],
@@ -137,7 +137,7 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
   },
 
   clearUpgradeHistory: () => {
-    Logger.log('🧹 Clear upgrade history requested');
+    // Clear upgrade history requested
   },
 
   purchaseIndividualFireUpgrade: (upgradeId, cost, maxLevel) => {

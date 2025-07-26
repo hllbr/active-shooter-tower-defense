@@ -6,7 +6,7 @@ import { DiceInfo } from './DiceInfo';
 import { DiceAnimation } from './DiceAnimation';
 import { DiceResult } from './DiceResult';
 import { DiceButton } from './DiceButton';
-import { Logger } from '../../../utils/Logger';
+
 
 export const DiceRoller: React.FC = () => {
   const diceRoll = useGameStore((state: Store) => state.diceRoll);
@@ -33,7 +33,7 @@ export const DiceRoller: React.FC = () => {
       }, 100);
       
     } catch (error) {
-      Logger.error('❌ Error in rollDice:', error);
+      // Silent error handling for production
     }
   };
 

@@ -7,7 +7,7 @@ import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
 import type { ResourceSource, ResourceTransaction } from '../../gameTypes';
-import { Logger } from '../../../utils/Logger';
+// Logger import removed for production
 
 export interface ResourceSlice {
   // Enhanced resource functions with source tracking
@@ -59,7 +59,7 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
   addResource: (amount, source, metadata) => {
     const validation = securityManager.validateStateChange('addResource', {}, { gold: amount });
     if (!validation.valid) {
-      Logger.warn('🔒 Security: addResource blocked:', validation.reason);
+      // Security: addResource blocked
       return;
     }
 
@@ -77,19 +77,19 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
       resourceTransactions: [...(state.resourceTransactions || []), transaction]
     }));
     emitResourceUpdated(get().gold + amount);
-    Logger.log(`💰 Resource added: ${amount} from ${source}`, metadata);
+    // Resource added
   },
 
   spendResource: (amount, source, metadata) => {
     const validation = securityManager.validateStateChange('spendResource', {}, { gold: amount });
     if (!validation.valid) {
-      Logger.warn('🔒 Security: spendResource blocked:', validation.reason);
+      // Security: spendResource blocked
       return false;
     }
 
     const currentGold = get().gold;
     if (currentGold < amount) {
-      Logger.warn('❌ Insufficient resources for purchase:', { required: amount, available: currentGold });
+      // Insufficient resources for purchase
       return false;
     }
 
@@ -107,14 +107,14 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
       resourceTransactions: [...(state.resourceTransactions || []), transaction]
     }));
     emitResourceUpdated(get().gold - amount);
-    Logger.log(`💸 Resource spent: ${amount} on ${source}`, metadata);
+    // Resource spent
     return true;
   },
 
   setResource: (amount, source, metadata) => {
     const validation = securityManager.validateStateChange('setResource', {}, { gold: amount });
     if (!validation.valid) {
-      Logger.warn('🔒 Security: setResource blocked:', validation.reason);
+      // Security: setResource blocked
       return;
     }
 
@@ -131,7 +131,7 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
       resourceTransactions: [...(state.resourceTransactions || []), transaction]
     }));
     emitResourceUpdated(amount);
-    Logger.log(`🔄 Resource set: ${amount} via ${source}`, metadata);
+    // Resource set
   },
 
   canAfford: (action) => {

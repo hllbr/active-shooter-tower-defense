@@ -1,7 +1,7 @@
 import { useGameStore } from '../../models/store';
 import type { TowerSlot, Enemy, Position, TowerClass } from '../../models/gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
-import { Logger } from '../../utils/Logger';
+
 
 /**
  * Strategic placement analysis result
@@ -52,7 +52,7 @@ export class AutoPlacementSystem {
    */
   public setActive(active: boolean): void {
     this.isActive = active;
-    Logger.log(`🤖 Auto Placement ${active ? 'enabled' : 'disabled'}`);
+    // Auto Placement logging removed for production optimization
   }
 
   /**
@@ -69,13 +69,13 @@ export class AutoPlacementSystem {
     this.lastManualIntervention = performance.now();
     if (this.isActive) {
       this.setActive(false);
-      Logger.log('🤖 Auto placement temporarily disabled due to manual intervention');
+      // Auto placement logging removed for production optimization
       
       // Re-enable after cooldown
       setTimeout(() => {
         if (performance.now() - this.lastManualIntervention >= this.MANUAL_INTERVENTION_COOLDOWN) {
           this.setActive(true);
-          Logger.log('🤖 Auto placement re-enabled after manual intervention cooldown');
+          // Auto placement logging removed for production optimization
         }
       }, this.MANUAL_INTERVENTION_COOLDOWN);
     }
@@ -535,7 +535,7 @@ export class AutoPlacementSystem {
     // Execute placement
     buildTower(topPlacement.slotIndex, false, 'attack', topPlacement.towerClass as TowerClass, false);
     this.lastPlacementTime = performance.now();
-    Logger.log(`🤖 Auto placed ${topPlacement.towerClass} (${topPlacement.reason})`);
+    // Auto placement logging removed for production optimization
     return true;
 
     return false;

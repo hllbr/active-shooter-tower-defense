@@ -27,7 +27,7 @@ export const StateOptimizationUtils = {
    * Log current state optimization status
    */
   logStatus: () => {
-    performanceMonitor.logPerformance();
+    // Performance logging removed for production optimization
   },
   
   /**

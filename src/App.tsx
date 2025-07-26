@@ -1,4 +1,5 @@
 import './App.css';
+import './ui/responsive.css';
 import './ui/TowerSpot/styles/towerSelectionPanel.css';
 import './ui/TowerSpot/styles/enhancedLockedZone.css';
 import './ui/TowerSpot/styles/simplifiedTowerControls.css';

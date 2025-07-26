@@ -17,7 +17,7 @@ const generateCircularTowerSlots = (count: number, centerX: number, centerY: num
 };
 
 export const GAME_CONSTANTS = {
-  DEBUG_MODE: false,
+  // Debug mode removed for production optimization
   // Canvas
   CANVAS_BG: '#222831',
   CANVAS_WIDTH: 1920,
@@ -1364,31 +1364,12 @@ export const GAME_CONSTANTS = {
   // Spawn Zone System (NEW)
   SPAWN_ZONES: {
     ENABLED: true, // Enable zone-based spawning
-    DEBUG_VISIBLE: false, // Show zones visually (separate from general debug)
-    PERFORMANCE_LOGGING: true, // Log performance improvements
+    DEBUG_VISIBLE: false, // Always false for production
+          PERFORMANCE_LOGGING: false, // Disabled for production
     FALLBACK_TO_LEGACY: false, // Fallback to edge spawning if needed
   },
   } as const;
 
-// Debug utilities for spawn zone testing
-export const toggleDebugMode = () => {
-  const constants = GAME_CONSTANTS as { DEBUG_MODE: boolean };
-  constants.DEBUG_MODE = !constants.DEBUG_MODE;
-  return constants.DEBUG_MODE;
-};
+// Debug utilities removed for production optimization
 
-export const toggleSpawnZoneDebug = () => {
-  const spawnZones = GAME_CONSTANTS.SPAWN_ZONES as { DEBUG_VISIBLE: boolean };
-  spawnZones.DEBUG_VISIBLE = !spawnZones.DEBUG_VISIBLE;
-  return spawnZones.DEBUG_VISIBLE;
-};
-
-// Add to window for easy console access
-if (typeof window !== 'undefined') {
-  const globalWindow = window as Window & { 
-    toggleDebugMode?: () => boolean; 
-    toggleSpawnZoneDebug?: () => boolean; 
-  };
-  globalWindow.toggleDebugMode = toggleDebugMode;
-  globalWindow.toggleSpawnZoneDebug = toggleSpawnZoneDebug;
-} 
+// Window access removed for production optimization 

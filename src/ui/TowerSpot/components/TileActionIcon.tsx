@@ -79,7 +79,7 @@ export const TileActionIcon: React.FC<TileActionIconProps> = ({
   }
 
   return (
-    <g data-tower-controls={slotIdx}>
+    <g data-tower-controls={_slotIdx}>
       {/* Tile Action Icon */}
       <text
         x={actionIconX}

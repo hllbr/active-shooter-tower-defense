@@ -1,5 +1,5 @@
 import { validatePackagePurchase } from '../../../security/SecurityEnhancements';
-import { Logger } from '../../../utils/Logger';
+
 
 export interface PackageDefinition {
   id: string;
@@ -25,7 +25,6 @@ export const securePackagePurchase = (
   // Validate package purchase
   const validation = validatePackagePurchase(packageId, cost, maxAllowed);
   if (!validation.valid) {
-    Logger.warn('🔒 Security: Package purchase blocked:', validation.reason);
     return false;
   }
   

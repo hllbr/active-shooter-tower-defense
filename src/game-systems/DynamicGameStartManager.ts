@@ -75,7 +75,7 @@ export class DynamicGameStartManager {
       .filter(({ slot }) => slot.unlocked && !slot.tower);
 
     if (availableSlots.length === 0) {
-      console.warn('No available slots for random tower placement');
+      // No available slots for random tower placement
       return;
     }
 

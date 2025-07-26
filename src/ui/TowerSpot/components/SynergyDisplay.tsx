@@ -23,70 +23,72 @@ export const SynergyDisplay: React.FC<SynergyDisplayProps> = React.memo(({
   const visualEffects = towerSynergyManager.getSynergyVisualEffects(towerSlots);
 
   return (
-    <g>
-      {/* Visual synergy effects */}
-      {visualEffects.map((effect, index) => (
-        <circle
-          key={`synergy-effect-${index}`}
-          cx={effect.position.x}
-          cy={effect.position.y}
-          r={effect.radius}
-          fill="none"
-          stroke={effect.color}
-          strokeWidth={2}
-          opacity={effect.opacity}
-          strokeDasharray={effect.type === 'synergy' ? '4 2' : '2 2'}
-        />
-      ))}
+    <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+      <g>
+        {/* Visual synergy effects */}
+        {visualEffects.map((effect, index) => (
+          <circle
+            key={`synergy-effect-${index}`}
+            cx={effect.position.x}
+            cy={effect.position.y}
+            r={effect.radius}
+            fill="none"
+            stroke={effect.color}
+            strokeWidth={2}
+            opacity={effect.opacity}
+            strokeDasharray={effect.type === 'synergy' ? '4 2' : '2 2'}
+          />
+        ))}
 
-      {/* Synergy info panels */}
-      {activeSynergies.map((towerSynergy) => {
-        const slot = towerSlots.find(s => s.tower?.id === towerSynergy.towerId);
-        if (!slot?.tower) return null;
+        {/* Synergy info panels */}
+        {activeSynergies.map((towerSynergy) => {
+          const slot = towerSlots.find(s => s.tower?.id === towerSynergy.towerId);
+          if (!slot?.tower) return null;
 
-        return (
-          <g key={`synergy-panel-${towerSynergy.towerId}`}>
-            {/* Background panel */}
-            <rect
-              x={slot.x - 80}
-              y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 60}
-              width={160}
-              height={50}
-              fill="rgba(0, 0, 0, 0.8)"
-              stroke="#00FFFF"
-              strokeWidth={1}
-              rx={4}
-            />
-            
-            {/* Synergy title */}
-            <text
-              x={slot.x}
-              y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 45}
-              fill="#00FFFF"
-              fontSize={10}
-              fontWeight="bold"
-              textAnchor="middle"
-            >
-              Synergy Active
-            </text>
-            
-            {/* Synergy details */}
-            {towerSynergy.synergies.map((synergy, index) => (
+          return (
+            <g key={`synergy-panel-${towerSynergy.towerId}`}>
+              {/* Background panel */}
+              <rect
+                x={slot.x - 80}
+                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 60}
+                width={160}
+                height={50}
+                fill="rgba(0, 0, 0, 0.8)"
+                stroke="#00FFFF"
+                strokeWidth={1}
+                rx={4}
+              />
+              
+              {/* Synergy title */}
               <text
-                key={`synergy-detail-${index}`}
                 x={slot.x}
-                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 30 + (index * 12)}
-                fill="#FFFFFF"
-                fontSize={8}
+                y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 45}
+                fill="#00FFFF"
+                fontSize={10}
+                fontWeight="bold"
                 textAnchor="middle"
               >
-                {synergy.description}
+                Synergy Active
               </text>
-            ))}
-          </g>
-        );
-      })}
-    </g>
+              
+              {/* Synergy details */}
+              {towerSynergy.synergies.map((synergy, index) => (
+                <text
+                  key={`synergy-detail-${index}`}
+                  x={slot.x}
+                  y={slot.y - GAME_CONSTANTS.TOWER_SIZE / 2 - 30 + (index * 12)}
+                  fill="#FFFFFF"
+                  fontSize={8}
+                  textAnchor="middle"
+                >
+                  {synergy.description}
+                </text>
+              ))}
+            </g>
+          );
+        })}
+      </g>
+    </svg>
   );
 });
 

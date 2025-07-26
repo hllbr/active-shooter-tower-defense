@@ -4,7 +4,7 @@ import { GAME_CONSTANTS } from '../../../utils/constants';
 import { ShieldStatsDisplay } from './ShieldStatsDisplay';
 import { ShieldUpgradeCard } from './ShieldUpgradeCard';
 import { ScrollableGridList } from '../../common/ScrollableList';
-import { Logger } from '../../../utils/Logger';
+
 
 export const ShieldUpgrades: React.FC = () => {
   const gold = useGameStore((state: Store) => state.gold);
@@ -34,7 +34,6 @@ export const ShieldUpgrades: React.FC = () => {
   const handlePurchase = (index: number, finalCost: number) => {
     const shield = GAME_CONSTANTS.WALL_SHIELDS[index];
     if (!shield) {
-      Logger.error(`❌ Invalid shield index: ${index}`);
       import('../../../utils/sound').then(({ playSound }) => {
         playSound('error');
       });
@@ -43,7 +42,6 @@ export const ShieldUpgrades: React.FC = () => {
     
     const currentShieldLevel = wallLevel || 0;
     if (index !== currentShieldLevel) {
-      Logger.error(`❌ Invalid purchase attempt: index ${index} !== currentLevel ${currentShieldLevel}`);
       import('../../../utils/sound').then(({ playSound }) => {
         playSound('error');
       });
@@ -52,7 +50,6 @@ export const ShieldUpgrades: React.FC = () => {
     
     // Validate cost matches what the UI calculated
     if (gold < finalCost) {
-      Logger.error(`❌ Insufficient gold: ${gold} < ${finalCost}`);
       import('../../../utils/sound').then(({ playSound }) => {
         playSound('error');
       });
@@ -60,7 +57,6 @@ export const ShieldUpgrades: React.FC = () => {
     }
     
     // Shield purchase processed - this will now use the correct shield.cost from WALL_SHIELDS
-    Logger.log(`✅ Purchasing shield ${shield.name} for ${finalCost} gold. Current level: ${currentShieldLevel}`);
     upgradeWall();
     
     // Show success feedback

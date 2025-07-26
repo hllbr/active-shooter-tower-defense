@@ -12,7 +12,7 @@ import {
   ModifierRenderer,
   VisualExtrasRenderer,
   SlotUnlockDisplay,
-  DebugInfo,
+
   ParticleSystem,
   FirstTowerHighlight,
   TowerHealthDisplay,
@@ -49,7 +49,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
     canAffordUpgrade,
     canRepair,
     canAffordRepair,
-    debugInfo,
+
     shouldShowBuildText,
     wallLevel,
     
@@ -284,8 +284,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             cooldownRemaining={moveState.cooldownRemaining}
           />
           
-          {/* Debug information */}
-          <DebugInfo slot={slot} debugInfo={debugInfo} />
+                {/* Debug information removed for production optimization */}
           
           {/* Simplified tower controls */}
           <SimplifiedTowerControls

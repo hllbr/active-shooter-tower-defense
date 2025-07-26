@@ -1,5 +1,5 @@
 import type { Tower, Enemy } from '../../models/gameTypes';
-import { Logger } from '../../utils/Logger';
+
 
 /**
  * Targeting strategy types
@@ -48,7 +48,7 @@ export class AutoTargeting {
    */
   public setActive(active: boolean): void {
     this.isActive = active;
-    Logger.log(`🤖 Auto Targeting ${active ? 'enabled' : 'disabled'}`);
+    // Auto Targeting logging removed for production optimization
   }
 
   /**
@@ -65,13 +65,13 @@ export class AutoTargeting {
     this.lastManualIntervention = performance.now();
     if (this.isActive) {
       this.setActive(false);
-      Logger.log('🤖 Auto targeting temporarily disabled due to manual intervention');
+      // Auto targeting logging removed for production optimization
       
       // Re-enable after cooldown
       setTimeout(() => {
         if (performance.now() - this.lastManualIntervention >= this.MANUAL_INTERVENTION_COOLDOWN) {
           this.setActive(true);
-          Logger.log('🤖 Auto targeting re-enabled after manual intervention cooldown');
+          // Auto targeting logging removed for production optimization
         }
       }, this.MANUAL_INTERVENTION_COOLDOWN);
     }

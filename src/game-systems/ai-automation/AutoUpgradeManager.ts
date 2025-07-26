@@ -1,7 +1,7 @@
 import { useGameStore } from '../../models/store';
 import type { Tower, TowerSlot } from '../../models/gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
-import { Logger } from '../../utils/Logger';
+
 
 /**
  * Tower upgrade priority calculation result
@@ -39,7 +39,7 @@ export class AutoUpgradeManager {
    */
   public setActive(active: boolean): void {
     this.isActive = active;
-    Logger.log(`🤖 Auto Upgrade ${active ? 'enabled' : 'disabled'}`);
+    // Auto Upgrade logging removed for production optimization
   }
 
   /**
@@ -56,13 +56,13 @@ export class AutoUpgradeManager {
     this.lastManualIntervention = performance.now();
     if (this.isActive) {
       this.setActive(false);
-      Logger.log('🤖 Auto upgrade temporarily disabled due to manual intervention');
+      // Auto upgrade logging removed for production optimization
       
       // Re-enable after cooldown
       setTimeout(() => {
         if (performance.now() - this.lastManualIntervention >= this.MANUAL_INTERVENTION_COOLDOWN) {
           this.setActive(true);
-          Logger.log('🤖 Auto upgrade re-enabled after manual intervention cooldown');
+          // Auto upgrade logging removed for production optimization
         }
       }, this.MANUAL_INTERVENTION_COOLDOWN);
     }
@@ -358,7 +358,7 @@ export class AutoUpgradeManager {
     }, 'auto_upgrade');
 
     if (success) {
-      Logger.log(`🤖 Auto upgraded ${topPriority.tower.towerClass || 'tower'} (${topPriority.reason})`);
+      // Auto upgrade logging removed for production optimization
       return true;
     }
 
@@ -395,7 +395,7 @@ export class AutoUpgradeManager {
       try {
         listener(tower, tower.level - 1, tower.level);
       } catch (error) {
-        Logger.error('Error in tower upgrade listener:', error);
+        // Error logging removed for production optimization
       }
     });
   }

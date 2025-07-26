@@ -5,7 +5,7 @@
  */
 
 import { useGameStore } from '../../models/store';
-import { Logger } from '../../utils/Logger';
+
 import { UnlockRequirements } from './MarketManager';
 
 export interface UnlockCondition {
@@ -249,11 +249,11 @@ export class UnlockManager {
       try {
         listener(event);
       } catch (error) {
-        Logger.warn(`Unlock listener error: ${error}`);
+        // Unlock listener error
       }
     });
 
-    Logger.log(`🔓 Unlock event recorded: ${event.itemName} (${event.unlockType})`);
+    // Unlock event recorded
   }
 
   /**
@@ -294,7 +294,7 @@ export class UnlockManager {
   public resetUnlockProgress(): void {
     this.unlockProgress.clear();
     this.unlockHistory = [];
-    Logger.log('🔄 Unlock progress reset');
+    // Unlock progress reset
   }
 
   /**
@@ -319,7 +319,7 @@ export class UnlockManager {
   }): void {
     this.unlockProgress = new Map(Object.entries(data.progress));
     this.unlockHistory = data.history;
-    Logger.log('📥 Unlock data imported');
+    // Unlock data imported
   }
 }
 

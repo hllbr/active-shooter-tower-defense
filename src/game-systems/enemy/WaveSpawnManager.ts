@@ -216,31 +216,7 @@ export class WaveSpawnManager {
   }
 }
 
-// Centralized performance monitoring (debug only)
-let frameCount: number = 0;
-let lastFpsLog: number = performance.now();
-export function logPerformanceStats() {
-  const debugMode = typeof window !== 'undefined' && 'GAME_CONSTANTS' in window && Boolean((window as unknown as { [key: string]: unknown })['GAME_CONSTANTS'] && (window as unknown as { [key: string]: { DEBUG_MODE?: boolean } })['GAME_CONSTANTS'].DEBUG_MODE);
-  if (!debugMode) return;
-  frameCount++;
-  const now = performance.now();
-  if (now - lastFpsLog > 1000) {
-    const _fps = frameCount;
-    frameCount = 0;
-    lastFpsLog = now;
-    let _mem: string | number = 'N/A';
-    const win = window as unknown as { performance?: { memory?: { usedJSHeapSize: number } } };
-    if (win.performance && win.performance.memory) {
-      _mem = (win.performance.memory.usedJSHeapSize / 1048576).toFixed(2);
-    }
-    // Performance monitoring: FPS and memory usage tracking
-  }
-} 
+// Performance monitoring removed for production optimization 
 
-const store = useGameStore;
-store.subscribe((state, prevState) => {
-  if (!prevState.gameReadyForWaves && state.gameReadyForWaves) {
-    // Start wave spawning logic here, e.g.:
-    // WaveSpawnManager.startEnemyWave(state.currentWave);
-  }
-}); 
+// Store subscription moved to appropriate React component or hook
+// to avoid initialization issues 

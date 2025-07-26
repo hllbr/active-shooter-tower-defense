@@ -31,8 +31,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = React.memo(({ upgrade, go
         import('../../../utils/sound/soundEffects').then(({ playSound }) => {
           playSound('upgrade-purchase');
         });
-      } catch (error) {
-        console.error('❌ Upgrade failed:', error);
+      } catch (_error) {
         // 🔊 ENHANCED: Play error sound on upgrade failure
         import('../../../utils/sound/soundEffects').then(({ playSound }) => {
           playSound('error');

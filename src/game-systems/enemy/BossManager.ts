@@ -2,7 +2,7 @@ import type { Enemy, BossLootEntry } from '../../models/gameTypes';
 import { selectBossForWave, type BossDefinition } from './BossDefinitions';
 import { useGameStore } from '../../models/store';
 import { playSound } from '../../utils/sound';
-import { Logger } from '../../utils/Logger';
+
 import { BossPhaseManager } from './BossPhaseManager';
 import {
   executeChargeAttack,
@@ -260,7 +260,7 @@ export class BossManager {
         executeRealityTear(boss, definition);
         break;
       default:
-        Logger.warn(`Unknown boss ability: ${ability}`);
+        // Unknown boss ability warning removed for production optimization
     }
   }
 

@@ -102,9 +102,7 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
         clearTimeout(screenShakeTimerRef.current);
       }
       
-      if (GAME_CONSTANTS.DEBUG_MODE) {
-        const _bulletStats = advancedBulletPool.getStats();
-      }
+      // Debug mode removed for production optimization
     };
   }, []);
 

@@ -8,6 +8,7 @@ import type { TowerUpgradeInfo } from '../types';
 import { playSound } from '../../../utils/sound/soundEffects';
 import { useChallenge } from '../../challenge/hooks/useChallenge';
 import { toast } from 'react-toastify';
+import { gameFlowManager } from '../../../game-systems/GameFlowManager';
 
 export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const gold = useGameStore((s) => s.gold);
@@ -35,11 +36,9 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const isUnlocking = unlockingSlots.has(slotIdx);
   const isRecentlyUnlocked = recentlyUnlockedSlots.has(slotIdx);
   
-  // Build logic
-  const canBuild = slot.unlocked && !slot.tower &&
-    gold >= GAME_CONSTANTS.TOWER_COST &&
-    energy >= GAME_CONSTANTS.ENERGY_COSTS.buildTower &&
-    towerSlots.filter(s => s.tower).length < maxTowers;
+  // Build logic using GameFlowManager for improved UI state
+  const buildUIState = gameFlowManager.getBuildUIState(slotIdx);
+  const canBuild = buildUIState.canBuild;
 
   // Slot unlock logic
   const unlockCost = GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] ?? 2400;
@@ -82,9 +81,9 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const currentTowerInfo: TowerUpgradeInfo | null = slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level - 1] : null;
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
 
-  // Debug info
+  // Debug info removed for production optimization
   const debugInfo = React.useMemo(() => {
-    if (!slot.tower || !GAME_CONSTANTS.DEBUG_MODE) return null;
+    return null;
     const { enemy } = getTargetEnemy(slot.tower, enemies, TargetingMode.NEAREST);
     const firing = performance.now() - slot.tower.lastFired < 100;
     return enemy ? {
@@ -147,6 +146,9 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
     playSound('tower-create-sound');
     toast.success('Kule inşa edildi!');
     incrementChallenge('build');
+    
+    // Update pathfinding when tower is placed
+    gameFlowManager.updatePathfinding();
   };
 
   const handlePerformTileAction = (slotIdx: number, action: 'wall' | 'trench' | 'buff') => {
@@ -208,6 +210,9 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
 
   const handleDelete = (slotIdx: number) => {
     removeTower(slotIdx);
+    
+    // Update pathfinding when tower is removed
+    gameFlowManager.updatePathfinding();
   };
 
   return {

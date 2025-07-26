@@ -14,6 +14,7 @@ import { SimplifiedMarketUI } from '../game/market/SimplifiedMarketUI';
 import { AuraUpgrades } from '../game/upgrades/AuraUpgrades';
 import { FireModeSelector } from '../game/upgrades/FireModeSelector';
 import { AdvancedMineSelector } from '../game/upgrades/AdvancedMineSelector';
+import { MissionDisplay } from '../game/upgrades/MissionDisplay';
 
 // Tab specific components
 
@@ -38,6 +39,9 @@ export const UpgradeTabContent: React.FC<TabContentProps> = ({ activeTab }) => {
             {bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length && <DefenseUpgrades />}
           </div>
         );
+        
+      case 'missions':
+        return <MissionDisplay />;
         
       case 'packages':
         return <UpgradePackages />;

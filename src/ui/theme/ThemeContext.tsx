@@ -2,7 +2,7 @@ import { createContext } from 'react';
 import { THEME_COLORS, ACCESSIBILITY_MODES } from './themeConstants';
 import type { ThemeType, AccessibilityMode } from './themeConstants';
 
-interface ThemeContextType {
+export interface ThemeContextType {
   theme: ThemeType;
   accessibilityMode: AccessibilityMode;
   setTheme: (theme: ThemeType) => void;

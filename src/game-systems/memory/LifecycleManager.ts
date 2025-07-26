@@ -67,9 +67,7 @@ export class LifecycleManager {
       }
     }
     
-    if (GAME_CONSTANTS.DEBUG_MODE && cleaned > 0) {
-      // Debug logging for cleanup statistics can be added here
-    }
+    // Debug logging removed for production optimization
     
     return cleaned;
   }

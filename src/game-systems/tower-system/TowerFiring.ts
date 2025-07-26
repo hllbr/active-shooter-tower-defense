@@ -83,9 +83,7 @@ export class TowerFiringSystem {
     
     tower.lastFired = performance.now();
     
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-      // Debug logging for tower firing can be added here
-    }
+    // Debug logging removed for production optimization
   }
 
   /**
@@ -653,10 +651,7 @@ export class TowerFiringSystem {
       const { enemy, threatScore } = getTargetEnemy(tower, visibleEnemies, targetingMode, options);
       if (!enemy) return;
       
-      // Debug targeting information
-      if (GAME_CONSTANTS.DEBUG_MODE && threatScore) {
-        // Debug logging for targeting information can be added here
-      }
+      // Debug targeting information removed for production optimization
 
       this.fireTower(tower, enemy, {
         speedMultiplier: bulletType.speedMultiplier,

@@ -5,7 +5,7 @@ export { VisualExtrasRenderer } from './VisualExtrasRenderer';
 export { TowerMenu } from './TowerMenu';
 export { TowerInfoPanel } from './TowerInfoPanel';
 export { SlotUnlockDisplay } from './SlotUnlockDisplay';
-export { DebugInfo } from './DebugInfo';
+
 
 // New sub-components
 export { EmptySlotRenderer } from './EmptySlotRenderer';

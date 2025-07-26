@@ -2,8 +2,7 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { useGameStore } from '../../models/store';
 import type { Store } from '../../models/store';
 import { getContinueButtonStyle } from './Footer/footerStyles';
-import { Logger } from '../../utils/Logger';
-// CRITICAL FIX: Security validation kaldırıldı - oyun akıcılığı için
+// Security validation removed for game fluidity
 // import { validateStateChange } from '../../security/SecurityEnhancements';
 
 interface ContinueButtonProps {
@@ -69,7 +68,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       }
       
     } catch (error) {
-      Logger.error('❌ Error in handleContinue:', error);
+      // Silent error handling for production
       setRefreshing(false);
     } finally {
       setIsProcessing(false);
@@ -99,7 +98,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     try {
       handleContinue();
     } catch (error) {
-      Logger.error('❌ Error in handleContinue:', error);
+      // Silent error handling for production
       setRefreshing(false);
       setIsProcessing(false);
     }

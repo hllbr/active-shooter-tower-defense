@@ -37,11 +37,7 @@ export function updateEffects() {
     }
   });
   
-  // Log performance statistics periodically
-  if (GAME_CONSTANTS.DEBUG_MODE && Math.random() < 0.01) { // 1% chance per frame
-    const _stats = effectPool.getStats();
-    // Performance statistics available for debugging
-  }
+  // Performance monitoring removed for production optimization
 }
 
 /**
@@ -68,7 +64,5 @@ export function performMemoryCleanup(): void {
   cleanupManager.cleanup();
   effectPool.clear();
   
-  if (GAME_CONSTANTS.DEBUG_MODE) {
-    // Debug cleanup logging can be added here
-  }
+  // Debug cleanup logging removed for production optimization
 } 

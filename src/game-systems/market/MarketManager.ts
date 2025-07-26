@@ -4,7 +4,7 @@
  * Follows SOLID principles for maintainability and extensibility
  */
 
-import { Logger } from '../../utils/Logger';
+
 import type { WeatherEffectCard } from './WeatherEffectMarket';
 import { unlockManager } from './UnlockManager';
 
@@ -279,7 +279,7 @@ export class MarketManager {
         const success = weatherEffectMarket.purchaseCard(itemId);
         if (success) {
           item.isOwned = true;
-          Logger.log(`Market item purchased: ${item.name}`);
+          // Market item purchased
         }
       });
       return true;

@@ -33,12 +33,7 @@ export const startMemoryMonitoring = (interval: number = 5000): () => void => {
   const intervalId = setInterval(() => {
     const usage = checkMemoryUsage();
     
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-      // Log memory usage in debug mode
-      if (usage.percentage > 80) {
-        console.warn(`⚠️ High memory usage: ${usage.percentage.toFixed(1)}%`);
-      }
-    }
+    // Memory monitoring removed for production optimization
     
     // Take memory sample
     memoryMonitor.sample();

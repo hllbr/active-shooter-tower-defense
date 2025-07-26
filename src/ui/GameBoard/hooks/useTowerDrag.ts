@@ -236,7 +236,6 @@ export const useTowerDrag = () => {
     clearFeedback,
     
     // Legacy support (for backward compatibility)
-    debugMessage: feedback?.message || '',
     clearDebugMessage: clearFeedback
   };
 }; 

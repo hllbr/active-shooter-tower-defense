@@ -40,7 +40,7 @@ import {
   isExpectedStateChange,
   isExpectedGoldIncrease
 } from './helpers/securityUtils';
-import { Logger } from '../utils/Logger';
+// Logger import removed for production
 
 // Security Event Types
 export type SecurityEventType = 
@@ -337,7 +337,7 @@ export class SecurityManager {
     }
 
     // Log to console for debugging in non-production environments
-    Logger.warn(`[Security] ${severity.toUpperCase()}: ${type}`, details);
+    // Security warning logged
   }
 
   /**
@@ -359,7 +359,7 @@ export class SecurityManager {
         this.isLocked = false;
       }, 300000); // 5 minutes lockout
       
-      Logger.warn('[Security] System temporarily locked due to suspicious activity');
+      // Security: System temporarily locked due to suspicious activity
     }
   }
 

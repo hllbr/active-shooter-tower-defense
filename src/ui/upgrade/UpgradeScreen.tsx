@@ -46,7 +46,7 @@ export const UpgradeScreen: React.FC = React.memo(() => {
           // Zar at
           rollDice();
         } catch (error) {
-          console.error('Otomatik zar atma hatası:', error);
+          // Silent error handling for production
         }
       }, 500); // 500ms bekle
 

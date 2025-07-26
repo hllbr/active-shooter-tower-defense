@@ -25,6 +25,11 @@ export const UpgradeTabNavigation: React.FC<UpgradeTabNavigationProps> = ({
       color: '#4ade80'
     },
     { 
+      id: 'missions', 
+      name: '🎯 Görevler', 
+      color: '#3b82f6'
+    },
+    { 
       id: 'packages', 
       name: '🎁 Kombo Paketler', 
       color: '#fbbf24'

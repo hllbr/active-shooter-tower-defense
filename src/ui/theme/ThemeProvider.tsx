@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { THEME_COLORS, ACCESSIBILITY_MODES } from './themeConstants';
 import type { ThemeType, AccessibilityMode } from './themeConstants';
 import { ThemeContext } from './ThemeContext';
+import type { ThemeContextType } from './ThemeContext';
 
 interface ThemeProviderProps {
   children: React.ReactNode;
