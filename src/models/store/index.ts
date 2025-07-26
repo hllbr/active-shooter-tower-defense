@@ -4,6 +4,7 @@ import { GAME_CONSTANTS } from '../../utils/constants';
 import { energyManager } from '../../game-systems/EnergyManager';
 import { waveManager } from '../../game-systems/WaveManager';
 import { Logger } from '../../utils/Logger';
+import { GamePauseManager } from '../../game-systems/GamePauseManager';
 import { initialState } from './initialState';
 import { createEnemySlice, type EnemySlice } from './slices/enemySlice';
 import { createTowerSlice, type TowerSlice } from './slices/towerSlice';
@@ -60,6 +61,7 @@ export const useGameStore = create<Store>((set, get, api) => ({
   resetGame: () => {
     set(initialState);
     energyManager.reset();
+    GamePauseManager.reset();
   },
 
   setStarted: (started: boolean) => set({ isStarted: started }),
@@ -68,7 +70,15 @@ export const useGameStore = create<Store>((set, get, api) => ({
   /**
    * Set the global pause state (UI-based pause, e.g., upgrade screen)
    */
-  setPaused: (paused: boolean) => set({ isPaused: paused }),
+  setPaused: (paused: boolean) => {
+    set({ isPaused: paused });
+    // Use GamePauseManager to handle all pause-related actions
+    if (paused) {
+      GamePauseManager.pauseGame();
+    } else {
+      GamePauseManager.resumeGame();
+    }
+  },
 
   /**
    * Set the first tower placed state (for wave spawn gating)

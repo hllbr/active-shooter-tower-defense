@@ -98,8 +98,7 @@ export class DynamicGameStartManager {
       slotIndex: selectedSlot.index
     });
 
-    // Log the placement for debugging
-    console.log(`🎯 Dynamic Start: Placed ${selectedTowerName} (${selectedTowerClass}) at slot ${selectedSlot.index}`);
+            // Tower placed successfully
   }
 
   /**

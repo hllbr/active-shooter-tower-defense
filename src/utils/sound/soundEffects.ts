@@ -182,8 +182,10 @@ export function testVolumeControls(): void {
 export function playSound(sound: string): void {
   if (missingSounds.has(sound)) return;
 
-  const { isRefreshing } = useGameStore.getState();
-  if (isRefreshing && isGameSceneSound(sound)) return;
+  const { isRefreshing, isPaused } = useGameStore.getState();
+  
+  // Stop game scene sounds when paused or refreshing
+  if ((isRefreshing || isPaused) && isGameSceneSound(sound)) return;
 
   // 🔊 COOLDOWN CHECK: Ses çok sık çalınıyorsa engelle
   if (!canPlaySound(sound)) {

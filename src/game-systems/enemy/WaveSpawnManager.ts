@@ -225,15 +225,15 @@ export function logPerformanceStats() {
   frameCount++;
   const now = performance.now();
   if (now - lastFpsLog > 1000) {
-    const fps = frameCount;
+    const _fps = frameCount;
     frameCount = 0;
     lastFpsLog = now;
-    let mem: string | number = 'N/A';
+    let _mem: string | number = 'N/A';
     const win = window as unknown as { performance?: { memory?: { usedJSHeapSize: number } } };
     if (win.performance && win.performance.memory) {
-      mem = (win.performance.memory.usedJSHeapSize / 1048576).toFixed(2);
+      _mem = (win.performance.memory.usedJSHeapSize / 1048576).toFixed(2);
     }
-    console.log(`[PERF] FPS: ${fps} | Memory: ${mem} MB | Enemies:`, useGameStore.getState().enemies.length);
+    // Performance monitoring: FPS and memory usage tracking
   }
 } 
 
