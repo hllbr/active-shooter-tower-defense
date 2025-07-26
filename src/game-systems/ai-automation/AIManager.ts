@@ -1,5 +1,6 @@
 import type { Tower, TowerSlot, Enemy, Position } from '../../models/gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
+import { useGameStore } from '../../models/store';
 import { towerSynergyManager } from '../tower-system/TowerSynergyManager';
 import { defenseSystemManager } from '../defense-systems';
 import { autoUpgradeManager } from './AutoUpgradeManager';
@@ -455,6 +456,29 @@ export class AIManager {
     autoPlacementSystem.reset();
     autoUpgradeManager.reset();
     autoTargeting.reset();
+  }
+
+  /**
+   * Pause all automation systems
+   */
+  public pauseAutomation(): void {
+    autoPlacementSystem.setActive(false);
+    autoUpgradeManager.setActive(false);
+    autoTargeting.setActive(false);
+  }
+
+  /**
+   * Resume automation systems to their previous state
+   */
+  public resumeAutomation(): void {
+    // Resume automation based on current game state
+    const state = useGameStore.getState();
+    if (state.isStarted && !state.isGameOver) {
+      // Re-enable automation systems if game is active
+      autoPlacementSystem.setActive(true);
+      autoUpgradeManager.setActive(true);
+      autoTargeting.setActive(true);
+    }
   }
 
 }

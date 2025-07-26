@@ -1,5 +1,6 @@
 import { WAVE_SPAWN_CONFIGS } from './waveConfigs';
 import type { ISpawnStrategy, IPerformanceTracker } from './types';
+import { useGameStore } from '../../models/store';
 
 export class DynamicSpawnController {
   private spawnInterval: number | null = null;
@@ -38,6 +39,12 @@ export class DynamicSpawnController {
     );
 
     this.spawnInterval = window.setTimeout(() => {
+      // Check if game is paused before spawning
+      const state = useGameStore.getState();
+      if (state.isPaused || state.isGameOver) {
+        return;
+      }
+      
       this.spawnEnemy();
       this.currentSpawnCount++;
       const config = WAVE_SPAWN_CONFIGS[this.getWaveTier(waveNumber)];

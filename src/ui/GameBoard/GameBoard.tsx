@@ -102,14 +102,7 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ className, onSe
 
 
 
-  // 🎮 UPGRADE SCREEN: Stop only game scene sounds when upgrade screen opens
-  useEffect(() => {
-    if (isRefreshing) {
-      import('../../utils/sound/soundEffects').then(({ pauseGameSceneSounds }) => {
-        pauseGameSceneSounds();
-      });
-    }
-  }, [isRefreshing]);
+
 
 
 

@@ -142,7 +142,7 @@ export const useTowerDrag = () => {
     // Update drop zone animations
     updateDropZoneAnimations('highlight');
 
-  }, [towerSlots, isStarted, isRefreshing, waveStatus, energy, analyzeDropZones, showFeedback, updateDropZoneAnimations]);
+  }, [towerSlots, isStarted, isRefreshing, waveStatus, energy, analyzeDropZones, showFeedback, updateDropZoneAnimations, moveState.isMoveMode, moveState.moveSlotIdx]);
 
   // Handle hover changes
   const handleHoverChange = useCallback((hoveredSlot: number | null) => {

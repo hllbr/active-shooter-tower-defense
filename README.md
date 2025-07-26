@@ -144,3 +144,4 @@ This sequence ensures that **tower upgrades are immediately and consistently ref
 - **Testing:** The clear, event-driven flow enables reliable automated tests, which are essential for preventing bugs as the game evolves.
 
 > **In summary:** This flow is critical for a responsive, bug-free, and maintainable tower defense game, ensuring upgrades are always in sync across gameplay, visuals, and tests.
+

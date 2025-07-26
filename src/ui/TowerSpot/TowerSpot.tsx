@@ -126,7 +126,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
         y: bbox.y + bbox.height / 2
       };
     }
-  }), [slot.tower]);
+  }), []);
 
   return (
     <>
@@ -158,7 +158,6 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
                 strokeDasharray="4 2"
                 style={{ cursor: 'pointer' }}
                 onClick={() => {
-                  console.log('DEBUG: handleShowTowerSelection called');
                   handleShowTowerSelection();
                 }}
               />
