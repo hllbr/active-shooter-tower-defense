@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../../../models/store';
 import { weatherEffectMarket, type WeatherEffectCard } from '../../../game-systems/market/WeatherEffectMarket';
 import { playSound } from '../../../utils/sound/soundEffects';
+import { ScrollableGridList } from '../../common/ScrollableList';
 
 export const WeatherMarketContent: React.FC = () => {
   const { gold } = useGameStore();
@@ -127,49 +128,26 @@ export const WeatherMarketContent: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div style={{ maxHeight: '400px', overflowY: 'auto', padding: '4px' }}>
-        {activeTab === 'market' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '16px' }}>
-            {availableCards.map((card) => (
-              <WeatherEffectCard
-                key={card.id}
-                card={card}
-                gold={gold}
-                onPurchase={() => handlePurchaseCard(card.id)}
-                mode="purchase"
-              />
-            ))}
-            {availableCards.length === 0 && (
-              <div style={{ textAlign: 'center', color: '#9CA3AF', padding: '40px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🌤️</div>
-                <p>Şu anda satışta hava durumu efekti bulunmuyor.</p>
-                <p>Yeni efektler sonraki dalgalarda gelecek!</p>
-              </div>
-            )}
-          </div>
+      <ScrollableGridList
+        items={activeTab === 'market' ? availableCards : ownedCards}
+        renderItem={(card) => (
+          <WeatherEffectCard
+            card={card}
+            gold={gold}
+            onPurchase={activeTab === 'market' ? () => handlePurchaseCard(card.id) : undefined}
+            mode={activeTab}
+            isActive={activeTab === 'owned' ? activeEffects.some(effect => effect.card.id === card.id) : false}
+          />
         )}
-
-        {activeTab === 'owned' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '16px' }}>
-            {ownedCards.map((card) => (
-              <WeatherEffectCard
-                key={card.id}
-                card={card}
-                gold={gold}
-                mode="activate"
-                isActive={activeEffects.some(effect => effect.card.id === card.id)}
-              />
-            ))}
-            {ownedCards.length === 0 && (
-              <div style={{ textAlign: 'center', color: '#9CA3AF', padding: '40px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
-                <p>Henüz hava durumu efektiniz bulunmuyor.</p>
-                <p>Mağaza sekmesinden satın alabilirsiniz!</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+        keyExtractor={(card) => card.id}
+        maxHeight="400px"
+        gridTemplateColumns="repeat(auto-fit, minmax(350px, 1fr))"
+        gap="16px"
+        itemMinWidth="350px"
+        emptyMessage={activeTab === 'market' ? 'Şu anda satışta hava durumu efekti bulunmuyor.\nYeni efektler sonraki dalgalarda gelecek!' : 'Henüz hava durumu efektiniz bulunmuyor.\nMağaza sekmesinden satın alabilirsiniz!'}
+        emptyIcon={activeTab === 'market' ? '🌤️' : '📦'}
+        containerStyle={{ padding: '4px' }}
+      />
     </div>
   );
 };

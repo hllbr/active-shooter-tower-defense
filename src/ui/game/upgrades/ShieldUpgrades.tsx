@@ -3,6 +3,7 @@ import { useGameStore, type Store } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { ShieldStatsDisplay } from './ShieldStatsDisplay';
 import { ShieldUpgradeCard } from './ShieldUpgradeCard';
+import { ScrollableGridList } from '../../common/ScrollableList';
 import { Logger } from '../../../utils/Logger';
 
 export const ShieldUpgrades: React.FC = () => {
@@ -82,40 +83,35 @@ export const ShieldUpgrades: React.FC = () => {
         hasAvailableShields={GAME_CONSTANTS.WALL_SHIELDS.length > 0}
       />
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: 12
-      }}>
-        {GAME_CONSTANTS.WALL_SHIELDS.map((shield, i) => {
-          const currentShieldLevel = wallLevel || 0;
-          const isCurrentLevel = i === currentShieldLevel;
-          const isPastLevel = i < currentShieldLevel;
-          const isFutureLevel = i > currentShieldLevel;
-          
-          const _canPurchase = isCurrentLevel && gold >= shield.cost;
-          const isMaxed = isPastLevel;
-          const _isLocked = isFutureLevel;
-          
-          // Shield level progression logic verified
-          
-          return (
-            <ShieldUpgradeCard
-              key={i}
-              shield={shield}
-              index={i}
-              gold={gold}
-              globalWallStrength={globalWallStrength}
-              discountMultiplier={discountMultiplier}
-              diceUsed={diceUsed}
-              purchaseCount={isPastLevel ? 1 : 0}
-              maxAllowed={1}
-              isMaxed={isMaxed}
-              onPurchase={handlePurchase}
-            />
-          );
-        })}
-      </div>
+      <ScrollableGridList
+        items={GAME_CONSTANTS.WALL_SHIELDS.map((shield, i) => ({
+          shield,
+          index: i,
+          currentShieldLevel: wallLevel || 0,
+          isCurrentLevel: i === (wallLevel || 0),
+          isPastLevel: i < (wallLevel || 0),
+          isFutureLevel: i > (wallLevel || 0)
+        }))}
+        renderItem={({ shield, index, isPastLevel }) => (
+          <ShieldUpgradeCard
+            shield={shield}
+            index={index}
+            gold={gold}
+            globalWallStrength={globalWallStrength}
+            discountMultiplier={discountMultiplier}
+            diceUsed={diceUsed}
+            purchaseCount={isPastLevel ? 1 : 0}
+            maxAllowed={1}
+            isMaxed={isPastLevel}
+            onPurchase={handlePurchase}
+          />
+        )}
+        keyExtractor={({ index }) => `shield-${index}`}
+        gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))"
+        gap="12px"
+        itemMinWidth="250px"
+        containerStyle={{ width: '100%' }}
+      />
     </div>
   );
 }; 
