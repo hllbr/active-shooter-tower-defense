@@ -426,7 +426,13 @@ export class MissionManager {
    */
   updateMissionProgress(
     eventType: string,
-    eventData?: { amount?: number; perfectWave?: boolean; waveNumber?: number }
+    eventData?: { 
+      amount?: number; 
+      perfectWave?: boolean; 
+      waveNumber?: number;
+      enemiesKilled?: number;
+      goldEarned?: number;
+    }
   ): MissionProgressResult {
     const result: MissionProgressResult = {
       updatedMissions: [...this.missions],

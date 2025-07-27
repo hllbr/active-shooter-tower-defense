@@ -79,8 +79,8 @@ export class LootManager {
    * Handle enemy death and determine loot drops
    */
   static handleEnemyDeath(enemy: Enemy): void {
-    // Always drop gold (existing system)
-    this.dropGold(enemy);
+    // ✅ FIXED: Gold is now handled centrally in the enemy slice
+    // Only handle special loot drops here
     
     // Check for special loot drops
     const shouldDropSpecialLoot = this.shouldDropSpecialLoot(enemy);
@@ -92,19 +92,18 @@ export class LootManager {
     if (enemy.bossType && enemy.bossLootTable) {
       this.handleBossLoot(enemy);
     }
+    
+    // ✅ NEW: Create visual gold drop effect (without adding gold)
+    this.createGoldDropEffect(enemy);
   }
 
   /**
-   * Drop basic gold (enhanced with visual effects)
+   * ✅ NEW: Create visual gold drop effect without adding gold
    */
-  private static dropGold(enemy: Enemy): void {
-    const { addGold, addEffect } = useGameStore.getState();
+  private static createGoldDropEffect(enemy: Enemy): void {
+    const { addEffect } = useGameStore.getState();
     
-    // Enhanced gold drop with visual effect
-    const goldAmount = this.calculateGoldDrop(enemy);
-    addGold(goldAmount);
-    
-    // Create gold drop effect
+    // Create gold drop visual effect
     addEffect({
       id: `gold_drop_${enemy.id}`,
       position: enemy.position,
@@ -119,31 +118,6 @@ export class LootManager {
     
     // Play gold drop sound
     playSound('gold-drop');
-  }
-
-  /**
-   * Calculate enhanced gold drop amount
-   */
-  private static calculateGoldDrop(enemy: Enemy): number {
-    let baseGold = enemy.goldValue;
-    
-    // Wave scaling bonus
-    const { currentWave } = useGameStore.getState();
-    if (currentWave > 10) {
-      baseGold *= 1 + (currentWave - 10) * 0.05; // 5% increase per wave after 10
-    }
-    
-    // Special enemy bonus
-    if (enemy.isSpecial) {
-      baseGold *= this.lootConfig.specialEnemyMultiplier;
-    }
-    
-    // Boss bonus
-    if (enemy.bossType) {
-      baseGold *= this.lootConfig.bossMultiplier;
-    }
-    
-    return Math.floor(baseGold);
   }
 
   /**

@@ -33,7 +33,16 @@ export class AccessibilityManager {
    * Initialize accessibility manager with current settings
    */
   initialize(settings: Settings): void {
-    this.currentSettings = { ...settings };
+    // Ensure all required properties are present with defaults
+    this.currentSettings = {
+      musicVolume: settings.musicVolume ?? 0.7,
+      sfxVolume: settings.sfxVolume ?? 0.7,
+      mute: settings.mute ?? false,
+      healthBarAlwaysVisible: settings.healthBarAlwaysVisible ?? false,
+      accessibilityMode: settings.accessibilityMode ?? 'normal',
+      uiScale: typeof settings.uiScale === 'number' && !isNaN(settings.uiScale) ? settings.uiScale : 1.0,
+      colorblindType: settings.colorblindType ?? 'deuteranopia'
+    };
     this.applyAccessibilitySettings();
   }
 
@@ -41,6 +50,13 @@ export class AccessibilityManager {
    * Update accessibility settings
    */
   updateSettings(newSettings: Partial<Settings>): void {
+    // Ensure uiScale is valid if provided
+    if (newSettings.uiScale !== undefined) {
+      newSettings.uiScale = typeof newSettings.uiScale === 'number' && !isNaN(newSettings.uiScale) 
+        ? newSettings.uiScale 
+        : 1.0;
+    }
+    
     this.currentSettings = { ...this.currentSettings, ...newSettings };
     this.applyAccessibilitySettings();
     this.notifyListeners();
@@ -68,12 +84,18 @@ export class AccessibilityManager {
   private applyColorblindMode(): void {
     const { accessibilityMode, colorblindType } = this.currentSettings;
     
-    if (accessibilityMode === 'normal') {
+    // Ensure accessibilityMode is valid, default to 'normal' if undefined
+    const mode = accessibilityMode || 'normal';
+    
+    if (mode === 'normal') {
       this.resetColors();
       return;
     }
 
-    const palette = getAccessibilityPalette(accessibilityMode, colorblindType);
+    // Ensure colorblindType is valid, default to 'deuteranopia' if undefined
+    const type = colorblindType || 'deuteranopia';
+    
+    const palette = getAccessibilityPalette(mode, type);
     applyAccessibilityColors(palette);
   }
 
@@ -84,15 +106,18 @@ export class AccessibilityManager {
     const { uiScale } = this.currentSettings;
     const root = document.documentElement;
     
+    // Ensure uiScale is a valid number, default to 1.0 if undefined/null
+    const scale = typeof uiScale === 'number' && !isNaN(uiScale) ? uiScale : 1.0;
+    
     // Apply UI scaling as CSS custom property
-    root.style.setProperty('--ui-scale', uiScale.toString());
+    root.style.setProperty('--ui-scale', scale.toString());
     
     // Apply scaling to body for global scaling
-    document.body.style.transform = `scale(${uiScale})`;
+    document.body.style.transform = `scale(${scale})`;
     document.body.style.transformOrigin = 'top left';
     
     // Adjust viewport height to account for scaling
-    const adjustedHeight = 100 / uiScale;
+    const adjustedHeight = 100 / scale;
     root.style.setProperty('--vh', `${adjustedHeight}vh`);
   }
 
@@ -103,7 +128,10 @@ export class AccessibilityManager {
     const { accessibilityMode } = this.currentSettings;
     const root = document.documentElement;
     
-    if (accessibilityMode === 'reducedMotion') {
+    // Ensure accessibilityMode is valid, default to 'normal' if undefined
+    const mode = accessibilityMode || 'normal';
+    
+    if (mode === 'reducedMotion') {
       root.style.setProperty('--motion-preference', 'reduce');
       root.style.setProperty('--animation-duration', '0s');
       root.style.setProperty('--transition-duration', '0s');

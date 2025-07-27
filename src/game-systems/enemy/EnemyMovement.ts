@@ -29,8 +29,8 @@ export class EnemyMovement {
     const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall, damageEnemy, wallLevel, isGameOver, isPaused } =
       useGameStore.getState();
     
-    // ✅ CRITICAL FIX: Stop enemy movement if game is over or paused
-    if (isGameOver || isPaused) {
+    // ✅ FIXED: Only stop if game is over, allow paused games to continue
+    if (isGameOver) {
       return;
     }
     
@@ -374,8 +374,11 @@ export class EnemyMovement {
       wallLevel: number;
     }
   ): boolean {
-    const { distance } = movementData;
-    const collisionThreshold = (enemy.size + GAME_CONSTANTS.TOWER_SIZE) / 2;
+    const collisionThreshold = 30;
+    const distance = Math.hypot(
+      enemy.position.x - targetSlot.x,
+      enemy.position.y - targetSlot.y
+    );
 
     if (distance < collisionThreshold) {
       // Create collision visual effect
@@ -388,9 +391,9 @@ export class EnemyMovement {
         const collisionHandled = defenseTargetManager.handleEnemyCollision(enemy, currentTime);
         
         if (collisionHandled) {
-          // Enemy is destroyed when hitting defense target
-          actions.addGold(enemy.goldValue);
-          actions.removeEnemy(enemy.id);
+          // ✅ FIXED: Use direct removal to avoid recursion
+          const { removeEnemy } = useGameStore.getState();
+          removeEnemy(enemy.id);
           return true;
         }
       }
@@ -408,12 +411,17 @@ export class EnemyMovement {
         } else {
           // No wall: Damage tower, and the enemy is destroyed
           actions.damageTower(slotIdx, enemy.damage);
+          // ✅ FIXED: Use direct removal to avoid recursion
+          const { removeEnemy } = useGameStore.getState();
+          removeEnemy(enemy.id);
+          return true;
         }
       }
       
       // This part runs if there's no wall or no tower (fallback)
-      actions.addGold(enemy.goldValue);
-      actions.removeEnemy(enemy.id);
+      // ✅ FIXED: Use direct removal to avoid recursion
+      const { removeEnemy } = useGameStore.getState();
+      removeEnemy(enemy.id);
       return true;
     }
     return false;

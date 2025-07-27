@@ -25,6 +25,8 @@ export interface WaveSlice {
   startWavePreviewCountdown: () => void;
   speedUpPreparation: (amount: number) => void;
   isPreparing: boolean;
+  // ✅ NEW: Wave gold tracking
+  waveStartGold: number;
 }
 
 export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _get, _api) => ({
@@ -38,6 +40,7 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
   showWavePreview: false,
   wavePreviewCountdown: 5,
   isPreparing: false,
+  waveStartGold: 0,
 
   nextWave: () => set((state: Store) => {
     const newWave = state.currentWave + 1;
@@ -62,6 +65,7 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
       enemiesKilled: 0,
       enemiesRequired: newEnemiesRequired,
       gold: state.gold + waveIncome,
+      totalGoldEarned: state.totalGoldEarned + waveIncome, // ✅ NEW: Track wave income
       lostTowerThisWave: false,
       waveStartTime: performance.now(),
       currentWaveModifier: waveConfig.modifier || undefined,
@@ -125,6 +129,7 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
       prepRemaining: GAME_CONSTANTS.PREP_TIME,
       showWavePreview: false,
       isPreparing: true,
+      waveStartGold: state.gold, // ✅ NEW: Track gold at wave start
     };
   }),
 
@@ -133,15 +138,45 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
     const completionTime = performance.now() - state.waveStartTime;
     WavePerformanceTracker.recordWaveCompletion(state.currentWave, completionTime);
     
-    // Track analytics event
+    // ✅ NEW: Calculate wave-end gold summary
+    const waveGoldEarned = state.gold - state.waveStartGold; // ✅ FIXED: Proper gold calculation
+    const enemiesKilledThisWave = state.enemiesKilled;
+    const perfectWave = !state.lostTowerThisWave;
+    
+    // ✅ NEW: Wave completion bonus
+    let waveCompletionBonus = 0;
+    if (perfectWave) {
+      waveCompletionBonus = Math.floor(25 + (state.currentWave * 5)); // Perfect wave bonus
+    } else {
+      waveCompletionBonus = Math.floor(10 + (state.currentWave * 2)); // Standard completion bonus
+    }
+    
+    // ✅ NEW: Apply wave completion bonus
+    const totalWaveGold = waveGoldEarned + waveCompletionBonus;
+    
+    // Track analytics event with enhanced data
     gameAnalytics.trackEvent('wave_complete', {
       waveNumber: state.currentWave,
       completionTime,
-      perfectWave: !state.lostTowerThisWave,
-      enemiesKilled: state.enemiesKilled,
+      perfectWave,
+      enemiesKilled: enemiesKilledThisWave,
       towersRemaining: state.towers.length,
-      goldEarned: state.gold - (state.gold - 50 - (state.currentWave * 10)) // Estimate gold earned
+      goldEarned: totalWaveGold,
+      waveCompletionBonus,
+      waveGoldEarned
     });
+    
+    // ✅ NEW: Update mission progress for wave completion
+    setTimeout(() => {
+      import('../../../game-systems/MissionManager').then(({ missionManager }) => {
+        missionManager.updateMissionProgress('wave_completed', { 
+          waveNumber: state.currentWave,
+          perfectWave,
+          enemiesKilled: enemiesKilledThisWave,
+          goldEarned: totalWaveGold
+        });
+      });
+    }, 0);
     
     // ✅ NEW: Reset in-wave scaling
     InWaveScalingManager.reset();
@@ -149,6 +184,8 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
     return {
       waveStatus: 'completed' as WaveStatus,
       isPreparing: false,
+      gold: state.gold + waveCompletionBonus, // Add completion bonus
+      totalGoldEarned: state.totalGoldEarned + waveCompletionBonus,
     };
   }),
 

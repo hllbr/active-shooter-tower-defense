@@ -55,7 +55,25 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
         });
       }
       
-      return result;
+      // ✅ CRITICAL FIX: Ensure isFirstTowerPlaced is properly set
+      const finalResult = {
+        ...result,
+        isFirstTowerPlaced: result.isFirstTowerPlaced !== undefined ? result.isFirstTowerPlaced : state.isFirstTowerPlaced
+      };
+      
+      // If this is the first tower, also start the game
+      if (finalResult.isFirstTowerPlaced && !state.isFirstTowerPlaced) {
+        // First tower placed, starting game...
+        // Start wave after a short delay
+        setTimeout(() => {
+          const currentState = useGameStore.getState();
+          if (currentState.isFirstTowerPlaced && currentState.waveStatus === 'idle') {
+            currentState.startWave();
+          }
+        }, 1000);
+      }
+      
+      return finalResult;
     }),
 
   unlockSlot: (slotIdx) => set((state: Store) => {

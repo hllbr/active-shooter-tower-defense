@@ -377,8 +377,9 @@ export class EnhancedEnemyMovement {
         }
       }
       
-      actions.addGold(enemy.goldValue);
-      actions.removeEnemy(enemy.id);
+      // ✅ FIXED: Use centralized kill tracking for proper gold and stats
+      const { addEnemyKill } = useGameStore.getState();
+      addEnemyKill(enemy);
       return true;
     }
     

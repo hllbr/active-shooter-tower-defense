@@ -116,7 +116,8 @@ export class GameAnalyticsManager {
   private constructor() {
     this.config = this.loadConfig();
     this.sessions = this.loadSessions();
-    this.setupEventListeners();
+    // Defer event listener setup to avoid circular dependency
+    setTimeout(() => this.setupEventListeners(), 0);
   }
 
   public static getInstance(): GameAnalyticsManager {

@@ -16,12 +16,25 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
-type SettingsTab = 'audio' | 'performance' | 'accessibility' | 'analytics' | 'tips';
+type SettingsTab = 'audio' | 'performance' | 'accessibility' | 'analytics' | 'gameplay' | 'tips';
 
 export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
   const setPaused = useGameStore(state => state.setPaused);
   const [showPerformanceSelector, setShowPerformanceSelector] = useState(false);
-  const [settings, setSettingsState] = useState<Settings>(getSettings());
+  const [settings, setSettingsState] = useState<Settings>(() => {
+    const loadedSettings = getSettings();
+    // Ensure all required properties are present with defaults
+    return {
+      musicVolume: loadedSettings.musicVolume ?? 0.7,
+      sfxVolume: loadedSettings.sfxVolume ?? 0.7,
+      mute: loadedSettings.mute ?? false,
+      healthBarAlwaysVisible: loadedSettings.healthBarAlwaysVisible ?? false,
+      accessibilityMode: loadedSettings.accessibilityMode ?? 'normal',
+      uiScale: typeof loadedSettings.uiScale === 'number' && !isNaN(loadedSettings.uiScale) ? loadedSettings.uiScale : 1.0,
+      colorblindType: loadedSettings.colorblindType ?? 'deuteranopia',
+      defaultTargetingMode: loadedSettings.defaultTargetingMode ?? 'nearest'
+    };
+  });
   const [activeTab, setActiveTab] = useState<SettingsTab>('audio');
 
   const currentPerformanceMode = performanceSettings.getMode();
@@ -33,7 +46,20 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
 
   // Initialize accessibility manager
   useEffect(() => {
-    accessibilityManager.initialize(settings);
+    try {
+      accessibilityManager.initialize(settings);
+    } catch (error) {
+      // Fallback to default settings if there's an error
+      accessibilityManager.initialize({
+        musicVolume: 0.7,
+        sfxVolume: 0.7,
+        mute: false,
+        healthBarAlwaysVisible: false,
+        accessibilityMode: 'normal',
+        uiScale: 1.0,
+        colorblindType: 'deuteranopia'
+      });
+    }
   }, [settings]);
 
   const handleVolumeChange = useCallback((type: 'sfxVolume' | 'musicVolume', value: number) => {
@@ -60,6 +86,12 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
   const handleHealthBarToggle = useCallback(() => {
     const newHealthBarState = !settings.healthBarAlwaysVisible;
     const newSettings = { ...settings, healthBarAlwaysVisible: newHealthBarState };
+    setSettingsState(newSettings);
+    saveSettings(newSettings);
+  }, [settings]);
+
+  const handleTargetingModeChange = useCallback((mode: Settings['defaultTargetingMode']) => {
+    const newSettings = { ...settings, defaultTargetingMode: mode };
     setSettingsState(newSettings);
     saveSettings(newSettings);
   }, [settings]);
@@ -113,6 +145,12 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                     onClick={() => setActiveTab('accessibility')}
                   >
                     ♿ Erişilebilirlik
+                  </button>
+                  <button
+                    className={`settings-tab-button ${activeTab === 'gameplay' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('gameplay')}
+                  >
+                    🎮 Oyun
                   </button>
                   <button
                     className={`settings-tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
@@ -272,6 +310,60 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 settings={settings}
                 onSettingsChange={handleSettingsChange}
               />
+            )}
+
+            {activeTab === 'gameplay' && (
+              <div className="modern-settings-grid">
+                <div className="modern-settings-card">
+                  <div className="card-header">
+                    <span className="card-icon">🎯</span>
+                    <h3>Hedefleme Ayarları</h3>
+                  </div>
+                  
+                  <div className="card-content">
+                    <div className="setting-row">
+                      <label>Varsayılan Hedefleme Modu</label>
+                      <div className="targeting-mode-selector">
+                        <select
+                          value={settings.defaultTargetingMode}
+                          onChange={(e) => handleTargetingModeChange(e.target.value as Settings['defaultTargetingMode'])}
+                          className="targeting-mode-select"
+                        >
+                          <option value="nearest">🎯 En Yakın Düşman</option>
+                          <option value="lowest_hp">💀 En Düşük Can</option>
+                          <option value="highest_hp">🛡️ En Yüksek Can</option>
+                          <option value="fastest">⚡ En Hızlı</option>
+                          <option value="highest_value">💰 En Değerli</option>
+                          <option value="threat_assessment">🧠 Akıllı Hedefleme</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="setting-row">
+                      <div className="targeting-mode-description">
+                        <p>
+                          <strong>En Yakın Düşman:</strong> Kuleler en yakın düşmana ateş eder
+                        </p>
+                        <p>
+                          <strong>En Düşük Can:</strong> Kuleler zayıf düşmanları öncelikli hedefler
+                        </p>
+                        <p>
+                          <strong>En Yüksek Can:</strong> Kuleler tank düşmanları öncelikli hedefler
+                        </p>
+                        <p>
+                          <strong>En Hızlı:</strong> Kuleler hızlı düşmanları öncelikli hedefler
+                        </p>
+                        <p>
+                          <strong>En Değerli:</strong> Kuleler en çok altın veren düşmanları hedefler
+                        </p>
+                        <p>
+                          <strong>Akıllı Hedefleme:</strong> Kuleler AI ile en tehlikeli düşmanları hedefler
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {activeTab === 'analytics' && (

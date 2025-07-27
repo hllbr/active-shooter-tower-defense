@@ -136,8 +136,8 @@ export class WeatherManager {
     // Update weather sounds
     this.updateWeatherSounds(currentTime);
     
-    // Update store state
-    this.updateStoreState();
+    // Update store state - defer to avoid circular dependency
+    setTimeout(() => this.updateStoreState(), 0);
   }
 
   /**

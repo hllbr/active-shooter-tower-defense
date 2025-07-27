@@ -3,7 +3,6 @@ import { waveManager } from "./WaveManager";
 import { performanceTracker, dynamicSpawnController } from './spawn-system';
 import { 
   EnemyFactory, 
-  _EnemyMovement, 
   WaveSpawnManager 
 } from './enemy';
 import { EnhancedEnemyMovement } from './enemy/EnhancedEnemyMovement';

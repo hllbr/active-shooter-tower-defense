@@ -79,7 +79,6 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
     tickActionRegen: _tickActionRegen,
     showWavePreview,
     wavePreviewCountdown,
-    _showWavePreviewOverlay,
     hideWavePreviewOverlay,
     startWavePreviewCountdown,
     notifications
@@ -262,6 +261,8 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
     transition: screenShake ? 'none' : 'transform 0.1s ease-out'
   }), [screenShake, screenShakeIntensity]);
 
+
+
   return (
     <div style={containerStyleMemo}>
       <style>{keyframeStyles}</style>
@@ -272,6 +273,8 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
         onChallengeClick={handleChallengeClick}
         onSaveLoadClick={handleSaveLoadClick}
       />
+
+
 
       {/* Energy Warning */}
       <EnergyWarning />
@@ -288,7 +291,7 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
       {/* Unlock Animation */}
       <UnlockAnimation
         isVisible={unlockAnimation.isVisible}
-        type={unlockAnimation.type}
+        _type={unlockAnimation.type}
         title={unlockAnimation.title}
         description={unlockAnimation.description}
         icon={unlockAnimation.icon}

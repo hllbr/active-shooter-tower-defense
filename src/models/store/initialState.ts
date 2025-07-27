@@ -121,6 +121,7 @@ export const initialState: GameState = {
   selectedSlot: null,
   lostTowerThisWave: false,
   lastUpdate: 0,
+  waveStartGold: 0, // ✅ NEW: Track gold at wave start
 
   energyUpgrades: {},
   maxEnergy: GAME_CONSTANTS.ENERGY_SYSTEM.MAX_ENERGY_BASE,

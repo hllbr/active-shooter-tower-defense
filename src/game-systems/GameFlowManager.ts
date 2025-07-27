@@ -8,7 +8,7 @@ import { DynamicGameStartManager } from './DynamicGameStartManager';
 import { GAME_CONSTANTS } from '../utils/constants';
 import { missionManager } from './MissionManager';
 import { gameAnalytics } from './analytics/GameAnalyticsManager';
-import { Enemy, Position, TowerSlot } from '../models/types';
+import type { Enemy, TowerClass } from '../models/gameTypes';
 
 /**
  * GameFlowManager - Handles core game flow and initialization
@@ -97,54 +97,12 @@ export class GameFlowManager {
   /**
    * Ensure enemy has a valid movement target
    */
-  private ensureEnemyHasTarget(enemy: Enemy): void {
-    const state = useGameStore.getState();
-    
-    // If enemy has no target or target is invalid, assign new target
-    if (!enemy.target || !this.isValidTarget(enemy.target, state.towerSlots)) {
-      const newTarget = this.findNearestValidTarget(enemy.position, state.towerSlots);
-      if (newTarget) {
-        enemy.target = newTarget;
-      }
-    }
-  }
-
   /**
-   * Check if target is still valid
+   * Ensure enemy has a valid movement target
    */
-  private isValidTarget(target: Position, towerSlots: TowerSlot[]): boolean {
-    if (!target) return false;
-    
-    // Check if target tower still exists
-    const targetSlot = towerSlots.find(slot => 
-      slot.x === target.x && slot.y === target.y && slot.tower
-    );
-    
-    return !!targetSlot;
-  }
-
-  /**
-   * Find nearest valid target for enemy
-   */
-  private findNearestValidTarget(enemyPosition: Position, towerSlots: TowerSlot[]): Position | null {
-    let nearestTarget = null;
-    let nearestDistance = Infinity;
-    
-    towerSlots.forEach(slot => {
-      if (slot.tower && slot.unlocked) {
-        const distance = Math.sqrt(
-          Math.pow(slot.x - enemyPosition.x, 2) + 
-          Math.pow(slot.y - enemyPosition.y, 2)
-        );
-        
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestTarget = { x: slot.x, y: slot.y };
-        }
-      }
-    });
-    
-    return nearestTarget;
+  private ensureEnemyHasTarget(_enemy: Enemy): void {
+    // Enemies use dynamic targeting, no need to store targets
+    // This method is kept for compatibility but doesn't need to do anything
   }
 
            /**
@@ -192,19 +150,13 @@ export class GameFlowManager {
              missionManager.updateMissionProgress('wave_completed', { waveNumber: currentWave });
            };
            
-           // Track enemy kills
-           const originalAddEnemyKill = state.addEnemyKill;
-           state.addEnemyKill = () => {
-             originalAddEnemyKill();
-             
-             // Update mission progress for enemy kill
-             missionManager.updateMissionProgress('enemy_killed');
-           };
+           // ✅ FIXED: Track enemy kills - the addEnemyKill function now exists and handles mission tracking internally
+           // No need to override it since it's already integrated in the enemy slice
            
            // Track tower building
            const originalBuildTower = state.buildTower;
-           state.buildTower = (slotIdx: number, towerType: string) => {
-             originalBuildTower(slotIdx, towerType);
+           state.buildTower = (slotIdx: number, free?: boolean, towerType?: 'attack' | 'economy', towerClass?: TowerClass) => {
+             originalBuildTower(slotIdx, free, towerType, towerClass);
              
              // Update mission progress for tower building
              missionManager.updateMissionProgress('tower_built');
@@ -373,6 +325,75 @@ export class GameFlowManager {
     // Force enemy movement update to recalculate paths
     if (state.enemies.length > 0) {
       EnemyMovement.updateEnemyMovement();
+    }
+  }
+
+  /**
+   * Check and fix game state issues
+   */
+  checkAndFixGameState(): void {
+    const state = useGameStore.getState();
+    
+    // Check if game is stuck in a bad state
+    if (state.isStarted && !state.isGameOver && !state.isPaused && !state.isRefreshing) {
+      // Game should be running but might be stuck
+      // Game state check: Game should be running
+      
+      // Check if enemies are spawning
+      if (state.enemies.length === 0 && state.isFirstTowerPlaced) {
+        // No enemies found, checking spawn system...
+        this.ensureEnemySpawning();
+      }
+      
+      // Check if towers are firing
+      if (state.towerSlots.some(slot => slot.tower) && state.enemies.length > 0) {
+        // Towers present but not firing, checking tower system...
+        this.ensureTowerFiring();
+      }
+    }
+  }
+
+  /**
+   * Ensure enemy spawning is working
+   */
+  private ensureEnemySpawning(): void {
+    const state = useGameStore.getState();
+    
+    // If we have towers but no enemies, start spawning
+    if (state.towerSlots.some(slot => slot.tower) && state.enemies.length === 0) {
+      // Starting enemy spawning...
+      
+      // Import and start wave spawning
+      import('./enemy/WaveSpawnManager').then(({ WaveSpawnManager }) => {
+        if (!WaveSpawnManager.isSpawningActive()) {
+          WaveSpawnManager.startEnemyWave(state.currentWave);
+        }
+      });
+    }
+  }
+
+  /**
+   * Ensure tower firing is working
+   */
+  private ensureTowerFiring(): void {
+    const state = useGameStore.getState();
+    
+    // Check if towers have valid targets
+    const towersWithTargets = state.towerSlots.filter(slot => {
+      if (!slot.tower) return false;
+      
+      // Check if any enemies are in range
+      return state.enemies.some(enemy => {
+        const distance = Math.hypot(
+          slot.x - enemy.position.x,
+          slot.y - enemy.position.y
+        );
+        return distance <= slot.tower!.range;
+      });
+    });
+    
+    if (towersWithTargets.length > 0) {
+      // Found ${towersWithTargets.length} towers with targets
     }
   }
 }

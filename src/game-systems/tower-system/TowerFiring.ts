@@ -9,6 +9,7 @@ import { towerSynergyManager } from './TowerSynergyManager';
 import { defenseSystemManager } from '../defense-systems';
 import { useGameStore } from '../../models/store';
 import { fireModeManager } from './FireModeManager';
+import { getSettings } from '../../utils/settings';
 
 /**
  * Enhanced Tower Firing System
@@ -416,8 +417,8 @@ export class TowerFiringSystem {
     globalWallActive: boolean,
     wallRegenerationActive: boolean
   ): void {
-    // ✅ CRITICAL FIX: Stop tower firing if game is over or paused
-    if (isGameOver || isPaused) {
+    // ✅ FIXED: Only stop if game is over, allow paused games to continue
+    if (isGameOver) {
       return;
     }
     
@@ -633,14 +634,9 @@ export class TowerFiringSystem {
             break;
         }
       } else {
-        // Advanced towers get smarter targeting
-        if (tower.level >= 15) {
-          targetingMode = TargetingMode.THREAT_ASSESSMENT; // Elite towers use AI
-        } else if (tower.level >= 10) {
-          targetingMode = TargetingMode.LOWEST_HP; // High level towers finish enemies
-        } else if (tower.level >= 5) {
-          targetingMode = TargetingMode.FASTEST; // Mid level towers focus on fast enemies
-        }
+        // Basic towers use user's preferred targeting mode
+        const settings = getSettings();
+        targetingMode = settings.defaultTargetingMode as TargetingMode || TargetingMode.NEAREST;
       }
       
       // Special targeting for economic towers

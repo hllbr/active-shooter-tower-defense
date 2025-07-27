@@ -5,8 +5,8 @@
 
 .difficulty-indicator {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 160px; /* Positioned under the GameStatsPanel buttons */
+  right: 30px; /* Aligned with the right side like the buttons */
   z-index: 1000;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -179,9 +179,9 @@
 /* Responsive design */
 @media (max-width: 768px) {
   .difficulty-indicator {
-    top: 10px;
+    top: 120px; /* Adjusted for mobile layout */
     right: 10px;
-    left: 10px;
+    left: auto;
     min-width: auto;
   }
   

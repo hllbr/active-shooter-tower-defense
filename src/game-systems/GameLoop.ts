@@ -46,8 +46,8 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
     
     // Only update if enough time has passed
     if (deltaTime >= targetFrameTime) {
-      // Stop game loop updates if game is over, paused, OR in upgrade screen
-      if (state.isGameOver || state.isRefreshing || state.isPaused) {
+      // ✅ FIXED: Only stop if game is over or in upgrade screen, allow paused games to continue
+      if (state.isGameOver || state.isRefreshing) {
         frameId = requestAnimationFrame(loop);
         return;
       }

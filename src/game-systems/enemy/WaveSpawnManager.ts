@@ -70,8 +70,11 @@ export class WaveSpawnManager {
    */
   static startEnemyWave(wave: number) {
     const state = useGameStore.getState();
-    // Only spawn if the first tower has been placed
-    if (!state.isFirstTowerPlaced) return;
+    // ✅ FIXED: Check if we have towers instead of just the flag
+    if (!state.isFirstTowerPlaced && state.towers.length === 0) {
+      // No towers placed yet, cannot start wave
+      return;
+    }
     const { addEnemy, currentWaveModifier } = state;
 
     // 🎯 UPDATE: Configure spawn zones for current wave
