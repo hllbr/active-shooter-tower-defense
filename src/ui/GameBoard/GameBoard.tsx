@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { useGameStore } from '../../models/store';
 import { useChallenge } from '../challenge/hooks/useChallenge';
 
@@ -23,6 +23,9 @@ import {
 
 import { SynergyDisplay } from '../TowerSpot/components/SynergyDisplay';
 
+// Import new components
+import { WavePreviewOverlay } from './components/WavePreviewOverlay';
+import { UnlockAnimation } from '../common/UnlockAnimation';
 
 // Import enhanced hooks
 import { 
@@ -36,7 +39,7 @@ import { containerStyle, keyframeStyles } from './styles';
 import type { GameBoardProps } from './types';
 
 // Loading fallback component
-const LoadingFallback: React.FC = React.memo(() => (
+const LoadingFallback = React.memo(() => (
   <div style={{
     position: 'absolute',
     top: '50%',
@@ -51,7 +54,7 @@ const LoadingFallback: React.FC = React.memo(() => (
   </div>
 ));
 
-export const GameBoard: React.FC<GameBoardProps> = React.memo(({ onSettingsClick, onChallengeClick }) => {
+export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: GameBoardProps) => {
   const {
     isStarted,
     isGameOver,
@@ -70,11 +73,32 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ onSettingsClick
     startWave: _startWave,
     tickPreparation: _tickPreparation,
     tickEnergyRegen: _tickEnergyRegen,
-    tickActionRegen: _tickActionRegen
+    tickActionRegen: _tickActionRegen,
+    showWavePreview,
+    wavePreviewCountdown,
+    showWavePreviewOverlay,
+    hideWavePreviewOverlay,
+    startWavePreviewCountdown,
+    notifications
   } = useGameStore();
 
   const { incrementChallenge: _incrementChallenge } = useChallenge();
   const { theme: _theme } = useTheme();
+
+  // Unlock animation state
+  const [unlockAnimation, setUnlockAnimation] = useState<{
+    isVisible: boolean;
+    type: 'upgrade' | 'reward' | 'achievement' | 'mission';
+    title: string;
+    description?: string;
+    icon?: string;
+  }>({
+    isVisible: false,
+    type: 'upgrade',
+    title: '',
+    description: '',
+    icon: ''
+  });
 
   const shouldShowUpgradeScreen = useMemo(() => 
     isRefreshing && !isGameOver, 
@@ -109,6 +133,17 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ onSettingsClick
   const handleChallengeClick = useCallback(() => {
     onChallengeClick?.();
   }, [onChallengeClick]);
+
+  // Wave preview countdown handler
+  const handleWavePreviewCountdownComplete = useCallback(() => {
+    hideWavePreviewOverlay();
+    _startWave();
+  }, [hideWavePreviewOverlay, _startWave]);
+
+  // Unlock animation handlers
+  const handleUnlockAnimationComplete = useCallback(() => {
+    setUnlockAnimation(prev => ({ ...prev, isVisible: false }));
+  }, []);
 
   // Game effects hook
   const { screenShake, screenShakeIntensity, dimensions } = useGameEffects(unlockingSlots || new Set());
@@ -145,6 +180,54 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ onSettingsClick
     }
   }, [isStarted, isRefreshing, isGameOver]);
 
+  // Wave preview countdown timer
+  useEffect(() => {
+    if (showWavePreview && wavePreviewCountdown > 0) {
+      const timer = setInterval(() => {
+        startWavePreviewCountdown();
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [showWavePreview, wavePreviewCountdown, startWavePreviewCountdown]);
+
+  // Handle notifications for unlock animations
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const latestNotification = notifications[notifications.length - 1];
+      
+      // Check if this is an unlock notification
+      if (latestNotification.type === 'success' && 
+          (latestNotification.message.includes('Unlocked') || 
+           latestNotification.message.includes('Completed') ||
+           latestNotification.message.includes('Earned'))) {
+        
+        // Determine animation type based on message content
+        let type: 'upgrade' | 'reward' | 'achievement' | 'mission' = 'upgrade';
+        let icon = '✨';
+        
+        if (latestNotification.message.includes('Achievement')) {
+          type = 'achievement';
+          icon = '🏆';
+        } else if (latestNotification.message.includes('Mission')) {
+          type = 'mission';
+          icon = '🎯';
+        } else if (latestNotification.message.includes('Reward')) {
+          type = 'reward';
+          icon = '🎁';
+        }
+        
+        setUnlockAnimation({
+          isVisible: true,
+          type,
+          title: latestNotification.message.split(':')[1]?.trim() || 'Unlocked!',
+          description: latestNotification.message,
+          icon
+        });
+      }
+    }
+  }, [notifications]);
+
   // Memoized container style
   const containerStyleMemo = useMemo(() => ({
     ...containerStyle,
@@ -167,7 +250,21 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ onSettingsClick
       {/* Energy Warning */}
       <EnergyWarning />
 
-      {/* Debug Message removed for production optimization */}
+      {/* Wave Preview Overlay */}
+      <WavePreviewOverlay
+        isVisible={showWavePreview}
+        onCountdownComplete={handleWavePreviewCountdownComplete}
+      />
+
+      {/* Unlock Animation */}
+      <UnlockAnimation
+        isVisible={unlockAnimation.isVisible}
+        type={unlockAnimation.type}
+        title={unlockAnimation.title}
+        description={unlockAnimation.description}
+        icon={unlockAnimation.icon}
+        onComplete={handleUnlockAnimationComplete}
+      />
 
       {/* Game Area */}
       {shouldShowGameArea && (
@@ -188,8 +285,6 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ onSettingsClick
 
       {/* Conditional Renderer */}
       <ConditionalRenderer />
-
-      {/* Debug overlays removed for production optimization */}
 
       {/* Synergy Display */}
       <SynergyDisplay 

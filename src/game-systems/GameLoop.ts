@@ -6,6 +6,7 @@ import { stateTracker, performanceMonitor, GameStateSelectors } from './StateOpt
 import { SimplifiedEnvironmentManager } from './environment/SimplifiedEnvironmentManager';
 import { aiManager } from './ai-automation';
 import { FireHazardManager } from './FireHazardManager';
+import { advancedDefensiveVisuals } from './defense-systems/AdvancedDefensiveVisuals';
 
 // Performance metrics for monitoring
 interface GameLoopMetrics {
@@ -60,6 +61,9 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
       updateTowerFire();
       updateBullets(deltaTime);
       updateMineCollisions();
+      
+      // ✅ NEW: Update advanced defensive visuals
+      advancedDefensiveVisuals.update(deltaTime);
       
       // Check fire hazard time limits (reduced frequency for performance)
       if (gameLoopMetrics.totalFrames % 20 === 0) { // Check every 20 frames instead of 10

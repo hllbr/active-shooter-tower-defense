@@ -11,9 +11,14 @@ interface NeonButtonProps {
   style?: React.CSSProperties;
   type?: 'button' | 'submit' | 'reset';
   title?: string;
+  icon?: React.ReactNode;
+  loading?: boolean;
+  fullWidth?: boolean;
+  neonColor?: string;
+  pulse?: boolean;
 }
 
-export const NeonButton: React.FC<NeonButtonProps> = ({
+export const NeonButton = ({
   children,
   onClick,
   variant = 'primary',
@@ -22,8 +27,13 @@ export const NeonButton: React.FC<NeonButtonProps> = ({
   className = '',
   style = {},
   type = 'button',
-  title
-}) => {
+  title,
+  icon,
+  loading = false,
+  fullWidth = false,
+  neonColor,
+  pulse = false
+}: NeonButtonProps) => {
   const { colors, isReducedMotion } = useTheme();
 
   const getVariantStyles = (): React.CSSProperties => {

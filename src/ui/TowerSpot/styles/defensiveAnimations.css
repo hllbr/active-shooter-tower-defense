@@ -1,0 +1,403 @@
+/* 🛡️ Advanced Defensive Visual Animations */
+
+/* Wall Damage Pulse Animation */
+@keyframes wall-damage-pulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+    filter: drop-shadow(0 6px 12px rgba(255, 0, 0, 0.4));
+  }
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  }
+}
+
+/* Crack Appear Animation */
+@keyframes crack-appear {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+    stroke-dasharray: 0, 100;
+  }
+  50% {
+    opacity: 0.6;
+    stroke-width: 2;
+    stroke-dasharray: 50, 100;
+  }
+  100% {
+    opacity: 0.8;
+    stroke-width: 3;
+    stroke-dasharray: 100, 100;
+  }
+}
+
+/* Health Pulse Animation */
+@keyframes health-pulse {
+  0% {
+    opacity: 0.6;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.2);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scaleY(1);
+  }
+}
+
+/* Trench Sinking Animation */
+@keyframes trench-sink {
+  0% {
+    opacity: 0.3;
+    stroke-dashoffset: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    stroke-dashoffset: 10;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    stroke-dashoffset: 0;
+    transform: scale(1);
+  }
+}
+
+/* Mud Splash Animation */
+@keyframes mud-splash {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  30% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+  70% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+/* Dust Cloud Animation */
+@keyframes dust-cloud {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+    filter: blur(0px);
+  }
+  20% {
+    opacity: 0.8;
+    transform: scale(1);
+    filter: blur(1px);
+  }
+  80% {
+    opacity: 0.4;
+    transform: scale(1.5);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2);
+    filter: blur(5px);
+  }
+}
+
+/* Stone Shatter Animation */
+@keyframes stone-shatter {
+  0% {
+    opacity: 0;
+    transform: scale(0.1) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.2) rotate(45deg);
+  }
+  60% {
+    opacity: 0.8;
+    transform: scale(1) rotate(90deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(180deg);
+  }
+}
+
+/* Fire Burst Animation */
+@keyframes fire-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+    filter: hue-rotate(0deg);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.5);
+    filter: hue-rotate(30deg);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1);
+    filter: hue-rotate(60deg);
+  }
+  75% {
+    opacity: 0.4;
+    transform: scale(0.8);
+    filter: hue-rotate(90deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+    filter: hue-rotate(120deg);
+  }
+}
+
+/* Upgrade Glow Animation */
+@keyframes upgrade-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+    filter: brightness(1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.3);
+    filter: brightness(1.5);
+  }
+  70% {
+    opacity: 0.8;
+    transform: scale(1.1);
+    filter: brightness(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+    filter: brightness(1);
+  }
+}
+
+/* Screen Shake Animation */
+@keyframes screen-shake {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-2px, -1px);
+  }
+  20% {
+    transform: translate(2px, -1px);
+  }
+  30% {
+    transform: translate(-2px, 1px);
+  }
+  40% {
+    transform: translate(2px, 1px);
+  }
+  50% {
+    transform: translate(-1px, -2px);
+  }
+  60% {
+    transform: translate(1px, -2px);
+  }
+  70% {
+    transform: translate(-1px, 2px);
+  }
+  80% {
+    transform: translate(1px, 2px);
+  }
+  90% {
+    transform: translate(-1px, -1px);
+  }
+}
+
+/* Wall Level Evolution Animations */
+@keyframes wall-evolve {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.8);
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* Trench Level Evolution Animation */
+@keyframes trench-evolve {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.9);
+    filter: blur(3px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* Spike Emerge Animation */
+@keyframes spike-emerge {
+  0% {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scaleY(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+/* Barbed Wire Unfurl Animation */
+@keyframes barbed-wire-unfurl {
+  0% {
+    stroke-dasharray: 0, 100;
+    opacity: 0;
+  }
+  50% {
+    stroke-dasharray: 50, 100;
+    opacity: 0.6;
+  }
+  100% {
+    stroke-dasharray: 100, 100;
+    opacity: 1;
+  }
+}
+
+/* Enhanced Wall Damage States */
+.wall-damage-severe {
+  animation: wall-damage-pulse 0.8s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(255, 0, 0, 0.3));
+}
+
+.wall-damage-critical {
+  animation: wall-damage-pulse 0.4s ease-in-out infinite;
+  filter: drop-shadow(0 6px 12px rgba(255, 0, 0, 0.5));
+}
+
+/* Trench Depth Effects */
+.trench-level-1 {
+  filter: blur(1px);
+}
+
+.trench-level-2 {
+  filter: blur(2px);
+}
+
+.trench-level-3 {
+  filter: blur(3px);
+}
+
+/* Enemy Sinking Effect */
+.enemy-sinking {
+  animation: enemy-sink 1s ease-in-out;
+}
+
+@keyframes enemy-sink {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(5px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(10px);
+    opacity: 0.6;
+  }
+}
+
+/* Knockback Effect */
+.enemy-knockback {
+  animation: knockback-effect 0.5s ease-out;
+}
+
+@keyframes knockback-effect {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-20px) translateY(-10px);
+  }
+  50% {
+    transform: translateX(-40px) translateY(-5px);
+  }
+  75% {
+    transform: translateX(-20px) translateY(0);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+/* Stun Effect */
+.enemy-stunned {
+  animation: stun-effect 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes stun-effect {
+  0% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  100% {
+    opacity: 0.5;
+    filter: brightness(1.5) saturate(0.5);
+  }
+}
+
+/* Performance Optimizations */
+.defensive-effect {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .defensive-effect {
+    animation: none !important;
+  }
+  
+  .wall-damage-severe,
+  .wall-damage-critical {
+    animation: none !important;
+  }
+  
+  .enemy-sinking,
+  .enemy-knockback,
+  .enemy-stunned {
+    animation: none !important;
+  }
+} 

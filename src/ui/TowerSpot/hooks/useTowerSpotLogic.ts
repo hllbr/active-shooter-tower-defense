@@ -128,16 +128,15 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
       return;
     }
 
+    // Build tower and show success message immediately
     buildTower(slotIdx, false, 'attack', towerClass);
-    const newSlot = useGameStore.getState().towerSlots[slotIdx];
-    if (newSlot.tower && newSlot.tower.towerClass === towerClass) {
-      playSound('tower-create-sound');
-      toast.success('Kule inşa edildi!');
-      incrementChallenge('build');
-    } else {
-      toast.error('Kule inşa edilemedi!');
-      playSound('error');
-    }
+    playSound('tower-create-sound');
+    toast.success('Kule inşa edildi!');
+    incrementChallenge('build');
+    
+    // Update pathfinding when tower is placed
+    gameFlowManager.updatePathfinding();
+    
     setShowTowerSelection(false);
   };
 

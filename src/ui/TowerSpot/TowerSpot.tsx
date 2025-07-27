@@ -26,13 +26,13 @@ import {
   TowerTooltip
 } from './components';
 
-export const TowerSpot: React.FC<TowerSpotProps> = ({ 
-  slot, 
-  slotIdx, 
-  onTowerDragStart, 
-  isDragTarget, 
-  draggedTowerSlotIdx 
-}) => {
+export const TowerSpot = ({
+  slot,
+  slotIdx,
+  onTowerDragStart,
+  isDragTarget,
+  draggedTowerSlotIdx
+}: TowerSpotProps) => {
   // Move manager for hand icon functionality
   const { getMoveStateForSlot, initiateMoveMode } = useTowerMoveManager();
   const moveState = getMoveStateForSlot(slotIdx);
@@ -130,7 +130,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
       if (!svgGroupRef.current) return null;
       const fireOrigin = svgGroupRef.current.querySelector('[data-fire-origin="true"]');
       if (!fireOrigin) return null;
-      const bbox = (fireOrigin as SVGGGraphicsElement).getBBox();
+      const bbox = (fireOrigin as SVGGraphicsElement).getBBox();
       // SVG koordinatlarını döndür
       return {
         x: bbox.x + bbox.width / 2,

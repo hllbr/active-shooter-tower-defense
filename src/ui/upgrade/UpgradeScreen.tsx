@@ -7,7 +7,7 @@ import { UpgradeTabContent } from './UpgradeTabContent';
 import { UpgradeFooter } from './Footer/UpgradeFooter';
 import { useGameStore } from '../../models/store';
 
-export const UpgradeScreen: React.FC = React.memo(() => {
+export const UpgradeScreen = React.memo(() => {
   const [activeTab, setActiveTab] = useState<TabType>('dice');
   
   const diceUsed = useGameStore(state => state.diceUsed);

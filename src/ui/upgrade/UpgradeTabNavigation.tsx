@@ -5,12 +5,14 @@ import { tabStyles, getTabButtonStyle, getPriorityBadgeStyle } from './tabStyles
 interface UpgradeTabNavigationProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
+  isMobile?: boolean;
 }
 
-export const UpgradeTabNavigation: React.FC<UpgradeTabNavigationProps> = ({ 
+export const UpgradeTabNavigation = ({
   activeTab,
-  onTabChange 
-}) => {
+  onTabChange,
+  isMobile = false
+}: UpgradeTabNavigationProps) => {
   // Tab configuration - Ana componentten taşındı
   const tabs: TabConfig[] = [
     { 

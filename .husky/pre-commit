@@ -13,6 +13,28 @@ if [ ! -z "$CONSOLE_CHECK" ]; then
   exit 1
 fi
 
+# Check for React.FC usage in staged files
+echo "🔍 Checking for React.FC usage..."
+REACT_FC_CHECK=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' | xargs grep -l 'React\.FC' 2>/dev/null || true)
+
+if [ ! -z "$REACT_FC_CHECK" ]; then
+  echo "❌ Commit blocked: React.FC or classic function syntax is not allowed. Use modern arrow functions."
+  echo "Files with React.FC usage:"
+  echo "$REACT_FC_CHECK"
+  exit 1
+fi
+
+# Check for classic function declarations in staged files (excluding TypeScript types and class methods)
+echo "🔍 Checking for classic function declarations..."
+FUNCTION_CHECK=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' | xargs grep -l '^function ' 2>/dev/null || true)
+
+if [ ! -z "$FUNCTION_CHECK" ]; then
+  echo "❌ Commit blocked: React.FC or classic function syntax is not allowed. Use modern arrow functions."
+  echo "Files with classic function declarations:"
+  echo "$FUNCTION_CHECK"
+  exit 1
+fi
+
 # Run type check first
 echo "📝 Type checking..."
 npm run type-check

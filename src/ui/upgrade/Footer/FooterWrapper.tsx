@@ -5,7 +5,7 @@ interface FooterWrapperProps {
   children: React.ReactNode;
 }
 
-export const FooterWrapper: React.FC<FooterWrapperProps> = ({ children }) => {
+export const FooterWrapper = ({ children }: FooterWrapperProps) => {
   return (
     <div style={footerStyles.footerContainer}>
       {children}

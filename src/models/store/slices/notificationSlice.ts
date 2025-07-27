@@ -1,17 +1,20 @@
-import type { StateCreator } from 'zustand';
+import { StateCreator } from 'zustand';
 import type { Store } from '../index';
 
-export interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'info' | 'warning';
-  message: string;
-  timestamp: number;
-  duration?: number; // milliseconds, default 3000
-}
-
 export interface NotificationSlice {
-  notifications: Notification[];
-  addNotification: (notification: Omit<Notification, 'timestamp'>) => void;
+  notifications: {
+    id: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+    message: string;
+    timestamp: number;
+    duration?: number;
+  }[];
+  addNotification: (notification: {
+    id: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+    message: string;
+    duration?: number;
+  }) => void;
   removeNotification: (id: string) => void;
   clearNotifications: () => void;
 }
@@ -20,23 +23,27 @@ export const createNotificationSlice: StateCreator<Store, [], [], NotificationSl
   notifications: [],
 
   addNotification: (notification) => set((state: Store) => {
-    const newNotification: Notification = {
+    const newNotification = {
       ...notification,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      duration: notification.duration || 3000
     };
 
-    // Add notification to the beginning of the array
-    const updatedNotifications = [newNotification, ...state.notifications];
+    // Remove notification after duration
+    setTimeout(() => {
+      get().removeNotification(notification.id);
+    }, newNotification.duration);
 
-    // Keep only the last 10 notifications
-    const limitedNotifications = updatedNotifications.slice(0, 10);
-
-    return { notifications: limitedNotifications };
+    return {
+      notifications: [...state.notifications, newNotification]
+    };
   }),
 
   removeNotification: (id) => set((state: Store) => ({
-    notifications: state.notifications.filter(notification => notification.id !== id)
+    notifications: state.notifications.filter(n => n.id !== id)
   })),
 
-  clearNotifications: () => set({ notifications: [] })
+  clearNotifications: () => set(() => ({
+    notifications: []
+  }))
 }); 

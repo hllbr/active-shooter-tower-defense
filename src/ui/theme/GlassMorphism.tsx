@@ -11,15 +11,18 @@ interface GlassMorphismProps {
   glow?: boolean;
 }
 
-export const GlassMorphism: React.FC<GlassMorphismProps> = ({
+export const GlassMorphism = ({
   children,
+  variant = 'default',
   className = '',
   style = {},
-  variant = 'default',
-  blur = 'medium',
+  holographic = false,
+  blur = 10,
+  opacity = 0.1,
   border = true,
-  glow = false
-}) => {
+  shadow = true,
+  animated = false
+}: GlassMorphismProps) => {
   const { theme, isReducedMotion } = useTheme();
 
   const getBlurValue = () => {

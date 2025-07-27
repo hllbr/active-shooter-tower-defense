@@ -8,7 +8,7 @@ import { playSound } from '../../../utils/sound/soundEffects';
  * Provides dynamic visual effects and animations for different tower types
  * Optimized for performance with conditional rendering
  */
-export const TowerEffectsRenderer: React.FC<VisualExtrasProps> = ({ slot }) => {
+export const TowerEffectsRenderer = ({ slot }: VisualExtrasProps) => {
   if (!slot.tower) return null;
 
   const towerClass = slot.tower.towerClass;
@@ -45,7 +45,7 @@ export const TowerEffectsRenderer: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Sniper Effects - Precision targeting, critical hit indicators
-const SniperEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const SniperEffects = ({ slot }: VisualExtrasProps) => {
   const isElite = (slot.tower?.level || 1) >= 3;
   
   return (
@@ -88,7 +88,7 @@ const SniperEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Gatling Effects - Rapid fire, spin-up animation, ammo indicators
-const GatlingEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const GatlingEffects = ({ slot }: VisualExtrasProps) => {
   const barrelCount = Math.min((slot.tower?.level || 1) + 2, 6);
   
   return (
@@ -131,7 +131,7 @@ const GatlingEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Laser Effects - Energy beams, focus indicators, penetration effects
-const LaserEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const LaserEffects = ({ slot }: VisualExtrasProps) => {
   const isElite = (slot.tower?.level || 1) >= 3;
   
   return (
@@ -195,7 +195,7 @@ const LaserEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Mortar Effects - Artillery range, shell trajectory, explosion indicators
-const MortarEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const MortarEffects = ({ slot }: VisualExtrasProps) => {
   return (
     <g>
       {/* Artillery Range */}
@@ -235,7 +235,7 @@ const MortarEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Flamethrower Effects - Fire particles, heat waves, burn indicators
-const FlamethrowerEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const FlamethrowerEffects = ({ slot }: VisualExtrasProps) => {
   const scale = usePulseAnimation(1100, 0.93, 1.09);
   const r = (slot.tower?.areaEffectRadius || (GAME_CONSTANTS.TOWER_SIZE + 15)) * scale;
   const [played, setPlayed] = useState(false);
@@ -299,7 +299,7 @@ const FlamethrowerEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Radar Effects - Detection waves, scanning animation, signal indicators
-const RadarEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const RadarEffects = ({ slot }: VisualExtrasProps) => {
   return (
     <g>
       {/* Detection Waves */}
@@ -339,7 +339,7 @@ const RadarEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Supply Depot Effects - Ammo indicators, supply lines, reload animations
-const SupplyDepotEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const SupplyDepotEffects = ({ slot }: VisualExtrasProps) => {
   return (
     <g>
       {/* Supply Lines */}
@@ -379,7 +379,7 @@ const SupplyDepotEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Shield Generator Effects - Shield bubbles, protection indicators, barrier effects
-const ShieldGeneratorEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const ShieldGeneratorEffects = ({ slot }: VisualExtrasProps) => {
   const scale = usePulseAnimation(1200, 0.95, 1.08);
   const r = (slot.tower?.areaEffectRadius || (GAME_CONSTANTS.TOWER_SIZE + 30)) * scale;
   const [played, setPlayed] = useState(false);
@@ -439,7 +439,7 @@ const ShieldGeneratorEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Repair Station Effects - Healing pulses, repair indicators, medical effects
-const RepairStationEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const RepairStationEffects = ({ slot }: VisualExtrasProps) => {
   const scale = usePulseAnimation(1400, 0.92, 1.08);
   const r = (slot.tower?.areaEffectRadius || (GAME_CONSTANTS.TOWER_SIZE + 25)) * scale;
   const [played, setPlayed] = useState(false);
@@ -497,7 +497,7 @@ const RepairStationEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // EMP Effects - Disruption waves, electronic interference, lightning effects
-const EMPEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const EMPEffects = ({ slot }: VisualExtrasProps) => {
   return (
     <g>
       {/* Disruption Field */}
@@ -544,7 +544,7 @@ const EMPEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Stealth Detector Effects - Detection waves, stealth reveal, scanning effects
-const StealthDetectorEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const StealthDetectorEffects = ({ slot }: VisualExtrasProps) => {
   return (
     <g>
       {/* Detection Waves */}
@@ -591,7 +591,7 @@ const StealthDetectorEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Air Defense Effects - Anti-air targeting, missile indicators, sky defense
-const AirDefenseEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const AirDefenseEffects = ({ slot }: VisualExtrasProps) => {
   return (
     <g>
       {/* Anti-Air Range */}
@@ -638,7 +638,7 @@ const AirDefenseEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 };
 
 // Standard Effects - Default effects for non-specialized towers
-const StandardEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
+const StandardEffects = ({ slot }: VisualExtrasProps) => {
   const visual = GAME_CONSTANTS.TOWER_VISUALS.find(v => v.level === (slot.tower?.level || 1));
   if (!visual) return null;
   
@@ -670,18 +670,18 @@ const StandardEffects: React.FC<VisualExtrasProps> = ({ slot }) => {
 }; 
 
 // Utility for animated pulsing
-function usePulseAnimation(duration = 1200, min = 0.7, max = 1.1) {
+const usePulseAnimation = (duration = 1200, min = 0.7, max = 1.1) => {
   const [scale, setScale] = useState(1);
   useEffect(() => {
     let running = true;
     const start = performance.now();
-    function animate(now: number) {
+    const animate = (now: number) => {
       if (!running) return;
       const t = ((now - start) % duration) / duration;
       const s = min + (max - min) * 0.5 * (1 + Math.sin(2 * Math.PI * t));
       setScale(s);
       requestAnimationFrame(animate);
-    }
+    };
     requestAnimationFrame(animate);
     return () => { running = false; };
   }, [duration, min, max]);

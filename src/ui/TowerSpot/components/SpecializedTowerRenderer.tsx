@@ -7,7 +7,7 @@ import type { TowerRenderProps } from '../types';
  * Provides unique visual designs for each tower class with distinct characteristics
  * Optimized for performance and visual clarity
  */
-export const SpecializedTowerRenderer: React.FC<TowerRenderProps> = ({ slot, towerLevel }) => {
+export const SpecializedTowerRenderer = ({ slot, towerLevel }: TowerRenderProps) => {
   if (!slot.tower?.towerClass) {
     return null; // Fall back to standard renderer for non-specialized towers
   }
@@ -46,7 +46,7 @@ export const SpecializedTowerRenderer: React.FC<TowerRenderProps> = ({ slot, tow
 };
 
 // Sniper Tower - High precision, long range, critical hit focused
-const SniperTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel, baseWidth }) => {
+const SniperTower = ({ slot, towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   const isElite = towerLevel >= 3;
   
   return (
@@ -144,7 +144,7 @@ const SniperTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot,
 };
 
 // Gatling Tower - Rapid fire, multiple barrels, spin-up mechanic
-const GatlingTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel, baseWidth }) => {
+const GatlingTower = ({ slot, towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   const barrelCount = Math.min(towerLevel + 2, 6);
   
   return (
@@ -229,7 +229,7 @@ const GatlingTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot
 };
 
 // Laser Tower - Energy weapon, beam focus, armor penetration
-const LaserTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel, baseWidth }) => {
+const LaserTower = ({ slot, towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   const isElite = towerLevel >= 3;
   
   return (
@@ -342,7 +342,7 @@ const LaserTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, 
 };
 
 // Mortar (Mancınık) Tower - Area control, AOE
-const MortarTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel: _towerLevel, baseWidth }) => {
+const MortarTower = ({ slot, towerLevel: _towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   // Pervane için animasyonlu grup
   return (
     <g>
@@ -406,7 +406,7 @@ const MortarTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot,
 };
 
 // Flamethrower Tower - Close range, area control, burning damage
-const FlamethrowerTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel: _towerLevel, baseWidth }) => {
+const FlamethrowerTower = ({ slot, towerLevel: _towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   return (
     <g>
       {/* Industrial Foundation */}
@@ -500,7 +500,7 @@ const FlamethrowerTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({
 };
 
 // Radar Tower - Support tower, detection, accuracy bonus
-const RadarTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel: _towerLevel, baseWidth }) => {
+const RadarTower = ({ slot, towerLevel: _towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   // Dönen radar için animasyonlu grup
   return (
     <g>
@@ -588,7 +588,7 @@ const RadarTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, 
 };
 
 // Supply Depot Tower - Support tower, ammo supply, reload speed
-const SupplyDepotTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel: _towerLevel, baseWidth }) => {
+const SupplyDepotTower = ({ slot, towerLevel: _towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   // Kutu titreşim/pulse animasyonu
   return (
     <g>
@@ -663,7 +663,7 @@ const SupplyDepotTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ 
 };
 
 // Shield Generator Tower - Defensive tower, shield generation
-const ShieldGeneratorTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel, baseWidth }) => {
+const ShieldGeneratorTower = ({ slot, towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   // Hasar çemberi için animasyonlu SVG
   const [active, setActive] = React.useState(true); // Kule aktif mi
   const [fade, setFade] = React.useState(false); // Güç kaybı animasyonu
@@ -774,7 +774,7 @@ const ShieldGeneratorTower: React.FC<TowerRenderProps & { baseWidth: number }> =
 };
 
 // Repair Station Tower - Support tower, healing, repair
-const RepairStationTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel, baseWidth }) => {
+const RepairStationTower = ({ slot, towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   // Hasar çemberi için animasyonlu SVG
   const [active, setActive] = React.useState(true);
   const [fade, setFade] = React.useState(false);
@@ -879,7 +879,7 @@ const RepairStationTower: React.FC<TowerRenderProps & { baseWidth: number }> = (
 };
 
 // EMP Tower - Specialist tower, electronic disruption
-const EMPTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel: _towerLevel, baseWidth }) => {
+const EMPTower = ({ slot, towerLevel: _towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   // Patlayan halka animasyonu
   return (
     <g>
@@ -972,7 +972,7 @@ const EMPTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, to
 };
 
 // Stealth Detector Tower - Specialist tower, stealth detection
-const StealthDetectorTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel: _towerLevel, baseWidth }) => {
+const StealthDetectorTower = ({ slot, towerLevel: _towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   // Radar tarama animasyonu
   return (
     <g>
@@ -1065,7 +1065,7 @@ const StealthDetectorTower: React.FC<TowerRenderProps & { baseWidth: number }> =
 };
 
 // Air Defense Tower - Specialist tower, anti-air
-const AirDefenseTower: React.FC<TowerRenderProps & { baseWidth: number }> = ({ slot, towerLevel: _towerLevel, baseWidth }) => {
+const AirDefenseTower = ({ slot, towerLevel: _towerLevel, baseWidth }: TowerRenderProps & { baseWidth: number }) => {
   // Füze ateşleme animasyonu
   return (
     <g>

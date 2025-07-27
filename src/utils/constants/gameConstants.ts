@@ -697,7 +697,7 @@ export const GAME_CONSTANTS = {
   // Enemy - Improved for better visual clarity
   ENEMY_SIZE: 32, // Reduced from 36 to 32 for less screen coverage
   ENEMY_HEALTH: 60,
-  ENEMY_SPEED: 80,
+  ENEMY_SPEED: 120, // Increased from 80 to 120 for faster movement
   ENEMY_GOLD_DROP: 50,
   ENEMY_SPAWN_RATE: 1200, // Increased from 800ms to 1200ms for better pacing
   ENEMY_WAVE_INCREASE: 2,
@@ -706,38 +706,38 @@ export const GAME_CONSTANTS = {
   ENEMY_HEALTHBAR_HEIGHT: 4, // Reduced from 6 to 4 for less visual clutter
   ENEMY_TYPES: {
     // Basic Enemies (Wave 1-10) - Updated colors for CSS-based visual diversification
-    Basic: { speed: 80, hp: 60, damage: 10, color: '#808080', behaviorTag: 'normal' }, // Gray circle
-    Scout: { speed: 140, hp: 40, damage: 8, color: '#3b82f6', behaviorTag: 'avoid' }, // Blue triangle
-    Tank: { speed: 60, hp: 200, damage: 20, color: '#2d5016', behaviorTag: 'tank' }, // Dark green square
-    Ghost: { speed: 100, hp: 70, damage: 12, color: '#8b5cf6', behaviorTag: 'ghost' }, // Purple blob
+    Basic: { speed: 120, hp: 60, damage: 10, color: '#808080', behaviorTag: 'normal' }, // Gray circle - increased from 80
+    Scout: { speed: 180, hp: 40, damage: 8, color: '#3b82f6', behaviorTag: 'avoid' }, // Blue triangle - increased from 140
+    Tank: { speed: 90, hp: 200, damage: 20, color: '#2d5016', behaviorTag: 'tank' }, // Dark green square - increased from 60
+    Ghost: { speed: 150, hp: 70, damage: 12, color: '#8b5cf6', behaviorTag: 'ghost' }, // Purple blob - increased from 100
     
     // Enhanced Behavior Enemies (Wave 5+)
-    Fleer: { speed: 120, hp: 50, damage: 8, color: '#ff6b6b', behaviorTag: 'flee' },
-    Grouper: { speed: 70, hp: 150, damage: 18, color: '#4ecdc4', behaviorTag: 'group' },
-    Berserker: { speed: 90, hp: 180, damage: 25, color: '#ea580c', behaviorTag: 'rage' },
+    Fleer: { speed: 160, hp: 50, damage: 8, color: '#ff6b6b', behaviorTag: 'flee' }, // increased from 120
+    Grouper: { speed: 110, hp: 150, damage: 18, color: '#4ecdc4', behaviorTag: 'group' }, // increased from 70
+    Berserker: { speed: 130, hp: 180, damage: 25, color: '#ea580c', behaviorTag: 'rage' }, // increased from 90
     
     // Advanced Enemies (Wave 11-30)
-    Assassin: { speed: 160, hp: 80, damage: 15, color: '#dc2626', behaviorTag: 'stealth' },
-    Shaman: { speed: 70, hp: 120, damage: 18, color: '#7c3aed', behaviorTag: 'healer' },
-    Archer: { speed: 110, hp: 90, damage: 22, color: '#059669', behaviorTag: 'ranged' },
+    Assassin: { speed: 200, hp: 80, damage: 15, color: '#dc2626', behaviorTag: 'stealth' }, // increased from 160
+    Shaman: { speed: 110, hp: 120, damage: 18, color: '#7c3aed', behaviorTag: 'healer' }, // increased from 70
+    Archer: { speed: 150, hp: 90, damage: 22, color: '#059669', behaviorTag: 'ranged' }, // increased from 110
     
     // Elite Enemies (Wave 31-60)
-    Demon: { speed: 120, hp: 250, damage: 35, color: '#991b1b', behaviorTag: 'fire' },
-    Wraith: { speed: 130, hp: 150, damage: 30, color: '#4338ca', behaviorTag: 'phase' },
-    Golem: { speed: 40, hp: 400, damage: 40, color: '#78716c', behaviorTag: 'armor' },
-    Phoenix: { speed: 150, hp: 200, damage: 28, color: '#f97316', behaviorTag: 'resurrect' },
+    Demon: { speed: 160, hp: 250, damage: 35, color: '#991b1b', behaviorTag: 'fire' }, // increased from 120
+    Wraith: { speed: 170, hp: 150, damage: 30, color: '#4338ca', behaviorTag: 'phase' }, // increased from 130
+    Golem: { speed: 60, hp: 400, damage: 40, color: '#78716c', behaviorTag: 'armor' }, // increased from 40
+    Phoenix: { speed: 190, hp: 200, damage: 28, color: '#f97316', behaviorTag: 'resurrect' }, // increased from 150
     
     // Boss Enemies (Wave 10, 20, 30, etc.)
-    TankBoss: { speed: 30, hp: 800, damage: 50, color: '#475569', behaviorTag: 'tank_boss' },
-    GhostBoss: { speed: 80, hp: 600, damage: 45, color: '#6366f1', behaviorTag: 'ghost_boss' },
-    DemonLord: { speed: 60, hp: 1200, damage: 80, color: '#7f1d1d', behaviorTag: 'demon_boss' },
-    DragonKing: { speed: 50, hp: 2000, damage: 120, color: '#dc2626', behaviorTag: 'dragon_boss' },
+    TankBoss: { speed: 50, hp: 800, damage: 50, color: '#475569', behaviorTag: 'tank_boss' }, // increased from 30
+    GhostBoss: { speed: 120, hp: 600, damage: 45, color: '#6366f1', behaviorTag: 'ghost_boss' }, // increased from 80
+    DemonLord: { speed: 100, hp: 1200, damage: 80, color: '#7f1d1d', behaviorTag: 'demon_boss' }, // increased from 60
+    DragonKing: { speed: 80, hp: 2000, damage: 120, color: '#dc2626', behaviorTag: 'dragon_boss' }, // increased from 50
     
     // Ultimate Bosses (Wave 70-100)
-    LichKing: { speed: 70, hp: 3000, damage: 150, color: '#1e1b4b', behaviorTag: 'lich_boss' },
-    TitanLord: { speed: 35, hp: 5000, damage: 200, color: '#365314', behaviorTag: 'titan_boss' },
-    VoidGod: { speed: 90, hp: 8000, damage: 300, color: '#0c0a09', behaviorTag: 'void_boss' },
-    UltimateGod: { speed: 100, hp: 15000, damage: 500, color: '#fbbf24', behaviorTag: 'ultimate_boss' },
+    LichKing: { speed: 120, hp: 3000, damage: 150, color: '#1e1b4b', behaviorTag: 'lich_boss' }, // increased from 70
+    TitanLord: { speed: 60, hp: 5000, damage: 200, color: '#365314', behaviorTag: 'titan_boss' }, // increased from 35
+    VoidGod: { speed: 140, hp: 8000, damage: 300, color: '#0c0a09', behaviorTag: 'void_boss' }, // increased from 90
+    UltimateGod: { speed: 150, hp: 15000, damage: 500, color: '#fbbf24', behaviorTag: 'ultimate_boss' }, // increased from 100
   },
   TANK_DEATH_RADIUS: 80,
 

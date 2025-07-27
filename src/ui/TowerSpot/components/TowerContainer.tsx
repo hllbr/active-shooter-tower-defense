@@ -6,9 +6,9 @@ import {
   WallRenderer,
   TowerRenderer,
   VisualExtrasRenderer,
-
   TowerInfoPanel
 } from './';
+import { EnhancedDefensiveRenderer } from './EnhancedDefensiveRenderer';
 
 interface TowerContainerProps {
   slot: TowerSlot;
@@ -23,11 +23,10 @@ interface TowerContainerProps {
   onUpgrade: (slotIdx: number) => void;
 }
 
-export const TowerContainer: React.FC<TowerContainerProps> = ({
+export const TowerContainer = ({
   slot,
   slotIdx,
   wallLevel,
-  
   currentTowerInfo,
   towerBottomY,
   canUpgrade,
@@ -35,9 +34,16 @@ export const TowerContainer: React.FC<TowerContainerProps> = ({
   upgradeMessage,
   canAffordUpgrade,
   onUpgrade
-}) => {
+}: TowerContainerProps) => {
   return (
     <g>
+      {/* Enhanced Defensive Visuals */}
+      <EnhancedDefensiveRenderer
+        slot={slot}
+        slotIdx={slotIdx}
+        wallLevel={wallLevel}
+      />
+      
       {/* Modifiers (behind tower) */}
       <ModifierRenderer slot={slot} />
       

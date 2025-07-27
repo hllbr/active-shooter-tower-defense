@@ -237,7 +237,7 @@ if (store && store.addTowerUpgradeListener) {
 // In-memory cache for current targets per tower
 const towerTargetCache: Record<string, string | null> = {};
 
-function shouldSwitchTarget(tower: Tower, currentTarget: Enemy | null, enemies: Enemy[], range: number): boolean {
+const shouldSwitchTarget = (tower: Tower, currentTarget: Enemy | null, enemies: Enemy[], range: number): boolean => {
   if (!currentTarget) return true;
   if (!currentTarget.isActive || currentTarget.health <= 0) return true;
   const dist = Math.hypot(currentTarget.position.x - tower.position.x, currentTarget.position.y - tower.position.y);

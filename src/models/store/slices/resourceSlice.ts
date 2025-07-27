@@ -51,7 +51,7 @@ export function offResourceUpdated(listener: (gold: number) => void) {
   resourceUpdateListeners.delete(listener);
 }
 
-function emitResourceUpdated(gold: number) {
+const emitResourceUpdated = (gold: number) => {
   resourceUpdateListeners.forEach((listener) => listener(gold));
 }
 

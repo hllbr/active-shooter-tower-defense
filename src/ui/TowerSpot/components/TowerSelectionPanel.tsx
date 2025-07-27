@@ -21,14 +21,14 @@ interface TowerIconProps {
   onLeave: () => void;
 }
 
-const TowerIcon: React.FC<TowerIconProps> = ({ 
+const TowerIcon = ({
   towerClass,
-  towerData, 
-  isSelected, 
-  onSelect, 
-  onHover, 
-  onLeave 
-}) => {
+  towerData,
+  isSelected,
+  onSelect,
+  onHover,
+  onLeave
+}: TowerIconProps) => {
   // Prepare a mock slot for rendering SVG
   const slot = {
     x: 32,
@@ -115,7 +115,7 @@ const TowerIcon: React.FC<TowerIconProps> = ({
         justifyContent: 'center',
         padding: 12,
         borderRadius: 14,
-        background: 'rgba(44, 62, 80, 0.85)',
+        background: isSelected ? 'rgba(39, 174, 96, 0.2)' : 'rgba(44, 62, 80, 0.85)',
         boxShadow: isSelected ? '0 0 0 3px #27ae60' : '0 2px 8px rgba(0,0,0,0.12)',
         border: isSelected ? '2px solid #27ae60' : '2px solid #4a90e2',
         cursor: 'pointer',
@@ -123,7 +123,7 @@ const TowerIcon: React.FC<TowerIconProps> = ({
         minWidth: 110,
         maxWidth: 140,
         margin: 'auto',
-        transition: 'box-shadow 0.2s, border 0.2s',
+        transition: 'all 0.2s ease',
       }}
     >
       <svg width={64} height={64} style={{ marginBottom: 10, display: 'block' }}>
@@ -139,10 +139,13 @@ const TowerIcon: React.FC<TowerIconProps> = ({
   );
 };
 
-const TowerTooltip: React.FC<{ 
+const TowerTooltip = ({
+  towerData,
+  position
+}: {
   towerData: typeof GAME_CONSTANTS.SPECIALIZED_TOWERS[TowerClass] | null;
   position: { x: number; y: number } | null;
-}> = ({ towerData, position }) => {
+}) => {
   if (!towerData || !position) return null;
 
   const getStatDisplay = () => {
@@ -220,12 +223,12 @@ const TowerTooltip: React.FC<{
   );
 };
 
-export const TowerSelectionPanel: React.FC<TowerSelectionPanelProps> = ({
+export const TowerSelectionPanel = ({
   isVisible,
   onClose,
   onSelectTower,
   _slotIdx
-}) => {
+}: TowerSelectionPanelProps) => {
   const [selectedTower, setSelectedTower] = useState<TowerClass | null>(null);
   const [tooltipData, setTooltipData] = useState<typeof GAME_CONSTANTS.SPECIALIZED_TOWERS[TowerClass] | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
@@ -240,8 +243,11 @@ export const TowerSelectionPanel: React.FC<TowerSelectionPanelProps> = ({
 
   const handleTowerSelect = useCallback((towerClass: TowerClass) => {
     setSelectedTower(towerClass);
-    onSelectTower(towerClass);
-    onClose();
+    // Delay closing to show selection briefly
+    setTimeout(() => {
+      onSelectTower(towerClass);
+      onClose();
+    }, 100);
   }, [onSelectTower, onClose]);
 
   const handleTowerHover = useCallback((towerData: typeof GAME_CONSTANTS.SPECIALIZED_TOWERS[TowerClass], event: React.MouseEvent<HTMLDivElement>) => {

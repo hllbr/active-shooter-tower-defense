@@ -15,7 +15,7 @@ import { ChallengeProvider } from './ui/challenge/ChallengeProvider';
 import { MiniSecurityIndicator } from './ui/common/SecurityStatusIndicator';
 import { ThemeProvider } from './ui/theme/ThemeProvider';
 
-function App() {
+const App = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [challengeOpen, setChallengeOpen] = useState(false);
 
@@ -50,6 +50,6 @@ function App() {
       </ChallengeProvider>
     </ThemeProvider>
   );
-}
+};
 
 export default App; 

@@ -8,7 +8,7 @@ import { useGameStore } from '../../models/store';
 import { useResponsiveUI } from '../../game-systems/responsive';
 import { useButtonTouchControls } from '../../game-systems/responsive';
 
-export const ResponsiveUpgradeScreen: React.FC = React.memo(() => {
+export const ResponsiveUpgradeScreen = React.memo(() => {
   const [activeTab, setActiveTab] = useState<TabType>('dice');
   
   // Responsive UI hook

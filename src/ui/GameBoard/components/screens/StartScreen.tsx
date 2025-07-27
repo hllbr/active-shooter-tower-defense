@@ -2,7 +2,7 @@ import React from 'react';
 import { useGameStore } from '../../../../models/store';
 import { GAME_CONSTANTS } from '../../../../utils/constants';
 
-export const StartScreen: React.FC = () => {
+export const StartScreen = () => {
   const { isStarted, setStarted, startPreparation, isFirstTowerPlaced } = useGameStore();
 
   if (isStarted) return null;
@@ -63,15 +63,22 @@ export const StartScreen: React.FC = () => {
           </span>
         </span>
       )}
+      
       <span style={{ 
-        color: '#fff', 
-        fontSize: 40, 
-        fontWeight: 'bold', 
-        background: 'rgba(0,0,0,0.5)', 
-        padding: '24px 48px', 
-        borderRadius: 16 
+        color: '#ffffff', 
+        fontSize: 24, 
+        fontWeight: 'bold',
+        background: 'rgba(0,0,0,0.4)',
+        padding: '12px 24px',
+        borderRadius: 8,
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        ':hover': {
+          background: 'rgba(0,0,0,0.6)',
+          transform: 'scale(1.05)'
+        }
       }}>
-        Başlamak İçin Tıkla
+        Click to Start
       </span>
     </div>
   );

@@ -47,11 +47,11 @@ export function getEnemiesInRange(pos: Position, range: number, enemies: Enemy[]
   return targetingGetEnemiesInRange(pos, range, enemies);
 }
 
-function _fireTower(
+const _fireTower = (
   tower: Tower,
   enemy: Enemy,
   bulletType: { speedMultiplier: number; damageMultiplier: number; color: string },
-) {
+) => {
   const state = useGameStore.getState();
   
   // Use the new tower firing system
@@ -64,7 +64,7 @@ function _fireTower(
 }
 
 // Special ability functions
-function _handleSpecialAbility(tower: Tower, enemies: Enemy[], addEffect: (effect: Effect) => void, damageEnemy: (id: string, damage: number) => void) {
+const _handleSpecialAbility = (tower: Tower, enemies: Enemy[], addEffect: (effect: Effect) => void, damageEnemy: (id: string, damage: number) => void) => {
   // Use the new special abilities system
   return specialAbilitiesManager.handleSpecialAbility(tower, enemies, addEffect, damageEnemy);
 }

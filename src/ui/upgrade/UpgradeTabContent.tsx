@@ -19,7 +19,7 @@ import { MissionDisplay } from '../game/upgrades/MissionDisplay';
 // Tab specific components
 
 
-export const UpgradeTabContent: React.FC<TabContentProps> = ({ activeTab }) => {
+export const UpgradeTabContent = ({ activeTab }: TabContentProps) => {
   const bulletLevel = useGameStore((s: Store) => s.bulletLevel);
   const discountMultiplier = useGameStore((s: Store) => s.discountMultiplier);
 

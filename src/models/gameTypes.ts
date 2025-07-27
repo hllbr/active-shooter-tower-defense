@@ -522,6 +522,10 @@ export interface GameState {
    * True if the game is ready to spawn waves (at least one tower placed)
    */
   gameReadyForWaves: boolean;
+
+  // ✅ NEW: Wave preview system
+  showWavePreview: boolean;
+  wavePreviewCountdown: number;
 }
 
 // ✅ NEW: Defense Target System

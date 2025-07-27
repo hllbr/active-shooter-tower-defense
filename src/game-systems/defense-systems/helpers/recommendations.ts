@@ -1,23 +1,23 @@
 import type { Tower, TowerSlot, Position, Enemy } from '../../../models/gameTypes';
 
-function getDistance(pos1: Position, pos2: Position): number {
+const getDistance = (pos1: Position, pos2: Position): number => {
   return Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2));
 }
 
-function findNearbyTowers(centerTower: Tower, allTowers: Tower[], radius: number): Tower[] {
+const findNearbyTowers = (centerTower: Tower, allTowers: Tower[], radius: number): Tower[] => {
   return allTowers.filter(tower => {
     const distance = getDistance(centerTower.position, tower.position);
     return distance <= radius;
   });
 }
 
-function calculateClusterCenter(towers: Tower[]): Position {
+const calculateClusterCenter = (towers: Tower[]): Position => {
   const sumX = towers.reduce((sum, tower) => sum + tower.position.x, 0);
   const sumY = towers.reduce((sum, tower) => sum + tower.position.y, 0);
   return { x: sumX / towers.length, y: sumY / towers.length };
 }
 
-function findTowerClusters(towerSlots: TowerSlot[]): Array<{ towers: Tower[]; center: Position }> {
+const findTowerClusters = (towerSlots: TowerSlot[]): Array<{ towers: Tower[]; center: Position }> => {
   const clusters: Array<{ towers: Tower[]; center: Position }> = [];
   const towers = towerSlots.filter(slot => slot.tower).map(slot => slot.tower!);
   const visited = new Set<string>();

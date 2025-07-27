@@ -4,7 +4,7 @@ import { PackageCard } from './PackageCard';
 import { ScrollableGridList } from '../../common/ScrollableList';
 import { PACKAGE_DEFINITIONS } from './packageData';
 
-export const UpgradePackages: React.FC = () => {
+export const UpgradePackages = () => {
   const { 
     gold, 
     currentWave, 
@@ -59,20 +59,14 @@ export const UpgradePackages: React.FC = () => {
           />
         )}
         keyExtractor={({ packageDef }) => packageDef.id}
-        gridTemplateColumns="repeat(auto-fit, minmax(350px, 1fr))"
-        gap="20px"
-        itemMinWidth="350px"
-        containerStyle={{ width: '100%' }}
+        containerStyle={{
+          maxHeight: '400px',
+          overflowY: 'auto',
+          padding: '8px'
+        }}
+        emptyMessage="No packages available"
+        emptyIcon="📦"
       />
-
-      <style>
-        {`
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-          }
-        `}
-      </style>
     </>
   );
 }; 

@@ -128,7 +128,7 @@ const isGameSceneSound = (sound: string): boolean => {
 /**
  * Ses için cooldown kontrolü yapar
  */
-function canPlaySound(soundName: string): boolean {
+const canPlaySound = (soundName: string): boolean => {
   const now = Date.now();
   const lastPlayed = soundLastPlayed.get(soundName) || 0;
   const cooldownDuration = SOUND_COOLDOWN_DURATIONS[soundName] || SOUND_COOLDOWN_DURATIONS.default;
@@ -139,7 +139,7 @@ function canPlaySound(soundName: string): boolean {
 /**
  * Ses çalındığında cooldown kaydeder
  */
-function recordSoundPlayed(soundName: string): void {
+const recordSoundPlayed = (soundName: string): void => {
   soundLastPlayed.set(soundName, Date.now());
 }
 

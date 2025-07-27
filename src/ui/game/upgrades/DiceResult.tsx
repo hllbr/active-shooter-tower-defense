@@ -7,11 +7,11 @@ interface DiceResultProps {
   show: boolean;
 }
 
-export const DiceResult: React.FC<DiceResultProps> = ({ 
+export const DiceResult = ({ 
   diceRoll, 
   discountMultiplier, 
   show 
-}) => {
+}: DiceResultProps) => {
   if (!show || !diceRoll) return null;
 
   const getResultColor = () => {

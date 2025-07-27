@@ -442,16 +442,18 @@ export class EnemyMovement {
   ): void {
     const { direction } = movementData;
     
-    // Apply knockback
-    const knockbackForce = 50;
-    enemy.position.x -= direction.x * knockbackForce;
-    enemy.position.y -= direction.y * knockbackForce;
+    // ✅ NEW: Use advanced defensive visuals system
+    const { advancedDefensiveVisuals } = require('../defense-systems/AdvancedDefensiveVisuals');
+    const { towerSlots } = useGameStore.getState();
+    const slot = towerSlots[slotIdx];
     
-    // Apply stun effect
-    enemy.frozenUntil = performance.now() + 1000; // 1 second stun
+    // Handle collision with enhanced visuals
+    advancedDefensiveVisuals.handleDefensiveCollision(enemy, slot, slotIdx, actions);
     
-    // Damage the wall
-    actions.hitWall(slotIdx);
+    // Apply stun effect (now handled by advanced system)
+    if (!enemy.frozenUntil) {
+      enemy.frozenUntil = performance.now() + 1000; // 1 second stun
+    }
     
     // Damage the enemy
     actions.damageEnemy(enemy.id, 10);

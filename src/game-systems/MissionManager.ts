@@ -1,4 +1,5 @@
 import { useGameStore } from '../models/store';
+import { energyManager } from './EnergyManager';
 // GameState import removed for production
 // Logger import removed for production
 
@@ -360,19 +361,20 @@ export class MissionManager {
   }
 
   /**
-   * Generate mission name
+   * Generate mission name based on category and number
    */
   private generateMissionName(missionNumber: number, category: string): string {
-    const prefixes = {
-      combat: ['Savaşçı', 'Komutan', 'Elit', 'Kahraman', 'Savaş'],
-      economic: ['Tüccar', 'Ekonomist', 'Altın', 'Zengin', 'Ticaret'],
-      survival: ['Hayatta Kalma', 'Dayanıklılık', 'Sürdürülebilirlik', 'Güç', 'İrade'],
-      exploration: ['Kaşif', 'Araştırmacı', 'Keşif', 'Macera', 'Bilinmeyen'],
-      progression: ['İlerleme', 'Gelişim', 'Yükseliş', 'Evrim', 'Dönüşüm']
+    const categoryNames: Record<string, string[]> = {
+      combat: ['Savaş', 'Saldırı', 'Savunma', 'Taktik', 'Strateji'],
+      economic: ['Ekonomi', 'Ticaret', 'Kaynak', 'Altın', 'Servet'],
+      survival: ['Hayatta Kalma', 'Dayanıklılık', 'Süreklilik', 'Direniş', 'Azim'],
+      exploration: ['Keşif', 'Araştırma', 'Gelişim', 'İlerleme', 'Yenilik'],
+      progression: ['İlerleme', 'Gelişim', 'Yükseliş', 'Başarı', 'Zafer']
     };
 
-    const prefix = prefixes[category][missionNumber % prefixes[category].length];
-    return `${prefix} ${missionNumber}`;
+    const names = categoryNames[category as keyof typeof categoryNames] || categoryNames.combat;
+    const nameIndex = missionNumber % names.length;
+    return `${names[nameIndex]} ${missionNumber}`;
   }
 
   /**
@@ -490,6 +492,9 @@ export class MissionManager {
           mission.completed = true;
           result.newlyCompleted.push(mission);
           
+          // Apply regular mission reward to store
+          this.applyMissionRewardToStore(mission);
+          
           // Apply gameplay reward if available
           if (mission.gameplayReward) {
             result.gameplayRewards.push(mission.gameplayReward);
@@ -508,6 +513,145 @@ export class MissionManager {
     this.saveMissionProgress();
 
     return result;
+  }
+
+  /**
+   * Apply regular mission reward to the store
+   */
+  private applyMissionRewardToStore(mission: SequentialMission): void {
+    const state = useGameStore.getState();
+
+    switch (mission.reward.type) {
+      case 'gold':
+        state.addGold(mission.reward.amount);
+        break;
+
+      case 'energy':
+        // Add energy using the energy manager
+        energyManager.add(mission.reward.amount, 'mission_reward');
+        break;
+
+      case 'actions':
+        // Add actions to remaining actions
+        useGameStore.setState({
+          actionsRemaining: Math.min(
+            state.maxActions,
+            state.actionsRemaining + mission.reward.amount
+          )
+        });
+        break;
+
+      case 'experience': {
+        // Apply experience to player profile
+        const newProfile = { ...state.playerProfile };
+        newProfile.experience += mission.reward.amount;
+        
+        // Check for level up
+        const newLevel = Math.floor(newProfile.experience / 1000) + 1;
+        if (newLevel > newProfile.level) {
+          newProfile.level = newLevel;
+        }
+        
+        useGameStore.setState({ playerProfile: newProfile });
+        break;
+      }
+
+      case 'unlock': {
+        // Handle special unlocks
+        if (mission.reward.special) {
+          this.handleSpecialUnlock(mission.reward.special);
+        }
+        break;
+      }
+
+      case 'upgrade': {
+        // Handle upgrade rewards
+        if (mission.reward.special === 'bullet') {
+          state.upgradeBullet(true);
+        } else if (mission.reward.special === 'shield') {
+          // Handle shield upgrade
+          this.handleShieldUpgrade();
+        }
+        break;
+      }
+    }
+
+    // Show notification for mission completion
+    this.showMissionCompletionNotification(mission);
+  }
+
+  /**
+   * Handle special unlock rewards
+   */
+  private handleSpecialUnlock(special: string): void {
+    const state = useGameStore.getState();
+
+    if (special.startsWith('milestone_')) {
+      // Handle milestone unlocks
+      const milestoneNumber = parseInt(special.split('_')[1]);
+      this.handleMilestoneUnlock(milestoneNumber);
+    } else if (special === 'fire_mastery') {
+      // Unlock fire mastery upgrade
+      state.unlockTowerType('fire_mastery');
+    }
+  }
+
+  /**
+   * Handle milestone unlocks
+   */
+  private handleMilestoneUnlock(milestoneNumber: number): void {
+    const state = useGameStore.getState();
+
+    // Unlock special features based on milestone
+    switch (milestoneNumber) {
+      case 25:
+        // Unlock advanced upgrades
+        state.unlockTowerType('advanced_fire');
+        break;
+      case 50:
+        // Unlock special abilities
+        state.unlockTowerType('special_abilities');
+        break;
+      case 75:
+        // Unlock legendary upgrades
+        state.unlockTowerType('legendary');
+        break;
+      case 100:
+        // Unlock ultimate upgrades
+        state.unlockTowerType('ultimate');
+        break;
+    }
+  }
+
+  /**
+   * Handle shield upgrade reward
+   */
+  private handleShieldUpgrade(): void {
+    const state = useGameStore.getState();
+    
+    // Find the next available shield upgrade
+    // For now, we'll just add to shield upgrades purchased count
+    useGameStore.setState({
+      shieldUpgradesPurchased: state.shieldUpgradesPurchased + 1
+    });
+  }
+
+  /**
+   * Show mission completion notification
+   */
+  private showMissionCompletionNotification(mission: SequentialMission): void {
+    const notification = {
+      id: `mission-${mission.id}`,
+      type: 'success' as const,
+      message: `🎯 Görev Tamamlandı: ${mission.name}! Ödül: ${mission.reward.description}`,
+      timestamp: Date.now(),
+      duration: 5000
+    };
+
+    useGameStore.getState().addNotification(notification);
+
+    // Play completion sound (optional)
+    // Sound will be handled by the notification system if available
   }
 
   /**
@@ -552,44 +696,99 @@ export class MissionManager {
     const state = useGameStore.getState();
 
     switch (reward.type) {
-      case 'multi_fire':
+      case 'multi_fire': {
         // Apply multi-fire to all towers
         if (reward.target === 'all_towers') {
-          state.towerSlots.forEach(slot => {
+          const updatedSlots = state.towerSlots.map(slot => {
             if (slot.tower) {
-              slot.tower.multiShotCount = reward.value;
+              return {
+                ...slot,
+                tower: {
+                  ...slot.tower,
+                  multiShotCount: reward.value
+                }
+              };
             }
+            return slot;
           });
+          useGameStore.setState({ towerSlots: updatedSlots });
         }
         break;
+      }
 
-      case 'tower_repair':
+      case 'tower_repair': {
         // Repair all towers
         if (reward.target === 'all_towers') {
-          state.towerSlots.forEach(slot => {
+          const updatedSlots = state.towerSlots.map(slot => {
             if (slot.tower) {
-              slot.tower.health = slot.tower.maxHealth;
+              return {
+                ...slot,
+                tower: {
+                  ...slot.tower,
+                  health: slot.tower.maxHealth
+                }
+              };
             }
+            return slot;
           });
+          useGameStore.setState({ towerSlots: updatedSlots });
         }
         break;
+      }
 
-      case 'damage_boost':
+      case 'damage_boost': {
         // Apply damage boost to all towers
         if (reward.target === 'all_towers') {
-          state.towerSlots.forEach(slot => {
+          const updatedSlots = state.towerSlots.map(slot => {
             if (slot.tower) {
-              slot.tower.damage *= reward.value;
+              return {
+                ...slot,
+                tower: {
+                  ...slot.tower,
+                  damage: slot.tower.damage * reward.value
+                }
+              };
             }
+            return slot;
           });
+          useGameStore.setState({ towerSlots: updatedSlots });
         }
         break;
+      }
 
-      case 'temporary_mines':
+      case 'temporary_mines': {
         // Add temporary mines (handled by mine system)
         // This would integrate with the existing mine system
+        this.addTemporaryMines(reward.value);
         break;
+      }
+
+      case 'gold_bonus': {
+        // Apply gold bonus
+        state.addGold(reward.value);
+        break;
+      }
+
+      case 'energy_bonus': {
+        // Apply energy bonus
+        energyManager.add(reward.value, 'gameplay_reward');
+        break;
+      }
     }
+  }
+
+  /**
+   * Add temporary mines to the game
+   */
+  private addTemporaryMines(count: number): void {
+    const state = useGameStore.getState();
+    
+    // Add temporary mines to the mine system
+    // This would integrate with the existing mine placement system
+    // For now, we'll just add them to the mine level
+    useGameStore.setState({
+      mineLevel: (state.mineLevel || 0) + count
+    });
   }
 
   /**
@@ -614,27 +813,65 @@ export class MissionManager {
     const state = useGameStore.getState();
 
     switch (reward.type) {
-      case 'multi_fire':
-        // Reset multi-fire for all towers
+      case 'multi_fire': {
+        // Remove multi-fire from all towers
         if (reward.target === 'all_towers') {
-          state.towerSlots.forEach(slot => {
+          const updatedSlots = state.towerSlots.map(slot => {
             if (slot.tower) {
-              slot.tower.multiShotCount = 1; // Reset to default
+              return {
+                ...slot,
+                tower: {
+                  ...slot.tower,
+                  multiShotCount: 1 // Reset to default
+                }
+              };
             }
+            return slot;
           });
+          useGameStore.setState({ towerSlots: updatedSlots });
         }
         break;
+      }
 
-      case 'damage_boost':
+      case 'damage_boost': {
+        // Remove damage boost from all towers
         if (reward.target === 'all_towers') {
-          state.towerSlots.forEach(slot => {
+          const updatedSlots = state.towerSlots.map(slot => {
             if (slot.tower) {
-              slot.tower.damage /= reward.value;
+              return {
+                ...slot,
+                tower: {
+                  ...slot.tower,
+                  damage: slot.tower.damage / reward.value // Revert the boost
+                }
+              };
             }
+            return slot;
           });
+          useGameStore.setState({ towerSlots: updatedSlots });
         }
         break;
+      }
+
+      case 'temporary_mines': {
+        // Remove temporary mines
+        this.removeTemporaryMines(reward.value);
+        break;
+      }
     }
+  }
+
+  /**
+   * Remove temporary mines from the game
+   */
+  private removeTemporaryMines(count: number): void {
+    const state = useGameStore.getState();
+    
+    // Remove temporary mines from the mine system
+    const currentMines = state.mineLevel || 0;
+    useGameStore.setState({
+      mineLevel: Math.max(0, currentMines - count)
+    });
   }
 
   /**
@@ -670,12 +907,14 @@ export class MissionManager {
       // Check unlock condition
       if (mission.unlockCondition) {
         switch (mission.unlockCondition.type) {
-          case 'mission':
+          case 'mission': {
             const requiredMission = this.missions.find(m => m.missionNumber === mission.unlockCondition!.value);
             return requiredMission?.completed || false;
-          case 'wave':
+          }
+          case 'wave': {
             const currentWave = useGameStore.getState().currentWave;
             return currentWave >= (mission.unlockCondition.value as number);
+          }
           default:
             return true;
         }
