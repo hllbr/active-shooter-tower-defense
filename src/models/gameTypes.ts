@@ -247,6 +247,10 @@ export interface Bullet {
   typeIndex: number;
   targetId?: string;
   life: number;
+  // Piercing bullet properties
+  piercing?: boolean;
+  maxTargets?: number;
+  targetsHit?: number;
 }
 
 export interface Effect {
@@ -518,6 +522,10 @@ export interface GameState {
    * True if the game is ready to spawn waves (at least one tower placed)
    */
   gameReadyForWaves: boolean;
+
+  // ✅ NEW: Wave preview system
+  showWavePreview: boolean;
+  wavePreviewCountdown: number;
 }
 
 // ✅ NEW: Defense Target System

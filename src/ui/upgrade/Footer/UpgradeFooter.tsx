@@ -5,7 +5,7 @@ import { FooterAnimations } from './FooterAnimations';
 
 
 // Props artık gerekmiyor, ContinueButton kendi logic'ini handle ediyor
-export const UpgradeFooter: React.FC = () => {
+export const UpgradeFooter = () => {
   return (
     <FooterWrapper>
       <ContinueButton />

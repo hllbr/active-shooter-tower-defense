@@ -32,7 +32,7 @@ export function getAffordabilityStatus(cost: number, available: number): {
   };
 }
 
-// ✅ UNIFIED BUTTON TEXT SYSTEM (fixes inconsistent button states)
+
 export function getUnifiedButtonText(
   isMaxed: boolean, 
   canAfford: boolean, 
@@ -59,7 +59,7 @@ export function getUnifiedButtonText(
   return '❌ Yetersiz Altın';
 }
 
-// ✅ UNIFIED COST DISPLAY SYSTEM (fixes inconsistent cost formatting)
+
 export function getUnifiedCostDisplay(
   cost: number,
   originalCost?: number,
@@ -85,7 +85,7 @@ export function getUnifiedCostDisplay(
   };
 }
 
-// ✅ UNIFIED LEVEL DISPLAY SYSTEM (fixes level display inconsistencies)
+
 export function getUnifiedLevelDisplay(
   currentLevel: number,
   maxLevel: number,
@@ -97,7 +97,7 @@ export function getUnifiedLevelDisplay(
   return `${currentLevel}/${maxLevel}`;
 }
 
-// ✅ UNIFIED STATUS DISPLAY SYSTEM (fixes purchase count inconsistencies)
+
 export function getUnifiedStatusDisplay(
   currentCount: number,
   maxCount: number,

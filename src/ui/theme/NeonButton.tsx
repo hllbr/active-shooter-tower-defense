@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from './ThemeProvider';
+import { useTheme } from './useTheme';
 
 interface NeonButtonProps {
   children: React.ReactNode;
@@ -11,9 +11,14 @@ interface NeonButtonProps {
   style?: React.CSSProperties;
   type?: 'button' | 'submit' | 'reset';
   title?: string;
+  icon?: React.ReactNode;
+  loading?: boolean;
+  fullWidth?: boolean;
+  neonColor?: string;
+  pulse?: boolean;
 }
 
-export const NeonButton: React.FC<NeonButtonProps> = ({
+export const NeonButton = ({
   children,
   onClick,
   variant = 'primary',
@@ -22,8 +27,13 @@ export const NeonButton: React.FC<NeonButtonProps> = ({
   className = '',
   style = {},
   type = 'button',
-  title
-}) => {
+  title,
+  _icon,
+  _loading = false,
+  _fullWidth = false,
+  _neonColor,
+  _pulse = false
+}: NeonButtonProps) => {
   const { colors, isReducedMotion } = useTheme();
 
   const getVariantStyles = (): React.CSSProperties => {

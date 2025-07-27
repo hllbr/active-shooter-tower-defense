@@ -12,39 +12,51 @@ export interface ExplosionEffect {
 export function createMineExplosionEffects(mine: Mine): ExplosionEffect[] {
   const effects: ExplosionEffect[] = [];
   
-  // 🎆 FIXED: Reduced explosion sizes for better gameplay visibility
-  const scaleFactor = 0.5; // Reduce mine explosions to 50% size
-  const maxRadius = 40; // Maximum explosion radius to prevent screen coverage
+  // ✅ NEW: Enhanced mine explosion effects with better visual impact
+  const scaleFactor = 0.7; // Slightly larger for better visibility
+  const maxRadius = 50; // Increased maximum radius
 
-  // 1. Core flash (white) - much smaller and shorter
+  // 1. Core flash (white) - bright initial flash
   effects.push({
     id: `explosion-core-${mine.id}`,
     position: mine.position,
-    radius: Math.min(mine.radius * 0.3 * scaleFactor, maxRadius * 0.5),
-    color: 'rgba(255, 255, 255, 0.8)', // Reduced opacity
-    life: 100, // Shorter duration
-    maxLife: 100,
+    radius: Math.min(mine.radius * 0.4 * scaleFactor, maxRadius * 0.6),
+    color: 'rgba(255, 255, 255, 0.9)', // Brighter flash
+    life: 150, // Slightly longer for better visibility
+    maxLife: 150,
   });
 
-  // 2. Main explosion (orange) - smaller
+  // 2. Main explosion (orange/red) - more vibrant
   effects.push({
     id: `explosion-main-${mine.id}`,
     position: mine.position,
-    radius: Math.min(mine.radius * 0.6 * scaleFactor, maxRadius),
-    color: 'rgba(255, 150, 0, 0.6)', // Reduced opacity
-    life: 250, // Shorter duration
-    maxLife: 250,
+    radius: Math.min(mine.radius * 0.8 * scaleFactor, maxRadius),
+    color: 'rgba(255, 100, 0, 0.8)', // More vibrant orange
+    life: 300, // Longer duration
+    maxLife: 300,
   });
 
-  // 3. Lingering smoke (dark grey) - much smaller
+  // 3. Lingering smoke (dark grey) - more visible
   effects.push({
     id: `explosion-smoke-${mine.id}`,
     position: mine.position,
-    radius: Math.min(mine.radius * 0.4 * scaleFactor, maxRadius * 0.7),
-    color: 'rgba(80, 80, 80, 0.4)', // Much more transparent
-    life: 400, // Shorter duration
-    maxLife: 400,
+    radius: Math.min(mine.radius * 0.5 * scaleFactor, maxRadius * 0.8),
+    color: 'rgba(60, 60, 60, 0.6)', // More visible smoke
+    life: 500, // Longer duration
+    maxLife: 500,
   });
+
+  // ✅ NEW: Add enhanced particle effects
+  setTimeout(() => {
+    import('../effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+      enhancedVisualEffectsManager.createMineExplosionEffect(
+        mine.position.x,
+        mine.position.y,
+        mine.mineSubtype || 'standard',
+        mine.radius
+      );
+    });
+  }, 0);
 
   return effects;
 } 

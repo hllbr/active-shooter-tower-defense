@@ -60,10 +60,55 @@ export class BulletUpdateSystem {
       enemies,
       deltaTime,
       (bullet, enemy, collisionResult) => {
+        // ✅ NEW: Handle piercing bullets
+        const isPiercing = bullet.piercing || false;
+        const maxTargets = bullet.maxTargets || 1;
+        const targetsHit = bullet.targetsHit || 0;
+        
         // Apply damage
         damageEnemy(enemy.id, bullet.damage);
         
-        // Remove bullet and return to pool
+        // Apply bullet effects
+        const bulletType = GAME_CONSTANTS.BULLET_TYPES[bullet.typeIndex];
+        if ('freezeDuration' in bulletType && bulletType.freezeDuration) {
+          enemy.frozenUntil = now + bulletType.freezeDuration;
+        }
+        
+        // ✅ NEW: Enhanced collision effects with particles
+        if (collisionResult.collisionPoint) {
+          // Add traditional collision effect
+          addEffect({
+            id: `collision-${Date.now()}-${Math.random()}`,
+            position: collisionResult.collisionPoint,
+            radius: 15,
+            color: bullet.color,
+            life: 200,
+            maxLife: 200,
+          });
+          
+          // Add enhanced particle impact effect
+          setTimeout(() => {
+            import('../effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+              enhancedVisualEffectsManager.createBulletImpactEffect(
+                collisionResult.collisionPoint.x,
+                collisionResult.collisionPoint.y,
+                bullet.typeIndex.toString()
+              );
+            });
+          }, 0);
+        }
+        
+        // Handle piercing logic
+        if (isPiercing && targetsHit < maxTargets) {
+          // Increment targets hit
+          bullet.targetsHit = targetsHit + 1;
+          
+          // Don't remove bullet yet if it can pierce more targets
+          if (bullet.targetsHit < maxTargets) {
+            return; // Continue with the bullet
+          }
+        }
+        
         removeBullet(bullet.id);
         const bulletPool2 = advancedPoolManager.getPool<Bullet>('bullet');
         if (bulletPool2) {
@@ -74,25 +119,7 @@ export class BulletUpdateSystem {
           }
         }
         
-        // Apply bullet effects
-        const bulletType = GAME_CONSTANTS.BULLET_TYPES[bullet.typeIndex];
-        if ('freezeDuration' in bulletType && bulletType.freezeDuration) {
-          enemy.frozenUntil = now + bulletType.freezeDuration;
-        }
-        
-        // Optional: Add collision effect at the collision point
-        if (collisionResult.collisionPoint) {
-          addEffect({
-            id: `collision-${Date.now()}-${Math.random()}`,
-            position: collisionResult.collisionPoint,
-            radius: 15,
-            color: bullet.color,
-            life: 200,
-            maxLife: 200,
-          });
-        }
-        
-        // Debug mode collision logging can be added here if needed
+
       }
     );
   }

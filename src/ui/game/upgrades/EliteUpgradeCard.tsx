@@ -40,7 +40,7 @@ export const EliteUpgradeCard: React.FC = () => {
     onUpgrade: () => {
       // Check requirements before attempting purchase
       if (!requirements.allMet) {
-        console.error('❌ Elite upgrade blocked:', requirementText);
+        // Elite upgrade blocked silently
         import('../../../utils/sound').then(({ playSound }) => {
           playSound('error');
         });
@@ -56,7 +56,7 @@ export const EliteUpgradeCard: React.FC = () => {
       if (success) {
         setEliteModuleLevel(eliteModuleLevel + 1);
       } else {
-        console.error('❌ Elite upgrade failed: Insufficient funds or state error');
+        // Elite upgrade failed silently
         import('../../../utils/sound').then(({ playSound }) => {
           playSound('error');
         });

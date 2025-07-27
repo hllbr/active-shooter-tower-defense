@@ -5,7 +5,7 @@ export { VisualExtrasRenderer } from './VisualExtrasRenderer';
 export { TowerMenu } from './TowerMenu';
 export { TowerInfoPanel } from './TowerInfoPanel';
 export { SlotUnlockDisplay } from './SlotUnlockDisplay';
-export { DebugInfo } from './DebugInfo';
+
 
 // New sub-components
 export { EmptySlotRenderer } from './EmptySlotRenderer';
@@ -30,10 +30,12 @@ export { RecentlyUnlockedGlow } from './RecentlyUnlockedGlow';
 export { SynergyDisplay } from './SynergyDisplay';
 export { FirstTowerHighlight } from './FirstTowerHighlight';
 export { TowerHealthDisplay } from './TowerHealthDisplay';
+export { TowerHealthBar } from './TowerHealthBar';
 export { TowerSelectionPanel } from './TowerSelectionPanel';
 export { EnhancedLockedSlot } from './EnhancedLockedSlot';
 export { SimplifiedTowerControls } from './SimplifiedTowerControls';
 export { FireHazardDisplay } from './FireHazardDisplay';
 export { TowerMoveIcon } from './TowerMoveIcon';
 export { TileActionIcon } from './TileActionIcon';
-export { TileActionMenu } from './TileActionMenu'; 
+export { TileActionMenu } from './TileActionMenu';
+export { TowerTooltip } from './TowerTooltip'; 

@@ -1,0 +1,420 @@
+/* 🛡️ Enhanced Defensive Animations */
+
+/* Wall Damage Animations */
+.wall-damaged {
+  animation: wall-damage-pulse 0.5s ease-in-out;
+}
+
+.wall-critical {
+  animation: wall-critical-pulse 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes wall-damage-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+    filter: drop-shadow(0 6px 12px rgba(255, 0, 0, 0.4));
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  }
+}
+
+@keyframes wall-critical-pulse {
+  0% {
+    opacity: 0.8;
+    filter: drop-shadow(0 4px 8px rgba(255, 0, 0, 0.3));
+  }
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 6px 12px rgba(255, 0, 0, 0.6));
+  }
+}
+
+/* Wall Crack Animations */
+.crack-small {
+  animation: crack-appear 0.3s ease-out;
+}
+
+.crack-medium {
+  animation: crack-appear 0.4s ease-out 0.1s both;
+}
+
+.crack-large {
+  animation: crack-appear 0.5s ease-out 0.2s both;
+}
+
+@keyframes crack-appear {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+    stroke-dasharray: 0, 100;
+  }
+  50% {
+    opacity: 0.6;
+    stroke-width: 2;
+    stroke-dasharray: 50, 100;
+  }
+  100% {
+    opacity: 0.8;
+    stroke-width: 3;
+    stroke-dasharray: 100, 100;
+  }
+}
+
+/* Wall Health Indicator Animation */
+.wall-health-indicator {
+  animation: health-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes health-pulse {
+  0% {
+    opacity: 0.6;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.2);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scaleY(1);
+  }
+}
+
+/* Debris Effect Animations */
+.debris-particle {
+  animation: debris-fall 1.5s ease-out;
+}
+
+@keyframes debris-fall {
+  0% {
+    opacity: 0.8;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateY(10px) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.5);
+  }
+}
+
+/* Trench Level Animations */
+.trench-level-1 {
+  animation: trench-sink 2s ease-in-out infinite;
+}
+
+.trench-level-2 {
+  animation: trench-sink 1.5s ease-in-out infinite;
+}
+
+.trench-level-3 {
+  animation: trench-sink 1s ease-in-out infinite;
+}
+
+@keyframes trench-sink {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* Trench Depth Effect */
+.trench-depth {
+  animation: depth-pulse 3s ease-in-out infinite;
+}
+
+@keyframes depth-pulse {
+  0% {
+    opacity: 0.2;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    opacity: 0.5;
+    stroke-dashoffset: 10;
+  }
+  100% {
+    opacity: 0.2;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Trench Spike Animations */
+.trench-spike {
+  animation: spike-glow 2s ease-in-out infinite;
+}
+
+@keyframes spike-glow {
+  0% {
+    opacity: 0.6;
+    filter: drop-shadow(0 0 2px rgba(105, 105, 105, 0.5));
+  }
+  50% {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 4px rgba(105, 105, 105, 0.8));
+  }
+  100% {
+    opacity: 0.6;
+    filter: drop-shadow(0 0 2px rgba(105, 105, 105, 0.5));
+  }
+}
+
+/* Stone Block Animations */
+.stone-block {
+  animation: stone-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes stone-shimmer {
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+}
+
+/* Mud Splash Animations */
+.mud-splash-active .mud-splash-particle {
+  animation: mud-splash 1s ease-out;
+}
+
+@keyframes mud-splash {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  30% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+  70% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+/* Trench Level Indicator Animation */
+.trench-level-indicator {
+  animation: level-indicator-pulse 2s ease-in-out infinite;
+}
+
+@keyframes level-indicator-pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+}
+
+/* Enhanced Defensive Renderer Container */
+.enhanced-defensive-renderer {
+  transition: transform 0.1s ease-out;
+}
+
+/* Screen Shake Effect */
+.enhanced-defensive-renderer.shake {
+  animation: screen-shake 0.5s ease-out;
+}
+
+@keyframes screen-shake {
+  0% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-2px, -2px);
+  }
+  20% {
+    transform: translate(2px, 2px);
+  }
+  30% {
+    transform: translate(-2px, -2px);
+  }
+  40% {
+    transform: translate(2px, 2px);
+  }
+  50% {
+    transform: translate(-1px, -1px);
+  }
+  60% {
+    transform: translate(1px, 1px);
+  }
+  70% {
+    transform: translate(-1px, -1px);
+  }
+  80% {
+    transform: translate(1px, 1px);
+  }
+  90% {
+    transform: translate(-0.5px, -0.5px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* Wall Material Pattern Animations */
+.stone-pattern rect {
+  animation: stone-pattern-shift 6s ease-in-out infinite;
+}
+
+@keyframes stone-pattern-shift {
+  0% {
+    opacity: 0.2;
+    transform: translateX(0);
+  }
+  25% {
+    opacity: 0.4;
+    transform: translateX(1px);
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateX(0);
+  }
+  75% {
+    opacity: 0.4;
+    transform: translateX(-1px);
+  }
+  100% {
+    opacity: 0.2;
+    transform: translateX(0);
+  }
+}
+
+.metal-pattern rect {
+  animation: metal-glow 3s ease-in-out infinite;
+}
+
+@keyframes metal-glow {
+  0% {
+    opacity: 0.4;
+    filter: drop-shadow(0 0 2px rgba(192, 192, 192, 0.3));
+  }
+  50% {
+    opacity: 0.6;
+    filter: drop-shadow(0 0 4px rgba(192, 192, 192, 0.6));
+  }
+  100% {
+    opacity: 0.4;
+    filter: drop-shadow(0 0 2px rgba(192, 192, 192, 0.3));
+  }
+}
+
+.metal-pattern circle {
+  animation: metal-core-pulse 2s ease-in-out infinite;
+}
+
+@keyframes metal-core-pulse {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+}
+
+/* Stone Lining Animations */
+.stone-lining rect {
+  animation: stone-lining-shift 5s ease-in-out infinite;
+}
+
+@keyframes stone-lining-shift {
+  0% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  33% {
+    opacity: 0.6;
+    transform: translateY(-1px);
+  }
+  66% {
+    opacity: 0.5;
+    transform: translateY(1px);
+  }
+  100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+}
+
+/* Performance Optimizations */
+.enhanced-defensive-renderer * {
+  will-change: transform, opacity;
+}
+
+.wall-renderer,
+.trench-renderer {
+  will-change: transform, opacity, filter;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .enhanced-defensive-renderer *,
+  .wall-renderer,
+  .trench-renderer {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .wall-damaged,
+  .wall-critical {
+    opacity: 0.8;
+  }
+  
+  .trench-level-1,
+  .trench-level-2,
+  .trench-level-3 {
+    opacity: 0.7;
+  }
+} 

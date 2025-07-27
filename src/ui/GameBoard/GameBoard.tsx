@@ -1,11 +1,11 @@
-import React, { Suspense, lazy, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { useGameStore } from '../../models/store';
-import { GAME_CONSTANTS } from '../../utils/constants';
 import { useChallenge } from '../challenge/hooks/useChallenge';
 
-import { useTheme } from '../theme/ThemeProvider';
+import { useTheme } from '../theme/useTheme';
 import { SimplifiedEnvironmentManager } from '../../game-systems/environment/SimplifiedEnvironmentManager';
 import { ConditionalRenderer } from './components/ConditionalRenderer';
+import { gameFlowManager } from '../../game-systems/GameFlowManager';
 
 // Lazy load heavy components for code splitting
 const UpgradeScreen = lazy(() => import('../game/UpgradeScreen').then(module => ({ default: module.UpgradeScreen })));
@@ -14,22 +14,26 @@ const UpgradeScreen = lazy(() => import('../game/UpgradeScreen').then(module => 
 import {
   GameStatsPanel,
   EnergyWarning,
-  DebugMessage,
 
   PreparationScreen,
   StartScreen,
   GameOverScreen,
   GameArea
 } from './components';
-import { SpawnZoneDebugOverlay } from './components/overlays/SpawnZoneDebugOverlay';
+
 import { SynergyDisplay } from '../TowerSpot/components/SynergyDisplay';
 
+// Import new components
+import { WavePreviewOverlay } from './components/WavePreviewOverlay';
+import { UnlockAnimation } from '../common/UnlockAnimation';
+import DifficultyIndicator from '../game/DifficultyIndicator';
+import SaveLoadPanel from '../game/SaveLoadPanel';
+import { EnhancedParticleRenderer } from './components/renderers/EnhancedParticleRenderer';
 
 // Import enhanced hooks
 import { 
   useTowerDrag,
   useGameEffects,
-  useGameTimers,
   useGameLoop,
 } from './hooks';
 
@@ -38,7 +42,7 @@ import { containerStyle, keyframeStyles } from './styles';
 import type { GameBoardProps } from './types';
 
 // Loading fallback component
-const LoadingFallback: React.FC = () => (
+const LoadingFallback = React.memo(() => (
   <div style={{
     position: 'absolute',
     top: '50%',
@@ -51,201 +55,275 @@ const LoadingFallback: React.FC = () => (
   }}>
     ⚡ Yükleniyor...
   </div>
-);
+));
 
-export const GameBoard: React.FC<GameBoardProps> = React.memo(({ className, onSettingsClick, onChallengeClick }) => {
+export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: GameBoardProps) => {
   const {
-    towerSlots,
-    currentWave,
     isStarted,
+    isGameOver,
     isRefreshing,
-    waveStatus,
-    prepRemaining,
-    startWave,
-    tickPreparation,
-    tickEnergyRegen,
-    tickActionRegen,
+    isPaused,
+    currentWave,
+    energy: _energy,
+    gold: _gold,
+    enemiesKilled: _enemiesKilled,
+    energyWarning: _energyWarning,
     unlockingSlots,
-    initializeAchievements,
-    addEnemyKillListener,
-    removeEnemyKillListener,
-    addTowerUpgradeListener,
-
+    towerSlots,
+    lastUpdate: _lastUpdate,
+    waveStatus,
+    prepRemaining: _prepRemaining,
+    startWave: _startWave,
+    tickPreparation: _tickPreparation,
+    tickEnergyRegen: _tickEnergyRegen,
+    tickActionRegen: _tickActionRegen,
+    showWavePreview,
+    wavePreviewCountdown,
+    hideWavePreviewOverlay,
+    startWavePreviewCountdown,
+    notifications
   } = useGameStore();
 
-  // Weather market panel state
+  const { incrementChallenge: _incrementChallenge } = useChallenge();
+  const { theme: _theme } = useTheme();
 
+  // Unlock animation state
+  const [unlockAnimation, setUnlockAnimation] = useState<{
+    isVisible: boolean;
+    type: 'upgrade' | 'reward' | 'achievement' | 'mission';
+    title: string;
+    description?: string;
+    icon?: string;
+  }>({
+    isVisible: false,
+    type: 'upgrade',
+    title: '',
+    description: '',
+    icon: ''
+  });
 
-  const { incrementChallenge } = useChallenge();
-  const { isReducedMotion } = useTheme();
-  const prevWaveRef = React.useRef(currentWave);
-  const gameContainerRef = useRef<HTMLDivElement>(null);
+  // Save/Load panel state
+  const [saveLoadPanelOpen, setSaveLoadPanelOpen] = useState(false);
+
+  const shouldShowUpgradeScreen = useMemo(() => 
+    isRefreshing && !isGameOver, 
+    [isRefreshing, isGameOver]
+  );
+
+  const shouldShowGameArea = useMemo(() => 
+    isStarted && !isRefreshing && !isGameOver, 
+    [isStarted, isRefreshing, isGameOver]
+  );
+
+  const shouldShowPreparationScreen = useMemo(() => 
+    isStarted && !isRefreshing && !isGameOver && isPaused, 
+    [isStarted, isRefreshing, isGameOver, isPaused]
+  );
+
+  const shouldShowStartScreen = useMemo(() => 
+    !isStarted && !isGameOver, 
+    [isStarted, isGameOver]
+  );
+
+  const shouldShowGameOverScreen = useMemo(() => 
+    isGameOver, 
+    [isGameOver]
+  );
+
+  // Memoized callbacks for performance
+  const handleSettingsClick = useCallback(() => {
+    onSettingsClick?.();
+  }, [onSettingsClick]);
+
+  const handleChallengeClick = useCallback(() => {
+    onChallengeClick?.();
+  }, [onChallengeClick]);
+
+  const handleSaveLoadClick = useCallback(() => {
+    setSaveLoadPanelOpen(true);
+  }, []);
+
+  // Wave preview countdown handler
+  const handleWavePreviewCountdownComplete = useCallback(() => {
+    hideWavePreviewOverlay();
+    _startWave();
+  }, [hideWavePreviewOverlay, _startWave]);
+
+  // Unlock animation handlers
+  const handleUnlockAnimationComplete = useCallback(() => {
+    setUnlockAnimation(prev => ({ ...prev, isVisible: false }));
+  }, []);
+
+  // Game effects hook
+  const { screenShake, screenShakeIntensity, dimensions } = useGameEffects(unlockingSlots || new Set());
+  
+  // ✅ NEW: Enhanced visual effects integration
+  useEffect(() => {
+    const updateEnhancedEffects = () => {
+      import('../../game-systems/effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+        enhancedVisualEffectsManager.update(16); // 60 FPS update
+      });
+    };
+    
+    const effectInterval = setInterval(updateEnhancedEffects, 16);
+    
+    return () => {
+      clearInterval(effectInterval);
+    };
+  }, []);
+
+  // Tower drag hook
+  const towerDragState = useTowerDrag();
+
+  // Environment manager
   const environmentManagerRef = useRef<SimplifiedEnvironmentManager | null>(null);
 
-
-  // Initialize simplified environment manager for optimal performance
+  // Initialize environment manager and game flow
   useEffect(() => {
     if (!environmentManagerRef.current) {
       environmentManagerRef.current = new SimplifiedEnvironmentManager();
-      const envState = environmentManagerRef.current.getEnvironmentState();
-      useGameStore.setState({
-        terrainTiles: [], // No terrain tiles for simplified mode
-        weatherState: envState.weatherState,
-        timeOfDayState: envState.timeOfDayState,
-        environmentalHazards: [],
-        interactiveElements: []
-      });
     }
+    
+    // Initialize game flow manager
+    gameFlowManager.initialize();
   }, []);
 
-
-
-
-
-  // 🎮 UPGRADE SCREEN: Stop only game scene sounds when upgrade screen opens
-  useEffect(() => {
-    if (isRefreshing) {
-      import('../../utils/sound/soundEffects').then(({ pauseGameSceneSounds }) => {
-        pauseGameSceneSounds();
-      });
-    }
-  }, [isRefreshing]);
-
-
-
-  React.useEffect(() => {
-    if (isStarted && currentWave > prevWaveRef.current) {
-      incrementChallenge('wave');
-    }
-    prevWaveRef.current = currentWave;
-  }, [currentWave, isStarted, incrementChallenge]);
-
-  // Düşman öldürme event listener
-  React.useEffect(() => {
-    const handleEnemyKill = (_isSpecial?: boolean, enemyType?: string) => {
-      incrementChallenge('enemy');
-      // Boss düşmanlar için
-      if (enemyType && (enemyType.toLowerCase().includes('boss') || enemyType.toLowerCase().includes('king') || enemyType.toLowerCase().includes('lord') || enemyType.toLowerCase().includes('god'))) {
-        incrementChallenge('boss');
-      }
-    };
-    addEnemyKillListener(handleEnemyKill);
-    return () => {
-      removeEnemyKillListener(handleEnemyKill);
-    };
-  }, [addEnemyKillListener, removeEnemyKillListener, incrementChallenge]);
-
-  // Kule yükseltme event listener
-  React.useEffect(() => {
-    const handleTowerUpgrade = (_tower: unknown, oldLevel: number, newLevel: number) => {
-      if (newLevel > oldLevel) {
-        incrementChallenge('upgrade');
-      }
-    };
-    addTowerUpgradeListener(handleTowerUpgrade);
-    return () => {
-      // removeTowerUpgradeListener yok, array'den elle çıkar
-      const store = useGameStore.getState();
-      if (store.towerUpgradeListeners) {
-        store.towerUpgradeListeners = store.towerUpgradeListeners.filter(fn => fn !== handleTowerUpgrade);
-      }
-    };
-  }, [addTowerUpgradeListener, incrementChallenge]);
-
-  // Enhanced drag & drop system
-  const {
-    dragState,
-    dropZones,
-    feedback,
-    handleTowerDragStart,
-    handleMouseMove,
-    handleMouseUp,
-    handleTouchMove,
-    handleTouchEnd,
-    debugMessage,
-    clearDebugMessage
-  } = useTowerDrag();
-
-  // Game effects management
-  const { screenShake, dimensions } = useGameEffects(unlockingSlots);
-
-  // Game timers management
-  useGameTimers(
+  // Game loop hook
+  useGameLoop(
     isStarted,
+    isRefreshing,
     waveStatus,
-    prepRemaining,
-    startWave,
-    tickPreparation,
-    tickEnergyRegen,
-    tickActionRegen
+    currentWave,
+    environmentManagerRef.current || null
   );
 
-  // Game loop management
-  useGameLoop(isStarted, isRefreshing, waveStatus, currentWave, environmentManagerRef.current);
+  // Start game flow when game starts
+  useEffect(() => {
+    if (isStarted && !isRefreshing && !isGameOver) {
+      gameFlowManager.startGame();
+    }
+  }, [isStarted, isRefreshing, isGameOver]);
 
-  // Initialize game systems
-  React.useEffect(() => {
-    initializeAchievements();
-  }, [initializeAchievements]);
+  // Wave preview countdown timer
+  useEffect(() => {
+    if (showWavePreview && wavePreviewCountdown > 0) {
+      const timer = setInterval(() => {
+        startWavePreviewCountdown();
+      }, 1000);
 
-  const { width, height } = dimensions;
-  // Memoize props for GameArea
-  const memoizedTowerSlots = useMemo(() => towerSlots, [towerSlots]);
-  const memoizedDragState = useMemo(() => dragState, [dragState]);
-  const memoizedDropZones = useMemo(() => dropZones, [dropZones]);
-  const memoizedFeedback = useMemo(() => feedback, [feedback]);
-  const memoizedHandleMouseMove = useCallback(handleMouseMove, [handleMouseMove]);
-  const memoizedHandleMouseUp = useCallback(handleMouseUp, [handleMouseUp]);
-  const memoizedHandleTouchMove = useCallback(handleTouchMove, [handleTouchMove]);
-  const memoizedHandleTouchEnd = useCallback(handleTouchEnd, [handleTouchEnd]);
-  const memoizedHandleTowerDragStart = useCallback(handleTowerDragStart, [handleTowerDragStart]);
+      return () => clearInterval(timer);
+    }
+  }, [showWavePreview, wavePreviewCountdown, startWavePreviewCountdown]);
 
-  // --- Mobil algılama ---
-  const isMobile = typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || /Mobi|Android/i.test(navigator.userAgent));
+  // Handle notifications for unlock animations
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const latestNotification = notifications[notifications.length - 1];
+      
+      // Check if this is an unlock notification
+      if (latestNotification.type === 'success' && 
+          (latestNotification.message.includes('Unlocked') || 
+           latestNotification.message.includes('Completed') ||
+           latestNotification.message.includes('Earned'))) {
+        
+        // Determine animation type based on message content
+        let type: 'upgrade' | 'reward' | 'achievement' | 'mission' = 'upgrade';
+        let icon = '✨';
+        
+        if (latestNotification.message.includes('Achievement')) {
+          type = 'achievement';
+          icon = '🏆';
+        } else if (latestNotification.message.includes('Mission')) {
+          type = 'mission';
+          icon = '🎯';
+        } else if (latestNotification.message.includes('Reward')) {
+          type = 'reward';
+          icon = '🎁';
+        }
+        
+        setUnlockAnimation({
+          isVisible: true,
+          type,
+          title: latestNotification.message.split(':')[1]?.trim() || 'Unlocked!',
+          description: latestNotification.message,
+          icon
+        });
+      }
+    }
+  }, [notifications]);
 
-  // Performance optimization: no cinematic or post-processing effects
-  const isInCinematicMode = false;
-  const cameraTransform = 'none';
+  // Memoized container style
+  const containerStyleMemo = useMemo(() => ({
+    ...containerStyle,
+    transform: screenShake 
+      ? `translate(${Math.random() * screenShakeIntensity - screenShakeIntensity/2}px, ${Math.random() * screenShakeIntensity - screenShakeIntensity/2}px)` 
+      : 'none',
+    transition: screenShake ? 'none' : 'transform 0.1s ease-out'
+  }), [screenShake, screenShakeIntensity]);
+
+
 
   return (
-    <div 
-      ref={gameContainerRef}
-      style={{ 
-        ...containerStyle,
-        background: environmentManagerRef.current?.getEnvironmentState().backgroundGradient || GAME_CONSTANTS.CANVAS_BG,
-        animation: screenShake ? 'screen-shake 0.6s ease-in-out' : 'none',
-        transform: isInCinematicMode ? cameraTransform : 'none',
-        filter: 'none', // Disable post-processing for performance
-        transition: isReducedMotion ? 'none' : 'transform 0.3s ease-out, background 0.5s ease-out',
-      }} 
-      className={className}
-    >
-      {/* Post-processing disabled for performance */}
-
-      <style>
-        {keyframeStyles}
-      </style>
+    <div style={containerStyleMemo}>
+      <style>{keyframeStyles}</style>
       
-      {/* UI Components */}
+      {/* Game Stats Panel */}
       <GameStatsPanel 
-        onSettingsClick={onSettingsClick}
-        onChallengeClick={onChallengeClick}
+        onSettingsClick={handleSettingsClick}
+        onChallengeClick={handleChallengeClick}
+        onSaveLoadClick={handleSaveLoadClick}
       />
+
+
+
+      {/* Energy Warning */}
       <EnergyWarning />
-      <DebugMessage message={debugMessage} onClear={clearDebugMessage} />
-      <PreparationScreen />
-      <StartScreen />
-      <GameOverScreen />
 
+      {/* Difficulty Indicator */}
+      <DifficultyIndicator isVisible={isStarted && !isRefreshing} />
 
+      {/* Wave Preview Overlay */}
+      <WavePreviewOverlay
+        isVisible={showWavePreview}
+        onCountdownComplete={handleWavePreviewCountdownComplete}
+      />
 
-      {/* Weather Effects Indicator */}
-      
-              {/* Conditional renderer based on performance settings */}
-        <ConditionalRenderer />
-      
-      {/* Debug overlays */}
-      <SpawnZoneDebugOverlay />
+      {/* Unlock Animation */}
+      <UnlockAnimation
+        isVisible={unlockAnimation.isVisible}
+        _type={unlockAnimation.type}
+        title={unlockAnimation.title}
+        description={unlockAnimation.description}
+        icon={unlockAnimation.icon}
+        onComplete={handleUnlockAnimationComplete}
+      />
+
+      {/* Game Area */}
+      {shouldShowGameArea && (
+        <GameArea 
+          width={dimensions.width}
+          height={dimensions.height}
+          towerSlots={towerSlots}
+          dragState={towerDragState.dragState}
+          dropZones={towerDragState.dropZones}
+          feedback={towerDragState.feedback}
+          onMouseMove={towerDragState.handleMouseMove}
+          onMouseUp={towerDragState.handleMouseUp}
+          onTouchMove={towerDragState.handleTouchMove}
+          onTouchEnd={towerDragState.handleTouchEnd}
+          onTowerDragStart={towerDragState.handleTowerDragStart}
+        />
+      )}
+
+      {/* ✅ NEW: Enhanced Particle Effects Renderer */}
+      <EnhancedParticleRenderer
+        width={dimensions.width}
+        height={dimensions.height}
+        isActive={isStarted && !isRefreshing}
+      />
+
+      {/* Conditional Renderer */}
+      <ConditionalRenderer />
 
       {/* Synergy Display */}
       <SynergyDisplay 
@@ -253,59 +331,33 @@ export const GameBoard: React.FC<GameBoardProps> = React.memo(({ className, onSe
         isVisible={isStarted && !isRefreshing}
       />
 
-      {/* Lazy loaded UpgradeScreen with Suspense */}
-      {isRefreshing && (
+      {/* Upgrade Screen */}
+      {shouldShowUpgradeScreen && (
         <Suspense fallback={<LoadingFallback />}>
           <UpgradeScreen />
         </Suspense>
       )}
-      
-      {/* Game Area */}
-      <GameArea
-        width={width}
-        height={height}
-        towerSlots={memoizedTowerSlots}
-        dragState={memoizedDragState}
-        dropZones={memoizedDropZones}
-        feedback={memoizedFeedback}
-        onMouseMove={memoizedHandleMouseMove}
-        onMouseUp={memoizedHandleMouseUp}
-        onTouchMove={memoizedHandleTouchMove}
-        onTouchEnd={memoizedHandleTouchEnd}
-        onTowerDragStart={memoizedHandleTowerDragStart}
-        timeOfDay={'day'}
-        isMobile={isMobile}
+
+      {/* Preparation Screen */}
+      {shouldShowPreparationScreen && (
+        <PreparationScreen />
+      )}
+
+      {/* Start Screen */}
+      {shouldShowStartScreen && (
+        <StartScreen />
+      )}
+
+      {/* Game Over Screen */}
+      {shouldShowGameOverScreen && (
+        <GameOverScreen />
+      )}
+
+      {/* Save/Load Panel */}
+      <SaveLoadPanel
+        isOpen={saveLoadPanelOpen}
+        onClose={() => setSaveLoadPanelOpen(false)}
       />
-      {/* Area Effect Overlays for Support Towers */}
-      <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}>
-        {towerSlots.map((slot) => {
-          const t = slot.tower;
-          if (!t || !t.areaEffectActive || !t.areaEffectType || !t.areaEffectRadius) return null;
-          // Convert game coords to screen coords (assume 1:1 for now, adjust if needed)
-          const left = t.position.x - t.areaEffectRadius;
-          const top = t.position.y - t.areaEffectRadius;
-          const size = t.areaEffectRadius * 2;
-          let className = '';
-          if (t.areaEffectType === 'heal') className = 'area-effect-heal';
-          else if (t.areaEffectType === 'poison') className = 'area-effect-poison';
-          else if (t.areaEffectType === 'fire') className = 'area-effect-fire';
-          return (
-            <div
-              key={`area-effect-${t.id}`}
-              className={className}
-              style={{
-                position: 'absolute',
-                left,
-                top,
-                width: size,
-                height: size,
-                zIndex: 3,
-                pointerEvents: 'none',
-              }}
-            />
-          );
-        })}
-      </div>
     </div>
   );
 }); 

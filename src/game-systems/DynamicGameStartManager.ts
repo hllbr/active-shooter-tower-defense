@@ -75,7 +75,7 @@ export class DynamicGameStartManager {
       .filter(({ slot }) => slot.unlocked && !slot.tower);
 
     if (availableSlots.length === 0) {
-      console.warn('No available slots for random tower placement');
+      // No available slots for random tower placement
       return;
     }
 
@@ -98,8 +98,7 @@ export class DynamicGameStartManager {
       slotIndex: selectedSlot.index
     });
 
-    // Log the placement for debugging
-    console.log(`🎯 Dynamic Start: Placed ${selectedTowerName} (${selectedTowerClass}) at slot ${selectedSlot.index}`);
+            // Tower placed successfully
   }
 
   /**

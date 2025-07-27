@@ -4,6 +4,8 @@ import { TowerDragVisualization } from './TowerDragVisualization';
 import { useGameStore } from '../../../../models/store';
 import type { TowerSlot } from '../../../../models/gameTypes';
 import type { DragState, DropZoneState, DragFeedback } from '../../types';
+import { HealthBarRenderer, BossHealthBarStyles } from './helpers/HealthBarRenderer';
+import { EnemyVisualRenderer } from './helpers/EnemyVisualRenderer';
 
 interface GameAreaProps {
   width: number;
@@ -50,8 +52,12 @@ export const GameArea: React.FC<GameAreaProps> = React.memo(({
   const brightness = isMobile ? 1.0 : 1.04;
 
   // Memoize event handlers if needed (example)
-  const handleMouseDown = useCallback(() => useGameStore.getState().selectSlot(null), []);
-  const handleTouchStart = useCallback(() => useGameStore.getState().selectSlot(null), []);
+  const handleMouseDown = useCallback(() => {
+    // Global click handler for deselection is now handled by TowerInteractionManager
+  }, []);
+  const handleTouchStart = useCallback(() => {
+    // Global touch handler for deselection is now handled by TowerInteractionManager
+  }, []);
 
   return (
     <svg
@@ -108,19 +114,16 @@ export const GameArea: React.FC<GameAreaProps> = React.memo(({
           feedback={feedback}
         />
 
-        {/* Simplified Game Elements */}
+        {/* Enhanced Game Elements with Health Bars */}
         {/* Enemies */}
         {enemies.map((enemy) => (
-          <circle
-            key={enemy.id}
-            cx={enemy.position?.x || 0}
-            cy={enemy.position?.y || 0}
-            r={enemy.size || 8}
-            fill={enemy.type === 'boss' ? '#DC2626' : '#EF4444'}
-            stroke="#000"
-            strokeWidth="1"
-            opacity={0.9}
-          />
+          <g key={enemy.id}>
+            {/* Health Bar for all enemies */}
+            {HealthBarRenderer.render(enemy)}
+            
+            {/* Enhanced enemy visual with CSS-based diversification */}
+            {EnemyVisualRenderer.render(enemy)}
+          </g>
         ))}
 
         {/* Bullets */}
@@ -149,6 +152,7 @@ export const GameArea: React.FC<GameAreaProps> = React.memo(({
           />
         ))}
       </g>
+      <style>{BossHealthBarStyles}</style>
     </svg>
   );
 }); 

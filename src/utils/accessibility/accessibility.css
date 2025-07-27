@@ -1,0 +1,230 @@
+/* Accessibility Styles */
+
+/* CSS Custom Properties for Accessibility Colors */
+:root {
+  /* Default health bar colors */
+  --health-good: #00ff00;
+  --health-warning: #ffff00;
+  --health-bad: #ff0000;
+  --health-background: #333333;
+  
+  /* Default UI colors */
+  --primary-color: #1E3A8A;
+  --secondary-color: #F59E0B;
+  --accent-color: #10B981;
+  --danger-color: #EF4444;
+  --success-color: #22C55E;
+  --warning-color: #F59E0B;
+  --info-color: #3B82F6;
+  
+  /* UI Scaling */
+  --ui-scale: 1;
+  --vh: 100vh;
+  
+  /* Motion preferences */
+  --motion-preference: auto;
+  --animation-duration: 0.3s;
+  --transition-duration: 0.2s;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-preference: reduce;
+    --animation-duration: 0s;
+    --transition-duration: 0s;
+  }
+  
+  * {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --health-good: #00FF00;
+    --health-warning: #FFFF00;
+    --health-bad: #FF0000;
+    --health-background: #000000;
+    --primary-color: #FFFFFF;
+    --secondary-color: #FFFF00;
+    --accent-color: #00FF00;
+    --danger-color: #FF0000;
+    --success-color: #00FF00;
+    --warning-color: #FFFF00;
+    --info-color: #00FFFF;
+  }
+}
+
+/* UI Scaling Support */
+body {
+  transform-origin: top left;
+  transition: transform 0.3s ease;
+}
+
+/* Responsive UI Scaling */
+@media (max-width: 768px) {
+  :root {
+    --ui-scale: 0.9;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --ui-scale: 0.8;
+  }
+}
+
+/* Accessibility Focus Indicators */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+[role="button"]:focus {
+  outline: 2px solid var(--accent-color, #10B981);
+  outline-offset: 2px;
+}
+
+/* High contrast focus indicators */
+@media (prefers-contrast: high) {
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus,
+  [role="button"]:focus {
+    outline: 3px solid #FFFFFF;
+    outline-offset: 3px;
+  }
+}
+
+/* Screen Reader Only Text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Large Text Support */
+.large-text {
+  font-size: 1.2em;
+  line-height: 1.5;
+}
+
+/* Touch Target Sizing */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Colorblind-friendly patterns */
+.pattern-stripe {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    currentColor 2px,
+    currentColor 4px
+  );
+}
+
+.pattern-dots {
+  background-image: radial-gradient(
+    circle,
+    currentColor 1px,
+    transparent 1px
+  );
+  background-size: 4px 4px;
+}
+
+.pattern-checker {
+  background-image: 
+    linear-gradient(45deg, currentColor 25%, transparent 25%),
+    linear-gradient(-45deg, currentColor 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, currentColor 75%),
+    linear-gradient(-45deg, transparent 75%, currentColor 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+}
+
+/* Accessibility Animations */
+@keyframes accessibility-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes accessibility-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Reduced motion animations */
+@media (prefers-reduced-motion: reduce) {
+  .accessibility-pulse {
+    animation: none;
+  }
+  
+  .accessibility-bounce {
+    animation: none;
+  }
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  .modern-settings-panel {
+    border: 3px solid #FFFFFF;
+    background: #000000;
+  }
+  
+  .modern-settings-card {
+    border: 2px solid #FFFFFF;
+    background: #000000;
+  }
+  
+  .settings-tab-button {
+    border: 2px solid #FFFFFF;
+    color: #FFFFFF;
+  }
+  
+  .settings-tab-button.active {
+    background: #FFFFFF;
+    color: #000000;
+  }
+}
+
+/* Print styles for accessibility */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  a {
+    text-decoration: underline;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+} 

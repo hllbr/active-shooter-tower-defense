@@ -6,10 +6,12 @@ import { formatCurrency } from '../../../utils/formatters';
 import { playSound } from '../../../utils/sound/soundEffects';
 import { MineSelection } from './components/MineSelection';
 import { getMineUpgradeState } from './helpers/mineUpgradeHelpers';
+import { toast } from 'react-toastify';
 
-export const EnhancedMineUpgrade: React.FC = () => {
+export const EnhancedMineUpgrade = () => {
   const [showMineSelection, setShowMineSelection] = useState(false);
   const gold: number = useGameStore((s: Store) => s.gold);
+  const energy: number = useGameStore((s: Store) => s.energy);
   const mines = useGameStore((s: Store) => s.mines);
   const deploySpecializedMine = useGameStore((s: Store) => s.deploySpecializedMine);
   const mineLevel: number = useGameStore((s: Store) => s.mineLevel);
@@ -31,9 +33,15 @@ export const EnhancedMineUpgrade: React.FC = () => {
   
   const currentMines = mines.length;
   const maxMines = GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MAX_MINES_PER_WAVE;
+  
+  // Energy cost checks
+  const basicMineEnergyCost = GAME_CONSTANTS.ENERGY_COSTS.deployMine;
+  const specializedMineEnergyCost = GAME_CONSTANTS.ENERGY_COSTS.deploySpecializedMine;
+  const canAffordBasicMineEnergy = energy >= basicMineEnergyCost;
+  const canAffordSpecializedMineEnergy = energy >= specializedMineEnergyCost;
 
   const handleMineUpgrade = (): void => {
-    if (canAffordMines && !isMineUpgradeBlocked && mineUpgrade) {
+    if (canAffordMines && canAffordBasicMineEnergy && !isMineUpgradeBlocked && mineUpgrade) {
       upgradeMines();
       setTimeout(deployMines, 100);
       playSound('upgrade-purchase');
@@ -41,6 +49,11 @@ export const EnhancedMineUpgrade: React.FC = () => {
   };
 
   const handleMineSelect = (mineType: 'explosive' | 'utility' | 'area_denial', mineSubtype: string): void => {
+    if (!canAffordSpecializedMineEnergy) {
+      toast.warning('Yetersiz enerji!');
+      playSound('error');
+      return;
+    }
     deploySpecializedMine(mineType, mineSubtype);
     playSound('tower-create-sound');
     setShowMineSelection(false);
@@ -181,22 +194,22 @@ export const EnhancedMineUpgrade: React.FC = () => {
 
           <button
             onClick={handleMineUpgrade}
-            disabled={!canAffordMines}
+            disabled={!canAffordMines || !canAffordBasicMineEnergy}
             style={{
-              background: canAffordMines ? '#16a34a' : '#ef4444',
+              background: (canAffordMines && canAffordBasicMineEnergy) ? '#16a34a' : '#ef4444',
               color: '#fff',
               border: 'none',
               borderRadius: 8,
               padding: '8px 16px',
               fontSize: 12,
               fontWeight: 'bold',
-              cursor: canAffordMines ? 'pointer' : 'not-allowed',
+              cursor: (canAffordMines && canAffordBasicMineEnergy) ? 'pointer' : 'not-allowed',
               transition: 'all 0.2s',
               boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-              opacity: canAffordMines ? 1 : 0.7
+              opacity: (canAffordMines && canAffordBasicMineEnergy) ? 1 : 0.7
             }}
           >
-            Upgrade Basic Mines
+            Upgrade Basic Mines ({basicMineEnergyCost}⚡)
           </button>
         </div>
       )}
@@ -208,22 +221,22 @@ export const EnhancedMineUpgrade: React.FC = () => {
       }}>
         <button
           onClick={() => setShowMineSelection(!showMineSelection)}
-          disabled={currentMines >= maxMines}
+          disabled={currentMines >= maxMines || !canAffordSpecializedMineEnergy}
           style={{
-            background: currentMines >= maxMines ? '#6b7280' : '#16a34a',
+            background: (currentMines >= maxMines || !canAffordSpecializedMineEnergy) ? '#6b7280' : '#16a34a',
             color: '#fff',
             border: 'none',
             borderRadius: 8,
             padding: '10px 20px',
             fontSize: 14,
             fontWeight: 'bold',
-            cursor: currentMines >= maxMines ? 'not-allowed' : 'pointer',
+            cursor: (currentMines >= maxMines || !canAffordSpecializedMineEnergy) ? 'not-allowed' : 'pointer',
             transition: 'all 0.2s',
             boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
             width: '100%'
           }}
         >
-          {showMineSelection ? 'Hide Mine Selection' : 'Deploy Specialized Mine'}
+          {showMineSelection ? 'Hide Mine Selection' : `Deploy Specialized Mine (${specializedMineEnergyCost}⚡)`}
         </button>
 
         {showMineSelection && (

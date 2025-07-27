@@ -6,8 +6,10 @@
 import { useGameStore } from '../../models/store';
 import { playSound } from '../../utils/sound/soundEffects';
 import { toast } from 'react-toastify';
-import { Logger } from '../../utils/Logger';
+// Logger import removed for production
+
 import type { Enemy } from '../../models/gameTypes';
+import { weatherManager } from '../weather';
 
 export interface WeatherEffectCard {
   id: string;
@@ -199,7 +201,7 @@ export class WeatherEffectMarket {
   purchaseCard(cardId: string): boolean {
     const card = WEATHER_EFFECT_CARDS.find(c => c.id === cardId);
     if (!card) {
-      Logger.warn(`Weather card not found: ${cardId}`);
+      // Weather card not found
       return false;
     }
 
@@ -211,7 +213,7 @@ export class WeatherEffectMarket {
     }
 
     if (this.ownedCards.has(cardId)) {
-      Logger.warn(`Card already owned: ${cardId}`);
+      // Card already owned
       return false;
     }
 
@@ -220,7 +222,7 @@ export class WeatherEffectMarket {
     this.ownedCards.add(cardId);
     
     playSound('coin-collect');
-    Logger.log(`Weather card purchased: ${card.name} for ${card.cost} gold`);
+    // Weather card purchased
     
     return true;
   }
@@ -236,7 +238,7 @@ export class WeatherEffectMarket {
 
     // Check if already active
     if (this.activeEffects.has(cardId)) {
-      Logger.warn(`Effect already active: ${cardId}`);
+      // Effect already active
       return false;
     }
 
@@ -251,7 +253,7 @@ export class WeatherEffectMarket {
     this.applyWeatherEffect(card);
     
     playSound('energy-recharge');
-    Logger.log(`Weather effect activated: ${card.name}`);
+    // Weather effect activated
     
     return true;
   }
@@ -289,10 +291,14 @@ export class WeatherEffectMarket {
         break;
     }
 
-    // Update weather state for visual effects
+    // Update weather state for visual effects using WeatherManager
+    const weatherType = this.getWeatherTypeFromEffect(effect.type);
+    weatherManager.addWeatherEffect(weatherType, effect.intensity, card.duration);
+    
+    // Update store state
     gameState.updateWeatherState({
       ...gameState.weatherState,
-      currentWeather: this.getWeatherTypeFromEffect(effect.type),
+      currentWeather: weatherType,
       weatherIntensity: effect.intensity,
       startTime: performance.now(),
       duration: card.duration
@@ -359,10 +365,10 @@ export class WeatherEffectMarket {
   /**
    * Apply time dilation effect
    */
-  private applyTimeDilation(effect: WeatherEffect): void {
+  private applyTimeDilation(_effect: WeatherEffect): void {
     // This would slow down the game loop temporarily
     // Implementation would depend on how the game loop is structured
-    Logger.log(`Time dilation applied: ${effect.intensity} for ${effect.areaSize}ms`);
+    // Time dilation applied
   }
 
   /**
@@ -497,7 +503,7 @@ export class WeatherEffectMarket {
     for (const [cardId, effectData] of this.activeEffects.entries()) {
       if (now >= effectData.endTime) {
         this.activeEffects.delete(cardId);
-        Logger.log(`Weather effect expired: ${effectData.card.name}`);
+        // Weather effect expired
       }
     }
   }

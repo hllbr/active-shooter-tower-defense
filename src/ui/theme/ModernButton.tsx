@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from './ThemeProvider';
+import { useTheme } from './useTheme';
 
 interface ModernButtonProps {
   children: React.ReactNode;
@@ -16,7 +16,7 @@ interface ModernButtonProps {
   fullWidth?: boolean;
 }
 
-export const ModernButton: React.FC<ModernButtonProps> = ({
+export const ModernButton = ({
   children,
   onClick,
   variant = 'primary',
@@ -28,8 +28,8 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
   title,
   icon,
   loading = false,
-  fullWidth = false,
-}) => {
+  fullWidth = false
+}: ModernButtonProps) => {
   const { colors, isReducedMotion } = useTheme();
 
   const getVariantStyles = (): React.CSSProperties => {

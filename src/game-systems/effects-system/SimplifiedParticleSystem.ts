@@ -159,7 +159,6 @@ export class SimplifiedParticleSystem {
       particle.life -= deltaTime;
       particle.opacity = Math.max(0, particle.life / particle.maxLife);
       
-      // Remove dead particles
       if (particle.life <= 0) {
         this.destroyParticle(particle);
         this.particles.splice(i, 1);

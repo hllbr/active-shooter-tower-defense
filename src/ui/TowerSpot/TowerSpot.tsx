@@ -5,36 +5,39 @@ import type { TowerSpotProps } from './types';
 import { useTowerSpotLogic } from './hooks/useTowerSpotLogic';
 import { useGameStore } from '../../models/store';
 import { useTowerMoveManager } from '../GameBoard/hooks/useTowerMoveManager';
+import { towerInteractionManager } from '../../game-systems/tower-system/TowerInteractionManager';
+import { getSettings } from '../../utils/settings';
 import {
   TowerRenderer,
   WallRenderer,
   ModifierRenderer,
   VisualExtrasRenderer,
   SlotUnlockDisplay,
-  DebugInfo,
+
   ParticleSystem,
   FirstTowerHighlight,
-  TowerHealthDisplay,
+  TowerHealthBar,
   TowerSelectionPanel,
   SimplifiedTowerControls,
   FireHazardDisplay,
   TowerMoveIcon,
   TileActionIcon,
-  TileActionMenu
+  TileActionMenu,
+  TowerTooltip
 } from './components';
 
-export const TowerSpot: React.FC<TowerSpotProps> = ({ 
-  slot, 
-  slotIdx, 
-  onTowerDragStart, 
-  isDragTarget, 
-  draggedTowerSlotIdx 
-}) => {
+export const TowerSpot = ({
+  slot,
+  slotIdx,
+  onTowerDragStart,
+  isDragTarget,
+  draggedTowerSlotIdx
+}: TowerSpotProps) => {
   // Move manager for hand icon functionality
   const { getMoveStateForSlot, initiateMoveMode } = useTowerMoveManager();
   const moveState = getMoveStateForSlot(slotIdx);
   const selectedSlot = useGameStore(s => s.selectedSlot);
-  const selectSlot = useGameStore(s => s.selectSlot);
+  const _selectSlot = useGameStore(s => s.selectSlot);
   const {
     // State
     showTowerSelection,
@@ -47,7 +50,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
     canAffordUpgrade,
     canRepair,
     canAffordRepair,
-    debugInfo,
+
     shouldShowBuildText,
     wallLevel,
     
@@ -73,8 +76,15 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
 
   // Health display hover state
   const [showHealthDisplay, setShowHealthDisplay] = React.useState(false);
-  const [isTowerHovered, setIsTowerHovered] = React.useState(false);
+  const [_isTowerHovered, setIsTowerHovered] = React.useState(false);
   const isSelected = selectedSlot === slotIdx;
+  
+  // Get health bar settings
+  const settings = getSettings();
+  const healthBarAlwaysVisible = settings.healthBarAlwaysVisible;
+  
+  // Use interaction manager for hover state
+  const isHovered = towerInteractionManager.isSlotHovered(slotIdx);
 
   // --- YENİ: Build animasyonu için state ---
   const [showTowerVisible, setShowTowerVisible] = React.useState(true); // Kule görünür mü
@@ -115,6 +125,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
 
   // Kule ateşleme için: data-fire-origin noktasının ekran pozisyonunu bul
   React.useImperativeHandle(slot.fireOriginRef, () => ({
+    ...svgGroupRef.current,
     getFireOriginPosition: () => {
       if (!svgGroupRef.current) return null;
       const fireOrigin = svgGroupRef.current.querySelector('[data-fire-origin="true"]');
@@ -126,14 +137,15 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
         y: bbox.y + bbox.height / 2
       };
     }
-  }), [slot.tower]);
+  } as SVGGElement & { getFireOriginPosition?: () => { x: number; y: number } | null }), []);
 
   return (
     <>
     <g
       ref={svgGroupRef}
+      data-tower-slot={slotIdx}
       onMouseDown={(e) => {
-        selectSlot(slotIdx);
+        towerInteractionManager.handleTowerClick(slotIdx);
         e.stopPropagation();
       }}
     >
@@ -158,7 +170,6 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
                 strokeDasharray="4 2"
                 style={{ cursor: 'pointer' }}
                 onClick={() => {
-                  console.log('DEBUG: handleShowTowerSelection called');
                   handleShowTowerSelection();
                 }}
               />
@@ -234,10 +245,12 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             onMouseEnter={() => {
               setShowHealthDisplay(true);
               setIsTowerHovered(true);
+              towerInteractionManager.handleTowerHoverStart(slotIdx);
             }}
             onMouseLeave={() => {
               setShowHealthDisplay(false);
               setIsTowerHovered(false);
+              towerInteractionManager.handleTowerHoverEnd(slotIdx);
             }}
           >
             <TowerRenderer slot={slot} towerLevel={slot.tower.level} />
@@ -255,8 +268,11 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           {/* Visual extras (above tower) */}
           <VisualExtrasRenderer slot={slot} />
           
-          {/* Health display on hover */}
-          <TowerHealthDisplay slot={slot} isVisible={showHealthDisplay} />
+          {/* Health bar above tower */}
+          <TowerHealthBar slot={slot} isVisible={showHealthDisplay} showOnHover={!healthBarAlwaysVisible} />
+          
+          {/* Tower tooltip on hover */}
+          <TowerTooltip slot={slot} slotIdx={slotIdx} isVisible={isHovered} />
           
           {/* Fire hazard display */}
           <FireHazardDisplay slot={slot} slotIdx={slotIdx} />
@@ -266,7 +282,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             slot={slot}
             slotIdx={slotIdx}
             onMoveInitiate={initiateMoveMode}
-            isHovered={isTowerHovered}
+            isHovered={isHovered}
             isSelected={isSelected}
             canMove={moveState.canMove}
             moveCost={moveState.moveCost}
@@ -274,8 +290,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             cooldownRemaining={moveState.cooldownRemaining}
           />
           
-          {/* Debug information */}
-          <DebugInfo slot={slot} debugInfo={debugInfo} />
+                {/* Debug information removed for production optimization */}
           
           {/* Simplified tower controls */}
           <SimplifiedTowerControls
@@ -290,7 +305,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             repairCost={Math.ceil(GAME_CONSTANTS.TOWER_REPAIR_BASE_COST * (1 - (slot.tower.health / slot.tower.maxHealth)))}
             onRepair={handleRepair}
             onDelete={handleDelete}
-            isHovered={isTowerHovered}
+            _isHovered={isHovered}
             isSelected={isSelected}
           />
         </g>
@@ -302,7 +317,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
         _slotIdx={slotIdx}
         _onTileAction={handlePerformTileAction}
         onShowMenu={() => setShowTileActionMenu(true)}
-        isHovered={isTowerHovered}
+        isHovered={isHovered}
         isSelected={isSelected}
         canPerformAction={canPerformAction}
         actionsRemaining={actionsRemaining}

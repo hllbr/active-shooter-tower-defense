@@ -15,6 +15,22 @@ export const tabStyles = {
     background: 'rgba(0,0,0,0.15)',
     borderRadius: 12,
     border: '2px solid rgba(255,255,255,0.1)',
+    scrollbarWidth: 'thin' as const,
+    scrollbarColor: '#4A5568 #1A202C',
+    '&::-webkit-scrollbar': {
+      width: '8px'
+    },
+    '&::-webkit-scrollbar-track': {
+      background: '#1A202C',
+      borderRadius: '4px'
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: '#4A5568',
+      borderRadius: '4px',
+      '&:hover': {
+        background: '#6B7280'
+      }
+    }
   } as CSSProperties,
 
   coreTabContainer: {

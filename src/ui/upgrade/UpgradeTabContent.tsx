@@ -10,13 +10,16 @@ import { ShieldUpgrades } from '../game/upgrades/ShieldUpgrades';
 import { DefenseUpgrades } from '../game/upgrades/DefenseUpgrades';
 import { UpgradePackages } from '../game/upgrades/UpgradePackages';
 import { PowerMarket } from '../game/upgrades/PowerMarket';
-import { WeatherMarketContent } from '../game/market/WeatherMarketContent';
+import { SimplifiedMarketUI } from '../game/market/SimplifiedMarketUI';
 import { AuraUpgrades } from '../game/upgrades/AuraUpgrades';
+import { FireModeSelector } from '../game/upgrades/FireModeSelector';
+import { AdvancedMineSelector } from '../game/upgrades/AdvancedMineSelector';
+import { MissionDisplay } from '../game/upgrades/MissionDisplay';
 
 // Tab specific components
 
 
-export const UpgradeTabContent: React.FC<TabContentProps> = ({ activeTab }) => {
+export const UpgradeTabContent = ({ activeTab }: TabContentProps) => {
   const bulletLevel = useGameStore((s: Store) => s.bulletLevel);
   const discountMultiplier = useGameStore((s: Store) => s.discountMultiplier);
 
@@ -31,9 +34,14 @@ export const UpgradeTabContent: React.FC<TabContentProps> = ({ activeTab }) => {
             <FireUpgrades/>
             <ShieldUpgrades />
             <AuraUpgrades />
+            <FireModeSelector />
+            <AdvancedMineSelector />
             {bulletLevel >= GAME_CONSTANTS.BULLET_TYPES.length && <DefenseUpgrades />}
           </div>
         );
+        
+      case 'missions':
+        return <MissionDisplay />;
         
       case 'packages':
         return <UpgradePackages />;
@@ -42,7 +50,7 @@ export const UpgradeTabContent: React.FC<TabContentProps> = ({ activeTab }) => {
         return <PowerMarket />;
         
       case 'weather':
-        return <WeatherMarketContent />;
+        return <SimplifiedMarketUI />;
         
       default:
         return null;

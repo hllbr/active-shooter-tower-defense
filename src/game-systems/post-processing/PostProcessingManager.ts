@@ -32,7 +32,7 @@ export interface GameStateFilter {
   crtEffect: boolean;
 }
 
-import { Logger } from '../../utils/Logger';
+// Logger import removed for production
 
 export class PostProcessingManager {
   private static instance: PostProcessingManager;
@@ -246,7 +246,7 @@ export class PostProcessingManager {
   public applyGameStateFilter(filterName: string, duration: number = 1000): void {
     const filter = this.gameStateFilters.get(filterName);
     if (!filter) {
-      Logger.warn(`Post-processing filter "${filterName}" not found`);
+      // Post-processing filter not found
       return;
     }
 

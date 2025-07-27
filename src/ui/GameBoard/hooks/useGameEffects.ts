@@ -1,11 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
-import { GAME_CONSTANTS } from '../../../utils/constants';
 
 import { advancedBulletPool } from '../../../game-systems/memory/AdvancedBulletPool';
 
 export const useGameEffects = (unlockingSlots: Set<number>) => {
   // Screen shake effect
   const [screenShake, setScreenShake] = useState(false);
+  const [screenShakeIntensity, setScreenShakeIntensity] = useState(0);
   const screenShakeTimerRef = useRef<number | null>(null);
 
   // Viewport dimensions cache
@@ -24,8 +24,10 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
 
     if (unlockingSlots.size > 0) {
       setScreenShake(true);
+      setScreenShakeIntensity(5); // Default intensity for slot unlocking
       screenShakeTimerRef.current = window.setTimeout(() => {
         setScreenShake(false);
+        setScreenShakeIntensity(0);
         screenShakeTimerRef.current = null;
       }, 600);
       
@@ -37,8 +39,36 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
       };
     } else {
       setScreenShake(false);
+      setScreenShakeIntensity(0);
     }
   }, [unlockingSlots]);
+
+  // Boss phase transition screen shake
+  useEffect(() => {
+    const handleScreenShake = (event: CustomEvent) => {
+      const { intensity = 5, duration = 600, _frequency = 0.02 } = event.detail;
+      
+      // Clear any existing timer
+      if (screenShakeTimerRef.current) {
+        clearTimeout(screenShakeTimerRef.current);
+      }
+      
+      setScreenShake(true);
+      setScreenShakeIntensity(intensity);
+      
+      screenShakeTimerRef.current = window.setTimeout(() => {
+        setScreenShake(false);
+        setScreenShakeIntensity(0);
+        screenShakeTimerRef.current = null;
+      }, duration);
+    };
+
+    window.addEventListener('screenShake', handleScreenShake as EventListener);
+    
+    return () => {
+      window.removeEventListener('screenShake', handleScreenShake as EventListener);
+    };
+  }, []);
 
 
 
@@ -71,14 +101,13 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
         clearTimeout(screenShakeTimerRef.current);
       }
       
-      if (GAME_CONSTANTS.DEBUG_MODE) {
-        const _bulletStats = advancedBulletPool.getStats();
-      }
+  
     };
   }, []);
 
   return {
     screenShake,
+    screenShakeIntensity,
     dimensions
   };
 }; 

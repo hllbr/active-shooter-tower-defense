@@ -1,8 +1,11 @@
 import './App.css';
+import './ui/responsive.css';
+import './utils/accessibility/accessibility.css';
 import './ui/TowerSpot/styles/towerSelectionPanel.css';
 import './ui/TowerSpot/styles/enhancedLockedZone.css';
 import './ui/TowerSpot/styles/simplifiedTowerControls.css';
 import './ui/TowerSpot/styles/fireHazard.css';
+import './ui/common/ScrollableList.css';
 import { GameBoard } from './ui/GameBoard';
 import { useState } from 'react';
 import { SettingsPanel } from './ui/settings/SettingsPanel';
@@ -10,10 +13,10 @@ import { ChallengePanel } from './ui/challenge/ChallengePanel';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ChallengeProvider } from './ui/challenge/ChallengeProvider';
-import { MiniSecurityIndicator } from './ui/common/SecurityStatusIndicator';
+
 import { ThemeProvider } from './ui/theme/ThemeProvider';
 
-function App() {
+const App = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [challengeOpen, setChallengeOpen] = useState(false);
 
@@ -35,7 +38,7 @@ function App() {
             />
             <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
             <ChallengePanel isOpen={challengeOpen} onClose={() => setChallengeOpen(false)} />
-            <MiniSecurityIndicator />
+
             <div className="game-container">
               <h1>Shooter Tower Defense</h1>
               <GameBoard 
@@ -48,6 +51,6 @@ function App() {
       </ChallengeProvider>
     </ThemeProvider>
   );
-}
+};
 
 export default App; 

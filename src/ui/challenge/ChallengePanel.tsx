@@ -3,6 +3,7 @@ import { useChallenge } from './hooks/useChallenge';
 import type { Reward } from './context/ChallengeContext';
 import { format } from 'date-fns';
 import { ToastContainer, toast } from 'react-toastify';
+import { ScrollableList } from '../common/ScrollableList';
 import 'react-toastify/dist/ReactToastify.css';
 
 interface ChallengePanelProps {
@@ -310,39 +311,41 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({ isOpen, onClose 
               }}>
                 📜 Ödül Geçmişi (Son 10)
               </h3>
-              <div style={{
-                backgroundColor: '#2D3748',
-                border: '1px solid #4A5568',
-                borderRadius: '8px',
-                padding: '12px',
-                maxHeight: '200px',
-                overflowY: 'auto'
-              }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {claimedRewardHistory.slice(-10).reverse().map((item, i) => (
-                    <div 
-                      key={item.id + '-' + item.date + '-' + i}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '8px',
-                        backgroundColor: '#1A202C',
-                        borderRadius: '6px'
-                      }}
-                    >
-                      <span style={{ color: '#9CA3AF', fontSize: '12px' }}>
-                        {format(new Date(item.date), 'dd.MM.yyyy HH:mm')}
-                      </span>
-                      <span style={{ color: '#FFF', fontSize: '12px' }}>
-                        {item.reward.type === 'gold' ? `${item.reward.amount} 💰` : 
-                         item.reward.type === 'skin' ? `🎨 ${item.reward.name}` : 
-                         `🏰 ${item.reward.towerType}`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ScrollableList
+                items={claimedRewardHistory.slice(-10).reverse()}
+                renderItem={(item) => (
+                  <div 
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '8px',
+                      backgroundColor: '#1A202C',
+                      borderRadius: '6px'
+                    }}
+                  >
+                    <span style={{ color: '#9CA3AF', fontSize: '12px' }}>
+                      {format(new Date(item.date), 'dd.MM.yyyy HH:mm')}
+                    </span>
+                    <span style={{ color: '#FFF', fontSize: '12px' }}>
+                      {item.reward.type === 'gold' ? `${item.reward.amount} 💰` : 
+                       item.reward.type === 'skin' ? `🎨 ${item.reward.name}` : 
+                       `🏰 ${item.reward.towerType}`}
+                    </span>
+                  </div>
+                )}
+                keyExtractor={(item, i) => item.id + '-' + item.date + '-' + i}
+                maxHeight="200px"
+                containerStyle={{
+                  backgroundColor: '#2D3748',
+                  border: '1px solid #4A5568',
+                  borderRadius: '8px',
+                  padding: '12px'
+                }}
+                itemContainerStyle={{ marginBottom: '8px' }}
+                emptyMessage="Henüz ödül geçmişi bulunmuyor"
+                emptyIcon="📜"
+              />
             </div>
           )}
         </div>

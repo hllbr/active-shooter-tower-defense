@@ -7,12 +7,12 @@ interface DiceFaceProps {
   showShadow?: boolean;
 }
 
-export const DiceFace: React.FC<DiceFaceProps> = ({ 
+export const DiceFace = ({ 
   roll, 
   size = 'medium', 
   color,
   showShadow = false 
-}) => {
+}: DiceFaceProps) => {
   const getDiceFace = (rollValue: number | null): string => {
     if (!rollValue) return '';
     const faces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];

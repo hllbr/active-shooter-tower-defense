@@ -6,6 +6,7 @@ import { getRandomSpawnPosition } from './index';
 import BossManager from './BossManager';
 import { EnemyBehaviorSystem } from './EnemyBehaviorSystem';
 import { advancedEnemyPool } from '../memory/AdvancedEnemyPool';
+import { dynamicDifficultyManager } from '../DynamicDifficultyManager';
 
 /**
  * Factory class responsible for creating different types of enemies
@@ -19,7 +20,7 @@ export class EnemyFactory {
   }
 
   /**
-   * Creates an enemy with dynamic spawning integration
+   * Creates an enemy with dynamic spawning integration and difficulty adjustment
    */
   static createEnemy(wave: number, type: keyof typeof GAME_CONSTANTS.ENEMY_TYPES = 'Basic'): Enemy {
     const enemies = useGameStore.getState().enemies;
@@ -33,7 +34,8 @@ export class EnemyFactory {
       const position = getRandomSpawnPosition();
       const advancedBoss = BossManager.createBoss(wave, position);
       if (advancedBoss) {
-        return advancedBoss;
+        // Apply dynamic difficulty adjustment to boss
+        return dynamicDifficultyManager.applyEnemyAdjustment(advancedBoss, true);
       }
     }
 
@@ -47,11 +49,13 @@ export class EnemyFactory {
       isSpecial = Math.random() < totalChance;
     }
 
+    let enemy: Enemy;
+
     if (isSpecial && finalType === 'Basic') {
       // Use pool for special enemy (Yadama/Microbe)
       const position = getRandomSpawnPosition();
       const microbe = GAME_CONSTANTS.MICROBE_ENEMY;
-      const enemy = advancedEnemyPool.createEnemy(
+      enemy = advancedEnemyPool.createEnemy(
         position,
         microbe.health,
         microbe.speed,
@@ -63,12 +67,11 @@ export class EnemyFactory {
         undefined // bossType
       );
       // ... set special properties as needed ...
-      return enemy;
     } else {
       // Use pool for standard enemy
       const position = getRandomSpawnPosition();
       const config = GAME_CONSTANTS.ENEMY_TYPES[finalType] || { hp: 100, damage: 10, color: '#ff0000', speed: 1 };
-      const enemy = advancedEnemyPool.createEnemy(
+      enemy = advancedEnemyPool.createEnemy(
         position,
         config.hp,
         config.speed,
@@ -80,8 +83,10 @@ export class EnemyFactory {
         undefined // bossType
       );
       // ... set properties based on type, boss, etc. ...
-      return enemy;
     }
+
+    // Apply dynamic difficulty adjustment to regular enemies
+    return dynamicDifficultyManager.applyEnemyAdjustment(enemy, false);
   }
 
   /**

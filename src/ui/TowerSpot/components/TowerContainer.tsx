@@ -1,20 +1,19 @@
 import React from 'react';
 import type { TowerSlot } from '../../../models/gameTypes';
-import type { TowerUpgradeInfo, DebugInfoProps } from '../types';
+import type { TowerUpgradeInfo } from '../types';
 import {
   ModifierRenderer,
   WallRenderer,
   TowerRenderer,
   VisualExtrasRenderer,
-  DebugInfo,
   TowerInfoPanel
 } from './';
+import { EnhancedDefensiveRenderer } from './EnhancedDefensiveRenderer';
 
 interface TowerContainerProps {
   slot: TowerSlot;
   slotIdx: number;
   wallLevel: number;
-  debugInfo: DebugInfoProps['debugInfo'];
   currentTowerInfo: TowerUpgradeInfo | null;
   towerBottomY: number;
   canUpgrade: boolean;
@@ -24,11 +23,10 @@ interface TowerContainerProps {
   onUpgrade: (slotIdx: number) => void;
 }
 
-export const TowerContainer: React.FC<TowerContainerProps> = ({
+export const TowerContainer = ({
   slot,
   slotIdx,
   wallLevel,
-  debugInfo,
   currentTowerInfo,
   towerBottomY,
   canUpgrade,
@@ -36,9 +34,16 @@ export const TowerContainer: React.FC<TowerContainerProps> = ({
   upgradeMessage,
   canAffordUpgrade,
   onUpgrade
-}) => {
+}: TowerContainerProps) => {
   return (
     <g>
+      {/* Enhanced Defensive Visuals */}
+      <EnhancedDefensiveRenderer
+        slot={slot}
+        slotIdx={slotIdx}
+        wallLevel={wallLevel}
+      />
+      
       {/* Modifiers (behind tower) */}
       <ModifierRenderer slot={slot} />
       
@@ -51,8 +56,7 @@ export const TowerContainer: React.FC<TowerContainerProps> = ({
       {/* Visual extras (above tower) */}
       <VisualExtrasRenderer slot={slot} />
       
-      {/* Debug information */}
-      <DebugInfo slot={slot} debugInfo={debugInfo} />
+      {/* Debug information removed for production optimization */}
       
       {/* Tower info panel */}
       <TowerInfoPanel

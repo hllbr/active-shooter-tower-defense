@@ -1,5 +1,6 @@
 // Game constants removed as not needed
 import { useGameStore } from '../models/store';
+import { dynamicDifficultyManager } from './DynamicDifficultyManager';
 
 export type WaveStartHandler = () => void;
 export type WaveCompleteHandler = () => void;
@@ -27,7 +28,7 @@ export class WaveManager {
     else this.completeListeners.push(fn);
   }
 
-  startWave(_wave: number) {
+  startWave(wave: number) {
     if (this.waveActive) return;
     // Wave start processing
     this.waveActive = true;
@@ -35,6 +36,10 @@ export class WaveManager {
       clearTimeout(this.idleTimer);
       this.idleTimer = null;
     }
+    
+    // Start dynamic difficulty tracking for this wave
+    dynamicDifficultyManager.startWave(wave);
+    
     this.onStart();
     this.startListeners.forEach(l => l());
   }
@@ -76,6 +81,9 @@ export class WaveManager {
     
     if (kills >= required) {
       this.waveActive = false;
+      
+      // Record wave completion for dynamic difficulty adjustment
+      dynamicDifficultyManager.completeWave();
       
       // ✅ CRITICAL FIX: Trigger upgrade screen when wave completes
       // Show upgrade screen after wave 1 and every subsequent wave

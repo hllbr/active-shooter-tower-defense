@@ -3,11 +3,9 @@
  * Centralized resource management with source tracking and validation
  */
 
-import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
 import type { ResourceSource, ResourceTransaction } from '../../gameTypes';
-import { Logger } from '../../../utils/Logger';
 
 export interface ResourceSlice {
   // Enhanced resource functions with source tracking
@@ -51,17 +49,12 @@ export function offResourceUpdated(listener: (gold: number) => void) {
   resourceUpdateListeners.delete(listener);
 }
 
-function emitResourceUpdated(gold: number) {
+const emitResourceUpdated = (gold: number) => {
   resourceUpdateListeners.forEach((listener) => listener(gold));
 }
 
 export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (set, get, _api) => ({
   addResource: (amount, source, metadata) => {
-    const validation = securityManager.validateStateChange('addResource', {}, { gold: amount });
-    if (!validation.valid) {
-      Logger.warn('🔒 Security: addResource blocked:', validation.reason);
-      return;
-    }
 
     const transaction: ResourceTransaction = {
       id: `resource_${Date.now()}_${Math.random()}`,
@@ -77,19 +70,14 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
       resourceTransactions: [...(state.resourceTransactions || []), transaction]
     }));
     emitResourceUpdated(get().gold + amount);
-    Logger.log(`💰 Resource added: ${amount} from ${source}`, metadata);
+    // Resource added
   },
 
   spendResource: (amount, source, metadata) => {
-    const validation = securityManager.validateStateChange('spendResource', {}, { gold: amount });
-    if (!validation.valid) {
-      Logger.warn('🔒 Security: spendResource blocked:', validation.reason);
-      return false;
-    }
 
     const currentGold = get().gold;
     if (currentGold < amount) {
-      Logger.warn('❌ Insufficient resources for purchase:', { required: amount, available: currentGold });
+      // Insufficient resources for purchase
       return false;
     }
 
@@ -107,16 +95,11 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
       resourceTransactions: [...(state.resourceTransactions || []), transaction]
     }));
     emitResourceUpdated(get().gold - amount);
-    Logger.log(`💸 Resource spent: ${amount} on ${source}`, metadata);
+    // Resource spent
     return true;
   },
 
   setResource: (amount, source, metadata) => {
-    const validation = securityManager.validateStateChange('setResource', {}, { gold: amount });
-    if (!validation.valid) {
-      Logger.warn('🔒 Security: setResource blocked:', validation.reason);
-      return;
-    }
 
     const transaction: ResourceTransaction = {
       id: `set_${Date.now()}_${Math.random()}`,
@@ -131,7 +114,7 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
       resourceTransactions: [...(state.resourceTransactions || []), transaction]
     }));
     emitResourceUpdated(amount);
-    Logger.log(`🔄 Resource set: ${amount} via ${source}`, metadata);
+    // Resource set
   },
 
   canAfford: (action) => {

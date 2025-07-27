@@ -3,6 +3,7 @@ import { GAME_CONSTANTS } from '../../../utils/constants';
 import { formatProfessional } from '../../../utils/formatters';
 import { playSound } from '../../../utils/sound/soundEffects';
 import { toast } from 'react-toastify';
+import { useTowerTouchControls } from '../../../game-systems/responsive';
 import type { TowerSlot } from '../../../models/gameTypes';
 
 interface SimplifiedTowerControlsProps {
@@ -17,7 +18,7 @@ interface SimplifiedTowerControlsProps {
   repairCost: number;
   onRepair: (slotIdx: number) => void;
   onDelete: (slotIdx: number) => void;
-  isHovered: boolean;
+  _isHovered: boolean;
   isSelected: boolean;
 }
 
@@ -123,38 +124,43 @@ export const SimplifiedTowerControls: React.FC<SimplifiedTowerControlsProps> = (
   repairCost,
   onRepair,
   onDelete,
-  isHovered,
+  _isHovered,
   isSelected
 }) => {
-  const handleUpgrade = useCallback(() => {
-    if (!canAffordUpgrade) {
-      playSound('error');
-      toast.warning(`Not enough gold! You need ${formatProfessional(upgradeInfo?.cost || 0, 'currency')} to upgrade.`);
-      return;
+  // Touch controls for tower interactions
+  const { 
+    upgradeHandlers, 
+    repairHandlers, 
+    deleteHandlers 
+  } = useTowerTouchControls(
+    () => {
+      if (!canAffordUpgrade) {
+        playSound('error');
+        toast.warning(`Not enough gold! You need ${formatProfessional(upgradeInfo?.cost || 0, 'currency')} to upgrade.`);
+        return;
+      }
+      onUpgrade(slotIdx);
+    },
+    () => {
+      if (!canAffordRepair) {
+        playSound('error');
+        toast.warning(`Not enough gold! You need ${formatProfessional(repairCost, 'currency')} to repair.`);
+        return;
+      }
+      onRepair(slotIdx);
+    },
+    () => {
+      onDelete(slotIdx);
+      playSound('tower-upgrade');
+      toast.success('Tower removed!');
     }
-    onUpgrade(slotIdx);
-  }, [canAffordUpgrade, upgradeInfo, onUpgrade, slotIdx]);
-
-  const handleRepair = useCallback(() => {
-    if (!canAffordRepair) {
-      playSound('error');
-      toast.warning(`Not enough gold! You need ${formatProfessional(repairCost, 'currency')} to repair.`);
-      return;
-    }
-    onRepair(slotIdx);
-  }, [canAffordRepair, repairCost, onRepair, slotIdx]);
-
-  const handleDelete = useCallback(() => {
-    onDelete(slotIdx);
-    playSound('tower-upgrade');
-    toast.success('Tower removed!');
-  }, [onDelete, slotIdx]);
+  );
 
   if (!slot.tower) return null;
 
-  // Only show controls when tower is hovered or selected
-  const shouldShowControls = isHovered || isSelected;
-  if (!shouldShowControls) return null;
+  // Only show controls when tower is selected (click behavior)
+  // Hover no longer shows upgrade/repair controls
+  if (!isSelected) return null;
 
   const towerCenterX = slot.x;
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
@@ -167,23 +173,23 @@ export const SimplifiedTowerControls: React.FC<SimplifiedTowerControlsProps> = (
   const iconY = towerBottomY + 25;
 
   return (
-    <>
-      {/* Upgrade Icon */}
+    <g data-tower-controls={slotIdx}>
+      {/* Upgrade Icon with Touch Controls */}
       {canUpgrade && (
         <TowerControlIcon
           icon={canAffordUpgrade ? '🔼' : '❌'}
           color={canAffordUpgrade ? '#4ade80' : '#ff4444'}
           position={{ x: upgradeIconX, y: iconY }}
           tooltip={canAffordUpgrade 
-            ? `Upgrade (${formatProfessional(upgradeInfo?.cost || 0, 'currency')})`
+            ? `Upgrade (${formatProfessional(upgradeInfo?.cost || 0, 'currency')}) - Double tap for quick upgrade`
             : 'Not enough gold'
           }
-          onClick={handleUpgrade}
+          onClick={upgradeHandlers.onTap}
           isDisabled={!canAffordUpgrade}
         />
       )}
 
-      {/* Repair Icon */}
+      {/* Repair Icon with Touch Controls */}
       {canRepair && (
         <TowerControlIcon
           icon="🔧"
@@ -193,19 +199,19 @@ export const SimplifiedTowerControls: React.FC<SimplifiedTowerControlsProps> = (
             ? `Repair (${formatProfessional(repairCost, 'currency')})`
             : 'Not enough gold'
           }
-          onClick={handleRepair}
+          onClick={repairHandlers.onTap}
           isDisabled={!canAffordRepair}
         />
       )}
 
-      {/* Delete Icon */}
+      {/* Delete Icon with Touch Controls */}
       <TowerControlIcon
         icon="🗑️"
         color="#ff4444"
         position={{ x: deleteIconX, y: iconY }}
-        tooltip="Delete tower"
-        onClick={handleDelete}
+        tooltip="Delete tower (Long press for confirmation)"
+        onClick={deleteHandlers.onTap}
       />
-    </>
+    </g>
   );
 }; 

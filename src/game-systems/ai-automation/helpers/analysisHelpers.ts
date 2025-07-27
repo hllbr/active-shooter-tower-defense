@@ -7,20 +7,20 @@ export interface ThreatAnalysis {
 
 import type { Position, Enemy, TowerSlot } from '../../../models/gameTypes';
 
-function countEnemyTypes(enemyTypes: string[]): Record<string, number> {
+const countEnemyTypes = (enemyTypes: string[]): Record<string, number> => {
   return enemyTypes.reduce((acc, type) => {
     acc[type] = (acc[type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 }
 
-function findWeakestDefensePoint(enemies: Enemy[]): Position {
+const findWeakestDefensePoint = (enemies: Enemy[]): Position => {
   const centerX = enemies.reduce((sum, e) => sum + e.position.x, 0) / enemies.length || 0;
   const centerY = enemies.reduce((sum, e) => sum + e.position.y, 0) / enemies.length || 0;
   return { x: centerX, y: centerY };
 }
 
-function getCounterStrategies(primaryThreats: string[]): string[] {
+const getCounterStrategies = (primaryThreats: string[]): string[] => {
   const counters: string[] = [];
   for (const threat of primaryThreats) {
     switch (threat) {

@@ -3,6 +3,7 @@ import { EnergyUpgradeCard } from './EnergyUpgradeCard';
 import { UpgradeCard } from './UpgradeCard';
 import { useGameStore } from '../../../models/store';
 import { GAME_CONSTANTS } from '../../../utils/constants';
+import { ScrollableGridList } from '../../common/ScrollableList';
 import type { Store } from '../../../models/store';
 
 export const PowerMarket: React.FC = () => {
@@ -47,13 +48,35 @@ export const PowerMarket: React.FC = () => {
     { id: 'economy_area_duration', name: 'Ekonomi Alanı Süresi', desc: 'Para kulesi alan etkisinin süresini artırır.', icon: '⏳', color: '#eab308', maxLevel: 5, cost: 180 },
   ];
 
+  const energyUpgradeItems = GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES.map(upgrade => ({
+    type: 'energy' as const,
+    upgrade,
+    currentLevel: energyUpgrades[upgrade.id] || 0
+  }));
+
+  const supportUpgradeItems = supportUpgrades.map((upgrade) => {
+    const { currentLevel } = getSupportTowerUpgradeInfo(upgrade.id, upgrade.maxLevel);
+    return {
+      type: 'support' as const,
+      upgrade: {
+        name: upgrade.name,
+        description: upgrade.desc,
+        currentLevel,
+        baseCost: upgrade.cost,
+        maxLevel: upgrade.maxLevel,
+        onUpgrade: () => purchaseSupportTowerUpgrade(upgrade.id, upgrade.cost, upgrade.maxLevel),
+        icon: upgrade.icon,
+        color: upgrade.color,
+        isElite: false,
+        additionalInfo: `Seviye: ${currentLevel}/${upgrade.maxLevel}`,
+      }
+    };
+  });
+
+  const allUpgrades = [...energyUpgradeItems, ...supportUpgradeItems];
+
   return (
-    <div style={{ 
-      width: '100%', 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-      gap: 20
-    }}>
+    <>
       <style>
         {`
           @keyframes pulse {
@@ -63,44 +86,36 @@ export const PowerMarket: React.FC = () => {
         `}
       </style>
 
-      {GAME_CONSTANTS.POWER_MARKET.ENERGY_UPGRADES.map(upgrade => (
-        <EnergyUpgradeCard
-          key={upgrade.id}
-          upgrade={upgrade}
-          currentLevel={energyUpgrades[upgrade.id] || 0}
-          gold={gold}
-          onUpgrade={upgradeEnergySystem}
-        />
-      ))}
-      {/* Support Tower Area Effect Upgrades */}
-      {supportUpgrades.map((upgrade) => {
-        const { currentLevel } = getSupportTowerUpgradeInfo(upgrade.id, upgrade.maxLevel);
-        return (
-          <UpgradeCard
-            key={upgrade.id}
-            upgrade={{
-              name: upgrade.name,
-              description: upgrade.desc,
-              currentLevel,
-              baseCost: upgrade.cost,
-              maxLevel: upgrade.maxLevel,
-              onUpgrade: () => purchaseSupportTowerUpgrade(upgrade.id, upgrade.cost, upgrade.maxLevel),
-              icon: upgrade.icon,
-              color: upgrade.color,
-              isElite: false,
-              additionalInfo: `Seviye: ${currentLevel}/${upgrade.maxLevel}`,
-            }}
-            gold={gold}
-            discountMultiplier={discountMultiplier}
-          />
-        );
-      })}
-      {/*
-        ActionsUpgradeCard ve EliteUpgradeCard için de benzer şekilde prop iletimi gerekiyorsa,
-        aynı mantıkla eklenmelidir. Şu an için örnek olarak bırakıldı:
-        <ActionsUpgradeCard ... />
-        <EliteUpgradeCard ... />
-      */}
-    </div>
+      <ScrollableGridList
+        items={allUpgrades}
+        renderItem={(item) => {
+          if (item.type === 'energy') {
+            return (
+              <EnergyUpgradeCard
+                upgrade={item.upgrade}
+                currentLevel={item.currentLevel}
+                gold={gold}
+                onUpgrade={upgradeEnergySystem}
+              />
+            );
+          } else {
+            return (
+              <UpgradeCard
+                upgrade={item.upgrade}
+                gold={gold}
+                discountMultiplier={discountMultiplier}
+              />
+            );
+          }
+        }}
+        keyExtractor={(item, index) => 
+          item.type === 'energy' ? `energy-${item.upgrade.id}` : `support-${index}`
+        }
+        gridTemplateColumns="repeat(auto-fit, minmax(300px, 1fr))"
+        gap="20px"
+        itemMinWidth="300px"
+        containerStyle={{ width: '100%' }}
+      />
+    </>
   );
 }; 

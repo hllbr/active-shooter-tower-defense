@@ -68,7 +68,7 @@ export const createUpgradeHandler = (
       if (success) {
         levelSetter(currentLevel + 1);
       } else {
-        console.error('❌ Upgrade failed: Insufficient funds or state error');
+        // Upgrade failed silently
         import('../../../utils/sound').then(({ playSound }) => {
           playSound('error');
         });

@@ -37,7 +37,7 @@ export const ActionsUpgradeCard: React.FC = () => {
       if (success) {
         setMaxActionsLevel(maxActionsLevel + 1);
       } else {
-        console.error('❌ Actions upgrade failed: Insufficient funds or state error');
+        // Actions upgrade failed silently
         import('../../../utils/sound').then(({ playSound }) => {
           playSound('error');
         });

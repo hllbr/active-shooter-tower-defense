@@ -63,10 +63,7 @@ class SimplePerformanceMonitor {
   }
 
   logPerformance(): void {
-    if (this.updateCount > 0) {
-      const skipRate = (this.skippedCount / this.updateCount * 100).toFixed(1);
-      console.log(`Performance: ${skipRate}% updates skipped (${this.skippedCount}/${this.updateCount})`);
-    }
+    // Performance logging removed for production optimization
   }
 }
 

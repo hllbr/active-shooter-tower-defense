@@ -121,6 +121,7 @@ export const initialState: GameState = {
   selectedSlot: null,
   lostTowerThisWave: false,
   lastUpdate: 0,
+  waveStartGold: 0, // ✅ NEW: Track gold at wave start
 
   energyUpgrades: {},
   maxEnergy: GAME_CONSTANTS.ENERGY_SYSTEM.MAX_ENERGY_BASE,
@@ -211,6 +212,13 @@ export const initialState: GameState = {
   isFirstTowerPlaced: false,
   gameReadyForWaves: false,
 
+  // ✅ NEW: Wave preview system
+  showWavePreview: false,
+  wavePreviewCountdown: 5,
+
+  // ✅ NEW: Notification system for unlock animations
+  notifications: [],
+  
   supportTowerUpgrades: {
     radar_area_radius: 0,
     radar_area_power: 0,

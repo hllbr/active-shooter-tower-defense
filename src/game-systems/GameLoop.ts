@@ -6,6 +6,7 @@ import { stateTracker, performanceMonitor, GameStateSelectors } from './StateOpt
 import { SimplifiedEnvironmentManager } from './environment/SimplifiedEnvironmentManager';
 import { aiManager } from './ai-automation';
 import { FireHazardManager } from './FireHazardManager';
+import { advancedDefensiveVisuals } from './defense-systems/AdvancedDefensiveVisuals';
 
 // Performance metrics for monitoring
 interface GameLoopMetrics {
@@ -45,8 +46,8 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
     
     // Only update if enough time has passed
     if (deltaTime >= targetFrameTime) {
-      // CRITICAL FIX: Stop game loop updates if game is over, paused, OR in upgrade screen
-      if (state.isGameOver || state.isRefreshing || state.isPaused) {
+      // ✅ FIXED: Only stop if game is over or in upgrade screen, allow paused games to continue
+      if (state.isGameOver || state.isRefreshing) {
         frameId = requestAnimationFrame(loop);
         return;
       }
@@ -61,8 +62,11 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
       updateBullets(deltaTime);
       updateMineCollisions();
       
-      // ✅ NEW: Check fire hazard time limits
-      if (gameLoopMetrics.totalFrames % 10 === 0) { // Check every 10 frames
+      // ✅ NEW: Update advanced defensive visuals
+      advancedDefensiveVisuals.update(deltaTime);
+      
+      // Check fire hazard time limits (reduced frequency for performance)
+      if (gameLoopMetrics.totalFrames % 20 === 0) { // Check every 20 frames instead of 10
         const { towerSlots, destroyTowerByFire } = useGameStore.getState();
         towerSlots.forEach((slot, slotIdx) => {
           if (slot.tower && FireHazardManager.isTowerBurning(slot.tower)) {
@@ -73,14 +77,13 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
         });
       }
       
-      // Execute automated AI actions
-      if (gameLoopMetrics.totalFrames % 30 === 0) { // Every 30 frames (about 2 seconds at 60fps)
+      // Execute automated AI actions (reduced frequency for performance)
+      if (gameLoopMetrics.totalFrames % 60 === 0) { // Every 60 frames (about 1 second at 60fps) instead of 30
         aiManager.executeAutomatedActions();
       }
       
-      // Update simplified environment (minimal processing)
-      if (gameLoopMetrics.totalFrames % 10 === 0) {
-        // Only update environment every 10 frames for performance
+      // Update simplified environment (reduced frequency for performance)
+      if (gameLoopMetrics.totalFrames % 30 === 0) { // Every 30 frames instead of 10
         const environmentState = environmentManager.getEnvironmentState();
         useGameStore.setState({
           weatherState: environmentState.weatherState,
@@ -107,10 +110,10 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
         const throttleThreshold = activityLevel === 'high' ? 16 : 
                                 activityLevel === 'medium' ? 25 : 40;
         
-        // Smart update decision
+        // Smart update decision with more aggressive throttling
         const shouldUpdate = timeSinceLastUpdate >= throttleThreshold || 
-                           Math.abs(currentEnemyCount - prevEnemyCount) > 5 ||
-                           Math.abs(currentBulletCount - prevBulletCount) > 10;
+                           Math.abs(currentEnemyCount - prevEnemyCount) > 3 || // Reduced from 5
+                           Math.abs(currentBulletCount - prevBulletCount) > 5; // Reduced from 10
         
         if (shouldUpdate) {
           useGameStore.setState({ 
@@ -132,10 +135,7 @@ export function startGameLoop(existingManager?: SimplifiedEnvironmentManager) {
       lastStateSnapshot.enemyCount = currentEnemyCount;
       lastStateSnapshot.bulletCount = currentBulletCount;
       
-      // At the end of each tick, log performance stats (debug only)
-      // if (window && window['GAME_CONSTANTS'] && window['GAME_CONSTANTS'].DEBUG_MODE) {
-      //   logPerformanceStats();
-      // }
+      // Performance monitoring removed for production optimization
       
       // Calculate performance metrics
       gameLoopMetrics.avgDelta = (gameLoopMetrics.avgDelta * 0.9) + (deltaTime * 0.1);
@@ -157,7 +157,7 @@ export const GameLoopPerformance = {
   getMetrics: (): GameLoopMetrics => ({ ...gameLoopMetrics }),
   
   logPerformance: () => {
-    performanceMonitor.logPerformance();
+    // Performance logging removed for production optimization
   },
   
   resetMetrics: () => {

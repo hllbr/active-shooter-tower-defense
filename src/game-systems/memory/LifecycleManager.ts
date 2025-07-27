@@ -2,7 +2,7 @@
  * 🔄 Lifecycle Manager - Tracks object lifecycles and manages cleanup
  */
 
-import { GAME_CONSTANTS } from '../../utils/constants';
+// import { GAME_CONSTANTS } from '../../utils/constants';
 
 export class LifecycleManager {
   private static instance: LifecycleManager;
@@ -67,9 +67,7 @@ export class LifecycleManager {
       }
     }
     
-    if (GAME_CONSTANTS.DEBUG_MODE && cleaned > 0) {
-      // Debug logging for cleanup statistics can be added here
-    }
+    // Debug logging removed for production optimization
     
     return cleaned;
   }

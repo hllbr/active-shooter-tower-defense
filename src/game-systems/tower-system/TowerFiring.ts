@@ -8,6 +8,8 @@ import { specialAbilitiesManager } from './SpecialAbilities';
 import { towerSynergyManager } from './TowerSynergyManager';
 import { defenseSystemManager } from '../defense-systems';
 import { useGameStore } from '../../models/store';
+import { fireModeManager } from './FireModeManager';
+import { getSettings } from '../../utils/settings';
 
 /**
  * Enhanced Tower Firing System
@@ -47,6 +49,15 @@ export class TowerFiringSystem {
       1 // state.bulletLevel
     );
     
+    // ✅ NEW: Check for active fire modes first
+    const activeFireModes = fireModeManager.getActiveFireModes();
+    if (activeFireModes.length > 0) {
+      // Use the first active fire mode
+      const activeMode = activeFireModes[0];
+      this.executeFireMode(activeMode.id, tower, enemy, damage, speed, addBullet, addEffect, damageEnemy, fireOrigin);
+      return;
+    }
+    
     // Enhanced firing mechanics based on tower class
     switch (tower.towerClass) {
       case 'gatling':
@@ -73,9 +84,7 @@ export class TowerFiringSystem {
     
     tower.lastFired = performance.now();
     
-    if (GAME_CONSTANTS.DEBUG_MODE) {
-      // Debug logging for tower firing can be added here
-    }
+    // Debug logging removed for production optimization
   }
 
   /**
@@ -90,6 +99,17 @@ export class TowerFiringSystem {
     addBullet: (bullet: Bullet) => void,
     fireOrigin: { x: number; y: number }
   ): void {
+    // ✅ NEW: Create tower firing visual effects
+    setTimeout(() => {
+      import('../effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+        enhancedVisualEffectsManager.createTowerFiringEffect(
+          fireOrigin.x,
+          fireOrigin.y,
+          _tower.towerClass || 'standard'
+        );
+      });
+    }, 0);
+
     const bullet = advancedBulletPool.createBullet(
       fireOrigin,
       getDirection(fireOrigin, enemy.position),
@@ -117,6 +137,18 @@ export class TowerFiringSystem {
     fireOrigin?: { x: number; y: number }
   ): void {
     const origin = fireOrigin || { x: _tower.position.x, y: _tower.position.y };
+    
+    // ✅ NEW: Create enhanced tower firing visual effects for gatling
+    setTimeout(() => {
+      import('../effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+        enhancedVisualEffectsManager.createTowerFiringEffect(
+          origin.x,
+          origin.y,
+          'gatling'
+        );
+      });
+    }, 0);
+    
     // Primary target
     const primaryBullet = advancedBulletPool.createBullet(
       origin,
@@ -300,6 +332,39 @@ export class TowerFiringSystem {
   }
 
   /**
+   * Execute a specific fire mode
+   */
+  private executeFireMode(
+    modeId: string,
+    tower: Tower,
+    enemy: Enemy,
+    damage: number,
+    speed: number,
+    addBullet: (bullet: Bullet) => void,
+    addEffect?: (effect: Effect) => void,
+    damageEnemy?: (id: string, damage: number) => void,
+    fireOrigin?: { x: number; y: number }
+  ): void {
+    const origin = fireOrigin || { x: tower.position.x, y: tower.position.y };
+
+    switch (modeId) {
+      case 'spreadShot':
+        fireModeManager.executeSpreadShot(tower, enemy, damage, speed, addBullet, addEffect || (() => {}), origin);
+        break;
+      case 'chainLightning':
+        fireModeManager.executeChainLightning(tower, enemy, damage, speed, addBullet, addEffect || (() => {}), damageEnemy || (() => {}), origin);
+        break;
+      case 'piercingShot':
+        fireModeManager.executePiercingShot(tower, enemy, damage, speed, addBullet, addEffect || (() => {}), origin);
+        break;
+      default:
+        // Fallback to standard firing
+        this.fireStandardTower(tower, enemy, damage, speed, '#FF0000', addBullet, origin);
+        break;
+    }
+  }
+
+  /**
    * Find secondary target for dual-targeting towers
    */
   private findSecondaryTarget(_tower: Tower, _primaryEnemy: Enemy): Enemy | null {
@@ -352,8 +417,8 @@ export class TowerFiringSystem {
     globalWallActive: boolean,
     wallRegenerationActive: boolean
   ): void {
-    // ✅ CRITICAL FIX: Stop tower firing if game is over or paused
-    if (isGameOver || isPaused) {
+    // ✅ FIXED: Only stop if game is over, allow paused games to continue
+    if (isGameOver) {
       return;
     }
     
@@ -569,14 +634,9 @@ export class TowerFiringSystem {
             break;
         }
       } else {
-        // Advanced towers get smarter targeting
-        if (tower.level >= 15) {
-          targetingMode = TargetingMode.THREAT_ASSESSMENT; // Elite towers use AI
-        } else if (tower.level >= 10) {
-          targetingMode = TargetingMode.LOWEST_HP; // High level towers finish enemies
-        } else if (tower.level >= 5) {
-          targetingMode = TargetingMode.FASTEST; // Mid level towers focus on fast enemies
-        }
+        // Basic towers use user's preferred targeting mode
+        const settings = getSettings();
+        targetingMode = settings.defaultTargetingMode as TargetingMode || TargetingMode.NEAREST;
       }
       
       // Special targeting for economic towers
@@ -607,13 +667,10 @@ export class TowerFiringSystem {
       options.range = enhancedRange * rangeMult;
       
       // Use enhanced targeting system
-      const { enemy, threatScore } = getTargetEnemy(tower, visibleEnemies, targetingMode, options);
+      const { enemy, _threatScore } = getTargetEnemy(tower, visibleEnemies, targetingMode, options);
       if (!enemy) return;
       
-      // Debug targeting information
-      if (GAME_CONSTANTS.DEBUG_MODE && threatScore) {
-        // Debug logging for targeting information can be added here
-      }
+      // Debug targeting information removed for production optimization
 
       this.fireTower(tower, enemy, {
         speedMultiplier: bulletType.speedMultiplier,

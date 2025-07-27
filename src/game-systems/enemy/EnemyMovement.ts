@@ -29,13 +29,15 @@ export class EnemyMovement {
     const { enemies, towerSlots, damageTower, removeEnemy, addGold, hitWall, damageEnemy, wallLevel, isGameOver, isPaused } =
       useGameStore.getState();
     
-    // ✅ CRITICAL FIX: Stop enemy movement if game is over or paused
-    if (isGameOver || isPaused) {
+    // ✅ FIXED: Only stop if game is over, allow paused games to continue
+    if (isGameOver) {
       return;
     }
     
     // Update enemy behaviors first
     EnemyBehaviorSystem.updateEnemyBehaviors();
+    
+    // Target validation removed - enemies use dynamic targeting
     
     // Batch calculation cache for this tick
     const distanceCache: Record<string, number> = {};
@@ -372,8 +374,11 @@ export class EnemyMovement {
       wallLevel: number;
     }
   ): boolean {
-    const { distance } = movementData;
-    const collisionThreshold = (enemy.size + GAME_CONSTANTS.TOWER_SIZE) / 2;
+    const collisionThreshold = 30;
+    const distance = Math.hypot(
+      enemy.position.x - targetSlot.x,
+      enemy.position.y - targetSlot.y
+    );
 
     if (distance < collisionThreshold) {
       // Create collision visual effect
@@ -386,9 +391,9 @@ export class EnemyMovement {
         const collisionHandled = defenseTargetManager.handleEnemyCollision(enemy, currentTime);
         
         if (collisionHandled) {
-          // Enemy is destroyed when hitting defense target
-          actions.addGold(enemy.goldValue);
-          actions.removeEnemy(enemy.id);
+          // ✅ FIXED: Use direct removal to avoid recursion
+          const { removeEnemy } = useGameStore.getState();
+          removeEnemy(enemy.id);
           return true;
         }
       }
@@ -406,12 +411,17 @@ export class EnemyMovement {
         } else {
           // No wall: Damage tower, and the enemy is destroyed
           actions.damageTower(slotIdx, enemy.damage);
+          // ✅ FIXED: Use direct removal to avoid recursion
+          const { removeEnemy } = useGameStore.getState();
+          removeEnemy(enemy.id);
+          return true;
         }
       }
       
       // This part runs if there's no wall or no tower (fallback)
-      actions.addGold(enemy.goldValue);
-      actions.removeEnemy(enemy.id);
+      // ✅ FIXED: Use direct removal to avoid recursion
+      const { removeEnemy } = useGameStore.getState();
+      removeEnemy(enemy.id);
       return true;
     }
     return false;
@@ -438,18 +448,20 @@ export class EnemyMovement {
       wallLevel: number;
     }
   ): void {
-    const { direction } = movementData;
+    const { direction: _direction } = movementData;
     
-    // Apply knockback
-    const knockbackForce = 50;
-    enemy.position.x -= direction.x * knockbackForce;
-    enemy.position.y -= direction.y * knockbackForce;
+    // ✅ NEW: Use advanced defensive visuals system
+    // const { advancedDefensiveVisuals } = require('../defense-systems/AdvancedDefensiveVisuals');
+    const { towerSlots } = useGameStore.getState();
+    const slot = towerSlots[slotIdx];
     
-    // Apply stun effect
-    enemy.frozenUntil = performance.now() + 1000; // 1 second stun
+    // Handle collision with enhanced visuals
+    advancedDefensiveVisuals.handleDefensiveCollision(enemy, slot, slotIdx, actions);
     
-    // Damage the wall
-    actions.hitWall(slotIdx);
+    // Apply stun effect (now handled by advanced system)
+    if (!enemy.frozenUntil) {
+      enemy.frozenUntil = performance.now() + 1000; // 1 second stun
+    }
     
     // Damage the enemy
     actions.damageEnemy(enemy.id, 10);
@@ -480,6 +492,8 @@ export class EnemyMovement {
         return 'enemy_explosion';
     }
   }
+
+  // Target validation methods removed for production optimization
 
   /**
    * Clean up old cache entries

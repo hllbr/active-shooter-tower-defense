@@ -3,9 +3,9 @@ import { waveManager } from "./WaveManager";
 import { performanceTracker, dynamicSpawnController } from './spawn-system';
 import { 
   EnemyFactory, 
-  EnemyMovement, 
   WaveSpawnManager 
 } from './enemy';
+import { EnhancedEnemyMovement } from './enemy/EnhancedEnemyMovement';
 
 // Re-export functions for backward compatibility
 export const stopEnemyWave = WaveSpawnManager.stopEnemyWave;
@@ -17,8 +17,8 @@ export const startEnemyWave = WaveSpawnManager.startEnemyWave;
  * Enhanced enemy movement update with performance tracking
  */
 export function updateEnemyMovement() {
-  // Update enemy movement using the new modular system
-  EnemyMovement.updateEnemyMovement();
+  // Update enemy movement using the enhanced system with visual diversification
+  EnhancedEnemyMovement.updateEnemyMovement();
   
   const { enemies, enemiesKilled, enemiesRequired, towers, currentWave } = useGameStore.getState();
   

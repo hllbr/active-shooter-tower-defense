@@ -1,5 +1,5 @@
 import { useGameStore } from '../models/store';
-import { Logger } from '../utils/Logger';
+// Logger import removed for production
 
 /**
  * Upgrade category types
@@ -85,7 +85,7 @@ export class UpgradeManager {
     configs.forEach(config => {
       this.upgradeConfigs.set(config.id, config);
     });
-    Logger.log(`🤖 UpgradeManager initialized with ${configs.length} upgrade configurations`);
+    // UpgradeManager initialized
   }
 
   /**
@@ -93,7 +93,7 @@ export class UpgradeManager {
    */
   public registerUpgrade(config: UpgradeConfig): void {
     this.upgradeConfigs.set(config.id, config);
-    Logger.log(`🤖 Registered upgrade: ${config.name} (${config.id})`);
+          // Registered upgrade
   }
 
   /**
@@ -370,13 +370,13 @@ export class UpgradeManager {
   public async applyUpgrade(upgradeId: string): Promise<boolean> {
     const config = this.getUpgradeConfig(upgradeId);
     if (!config) {
-      Logger.error(`❌ Upgrade config not found: ${upgradeId}`);
+      // Upgrade config not found
       return false;
     }
 
     const currentLevel = this.getCurrentUpgradeLevel(upgradeId);
     if (currentLevel >= config.maxLevel) {
-      Logger.warn(`⚠️ Upgrade already at max level: ${upgradeId}`);
+      // Upgrade already at max level
       return false;
     }
 
@@ -392,9 +392,9 @@ export class UpgradeManager {
     }, 'upgrade');
 
     if (success) {
-      Logger.log(`✅ Applied upgrade: ${config.name} (Level ${currentLevel + 1})`);
+      // Applied upgrade successfully
     } else {
-      Logger.warn(`⚠️ Failed to apply upgrade: ${config.name}`);
+              // Failed to apply upgrade
     }
     return success;
   }
@@ -425,7 +425,7 @@ export class UpgradeManager {
         this.applyShieldUpgrade(config.id, newLevel);
         break;
       default:
-        Logger.warn(`⚠️ Unknown effect type: ${config.effectType}`);
+        // Unknown effect type
     }
   }
 
@@ -528,7 +528,7 @@ export class UpgradeManager {
     result.totalCost = totalCost;
 
     if (success) {
-      Logger.log(`🤖 Batch upgrade applied: ${result.upgradesApplied.length} upgrades, ${totalCost} gold spent`);
+      // Batch upgrade applied
     } else {
       result.errors.push('Batch upgrade transaction failed');
     }
@@ -540,7 +540,7 @@ export class UpgradeManager {
    */
   public undoUpgrade(): boolean {
     if (this.upgradeHistory.length === 0) {
-      Logger.warn('⚠️ No upgrade history to undo');
+      // No upgrade history to undo
       return false;
     }
 
@@ -548,7 +548,7 @@ export class UpgradeManager {
     const config = this.getUpgradeConfig(lastUpgrade.upgradeId);
     
     if (!config) {
-      Logger.error(`❌ Upgrade config not found for undo: ${lastUpgrade.upgradeId}`);
+      // Upgrade config not found for undo
       return false;
     }
 
@@ -559,10 +559,9 @@ export class UpgradeManager {
     // Revert upgrade effects
     this.revertUpgradeEffects(config, lastUpgrade.level);
 
-    // Remove from history
     this.upgradeHistory.pop();
 
-    Logger.log(`↩️ Undid upgrade: ${config.name} (Level ${lastUpgrade.level})`);
+          // Undid upgrade successfully
     return true;
   }
 
@@ -592,7 +591,7 @@ export class UpgradeManager {
         this.revertShieldUpgrade(config.id, level - 1);
         break;
       default:
-        Logger.warn(`⚠️ Unknown effect type for revert: ${config.effectType}`);
+        // Unknown effect type for revert
     }
   }
 
@@ -675,7 +674,7 @@ export class UpgradeManager {
    */
   public clearHistory(): void {
     this.upgradeHistory = [];
-    Logger.log('🧹 Upgrade history cleared');
+    // Upgrade history cleared
   }
 
   /**
@@ -691,7 +690,7 @@ export class UpgradeManager {
   public reset(): void {
     this.upgradeConfigs.clear();
     this.upgradeHistory = [];
-    Logger.log('🔄 UpgradeManager reset');
+    // UpgradeManager reset
   }
 }
 

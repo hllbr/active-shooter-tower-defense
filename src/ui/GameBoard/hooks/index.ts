@@ -1,6 +1,5 @@
 // GameBoard hooks index file
 export { useAnimatedCounter } from './useAnimatedCounter';
-export { useDebugMessage } from './useDebugMessage';
 export { useTowerDrag } from './useTowerDrag';
 export { useDragFeedback } from './useDragFeedback';
 export { useDropZoneAnalysis } from './useDropZoneAnalysis';

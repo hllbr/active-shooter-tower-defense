@@ -3,7 +3,7 @@ import { stopEnemyWave, startContinuousSpawning, stopContinuousSpawning } from '
 import { startGameLoop } from '../../../game-systems/GameLoop';
 import type { SimplifiedEnvironmentManager } from '../../../game-systems/environment/SimplifiedEnvironmentManager';
 import { waveManager } from '../../../game-systems/WaveManager';
-// import { startBackgroundMusic } from '../../../utils/sound'; // 🎵 OYUN MÜZİĞİ DEVRE DIŞI
+import { startBackgroundMusic } from '../../../utils/sound';
 
 export const useGameLoop = (
   isStarted: boolean,
@@ -25,7 +25,7 @@ export const useGameLoop = (
     
     if (!loopStopper.current) {
       loopStopper.current = startGameLoop(environmentManager ?? undefined);
-      // startBackgroundMusic(); // 🎵 OYUN MÜZİĞİ DEVRE DIŞI
+      startBackgroundMusic();
     }
     
     // Start continuous spawning system

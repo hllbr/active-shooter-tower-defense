@@ -18,7 +18,7 @@ interface EnergyStatusPanelProps {
 }
 
 // Performance-optimized cooldown display component
-const CooldownDisplay: React.FC<{ cooldownState: EnergyCooldownState }> = React.memo(({ cooldownState }) => {
+const CooldownDisplay = React.memo<{ cooldownState: EnergyCooldownState }>(({ cooldownState }) => {
   const remainingSeconds = useMemo(() => {
     return Math.ceil(cooldownState.remainingTime / 1000);
   }, [cooldownState.remainingTime]);
@@ -66,15 +66,15 @@ const CooldownDisplay: React.FC<{ cooldownState: EnergyCooldownState }> = React.
 CooldownDisplay.displayName = 'CooldownDisplay';
 
 // Performance-optimized energy bar component
-const EnergyBar: React.FC<{ energy: number; maxEnergy: number }> = React.memo(({ energy, maxEnergy }) => {
+const EnergyBar = React.memo<{ energy: number; maxEnergy: number }>(({ energy, maxEnergy }) => {
   const percentage = useMemo(() => {
     return Math.min(100, (energy / maxEnergy) * 100);
   }, [energy, maxEnergy]);
 
   const barColor = useMemo(() => {
-    if (percentage < 20) return '#ff4444';
-    if (percentage < 50) return '#ffaa00';
-    return '#00cfff';
+    if (percentage < 20) return 'var(--health-bad, #ff4444)';
+    if (percentage < 50) return 'var(--health-warning, #ffaa00)';
+    return 'var(--accent-color, #00cfff)';
   }, [percentage]);
 
   return (
@@ -99,7 +99,7 @@ const EnergyBar: React.FC<{ energy: number; maxEnergy: number }> = React.memo(({
 EnergyBar.displayName = 'EnergyBar';
 
 // Performance-optimized action display component
-const ActionDisplay: React.FC<{ 
+const ActionDisplay = React.memo<{ 
   actionsRemaining: number; 
   maxActions: number; 
   actionRegenTime: number 
@@ -122,7 +122,7 @@ const ActionDisplay: React.FC<{
 
 ActionDisplay.displayName = 'ActionDisplay';
 
-export const EnergyStatusPanel: React.FC<EnergyStatusPanelProps> = React.memo(({
+export const EnergyStatusPanel = React.memo<EnergyStatusPanelProps>(({
   energy,
   maxEnergy,
   stats,

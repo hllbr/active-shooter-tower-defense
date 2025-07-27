@@ -1,5 +1,8 @@
 /* TowerSpot Animation Styles */
 
+/* Import defensive animations */
+@import './defensiveAnimations.css';
+
 @keyframes pulse {
   0%, 100% { 
     opacity: 1; 

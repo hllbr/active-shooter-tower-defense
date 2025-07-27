@@ -4,6 +4,7 @@ import type { Enemy, TowerSlot, Position } from '../../models/gameTypes';
 import { createManagedEffect } from '../effects-system/Effects';
 import { advancedPoolManager } from '../memory/AdvancedPoolManager';
 import type { AdvancedEnemy } from '../memory/AdvancedEnemyPool';
+import { BossPhaseManager } from './BossPhaseManager';
 
 /**
  * Enhanced Enemy Behavior System
@@ -34,6 +35,7 @@ export class EnemyBehaviorSystem {
     this.fleeingEnemies.clear();
     this.fleeStartTimes.clear();
     this.bossPhaseTransitions.clear();
+    BossPhaseManager.initialize();
   }
 
   /**
@@ -63,9 +65,9 @@ export class EnemyBehaviorSystem {
       return;
     }
 
-    // Handle boss phase transitions
+    // Handle boss phase transitions using new BossPhaseManager
     if (enemy.bossType && enemy.health && enemy.maxHealth) {
-      this.handleBossPhaseTransition(enemy);
+      BossPhaseManager.updateBossPhase(enemy);
     }
 
     // Determine behavior based on enemy type and current state
@@ -234,93 +236,15 @@ export class EnemyBehaviorSystem {
    * Apply normal behavior to enemy
    */
   private static applyNormalBehavior(enemy: Enemy, _towerSlots: TowerSlot[]): void {
-    // Remove fleeing status if present
     if (this.fleeingEnemies.has(enemy.id)) {
       this.fleeingEnemies.delete(enemy.id);
       this.fleeStartTimes.delete(enemy.id);
       
-      // Restore original color
       enemy.color = this.getOriginalColor(enemy.type || 'Basic');
     }
   }
 
-  /**
-   * Handle boss phase transitions
-   */
-  private static handleBossPhaseTransition(enemy: Enemy): void {
-    if (!enemy.health || !enemy.maxHealth || !enemy.phaseTransitionThresholds) {
-      return;
-    }
 
-    const healthPercentage = enemy.health / enemy.maxHealth;
-    const currentPhase = enemy.bossPhase || 1;
-    const maxPhases = enemy.maxBossPhases || 1;
-
-    // Check if phase transition is needed
-    for (let phase = currentPhase; phase < maxPhases; phase++) {
-      const threshold = enemy.phaseTransitionThresholds[phase - 1];
-      if (healthPercentage <= threshold) {
-        this.triggerBossPhaseTransition(enemy, phase + 1);
-        break;
-      }
-    }
-  }
-
-  /**
-   * Trigger boss phase transition
-   */
-  private static triggerBossPhaseTransition(enemy: Enemy, newPhase: number): void {
-    const now = performance.now();
-    
-    // Prevent multiple transitions in short time
-    const lastTransition = this.bossPhaseTransitions.get(enemy.id);
-    if (lastTransition && (now - lastTransition.timestamp) < 2000) {
-      return;
-    }
-
-    // Update boss phase
-    enemy.bossPhase = newPhase;
-    enemy.isInvulnerable = true;
-    enemy.cinematicState = 'phase_transition';
-    enemy.cinematicStartTime = now;
-
-    // Record transition
-    this.bossPhaseTransitions.set(enemy.id, { phase: newPhase, timestamp: now });
-
-    // Apply phase-specific changes
-    this.applyBossPhaseChanges(enemy, newPhase);
-
-    // Create phase transition effect
-    this.createPhaseTransitionEffect(enemy.position, newPhase);
-
-    // Removed debug log for production cleanliness
-  }
-
-  /**
-   * Apply boss phase-specific changes
-   */
-  private static applyBossPhaseChanges(enemy: Enemy, phase: number): void {
-    switch (phase) {
-      case 2:
-        // Phase 2: Increased speed and damage
-        enemy.speed *= 1.3;
-        enemy.damage = Math.floor(enemy.damage * 1.5);
-        enemy.color = this.getPhaseColor(enemy.color, 2);
-        break;
-      case 3:
-        // Phase 3: Rage mode
-        enemy.speed *= 1.5;
-        enemy.damage = Math.floor(enemy.damage * 2);
-        enemy.rageMode = true;
-        enemy.color = this.getPhaseColor(enemy.color, 3);
-        break;
-      default:
-        // Additional phases
-        enemy.speed *= 1.2;
-        enemy.damage = Math.floor(enemy.damage * 1.3);
-        break;
-    }
-  }
 
   /**
    * Update group coordination

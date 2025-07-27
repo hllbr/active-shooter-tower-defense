@@ -3,7 +3,8 @@ import type { GameState } from '../gameTypes';
 import { GAME_CONSTANTS } from '../../utils/constants';
 import { energyManager } from '../../game-systems/EnergyManager';
 import { waveManager } from '../../game-systems/WaveManager';
-import { Logger } from '../../utils/Logger';
+// Logger import removed for production
+import { GamePauseManager } from '../../game-systems/GamePauseManager';
 import { initialState } from './initialState';
 import { createEnemySlice, type EnemySlice } from './slices/enemySlice';
 import { createTowerSlice, type TowerSlice } from './slices/towerSlice';
@@ -16,6 +17,7 @@ import { createResourceSlice, type ResourceSlice } from './slices/resourceSlice'
 import { createUpgradeSlice, type UpgradeSlice } from './slices/upgradeSlice';
 import { createEnvironmentSlice, type EnvironmentSlice } from './slices/environmentSlice';
 import { createMissionSlice, type MissionSlice } from './slices/missionSlice';
+import { createNotificationSlice, type NotificationSlice } from './slices/notificationSlice';
 
 export type Store = GameState &
   DiceSlice &
@@ -28,7 +30,8 @@ export type Store = GameState &
   ResourceSlice &
   UpgradeSlice &
   EnvironmentSlice &
-  MissionSlice & {
+  MissionSlice &
+  NotificationSlice & {
     resetGame: () => void;
     setStarted: (started: boolean) => void;
     setRefreshing: (refreshing: boolean) => void;
@@ -56,10 +59,12 @@ export const useGameStore = create<Store>((set, get, api) => ({
   ...createUpgradeSlice(set, get, api),
   ...createEnvironmentSlice(set, get, api),
   ...createMissionSlice(set, get, api),
+  ...createNotificationSlice(set, get, api),
 
   resetGame: () => {
     set(initialState);
     energyManager.reset();
+    GamePauseManager.reset();
   },
 
   setStarted: (started: boolean) => set({ isStarted: started }),
@@ -68,7 +73,15 @@ export const useGameStore = create<Store>((set, get, api) => ({
   /**
    * Set the global pause state (UI-based pause, e.g., upgrade screen)
    */
-  setPaused: (paused: boolean) => set({ isPaused: paused }),
+  setPaused: (paused: boolean) => {
+    set({ isPaused: paused });
+    // Use GamePauseManager to handle all pause-related actions
+    if (paused) {
+      GamePauseManager.pauseGame();
+    } else {
+      GamePauseManager.resumeGame();
+    }
+  },
 
   /**
    * Set the first tower placed state (for wave spawn gating)
@@ -87,7 +100,7 @@ try {
     initialEnergy,
     (e, w) => {
       if (isNaN(e) || e < 0) {
-        Logger.warn('⚠️ Energy manager returned invalid value, resetting:', e);
+        // Energy manager returned invalid value, resetting
         e = GAME_CONSTANTS.BASE_ENERGY || 100;
       }
       useGameStore.setState({ energy: e, energyWarning: w ?? null });
@@ -105,8 +118,8 @@ try {
     }
   });
 
-} catch (error) {
-  Logger.error('❌ Energy Manager initialization failed:', error);
+} catch {
+        // Energy Manager initialization failed
   energyManager.reset();
 }
 

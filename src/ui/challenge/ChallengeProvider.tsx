@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
+// import type { ReactNode } from 'react';
 import { useGameStore } from '../../models/store';
 import { differenceInDays, differenceInWeeks, startOfDay, startOfWeek } from 'date-fns';
 import { ChallengeContext, type Challenge, type ClaimedRewardHistoryItem } from './context/ChallengeContext';
@@ -18,13 +18,13 @@ const challengePool: Challenge[] = [
   { id: 10, text: 'Bir oyunda 3 farklı kule türü inşa et', type: 'build', target: 3, progress: 0, completed: false, reward: { type: 'tower', towerType: 'Mage' } },
 ];
 
-function getRandomChallenges(pool: Challenge[], count: number, filter?: (c: Challenge) => boolean) {
+const getRandomChallenges = (pool: Challenge[], count: number, filter?: (c: Challenge) => boolean) => {
   const filtered = filter ? pool.filter(c => filter(c) === true) : pool;
   const shuffled = [...filtered].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count).map(c => ({ ...c, progress: 0, completed: false }));
 }
 
-function getInitialChallenges() {
+const getInitialChallenges = () => {
   const saved = localStorage.getItem('challenges');
   const lastReset = localStorage.getItem('lastChallengeReset');
   const now = Date.now();
@@ -52,7 +52,7 @@ function getInitialChallenges() {
   return [...daily, ...weekly];
 }
 
-export const ChallengeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ChallengeProvider = ({ children }: { children: React.ReactNode }) => {
   const [challenges, setChallenges] = useState<Challenge[]>(getInitialChallenges());
   const [claimedRewards, setClaimedRewards] = useState<number[]>(() => {
     const saved = localStorage.getItem('claimedRewards');

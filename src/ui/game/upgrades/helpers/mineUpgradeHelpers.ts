@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS } from '../../../utils/constants/gameConstants';
+import { GAME_CONSTANTS } from '../../../utils/constants';
 
 interface DefenseUpgradeLimits {
   mines: {

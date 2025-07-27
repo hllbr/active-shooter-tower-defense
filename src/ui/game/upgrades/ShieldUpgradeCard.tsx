@@ -20,7 +20,7 @@ interface ShieldUpgradeCardProps {
   onPurchase: (index: number, finalCost: number) => void;
 }
 
-export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
+export const ShieldUpgradeCard = ({
   shield,
   index,
   gold,
@@ -31,7 +31,7 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
   maxAllowed: _maxAllowed,
   isMaxed,
   onPurchase,
-}) => {
+}: ShieldUpgradeCardProps) => {
   // CRITICAL FIX: Handle progression states
   const isPastLevel = isMaxed;
   const isCurrentLevel = !isMaxed && purchaseCount === 0;
@@ -63,25 +63,14 @@ export const ShieldUpgradeCard: React.FC<ShieldUpgradeCardProps> = ({
       onPurchase(index, finalCost);
       playSound('upgrade-purchase');
     } else {
-      const reason = isPastLevel 
+      const _reason = isPastLevel 
         ? 'Already completed' 
         : isFutureLevel 
           ? 'Locked - complete previous levels first'
           : 'Not enough gold';
       
-      // Play error sound and log reason for debugging
+      // Play error sound
       playSound('error');
-      console.warn(`Shield purchase blocked: ${reason}`, {
-        index,
-        canAfford,
-        isCurrentLevel,
-        isPastLevel,
-        isFutureLevel,
-        gold,
-        finalCost,
-        purchaseCount,
-        isMaxed
-      });
     }
   };
 

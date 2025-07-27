@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from './ThemeProvider';
+import { useTheme } from './useTheme';
 
 interface GlassMorphismProps {
   children: React.ReactNode;
@@ -11,15 +11,18 @@ interface GlassMorphismProps {
   glow?: boolean;
 }
 
-export const GlassMorphism: React.FC<GlassMorphismProps> = ({
+export const GlassMorphism = ({
   children,
+  variant = 'default',
   className = '',
   style = {},
-  variant = 'default',
-  blur = 'medium',
+  _holographic = false,
+  blur = 10,
+  _opacity = 0.1,
   border = true,
-  glow = false
-}) => {
+  _shadow = true,
+  _animated = false
+}: GlassMorphismProps) => {
   const { theme, isReducedMotion } = useTheme();
 
   const getBlurValue = () => {

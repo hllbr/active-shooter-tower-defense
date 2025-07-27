@@ -1,6 +1,7 @@
 /**
  * 🎯 Simplified Environment Manager
  * Optimized for performance and visual clarity
+ * Now delegates weather management to WeatherManager
  */
 
 import type { 
@@ -8,31 +9,22 @@ import type {
   TimeOfDayState, 
   Effect
 } from '../../models/gameTypes';
+import { weatherManager } from '../weather';
 
 export class SimplifiedEnvironmentManager {
-  private weatherState: WeatherState;
   private timeOfDayState: TimeOfDayState;
   private lastUpdate: number = 0;
 
   constructor() {
-    this.weatherState = this.initializeWeatherState();
     this.timeOfDayState = this.initializeTimeOfDayState();
   }
 
   /**
    * Initialize simplified weather state
+   * Now delegated to WeatherManager
    */
   private initializeWeatherState(): WeatherState {
-    return {
-      currentWeather: 'clear',
-      weatherIntensity: 0,
-      visibility: 1.0,
-      movementPenalty: 0,
-      damageModifier: 1.0,
-      duration: 120000, // 2 minutes for less frequent changes
-      startTime: performance.now(),
-      transitionTime: 0
-    };
+    return weatherManager.getWeatherState();
   }
 
   /**
@@ -50,6 +42,7 @@ export class SimplifiedEnvironmentManager {
 
   /**
    * Update simplified environment (minimal processing)
+   * Weather updates now handled by WeatherManager
    */
   public updateEnvironment(
     currentTime: number,
@@ -57,12 +50,8 @@ export class SimplifiedEnvironmentManager {
   ): void {
     this.lastUpdate = currentTime;
 
-    // Only update weather occasionally for minimal performance impact
-    if (currentTime % 5000 < 100) { // Every 5 seconds
-      this.updateSimpleWeather(currentTime);
-    }
-
-    // Slow time of day progression for subtle visual variety
+    // Weather updates now handled by WeatherManager
+    // Only update time of day for subtle visual variety
     if (currentTime % 10000 < 100) { // Every 10 seconds
       this.updateSimpleTimeOfDay(currentTime);
     }
@@ -70,25 +59,11 @@ export class SimplifiedEnvironmentManager {
 
   /**
    * Simple weather updates without heavy effects
+   * Now delegated to WeatherManager
    */
-  private updateSimpleWeather(currentTime: number): void {
-    const weatherDuration = currentTime - this.weatherState.startTime;
-
-    // Change weather less frequently for stability
-    if (weatherDuration > this.weatherState.duration) {
-      // Simple weather progression: clear -> light effects -> clear
-      const weatherCycle = ['clear', 'fog', 'clear', 'rain', 'clear'];
-      const currentIndex = weatherCycle.indexOf(this.weatherState.currentWeather);
-      const nextIndex = (currentIndex + 1) % weatherCycle.length;
-      
-      this.weatherState = {
-        ...this.weatherState,
-        currentWeather: weatherCycle[nextIndex] as WeatherState['currentWeather'],
-        weatherIntensity: 0.3, // Keep intensity low for clarity
-        startTime: currentTime,
-        duration: 120000 + Math.random() * 60000 // 2-3 minutes
-      };
-    }
+  private updateSimpleWeather(_currentTime: number): void {
+    // Weather updates now handled by WeatherManager
+    // This method is kept for compatibility but no longer used
   }
 
   /**
@@ -119,7 +94,7 @@ export class SimplifiedEnvironmentManager {
    */
   public getBackgroundGradient(): string {
     const { currentPhase } = this.timeOfDayState;
-    const { currentWeather } = this.weatherState;
+    const { currentWeather } = weatherManager.getWeatherState();
 
     let baseColors: [string, string] = ['#2D3748', '#1A202C']; // Default dark
 
@@ -152,7 +127,7 @@ export class SimplifiedEnvironmentManager {
    * Get simple weather indicator for UI
    */
   public getWeatherIndicator(): { icon: string; text: string; color: string } {
-    const { currentWeather } = this.weatherState;
+    const { currentWeather } = weatherManager.getWeatherState();
 
     switch (currentWeather) {
       case 'clear':
@@ -176,7 +151,7 @@ export class SimplifiedEnvironmentManager {
     weatherIndicator: { icon: string; text: string; color: string };
   } {
     return {
-      weatherState: this.weatherState,
+      weatherState: weatherManager.getWeatherState(),
       timeOfDayState: this.timeOfDayState,
       backgroundGradient: this.getBackgroundGradient(),
       weatherIndicator: this.getWeatherIndicator()
@@ -191,7 +166,7 @@ export class SimplifiedEnvironmentManager {
     movementPenalty: number;
     damageModifier: number;
   } {
-    const { currentWeather, weatherIntensity } = this.weatherState;
+    const { currentWeather, weatherIntensity } = weatherManager.getWeatherState();
     
     // Very subtle effects to maintain gameplay clarity
     switch (currentWeather) {
