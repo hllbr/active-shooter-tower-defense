@@ -2,8 +2,6 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { useGameStore } from '../../models/store';
 import type { Store } from '../../models/store';
 import { getContinueButtonStyle } from './Footer/footerStyles';
-// Security validation removed for game fluidity
-// import { validateStateChange } from '../../security/SecurityEnhancements';
 
 interface ContinueButtonProps {
   onContinueCallback?: () => void;
@@ -14,14 +12,8 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   const resetDice = useGameStore((s: Store) => s.resetDice);
   const startPreparation = useGameStore((s: Store) => s.startPreparation);
   const setRefreshing = useGameStore((s: Store) => s.setRefreshing);
-  
-  // 🆕 UPGRADE SCREEN: Functions for cleanup (now handled in UpgradeScreen mount)
-  // const clearAllEnemies = useGameStore((s: Store) => s.clearAllEnemies);
-  // const clearAllEffects = useGameStore((s: Store) => s.clearAllEffects);
-  
   const currentWave = useGameStore((s: Store) => s.currentWave);
   const isRefreshing = useGameStore((s: Store) => s.isRefreshing);
-  // const isPreparing = useGameStore((s: Store) => s.isPreparing); // REMOVE: unused
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -32,30 +24,19 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   }, [isRefreshing, isProcessing]);
 
   const handleContinue = useCallback(() => {
-    
-    // CRITICAL FIX: Security validation kaldırıldı - oyun akıcılığı için
-    // const validation = validateStateChange('continueWave', {}, {});
-    // if (!validation.valid) {
-    // }
-    
     try {
-      // clearAllEnemies(); // REMOVED: Now handled in UpgradeScreen mount
-      // clearAllEffects(); // REMOVED: Now handled in UpgradeScreen mount
-      
       nextWave();
-      
       startPreparation();
-      
       resetDice();
       
-      // 🎮 Resume game scene sounds after upgrade
+      // Resume game scene sounds after upgrade
       setTimeout(() => {
         import('../../utils/sound/soundEffects').then(({ resumeGameSceneSounds }) => {
           resumeGameSceneSounds();
         });
       }, 100);
       
-      // HAVA DURUMU: Yükseltme ekranı kapandıktan sonra hava efektlerini başlat
+      // Activate weather effects after upgrade screen closes
       import('../../game-systems/market/WeatherEffectMarket').then(({ weatherEffectMarket }) => {
         const currentWave = useGameStore.getState().currentWave;
         weatherEffectMarket.autoActivateEffects(currentWave);
@@ -68,7 +49,6 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
       }
       
     } catch (error) {
-      // Silent error handling for production
       setRefreshing(false);
     } finally {
       setIsProcessing(false);
@@ -86,9 +66,6 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
   };
 
   const handleContinueClick = () => {
-    // Check game state before proceeding
-    
-    // CRITICAL FIX: Lock problemi çözüldü - isRefreshing kontrolü kaldırıldı
     if (isProcessing) {
       return;
     }
@@ -98,21 +75,12 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     try {
       handleContinue();
     } catch (error) {
-      // Silent error handling for production
       setRefreshing(false);
       setIsProcessing(false);
     }
   };
 
-  // CRITICAL FIX: isRefreshing kontrolü kaldırıldı - sadece processing kontrol edilir
   const isDisabled = isProcessing;
-
-  // Debug function available in development
-  useEffect(() => {
-    (window as unknown as { debugContinueButton: () => void }).debugContinueButton = () => {
-      // Debug state available via debugContinueButton()
-    };
-  }, [isRefreshing, isProcessing, isDisabled, currentWave]);
 
   return (
     <button

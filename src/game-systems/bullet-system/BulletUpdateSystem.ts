@@ -97,7 +97,6 @@ export class BulletUpdateSystem {
           }
         }
         
-        // Remove bullet and return to pool (for non-piercing or max targets reached)
         removeBullet(bullet.id);
         const bulletPool2 = advancedPoolManager.getPool<Bullet>('bullet');
         if (bulletPool2) {
@@ -108,7 +107,7 @@ export class BulletUpdateSystem {
           }
         }
         
-        // Debug mode collision logging can be added here if needed
+
       }
     );
   }

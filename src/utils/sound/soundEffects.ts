@@ -10,37 +10,27 @@ export const gameAudio: HTMLAudioElement | null = null;
 const soundCache = new Map<string, HTMLAudioElement>();
 const missingSounds = new Set<string>();
 
-// 🔊 COOLDOWN SYSTEM: Prevent sound spam and overlapping
+
 const soundCooldowns = new Map<string, number>();
 const soundLastPlayed = new Map<string, number>();
 
-// Cooldown süreleri (milisaniye cinsinden) - ses türüne göre ayarlanmış
 const SOUND_COOLDOWN_DURATIONS: Record<string, number> = {
-  // Çok sık çalınan UI sesleri - kısa cooldown (REDUCED for better responsiveness)
   'click': 25,
   'hover': 50,
   'error': 100,
-  
-  // Orta sıklıkta çalınan sesler - orta cooldown (REDUCED for purchase responsiveness)
   'coin-collect': 75,
   'gold-drop': 100,
   'lock-break': 150,
-  'dice-roll': 100, // Further reduced for better dice responsiveness
+  'dice-roll': 100,
   'pickup-common': 125,
   'pickup-rare': 150,
   'notification': 250,
   'countdown-beep': 400,
-  
-  // Purchase & Upgrade sesleri - kısa cooldown (responsive UI için)
   'upgrade-purchase': 50,
-  
-  // Loot sesleri - kısa cooldown (hızlı toplamalar için)
   'loot-common': 50,
   'loot-rare': 75,
   'loot-epic': 100,
   'loot-legendary': 125,
-  
-  // Oyun aksiyonu sesleri - orta cooldown
   'explosion-large': 200,
   'explosion-small': 150,
   'tower-attack-explosive': 100,
@@ -49,17 +39,13 @@ const SOUND_COOLDOWN_DURATIONS: Record<string, number> = {
   'tower-attack-sniper': 300,
   'freeze-effect': 200,
   'slow-effect': 200,
-  'shield-activate': 100, // REDUCED for purchase responsiveness
+  'shield-activate': 100,
   'shield-break': 300,
   'energy-recharge': 150,
-  
-  // Kule sesleri - uzun cooldown
   'tower-create-sound': 400,
   'tower-levelup-sound': 500,
   'tower-destroy': 600,
   'tower-repair': 400,
-  
-  // Boss sesleri - uzun cooldown
   'boss-bombing': 800,
   'boss-charge': 1000,
   'boss-defeat': 2000,
@@ -69,23 +55,17 @@ const SOUND_COOLDOWN_DURATIONS: Record<string, number> = {
   'boss-phase-transition': 2000,
   'boss-reality-tear': 1500,
   'boss-spawn-minions': 800,
-  
-  // Özel sesler - çok uzun cooldown
   'gameover': 3000,
   'levelupwav': 2000,
   'victory-fanfare': 3000,
   'wave-complete': 2000,
   'defeat-heavy': 1500,
-  
-  // Ambient sesler - orta cooldown
   'ambient-battle': 5000,
   'ambient-wind': 8000,
-  
-  // Varsayılan cooldown
   'default': 200
 };
 
-// 🎮 Sound categories for better management
+
 const SOUND_CATEGORIES = {
   // Game scene sounds - paused during upgrade
   GAME_SCENE: [
@@ -187,7 +167,7 @@ export function playSound(sound: string): void {
   // Stop game scene sounds when paused or refreshing
   if ((isRefreshing || isPaused) && isGameSceneSound(sound)) return;
 
-  // 🔊 COOLDOWN CHECK: Ses çok sık çalınıyorsa engelle
+  
   if (!canPlaySound(sound)) {
     return;
   }
@@ -256,12 +236,12 @@ export function playContextualSound(context: 'victory' | 'defeat' | 'warning' | 
     defeat: 'gameover',
     death: 'death-soundü',
     warning: 'gameover',
-    purchase: 'lock-break',        // 🔊 UI_MARKET category - plays during upgrade
-    'tower-build': 'tower-create-sound',  // 🎮 GAME_SCENE category - paused during upgrade
-    'tower-upgrade': 'tower-levelup-sound', // 🎮 GAME_SCENE category - paused during upgrade
-    'dice-roll': 'dice-roll',      // 🔊 UI_MARKET category - plays during upgrade
+    purchase: 'lock-break',
+    'tower-build': 'tower-create-sound',
+    'tower-upgrade': 'tower-levelup-sound',
+    'dice-roll': 'dice-roll',
     click: '',
-    unlock: 'lock-break'           // 🔊 UI_MARKET category - plays during upgrade
+    unlock: 'lock-break'
   };
   const soundFile = soundMap[context];
   if (soundFile) playSound(soundFile);

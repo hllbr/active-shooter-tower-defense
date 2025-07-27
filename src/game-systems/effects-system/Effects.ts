@@ -28,7 +28,7 @@ export function updateEffects() {
   
   // 🚀 OPTIMIZED: Batch remove expired effects (no find() operation)
   expiredEffects.forEach(effect => {
-    removeEffect(effect.id); // Remove from state
+    removeEffect(effect.id);
     // Return to pool for reuse
     try {
       effectPool.release(effect);

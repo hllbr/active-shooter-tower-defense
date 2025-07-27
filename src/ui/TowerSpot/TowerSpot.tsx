@@ -6,6 +6,7 @@ import { useTowerSpotLogic } from './hooks/useTowerSpotLogic';
 import { useGameStore } from '../../models/store';
 import { useTowerMoveManager } from '../GameBoard/hooks/useTowerMoveManager';
 import { towerInteractionManager } from '../../game-systems/tower-system/TowerInteractionManager';
+import { getSettings } from '../../utils/settings';
 import {
   TowerRenderer,
   WallRenderer,
@@ -15,7 +16,7 @@ import {
 
   ParticleSystem,
   FirstTowerHighlight,
-  TowerHealthDisplay,
+  TowerHealthBar,
   TowerSelectionPanel,
   SimplifiedTowerControls,
   FireHazardDisplay,
@@ -78,6 +79,10 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
   const [_isTowerHovered, setIsTowerHovered] = React.useState(false);
   const isSelected = selectedSlot === slotIdx;
   
+  // Get health bar settings
+  const settings = getSettings();
+  const healthBarAlwaysVisible = settings.healthBarAlwaysVisible;
+  
   // Use interaction manager for hover state
   const isHovered = towerInteractionManager.isSlotHovered(slotIdx);
 
@@ -120,18 +125,19 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
 
   // Kule ateşleme için: data-fire-origin noktasının ekran pozisyonunu bul
   React.useImperativeHandle(slot.fireOriginRef, () => ({
+    ...svgGroupRef.current,
     getFireOriginPosition: () => {
       if (!svgGroupRef.current) return null;
       const fireOrigin = svgGroupRef.current.querySelector('[data-fire-origin="true"]');
       if (!fireOrigin) return null;
-      const bbox = (fireOrigin as SVGGraphicsElement).getBBox();
+      const bbox = (fireOrigin as SVGGGraphicsElement).getBBox();
       // SVG koordinatlarını döndür
       return {
         x: bbox.x + bbox.width / 2,
         y: bbox.y + bbox.height / 2
       };
     }
-  }), []);
+  } as SVGGElement & { getFireOriginPosition?: () => { x: number; y: number } | null }), []);
 
   return (
     <>
@@ -262,8 +268,8 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
           {/* Visual extras (above tower) */}
           <VisualExtrasRenderer slot={slot} />
           
-          {/* Health display on hover */}
-          <TowerHealthDisplay slot={slot} isVisible={showHealthDisplay} />
+          {/* Health bar above tower */}
+          <TowerHealthBar slot={slot} isVisible={showHealthDisplay} showOnHover={!healthBarAlwaysVisible} />
           
           {/* Tower tooltip on hover */}
           <TowerTooltip slot={slot} slotIdx={slotIdx} isVisible={isHovered} />
@@ -299,7 +305,7 @@ export const TowerSpot: React.FC<TowerSpotProps> = ({
             repairCost={Math.ceil(GAME_CONSTANTS.TOWER_REPAIR_BASE_COST * (1 - (slot.tower.health / slot.tower.maxHealth)))}
             onRepair={handleRepair}
             onDelete={handleDelete}
-            isHovered={isHovered}
+            _isHovered={isHovered}
             isSelected={isSelected}
           />
         </g>

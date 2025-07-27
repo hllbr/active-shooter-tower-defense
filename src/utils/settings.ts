@@ -2,6 +2,7 @@ export interface Settings {
   musicVolume: number;
   sfxVolume: number;
   mute: boolean;
+  healthBarAlwaysVisible: boolean;
 }
 
 const SETTINGS_KEY = 'game_settings';
@@ -16,7 +17,7 @@ export function getSettings(): Settings {
   } catch {
     // localStorage erişim hatası
   }
-  return { musicVolume: 0.7, sfxVolume: 0.7, mute: false };
+  return { musicVolume: 0.7, sfxVolume: 0.7, mute: false, healthBarAlwaysVisible: false };
 }
 
 export function saveSettings(settings: Settings) {

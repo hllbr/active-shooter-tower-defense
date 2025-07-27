@@ -1,0 +1,355 @@
+/* Enemy Visual Diversification CSS */
+
+/* Base enemy container */
+.enemy-container {
+  transition: all 0.3s ease-out;
+}
+
+/* Enemy Type Shapes */
+
+/* Basic Enemy - Gray Circle */
+.enemy-basic .enemy-shape {
+  fill: #808080 !important;
+  stroke: #404040 !important;
+}
+
+/* Tank Enemy - Dark Green Square */
+.enemy-tank .enemy-shape {
+  fill: #2d5016 !important;
+  stroke: #1a2f0d !important;
+  animation: tank-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes tank-pulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
+}
+
+/* Scout Enemy - Slim Blue Triangle */
+.enemy-scout .enemy-shape {
+  fill: #3b82f6 !important;
+  stroke: #1d4ed8 !important;
+  animation: scout-dash 1.5s ease-in-out infinite;
+}
+
+@keyframes scout-dash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Ghost Enemy - Purple Semi-transparent Blob */
+.enemy-ghost .enemy-shape {
+  fill: #8b5cf6 !important;
+  stroke: #6d28d9 !important;
+  opacity: 0.7 !important;
+  animation: ghost-fade 3s ease-in-out infinite alternate;
+}
+
+@keyframes ghost-fade {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 0.8; transform: scale(1.1); }
+}
+
+/* Assassin Enemy - Dark Red Circle */
+.enemy-assassin .enemy-shape {
+  fill: #dc2626 !important;
+  stroke: #991b1b !important;
+  animation: assassin-stealth 2s ease-in-out infinite;
+}
+
+@keyframes assassin-stealth {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.4; }
+}
+
+/* Berserker Enemy - Orange Circle */
+.enemy-berserker .enemy-shape {
+  fill: #ea580c !important;
+  stroke: #c2410c !important;
+  animation: berserker-rage 1s ease-in-out infinite alternate;
+}
+
+@keyframes berserker-rage {
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1.1) rotate(5deg); }
+}
+
+/* Shaman Enemy - Purple Circle */
+.enemy-shaman .enemy-shape {
+  fill: #7c3aed !important;
+  stroke: #5b21b6 !important;
+  animation: shaman-magic 2.5s ease-in-out infinite;
+}
+
+@keyframes shaman-magic {
+  0%, 100% { filter: hue-rotate(0deg); }
+  50% { filter: hue-rotate(30deg); }
+}
+
+/* Archer Enemy - Green Circle */
+.enemy-archer .enemy-shape {
+  fill: #059669 !important;
+  stroke: #047857 !important;
+  animation: archer-aim 1.5s ease-in-out infinite;
+}
+
+@keyframes archer-aim {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+}
+
+/* Demon Enemy - Dark Red Circle */
+.enemy-demon .enemy-shape {
+  fill: #991b1b !important;
+  stroke: #7f1d1d !important;
+  animation: demon-fire 1s ease-in-out infinite alternate;
+}
+
+@keyframes demon-fire {
+  0% { filter: brightness(1) drop-shadow(0 0 5px #ff0000); }
+  100% { filter: brightness(1.2) drop-shadow(0 0 10px #ff0000); }
+}
+
+/* Wraith Enemy - Blue Circle */
+.enemy-wraith .enemy-shape {
+  fill: #4338ca !important;
+  stroke: #3730a3 !important;
+  animation: wraith-phase 2s ease-in-out infinite;
+}
+
+@keyframes wraith-phase {
+  0%, 100% { opacity: 0.8; transform: translateX(0); }
+  50% { opacity: 0.4; transform: translateX(3px); }
+}
+
+/* Golem Enemy - Gray Circle */
+.enemy-golem .enemy-shape {
+  fill: #78716c !important;
+  stroke: #57534e !important;
+  animation: golem-stomp 2.5s ease-in-out infinite;
+}
+
+@keyframes golem-stomp {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Phoenix Enemy - Orange Circle */
+.enemy-phoenix .enemy-shape {
+  fill: #f97316 !important;
+  stroke: #ea580c !important;
+  animation: phoenix-burn 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes phoenix-burn {
+  0% { filter: brightness(1) drop-shadow(0 0 3px #ff6600); }
+  100% { filter: brightness(1.3) drop-shadow(0 0 8px #ff6600); }
+}
+
+/* Boss Enemies */
+.enemy-boss .enemy-shape {
+  animation: boss-presence 3s ease-in-out infinite alternate;
+}
+
+@keyframes boss-presence {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.05); filter: brightness(1.2); }
+}
+
+.enemy-boss-legendary .enemy-shape {
+  fill: #fbbf24 !important;
+  stroke: #f59e0b !important;
+  animation: legendary-boss 2s ease-in-out infinite alternate;
+}
+
+@keyframes legendary-boss {
+  0% { filter: brightness(1) drop-shadow(0 0 10px #ffd700); }
+  100% { filter: brightness(1.4) drop-shadow(0 0 20px #ffd700); }
+}
+
+.enemy-boss-major .enemy-shape {
+  fill: #ff6b35 !important;
+  stroke: #ea580c !important;
+  animation: major-boss 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes major-boss {
+  0% { filter: brightness(1) drop-shadow(0 0 8px #ff6b35); }
+  100% { filter: brightness(1.3) drop-shadow(0 0 15px #ff6b35); }
+}
+
+.enemy-boss-mini .enemy-shape {
+  fill: #4ade80 !important;
+  stroke: #22c55e !important;
+  animation: mini-boss 2s ease-in-out infinite alternate;
+}
+
+@keyframes mini-boss {
+  0% { filter: brightness(1) drop-shadow(0 0 5px #4ade80); }
+  100% { filter: brightness(1.2) drop-shadow(0 0 10px #4ade80); }
+}
+
+/* Movement Patterns */
+
+/* Normal Movement */
+.movement-normal {
+  transition: transform 0.1s ease-out;
+}
+
+/* Zigzag Movement */
+.movement-zigzag {
+  animation: zigzag-movement 2s ease-in-out infinite;
+}
+
+@keyframes zigzag-movement {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(5px) translateY(-3px); }
+  50% { transform: translateX(-5px) translateY(3px); }
+  75% { transform: translateX(3px) translateY(-2px); }
+}
+
+/* Stealth Movement */
+.movement-stealth {
+  animation: stealth-movement 3s ease-in-out infinite;
+}
+
+@keyframes stealth-movement {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.95); }
+}
+
+/* Straight Movement */
+.movement-straight {
+  transition: transform 0.05s linear;
+}
+
+/* Ghost Movement */
+.movement-ghost {
+  animation: ghost-movement 4s ease-in-out infinite;
+}
+
+@keyframes ghost-movement {
+  0%, 100% { opacity: 0.7; transform: translateX(0); }
+  50% { opacity: 0.9; transform: translateX(2px); }
+}
+
+/* Rage Movement */
+.movement-rage {
+  animation: rage-movement 1s ease-in-out infinite alternate;
+}
+
+@keyframes rage-movement {
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1.05) rotate(2deg); }
+}
+
+/* Group Movement */
+.movement-group {
+  animation: group-movement 2.5s ease-in-out infinite;
+}
+
+@keyframes group-movement {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Flee Movement */
+.movement-flee {
+  animation: flee-movement 1.5s ease-in-out infinite;
+}
+
+@keyframes flee-movement {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+}
+
+/* Speed Boost Effects */
+.speed-boost-ready {
+  transition: all 0.2s ease-out;
+}
+
+.speed-boost-ready:hover {
+  filter: brightness(1.2);
+  transform: scale(1.05);
+}
+
+/* Boss Effects */
+.boss-aura {
+  animation: boss-aura-pulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes boss-aura-pulse {
+  0% { opacity: 0.4; transform: scale(1); }
+  100% { opacity: 0.8; transform: scale(1.1); }
+}
+
+.boss-particle {
+  animation: boss-particle-rotate 4s linear infinite;
+}
+
+@keyframes boss-particle-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Special Effects */
+.special-pulse {
+  animation: special-pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes special-pulse {
+  0% { opacity: 0.3; transform: scale(1); }
+  100% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.special-particle {
+  animation: special-particle-orbit 3s linear infinite;
+}
+
+@keyframes special-particle-orbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Movement Trails */
+.movement-trail .trail-effect {
+  animation: trail-fade 1s ease-out forwards;
+}
+
+@keyframes trail-fade {
+  0% { opacity: 0.3; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+/* Performance Optimizations */
+.enemy-container {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .enemy-container {
+    animation-duration: 1.5s; /* Slower animations on mobile */
+  }
+  
+  .boss-aura {
+    animation-duration: 4s;
+  }
+  
+  .special-pulse {
+    animation-duration: 2s;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .enemy-container,
+  .enemy-shape,
+  .boss-aura,
+  .special-pulse,
+  .movement-trail {
+    animation: none !important;
+    transition: none !important;
+  }
+} 

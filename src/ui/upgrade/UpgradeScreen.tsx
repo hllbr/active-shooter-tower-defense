@@ -7,14 +7,9 @@ import { UpgradeTabContent } from './UpgradeTabContent';
 import { UpgradeFooter } from './Footer/UpgradeFooter';
 import { useGameStore } from '../../models/store';
 
-// Sub-components
-
-
 export const UpgradeScreen: React.FC = React.memo(() => {
-  // ✅ OPTIMIZED: Local state with memoization
   const [activeTab, setActiveTab] = useState<TabType>('dice');
   
-  // ✅ OPTIMIZED: Store selectors with memoization
   const diceUsed = useGameStore(state => state.diceUsed);
   const rollDice = useGameStore(state => state.rollDice);
   const clearAllEnemies = useGameStore(state => state.clearAllEnemies);
@@ -27,34 +22,28 @@ export const UpgradeScreen: React.FC = React.memo(() => {
     return () => setPaused(false);
   }, [setPaused]);
 
-  // Yükseltme ekranı açıldığında düşmanları temizle ve zar otomatik at
+  // Clear enemies and effects, auto-roll dice if not used
   useEffect(() => {
-    // Düşmanları ve efektleri temizle (para vermeden)
     clearAllEnemies();
     clearAllEffects();
     
-    // Eğer zar henüz bu dalga için atılmamışsa otomatik at
     if (!diceUsed) {
-      // Kısa bir delay ile zar at (kullanıcı deneyimi için)
       const timer = setTimeout(() => {
         try {
-          // Zar sesi çal
           import('../../utils/sound').then(({ playSound }) => {
             playSound('dice-roll');
           });
           
-          // Zar at
           rollDice();
         } catch (error) {
-          // Silent error handling for production
+          // Error handling
         }
-      }, 500); // 500ms bekle
+      }, 500);
 
       return () => clearTimeout(timer);
     }
   }, [clearAllEffects, clearAllEnemies, diceUsed, rollDice]);
 
-  // Event handlers - Sadece tab change kaldı
   const handleTabChange = useCallback((tab: TabType) => {
     setActiveTab(tab);
   }, []);
@@ -62,19 +51,12 @@ export const UpgradeScreen: React.FC = React.memo(() => {
   return (
     <div style={upgradeScreenStyles.overlay}>
       <div style={upgradeScreenStyles.mainContainer}>
-        {/* Header - Artık gold prop'una ihtiyaç yok */}
         <UpgradeHeader />
-
-        {/* Tab Navigation - Tabs config artık internal */}
         <UpgradeTabNavigation 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
         />
-
-        {/* Tab Content */}
         <UpgradeTabContent activeTab={activeTab} />
-
-        {/* Footer - Artık onContinue prop'una ihtiyaç yok */}
         <UpgradeFooter />
       </div>
     </div>

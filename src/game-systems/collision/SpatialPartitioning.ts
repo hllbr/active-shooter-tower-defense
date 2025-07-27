@@ -92,7 +92,7 @@ export class SpatialGrid<T extends SpatialObject> {
    * Insert object into the spatial grid
    */
   insert(obj: T): void {
-    this.remove(obj); // Remove if already exists
+    this.remove(obj);
     
     const cells = this.getObjectCells(obj);
     this.objectCells.set(obj.id, new Set(cells));
@@ -132,7 +132,7 @@ export class SpatialGrid<T extends SpatialObject> {
    * Update object position in the grid
    */
   update(obj: T): void {
-    this.insert(obj); // Remove and re-insert is simpler and fast enough
+    this.insert(obj);
   }
   
   /**

@@ -17,7 +17,7 @@ const generateCircularTowerSlots = (count: number, centerX: number, centerY: num
 };
 
 export const GAME_CONSTANTS = {
-  // Debug mode removed for production optimization
+  
   // Canvas
   CANVAS_BG: '#222831',
   CANVAS_WIDTH: 1920,
@@ -705,11 +705,11 @@ export const GAME_CONSTANTS = {
   ENEMY_COLORS: ['#ff3333', '#ff8800', '#ffcc00'],
   ENEMY_HEALTHBAR_HEIGHT: 4, // Reduced from 6 to 4 for less visual clutter
   ENEMY_TYPES: {
-    // Basic Enemies (Wave 1-10)
-    Basic: { speed: 80, hp: 60, damage: 10, color: '#ff3333', behaviorTag: 'normal' },
-    Scout: { speed: 140, hp: 40, damage: 8, color: '#6ee7b7', behaviorTag: 'avoid' },
-    Tank: { speed: 60, hp: 200, damage: 20, color: '#94a3b8', behaviorTag: 'tank' },
-    Ghost: { speed: 100, hp: 70, damage: 12, color: '#a78bfa', behaviorTag: 'ghost' },
+    // Basic Enemies (Wave 1-10) - Updated colors for CSS-based visual diversification
+    Basic: { speed: 80, hp: 60, damage: 10, color: '#808080', behaviorTag: 'normal' }, // Gray circle
+    Scout: { speed: 140, hp: 40, damage: 8, color: '#3b82f6', behaviorTag: 'avoid' }, // Blue triangle
+    Tank: { speed: 60, hp: 200, damage: 20, color: '#2d5016', behaviorTag: 'tank' }, // Dark green square
+    Ghost: { speed: 100, hp: 70, damage: 12, color: '#8b5cf6', behaviorTag: 'ghost' }, // Purple blob
     
     // Enhanced Behavior Enemies (Wave 5+)
     Fleer: { speed: 120, hp: 50, damage: 8, color: '#ff6b6b', behaviorTag: 'flee' },
@@ -1370,6 +1370,6 @@ export const GAME_CONSTANTS = {
   },
   } as const;
 
-// Debug utilities removed for production optimization
+
 
 // Window access removed for production optimization 

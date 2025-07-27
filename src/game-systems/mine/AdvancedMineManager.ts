@@ -208,7 +208,6 @@ export class AdvancedMineManager {
         break;
     }
 
-    // Remove the mine
     removeMine(mine.id);
   }
 
@@ -403,7 +402,6 @@ export class AdvancedMineManager {
       }
     });
 
-    // Remove expired effects
     expiredEffects.forEach(effectId => {
       this.activeEffects.delete(effectId);
     });

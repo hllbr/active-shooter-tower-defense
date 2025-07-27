@@ -215,7 +215,6 @@ export const ResponsiveUpgradeScreen: React.FC = React.memo(() => {
   return (
     <div style={getResponsiveOverlayStyles()}>
       <div style={getResponsiveContainerStyles()}>
-        {/* Responsive Header */}
         <div style={{ 
           padding: getOptimalSpacing(16),
           borderBottom: '2px solid rgba(255,255,255,0.1)'
@@ -223,7 +222,6 @@ export const ResponsiveUpgradeScreen: React.FC = React.memo(() => {
           <UpgradeHeader />
         </div>
 
-        {/* Responsive Tab Navigation */}
         <div style={getResponsiveTabNavigationStyles()}>
           <UpgradeTabNavigation 
             activeTab={activeTab} 
@@ -231,12 +229,10 @@ export const ResponsiveUpgradeScreen: React.FC = React.memo(() => {
           />
         </div>
 
-        {/* Responsive Tab Content */}
         <div style={getResponsiveTabContentStyles()}>
           <UpgradeTabContent activeTab={activeTab} />
         </div>
 
-        {/* Responsive Footer */}
         <div style={{ 
           padding: getOptimalSpacing(16),
           borderTop: '2px solid rgba(255,255,255,0.1)'
@@ -245,7 +241,6 @@ export const ResponsiveUpgradeScreen: React.FC = React.memo(() => {
         </div>
       </div>
 
-      {/* Responsive CSS for scrollbars */}
       <style>
         {`
           @keyframes fadeInOverlay {
@@ -253,7 +248,6 @@ export const ResponsiveUpgradeScreen: React.FC = React.memo(() => {
             to { opacity: 1; }
           }
 
-          /* Custom scrollbar styles */
           .responsive-upgrade-screen::-webkit-scrollbar {
             width: ${isMobile() ? '6px' : '8px'};
           }
@@ -272,21 +266,18 @@ export const ResponsiveUpgradeScreen: React.FC = React.memo(() => {
             background: #6B7280;
           }
 
-          /* Touch-friendly scrollbar for mobile */
           @media (hover: none) and (pointer: coarse) {
             .responsive-upgrade-screen::-webkit-scrollbar {
               width: 8px;
             }
           }
 
-          /* High contrast mode support */
           @media (prefers-contrast: high) {
             .responsive-upgrade-screen::-webkit-scrollbar-thumb {
               background: #ffffff;
             }
           }
 
-          /* Reduced motion support */
           @media (prefers-reduced-motion: reduce) {
             .responsive-upgrade-screen {
               animation: none;

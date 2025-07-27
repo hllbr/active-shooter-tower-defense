@@ -30,6 +30,7 @@ export { RecentlyUnlockedGlow } from './RecentlyUnlockedGlow';
 export { SynergyDisplay } from './SynergyDisplay';
 export { FirstTowerHighlight } from './FirstTowerHighlight';
 export { TowerHealthDisplay } from './TowerHealthDisplay';
+export { TowerHealthBar } from './TowerHealthBar';
 export { TowerSelectionPanel } from './TowerSelectionPanel';
 export { EnhancedLockedSlot } from './EnhancedLockedSlot';
 export { SimplifiedTowerControls } from './SimplifiedTowerControls';

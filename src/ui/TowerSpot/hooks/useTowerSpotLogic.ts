@@ -81,7 +81,7 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const currentTowerInfo: TowerUpgradeInfo | null = slot.tower ? GAME_CONSTANTS.TOWER_UPGRADES[slot.tower.level - 1] : null;
   const towerBottomY = slot.y + GAME_CONSTANTS.TOWER_SIZE / 2 + 15;
 
-  // Debug info removed for production optimization
+  
   const debugInfo = React.useMemo(() => {
     return null;
     const { enemy } = getTargetEnemy(slot.tower, enemies, TargetingMode.NEAREST);

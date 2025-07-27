@@ -2,6 +2,7 @@ import { useGameStore } from '../models/store';
 import { startBackgroundMusic, stopBackgroundMusic } from '../utils/sound';
 import { waveManager } from './WaveManager';
 import { EnemyMovement } from './enemy/EnemyMovement';
+import { EnhancedEnemyMovement } from './enemy/EnhancedEnemyMovement';
 import { WaveSpawnManager } from './enemy/WaveSpawnManager';
 import { DynamicGameStartManager } from './DynamicGameStartManager';
 import { GAME_CONSTANTS } from '../utils/constants';
@@ -62,11 +63,14 @@ export class GameFlowManager {
    * Ensure enemies move immediately after spawning
    */
   private initializeEnemyMovement(): void {
+    // Initialize enhanced enemy movement system
+    EnhancedEnemyMovement.initialize();
+    
     // Force enemy movement update on game start
-    const originalUpdateEnemyMovement = EnemyMovement.updateEnemyMovement;
+    const originalUpdateEnemyMovement = EnhancedEnemyMovement.updateEnemyMovement;
     
     // Override to ensure immediate movement
-    EnemyMovement.updateEnemyMovement = () => {
+    EnhancedEnemyMovement.updateEnemyMovement = () => {
       const state = useGameStore.getState();
       
       // Ensure enemies always have movement targets

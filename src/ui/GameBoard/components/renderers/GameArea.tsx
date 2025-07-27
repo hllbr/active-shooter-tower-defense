@@ -5,6 +5,7 @@ import { useGameStore } from '../../../../models/store';
 import type { TowerSlot } from '../../../../models/gameTypes';
 import type { DragState, DropZoneState, DragFeedback } from '../../types';
 import { HealthBarRenderer, BossHealthBarStyles } from './helpers/HealthBarRenderer';
+import { EnemyVisualRenderer } from './helpers/EnemyVisualRenderer';
 
 interface GameAreaProps {
   width: number;
@@ -120,16 +121,8 @@ export const GameArea: React.FC<GameAreaProps> = React.memo(({
             {/* Health Bar for all enemies */}
             {HealthBarRenderer.render(enemy)}
             
-            {/* Enemy body */}
-            <circle
-              cx={enemy.position?.x || 0}
-              cy={enemy.position?.y || 0}
-              r={enemy.size || 8}
-              fill={enemy.bossType ? '#DC2626' : '#EF4444'}
-              stroke="#000"
-              strokeWidth="1"
-              opacity={0.9}
-            />
+            {/* Enhanced enemy visual with CSS-based diversification */}
+            {EnemyVisualRenderer.render(enemy)}
           </g>
         ))}
 

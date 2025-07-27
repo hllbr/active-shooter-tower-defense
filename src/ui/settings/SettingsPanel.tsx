@@ -44,6 +44,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
     enhancedAudioManager.toggleMute();
   }, [settings]);
 
+  const handleHealthBarToggle = useCallback(() => {
+    const newHealthBarState = !settings.healthBarAlwaysVisible;
+    const newSettings = { ...settings, healthBarAlwaysVisible: newHealthBarState };
+    setSettingsState(newSettings);
+    saveSettings(newSettings);
+  }, [settings]);
+
   const testDiceSound = useCallback(() => {
     import('../../utils/sound').then(({ playSoundForTest }) => {
       playSoundForTest('dice-roll'); // Cooldown bypass ile test
@@ -175,6 +182,25 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
                   </button>
                 </div>
 
+                {/* Health Bar Visibility Setting */}
+                <div className="setting-row">
+                  <label>Kule Sağlık Çubukları</label>
+                  <div className="mute-control">
+                    <button 
+                      className={`mute-toggle-button ${settings.healthBarAlwaysVisible ? 'active' : 'muted'}`}
+                      onClick={handleHealthBarToggle}
+                      title={settings.healthBarAlwaysVisible ? 'Hover Moduna Geç' : 'Her Zaman Göster'}
+                    >
+                      <span className="speaker-icon">
+                        {settings.healthBarAlwaysVisible ? '👁️' : '👁️‍🗨️'}
+                      </span>
+                      <span className="mute-text">
+                        {settings.healthBarAlwaysVisible ? 'Her Zaman' : 'Hover'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="performance-tips">
                   <h4>💡 Performans İpuçları</h4>
                   <ul>
@@ -195,7 +221,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
               className="reset-button"
               onClick={() => {
                 if (confirm('Tüm ayarları varsayılana döndürmek istediğinizden emin misiniz?')) {
-                  const defaultSettings = { mute: false, sfxVolume: 0.7, musicVolume: 0.5 };
+                  const defaultSettings = { mute: false, sfxVolume: 0.7, musicVolume: 0.5, healthBarAlwaysVisible: false };
                   setSettingsState(defaultSettings);
                   saveSettings(defaultSettings);
                   performanceSettings.setMode('normal');

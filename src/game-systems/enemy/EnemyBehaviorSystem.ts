@@ -236,12 +236,10 @@ export class EnemyBehaviorSystem {
    * Apply normal behavior to enemy
    */
   private static applyNormalBehavior(enemy: Enemy, _towerSlots: TowerSlot[]): void {
-    // Remove fleeing status if present
     if (this.fleeingEnemies.has(enemy.id)) {
       this.fleeingEnemies.delete(enemy.id);
       this.fleeStartTimes.delete(enemy.id);
       
-      // Restore original color
       enemy.color = this.getOriginalColor(enemy.type || 'Basic');
     }
   }

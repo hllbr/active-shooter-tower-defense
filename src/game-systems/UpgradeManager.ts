@@ -559,7 +559,6 @@ export class UpgradeManager {
     // Revert upgrade effects
     this.revertUpgradeEffects(config, lastUpgrade.level);
 
-    // Remove from history
     this.upgradeHistory.pop();
 
           // Undid upgrade successfully

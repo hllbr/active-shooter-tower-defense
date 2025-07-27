@@ -2,6 +2,7 @@ import React from 'react';
 import { useGameStore } from '../../../../models/store';
 import type { Enemy, Bullet, Effect, Mine } from '../../../../models/gameTypes';
 import { HealthBarRenderer, BossHealthBarStyles } from './helpers/HealthBarRenderer';
+import { EnemyVisualRenderer } from './helpers/EnemyVisualRenderer';
 
 /**
  * 🎯 Simplified Renderer - Clean & Performance Optimized
@@ -23,81 +24,16 @@ export const SimplifiedRenderer: React.FC = () => {
         zIndex: 1
       }}
     >
-      {/* Enemies - Clean and Simple */}
-      {enemies.map((enemy: Enemy) => {
-        const isSpecial = enemy.bossType || enemy.type === 'Microbe' || enemy.type === 'Ghost';
-        
-        return (
-          <g key={enemy.id}>
-            {/* Enhanced Health Bar for all enemies */}
-            {HealthBarRenderer.render(enemy)}
-            
-            {/* Enemy body - simple circle */}
-            <circle
-              cx={enemy.position.x}
-              cy={enemy.position.y}
-              r={enemy.size / 2}
-              fill={enemy.color}
-              stroke={isSpecial ? "#FFF" : "#000"}
-              strokeWidth={isSpecial ? 3 : 2}
-              opacity={enemy.type === 'Ghost' ? 0.7 : 1}
-            />
-            
-            {/* Type indicators - simple icons */}
-            {enemy.type === 'Scout' && (
-              <text
-                x={enemy.position.x}
-                y={enemy.position.y + 4}
-                textAnchor="middle"
-                fill="#FFF"
-                fontSize="12"
-                fontWeight="bold"
-              >
-                ⚡
-              </text>
-            )}
-            
-            {enemy.type === 'Assassin' && (
-              <text
-                x={enemy.position.x}
-                y={enemy.position.y + 4}
-                textAnchor="middle"
-                fill="#FFF"
-                fontSize="12"
-                fontWeight="bold"
-              >
-                🗡️
-              </text>
-            )}
-            
-            {enemy.type === 'Microbe' && (
-              <text
-                x={enemy.position.x}
-                y={enemy.position.y + 4}
-                textAnchor="middle"
-                fill="#FFF"
-                fontSize="10"
-                fontWeight="bold"
-              >
-                🦠
-              </text>
-            )}
-            
-            {enemy.bossType && (
-              <text
-                x={enemy.position.x}
-                y={enemy.position.y + 6}
-                textAnchor="middle"
-                fill="#FFF"
-                fontSize="16"
-                fontWeight="bold"
-              >
-                {enemy.bossType === 'legendary' ? '👑' : enemy.bossType === 'major' ? '⚔️' : '🛡️'}
-              </text>
-            )}
-          </g>
-        );
-      })}
+      {/* Enemies - Enhanced Visual Diversification */}
+      {enemies.map((enemy: Enemy) => (
+        <g key={enemy.id}>
+          {/* Enhanced Health Bar for all enemies */}
+          {HealthBarRenderer.render(enemy)}
+          
+          {/* Enhanced enemy visual with CSS-based diversification */}
+          {EnemyVisualRenderer.render(enemy)}
+        </g>
+      ))}
 
       {/* Bullets - Simple dots */}
       {bullets.map((bullet: Bullet) => (

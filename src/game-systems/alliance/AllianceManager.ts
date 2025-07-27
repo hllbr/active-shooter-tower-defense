@@ -117,7 +117,6 @@ export class AllianceManager {
     alliance.members = alliance.members.filter(member => member.playerId !== playerId);
     this.playerAlliances.delete(playerId);
 
-    // Remove alliance bonuses from player
     this.removeAllianceBonuses(playerId);
 
     return true;

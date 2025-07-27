@@ -538,7 +538,6 @@ export class MissionManager {
 
     // Activated gameplay reward
 
-    // Remove temporary rewards after duration
     if (reward.duration > 0) {
       setTimeout(() => {
         this.deactivateGameplayReward(rewardId);
@@ -603,7 +602,6 @@ export class MissionManager {
     const { reward } = rewardData;
     this.activeGameplayRewards.delete(rewardId);
 
-    // Remove reward effects
     this.removeGameplayReward(reward);
 
     // Deactivated gameplay reward
@@ -628,11 +626,10 @@ export class MissionManager {
         break;
 
       case 'damage_boost':
-        // Remove damage boost from all towers
         if (reward.target === 'all_towers') {
           state.towerSlots.forEach(slot => {
             if (slot.tower) {
-              slot.tower.damage /= reward.value; // Reverse the boost
+              slot.tower.damage /= reward.value;
             }
           });
         }

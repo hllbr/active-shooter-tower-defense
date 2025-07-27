@@ -102,7 +102,7 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
         clearTimeout(screenShakeTimerRef.current);
       }
       
-      // Debug mode removed for production optimization
+  
     };
   }, []);
 
