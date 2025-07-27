@@ -1,9 +1,7 @@
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import { energyManager, type EnergyCooldownState, type EnergyStats } from '../../../game-systems/EnergyManager';
-import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
-// Logger import removed for production
 
 let enemyKillListeners: ((isSpecial?: boolean, enemyType?: string) => void)[] = [];
 export const addEnemyKillListener = (fn: (isSpecial?: boolean, enemyType?: string) => void): void => {
@@ -39,11 +37,6 @@ export const createEnergySlice: StateCreator<Store, [], [], EnergySlice> = (set,
   },
 
   addEnergy: (amount, action) => {
-    const validation = securityManager.validateStateChange('addEnergy', {}, { energy: amount });
-    if (!validation.valid) {
-      // Security: addEnergy blocked
-      return;
-    }
     energyManager.add(amount, action || 'manual');
   },
 
@@ -149,12 +142,6 @@ export const createEnergySlice: StateCreator<Store, [], [], EnergySlice> = (set,
   }),
 
   addAction: (amount) => {
-    const validation = securityManager.validateStateChange('addAction', {}, { actions: amount });
-    if (!validation.valid) {
-      // Security: addAction blocked
-      return;
-    }
-    
     const state = get();
     const baseActions = GAME_CONSTANTS.ACTION_SYSTEM.BASE_ACTIONS;
     const upgradeBonus = state.maxActionsLevel * 2;

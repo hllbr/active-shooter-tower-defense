@@ -1,9 +1,8 @@
 import { GAME_CONSTANTS } from '../../../utils/constants';
-import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
 import type { TowerClass } from '../../gameTypes';
-// Logger import removed for production
+import { gameAnalytics } from '../../../game-systems/analytics/GameAnalyticsManager';
 
 export interface UpgradeSlice {
   upgradeBullet: (free?: boolean) => void;
@@ -37,8 +36,20 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
   upgradeBullet: (free) => set((state: Store) => {
     const cost = free ? 0 : GAME_CONSTANTS.BULLET_UPGRADE_COST;
     if (state.gold < cost) return {};
+    
+    const newLevel = Math.min(state.bulletLevel + 1, GAME_CONSTANTS.BULLET_TYPES.length - 1);
+    
+    // Track analytics event
+    gameAnalytics.trackEvent('upgrade_purchased', {
+      upgradeType: 'bullet',
+      level: newLevel,
+      cost,
+      free,
+      wave: state.currentWave
+    });
+    
     return {
-      bulletLevel: Math.min(state.bulletLevel + 1, GAME_CONSTANTS.BULLET_TYPES.length - 1),
+      bulletLevel: newLevel,
       gold: state.gold - cost,
       fireUpgradesPurchased: state.fireUpgradesPurchased + 1,
       totalGoldSpent: state.totalGoldSpent + cost,
@@ -58,19 +69,6 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
   }),
 
   purchasePackage: (packageId, cost, maxAllowed) => {
-    const validation = securityManager.validateStateChange('purchasePackage', {}, { packageId, cost, maxAllowed });
-    if (!validation.valid) {
-      // Security: purchasePackage blocked
-      return false;
-    }
-    if (!packageId || typeof packageId !== 'string') {
-      // Security: Invalid package ID
-      return false;
-    }
-    if (cost <= 0 || cost > 10000) {
-      // Security: Invalid package cost
-      return false;
-    }
     const state = get();
     const tracker = state.packageTracker[packageId] || { purchaseCount: 0, lastPurchased: 0, maxAllowed };
     const current = tracker.purchaseCount;
@@ -115,7 +113,7 @@ export const createUpgradeSlice: StateCreator<Store, [], [], UpgradeSlice> = (se
     return false; // Placeholder - will be implemented with UpgradeManager
   },
 
-  applyBatchUpgrades: (upgradeIds) => {
+  applyBatchUpgrades: (_upgradeIds) => {
     // Batch upgrade requested
     return {
       success: false,

@@ -1,12 +1,8 @@
 import React from 'react';
 import { useGameStore } from '../../models/store';
+import type { DefenseTargetIndicatorProps } from './types';
 
-
-interface DefenseTargetIndicatorProps {
-  isVisible: boolean;
-}
-
-export const DefenseTargetIndicator: React.FC<DefenseTargetIndicatorProps> = ({ isVisible }) => {
+export const DefenseTargetIndicator = ({ isVisible }: DefenseTargetIndicatorProps) => {
   const { defenseTarget } = useGameStore();
   
   if (!isVisible || !defenseTarget || !defenseTarget.isActive) {
@@ -75,14 +71,14 @@ export const DefenseTargetIndicator: React.FC<DefenseTargetIndicatorProps> = ({ 
           height: 8,
           backgroundColor: 'rgba(255, 0, 0, 0.3)',
           borderRadius: 4,
-          border: '1px solid #ff0000',
+          border: '1px solid var(--health-bad, #ff0000)',
         }}
       >
         <div
           style={{
             width: `${healthPercentage}%`,
             height: '100%',
-            backgroundColor: healthPercentage > 50 ? '#00ff00' : healthPercentage > 25 ? '#ffff00' : '#ff0000',
+            backgroundColor: healthPercentage > 50 ? 'var(--health-good, #00ff00)' : healthPercentage > 25 ? 'var(--health-warning, #ffff00)' : 'var(--health-bad, #ff0000)',
             borderRadius: 3,
             transition: 'width 0.3s ease',
           }}
@@ -113,6 +109,4 @@ export const DefenseTargetIndicator: React.FC<DefenseTargetIndicatorProps> = ({ 
       </style>
     </div>
   );
-};
-
-export default DefenseTargetIndicator; 
+}; 

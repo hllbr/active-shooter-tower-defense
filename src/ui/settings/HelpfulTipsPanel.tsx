@@ -35,7 +35,7 @@ export const HelpfulTipsPanel = ({ isVisible }: HelpfulTipsPanelProps) => {
               ...categoryButtonStyle,
               ...(activeCategory === category.id ? activeCategoryButtonStyle : {})
             }}
-            onClick={() => setActiveCategory(category.id as any)}
+            onClick={() => setActiveCategory(category.id as string)}
           >
             <span style={{ fontSize: '16px', marginRight: '8px' }}>{category.icon}</span>
             {category.label}
@@ -94,8 +94,8 @@ export const HelpfulTipsPanel = ({ isVisible }: HelpfulTipsPanelProps) => {
 // Helper function to get tips by category
 const getTipsByCategory = (
   category: string, 
-  currentWave: number, 
-  playerProfile: any
+  _currentWave: number, 
+  _playerProfile: { level: number; achievementsCompleted: number }
 ) => {
   const allTips = {
     beginner: [

@@ -2,7 +2,7 @@
  * 🔄 Lifecycle Manager - Tracks object lifecycles and manages cleanup
  */
 
-import { GAME_CONSTANTS } from '../../utils/constants';
+// import { GAME_CONSTANTS } from '../../utils/constants';
 
 export class LifecycleManager {
   private static instance: LifecycleManager;

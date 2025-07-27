@@ -440,10 +440,10 @@ export class EnemyMovement {
       wallLevel: number;
     }
   ): void {
-    const { direction } = movementData;
+    const { direction: _direction } = movementData;
     
     // ✅ NEW: Use advanced defensive visuals system
-    const { advancedDefensiveVisuals } = require('../defense-systems/AdvancedDefensiveVisuals');
+    // const { advancedDefensiveVisuals } = require('../defense-systems/AdvancedDefensiveVisuals');
     const { towerSlots } = useGameStore.getState();
     const slot = towerSlots[slotIdx];
     

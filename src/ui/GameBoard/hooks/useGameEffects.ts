@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect } from 'react';
-import { GAME_CONSTANTS } from '../../../utils/constants';
 
 import { advancedBulletPool } from '../../../game-systems/memory/AdvancedBulletPool';
 
@@ -47,7 +46,7 @@ export const useGameEffects = (unlockingSlots: Set<number>) => {
   // Boss phase transition screen shake
   useEffect(() => {
     const handleScreenShake = (event: CustomEvent) => {
-      const { intensity = 5, duration = 600 } = event.detail;
+      const { intensity = 5, duration = 600, _frequency = 0.02 } = event.detail;
       
       // Clear any existing timer
       if (screenShakeTimerRef.current) {

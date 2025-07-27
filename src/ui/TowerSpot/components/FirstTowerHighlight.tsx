@@ -2,7 +2,7 @@ import React from 'react';
 import type { TowerClass } from '../../../models/gameTypes';
 
 interface FirstTowerHighlightProps {
-  slotIndex: number;
+  _slotIndex: number;
   towerClass: TowerClass;
   towerName: string;
 }
@@ -11,7 +11,7 @@ interface FirstTowerHighlightProps {
  * First Tower Highlight Component
  * Shows a tutorial highlight for the first placed tower with animated tag
  */
-export const FirstTowerHighlight = ({ slotIndex, towerClass, towerName }: FirstTowerHighlightProps) => {
+export const FirstTowerHighlight = ({ _slotIndex, towerClass, towerName }: FirstTowerHighlightProps) => {
   const [isVisible, setIsVisible] = React.useState(true);
   const [animationPhase, setAnimationPhase] = React.useState(0);
 

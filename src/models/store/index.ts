@@ -118,7 +118,7 @@ try {
     }
   });
 
-} catch (error) {
+} catch {
         // Energy Manager initialization failed
   energyManager.reset();
 }

@@ -5,9 +5,10 @@ import { SettingsPanel } from '../../../settings/SettingsPanel';
 interface GameStatsPanelProps {
   onSettingsClick?: () => void;
   onChallengeClick?: () => void;
+  onSaveLoadClick?: () => void;
 }
 
-export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onSettingsClick, onChallengeClick }) => {
+export const GameStatsPanel = ({ onSettingsClick, onChallengeClick, onSaveLoadClick }: GameStatsPanelProps) => {
   const { gold, energy } = useGameStore();
   const [showSettings, setShowSettings] = useState(false);
 
@@ -119,7 +120,7 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onSettingsClick,
         </div>
 
         {/* Action Buttons Container */}
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {/* Settings Button */}
           <button
             style={{
@@ -139,6 +140,7 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onSettingsClick,
               backdropFilter: 'blur(10px)',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
               flex: 1,
+              minWidth: '100px',
             }}
             onClick={() => onSettingsClick ? onSettingsClick() : setShowSettings(true)}
             onMouseEnter={(e) => {
@@ -155,6 +157,44 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onSettingsClick,
             }}
           >
             ⚙️ Ayarlar
+          </button>
+
+          {/* Save/Load Button */}
+          <button
+            style={{
+              background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+              border: '2px solid #A78BFA',
+              borderRadius: '12px',
+              padding: '10px',
+              color: 'white',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.3s ease',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+              flex: 1,
+              minWidth: '100px',
+            }}
+            onClick={() => onSaveLoadClick?.()}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)';
+              e.currentTarget.style.borderColor = '#F59E0B';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, #8B5CF6, #7C3AED)';
+              e.currentTarget.style.borderColor = '#A78BFA';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.3)';
+            }}
+          >
+            💾 Kaydet
           </button>
 
           {/* Achievements Button */}
@@ -176,6 +216,7 @@ export const GameStatsPanel: React.FC<GameStatsPanelProps> = ({ onSettingsClick,
               backdropFilter: 'blur(10px)',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
               flex: 1,
+              minWidth: '100px',
             }}
             onClick={() => onChallengeClick?.()}
             onMouseEnter={(e) => {

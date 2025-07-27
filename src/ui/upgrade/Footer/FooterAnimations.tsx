@@ -1,5 +1,4 @@
 import React from 'react';
-import { footerStyles } from './footerStyles';
 
 export const FooterAnimations = () => {
   return (

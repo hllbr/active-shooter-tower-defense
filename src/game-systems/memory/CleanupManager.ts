@@ -2,7 +2,7 @@
  * 🧹 Cleanup Manager - Handles automatic cleanup of timers, listeners, and other resources
  */
 
-import { GAME_CONSTANTS } from '../../utils/constants';
+// import { GAME_CONSTANTS } from '../../utils/constants';
 
 
 export interface CleanupTask {

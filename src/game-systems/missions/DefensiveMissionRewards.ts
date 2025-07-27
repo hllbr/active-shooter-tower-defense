@@ -4,7 +4,6 @@
  */
 
 import { useGameStore } from '../../models/store';
-import { enhancedDefensiveMechanics } from '../defense-systems/EnhancedDefensiveMechanics';
 import { towerDurabilityBalancer } from '../tower-system/TowerDurabilityBalancer';
 
 export interface DefensiveMissionReward {
@@ -40,7 +39,7 @@ export class DefensiveMissionRewards {
   private static instance: DefensiveMissionRewards;
   private activeRewards: Map<string, DefensiveMissionReward>;
   private missions: DefensiveMission[];
-  private rewardEffects: Map<string, any>;
+  private rewardEffects: Map<string, { type: string; value: number; duration?: number }>;
 
   private constructor() {
     this.activeRewards = new Map();
@@ -291,7 +290,7 @@ export class DefensiveMissionRewards {
    */
   updateMissionProgress(
     eventType: string,
-    eventData?: { 
+    _eventData?: { 
       trenchLevel?: number; 
       wallLevel?: number; 
       enemyType?: string;
@@ -444,7 +443,7 @@ export class DefensiveMissionRewards {
   /**
    * Apply trench slow bonus
    */
-  private applyTrenchSlowBonus(bonusPercentage: number): void {
+  private applyTrenchSlowBonus(_bonusPercentage: number): void {
     // This would modify the trench slow effect globally
     // Implementation depends on how trench effects are managed
   }
@@ -452,7 +451,7 @@ export class DefensiveMissionRewards {
   /**
    * Apply wall HP bonus
    */
-  private applyWallHPBonus(bonusPercentage: number): void {
+  private applyWallHPBonus(_bonusPercentage: number): void {
     // This would modify wall HP globally
     // Implementation depends on how wall HP is managed
   }
@@ -460,7 +459,7 @@ export class DefensiveMissionRewards {
   /**
    * Apply global defensive bonus
    */
-  private applyGlobalDefensiveBonus(bonusPercentage: number): void {
+  private applyGlobalDefensiveBonus(_bonusPercentage: number): void {
     // This would apply a global defensive bonus
     // Could affect multiple systems
   }
@@ -495,14 +494,14 @@ export class DefensiveMissionRewards {
   /**
    * Apply trench upgrade
    */
-  private applyTrenchUpgrade(reward: DefensiveMissionReward): void {
+  private applyTrenchUpgrade(_reward: DefensiveMissionReward): void {
     // This would upgrade a specific trench or provide trench upgrade benefits
   }
 
   /**
    * Apply wall upgrade
    */
-  private applyWallUpgrade(reward: DefensiveMissionReward): void {
+  private applyWallUpgrade(_reward: DefensiveMissionReward): void {
     // This would upgrade a specific wall or provide wall upgrade benefits
   }
 

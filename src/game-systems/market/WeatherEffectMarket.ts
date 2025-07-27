@@ -365,7 +365,7 @@ export class WeatherEffectMarket {
   /**
    * Apply time dilation effect
    */
-  private applyTimeDilation(effect: WeatherEffect): void {
+  private applyTimeDilation(_effect: WeatherEffect): void {
     // This would slow down the game loop temporarily
     // Implementation would depend on how the game loop is structured
     // Time dilation applied

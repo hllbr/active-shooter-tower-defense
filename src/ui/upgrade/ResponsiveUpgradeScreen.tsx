@@ -14,10 +14,10 @@ export const ResponsiveUpgradeScreen = React.memo(() => {
   // Responsive UI hook
   const { 
     config, 
-    styles, 
+    _styles, 
     isMobile, 
     isTablet, 
-    isDesktop,
+    _isDesktop,
     getOptimalFontSize,
     getOptimalSpacing 
   } = useResponsiveUI();
@@ -30,7 +30,7 @@ export const ResponsiveUpgradeScreen = React.memo(() => {
   const setPaused = useGameStore(state => state.setPaused);
 
   // Touch controls for close button
-  const { handlers: closeHandlers } = useButtonTouchControls(() => {
+  const { handlers: _closeHandlers } = useButtonTouchControls(() => {
     // Close upgrade screen logic
   });
 
@@ -52,7 +52,7 @@ export const ResponsiveUpgradeScreen = React.memo(() => {
             playSound('dice-roll');
           });
           rollDice();
-            } catch (error) {
+            } catch {
       // Auto dice roll error handled silently
     }
       }, 500);

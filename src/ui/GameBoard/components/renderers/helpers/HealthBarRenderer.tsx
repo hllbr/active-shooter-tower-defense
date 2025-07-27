@@ -5,6 +5,7 @@ import { GAME_CONSTANTS } from '../../../../../utils/constants';
 /**
  * Enhanced Health Bar Renderer
  * Follows SOLID principles with single responsibility for health visualization
+ * Now supports accessibility color modes
  */
 export class HealthBarRenderer {
   /**
@@ -15,15 +16,16 @@ export class HealthBarRenderer {
   }
 
   /**
-   * Get health color based on percentage with proper color coding
+   * Get health color based on percentage with accessibility support
    */
   private static getHealthColor(healthPercent: number): string {
+    // Use CSS custom properties for accessibility colors, fallback to default colors
     if (healthPercent >= 0.5) {
-      return '#00ff00'; // Green for 100%–50% HP
+      return 'var(--health-good, #00ff00)'; // Green for 100%–50% HP
     } else if (healthPercent >= 0.2) {
-      return '#ffff00'; // Yellow for 49%–20% HP
+      return 'var(--health-warning, #ffff00)'; // Yellow for 49%–20% HP
     } else {
-      return '#ff0000'; // Red for 19% and below
+      return 'var(--health-bad, #ff0000)'; // Red for 19% and below
     }
   }
 
@@ -64,7 +66,7 @@ export class HealthBarRenderer {
           y={enemy.position.y - yOffset}
           width={width}
           height={height}
-          fill={GAME_CONSTANTS.HEALTHBAR_BG}
+          fill="var(--health-background, #333)"
           stroke={isBoss ? '#ffd700' : '#000'} // Gold border for bosses
           strokeWidth={isBoss ? 2 : 1}
           rx={isBoss ? 4 : 2}

@@ -11,7 +11,7 @@ interface UpgradeTabNavigationProps {
 export const UpgradeTabNavigation = ({
   activeTab,
   onTabChange,
-  isMobile = false
+  _isMobile = false
 }: UpgradeTabNavigationProps) => {
   // Tab configuration - Ana componentten taşındı
   const tabs: TabConfig[] = [

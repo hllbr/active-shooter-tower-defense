@@ -17,12 +17,12 @@ export const useTowerSpotLogic = (slot: TowerSlot, slotIdx: number) => {
   const repairTower = useGameStore((s) => s.repairTower);
   const removeTower = useGameStore((s) => s.removeTower);
   const unlockSlot = useGameStore((s) => s.unlockSlot);
-  const maxTowers = useGameStore((s) => s.maxTowers);
+  const _maxTowers = useGameStore((s) => s.maxTowers);
   const wallLevel = useGameStore((s) => s.wallLevel);
   const performTileAction = useGameStore(s => s.performTileAction);
   const energy = useGameStore(s => s.energy);
   const enemies = useGameStore(s => s.enemies);
-  const towerSlots = useGameStore(s => s.towerSlots);
+  const _towerSlots = useGameStore(s => s.towerSlots);
   const unlockingSlots = useGameStore(s => s.unlockingSlots);
   const recentlyUnlockedSlots = useGameStore(s => s.recentlyUnlockedSlots);
 

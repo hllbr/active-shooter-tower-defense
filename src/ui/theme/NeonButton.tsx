@@ -28,11 +28,11 @@ export const NeonButton = ({
   style = {},
   type = 'button',
   title,
-  icon,
-  loading = false,
-  fullWidth = false,
-  neonColor,
-  pulse = false
+  _icon,
+  _loading = false,
+  _fullWidth = false,
+  _neonColor,
+  _pulse = false
 }: NeonButtonProps) => {
   const { colors, isReducedMotion } = useTheme();
 

@@ -98,6 +98,17 @@ export class TowerFiringSystem {
     addBullet: (bullet: Bullet) => void,
     fireOrigin: { x: number; y: number }
   ): void {
+    // ✅ NEW: Create tower firing visual effects
+    setTimeout(() => {
+      import('../effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+        enhancedVisualEffectsManager.createTowerFiringEffect(
+          fireOrigin.x,
+          fireOrigin.y,
+          _tower.towerClass || 'standard'
+        );
+      });
+    }, 0);
+
     const bullet = advancedBulletPool.createBullet(
       fireOrigin,
       getDirection(fireOrigin, enemy.position),
@@ -125,6 +136,18 @@ export class TowerFiringSystem {
     fireOrigin?: { x: number; y: number }
   ): void {
     const origin = fireOrigin || { x: _tower.position.x, y: _tower.position.y };
+    
+    // ✅ NEW: Create enhanced tower firing visual effects for gatling
+    setTimeout(() => {
+      import('../effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+        enhancedVisualEffectsManager.createTowerFiringEffect(
+          origin.x,
+          origin.y,
+          'gatling'
+        );
+      });
+    }, 0);
+    
     // Primary target
     const primaryBullet = advancedBulletPool.createBullet(
       origin,
@@ -648,7 +671,7 @@ export class TowerFiringSystem {
       options.range = enhancedRange * rangeMult;
       
       // Use enhanced targeting system
-      const { enemy, threatScore } = getTargetEnemy(tower, visibleEnemies, targetingMode, options);
+      const { enemy, _threatScore } = getTargetEnemy(tower, visibleEnemies, targetingMode, options);
       if (!enemy) return;
       
       // Debug targeting information removed for production optimization

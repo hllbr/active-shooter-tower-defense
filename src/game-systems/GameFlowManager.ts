@@ -7,6 +7,8 @@ import { WaveSpawnManager } from './enemy/WaveSpawnManager';
 import { DynamicGameStartManager } from './DynamicGameStartManager';
 import { GAME_CONSTANTS } from '../utils/constants';
 import { missionManager } from './MissionManager';
+import { gameAnalytics } from './analytics/GameAnalyticsManager';
+import { Enemy, Position, TowerSlot } from '../models/types';
 
 /**
  * GameFlowManager - Handles core game flow and initialization
@@ -46,6 +48,9 @@ export class GameFlowManager {
    */
   startGame(): void {
     const state = useGameStore.getState();
+    
+    // Start analytics session
+    gameAnalytics.startSession();
     
     // Ensure sound is started immediately
     this.ensureSoundStarted();
@@ -92,7 +97,7 @@ export class GameFlowManager {
   /**
    * Ensure enemy has a valid movement target
    */
-  private ensureEnemyHasTarget(enemy: any): void {
+  private ensureEnemyHasTarget(enemy: Enemy): void {
     const state = useGameStore.getState();
     
     // If enemy has no target or target is invalid, assign new target
@@ -107,7 +112,7 @@ export class GameFlowManager {
   /**
    * Check if target is still valid
    */
-  private isValidTarget(target: any, towerSlots: any[]): boolean {
+  private isValidTarget(target: Position, towerSlots: TowerSlot[]): boolean {
     if (!target) return false;
     
     // Check if target tower still exists
@@ -121,7 +126,7 @@ export class GameFlowManager {
   /**
    * Find nearest valid target for enemy
    */
-  private findNearestValidTarget(enemyPosition: any, towerSlots: any[]): any {
+  private findNearestValidTarget(enemyPosition: Position, towerSlots: TowerSlot[]): Position | null {
     let nearestTarget = null;
     let nearestDistance = Infinity;
     
@@ -260,15 +265,18 @@ export class GameFlowManager {
     try {
       startBackgroundMusic();
       this.soundStarted = true;
-          } catch (_error) {
-        // Failed to start background music
-      }
+              } catch {
+      // Failed to start background music
+    }
   }
 
   /**
    * Stop game flow and cleanup
    */
   stopGame(): void {
+    // End analytics session
+    gameAnalytics.endSession();
+    
     stopBackgroundMusic();
     this.soundStarted = false;
     

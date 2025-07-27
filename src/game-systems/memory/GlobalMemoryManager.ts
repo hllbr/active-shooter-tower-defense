@@ -6,7 +6,7 @@ import { CleanupManager } from './CleanupManager';
 import { EffectPool } from './EffectPool';
 import { LifecycleManager } from './LifecycleManager';
 import { MemoryMonitor } from './MemoryMonitor';
-import { GAME_CONSTANTS } from '../../utils/constants';
+// import { GAME_CONSTANTS } from '../../utils/constants';
 
 export class GlobalMemoryManager {
   private static instance: GlobalMemoryManager;

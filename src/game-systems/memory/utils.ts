@@ -2,7 +2,7 @@
  * 🛠️ Memory Testing Utilities
  */
 
-import { GAME_CONSTANTS } from '../../utils/constants';
+// import { GAME_CONSTANTS } from '../../utils/constants';
 import { GlobalMemoryManager } from './GlobalMemoryManager';
 import { MemoryMonitor } from './MemoryMonitor';
 
@@ -31,7 +31,7 @@ export const checkMemoryUsage = (): { used: number; total: number; percentage: n
 export const startMemoryMonitoring = (interval: number = 5000): () => void => {
   
   const intervalId = setInterval(() => {
-    const usage = checkMemoryUsage();
+    const _usage = checkMemoryUsage();
     
     // Memory monitoring removed for production optimization
     

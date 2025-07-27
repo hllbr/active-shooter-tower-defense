@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 interface UnlockAnimationProps {
   isVisible: boolean;
-  type: 'upgrade' | 'reward' | 'achievement' | 'mission';
+  _type: 'upgrade' | 'reward' | 'achievement' | 'mission';
   title: string;
   description?: string;
   icon?: string;
@@ -167,7 +167,7 @@ export const UnlockAnimation = ({
 };
 
 // Particle effects component
-const ParticleEffects = ({ type }: { type: string }) => {
+const ParticleEffects = ({ _type }: { type: string }) => {
   const particles = Array.from({ length: 12 }, (_, i) => i);
   
   return (

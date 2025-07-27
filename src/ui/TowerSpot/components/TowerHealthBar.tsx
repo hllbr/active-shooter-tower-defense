@@ -1,27 +1,37 @@
 import React from 'react';
 import { GAME_CONSTANTS } from '../../../utils/constants';
-import type { TowerSlot } from '../../../models/gameTypes';
-import '../styles/towerHealthBar.css';
-
-interface TowerHealthBarProps {
-  slot: TowerSlot;
-  isVisible: boolean;
-  showOnHover?: boolean;
-}
+import type { TowerHealthBarProps } from '../types';
 
 /**
  * Tower Health Bar Component
  * Displays a health bar above each tower with color-coded health status
  * Follows SOLID principles with single responsibility for health visualization
+ * Now supports accessibility color modes
  */
-export const TowerHealthBar: React.FC<TowerHealthBarProps> = ({ 
+export const TowerHealthBar = ({ 
   slot, 
   isVisible,
   showOnHover = true
-}) => {
-  if (!slot.tower) return null;
-
+}: TowerHealthBarProps) => {
   const tower = slot.tower;
+  
+  // Track previous health for animation
+  const [prevHealth, setPrevHealth] = React.useState(tower?.health || 0);
+  const [showDamageEffect, setShowDamageEffect] = React.useState(false);
+
+  // Detect health changes for damage effect
+  React.useEffect(() => {
+    if (tower && tower.health < prevHealth) {
+      setShowDamageEffect(true);
+      setTimeout(() => setShowDamageEffect(false), 500);
+    }
+    if (tower) {
+      setPrevHealth(tower.health);
+    }
+  }, [tower?.health, prevHealth, tower]);
+
+  if (!tower) return null;
+
   const healthPercentage = (tower.health / tower.maxHealth) * 100;
   
   // Show health bar if:
@@ -31,30 +41,17 @@ export const TowerHealthBar: React.FC<TowerHealthBarProps> = ({
   
   if (!shouldShow) return null;
 
-  // Track previous health for animation
-  const [prevHealth, setPrevHealth] = React.useState(tower.health);
-  const [showDamageEffect, setShowDamageEffect] = React.useState(false);
-
-  // Detect health changes for damage effect
-  React.useEffect(() => {
-    if (tower.health < prevHealth) {
-      setShowDamageEffect(true);
-      setTimeout(() => setShowDamageEffect(false), 500);
-    }
-    setPrevHealth(tower.health);
-  }, [tower.health, prevHealth]);
-
   /**
-   * Get health color based on percentage with proper color coding
+   * Get health color based on percentage with accessibility support
    * Green (100%–50%), Yellow (49%–20%), Red (19% or less)
    */
   const getHealthColor = (percentage: number): string => {
     if (percentage >= 50) {
-      return GAME_CONSTANTS.HEALTHBAR_GOOD; // Green for 100%–50% HP
+      return 'var(--health-good, #00ff00)'; // Green for 100%–50% HP
     } else if (percentage >= 20) {
-      return GAME_CONSTANTS.HEALTHBAR_WARNING; // Yellow for 49%–20% HP
+      return 'var(--health-warning, #ffff00)'; // Yellow for 49%–20% HP
     } else {
-      return GAME_CONSTANTS.HEALTHBAR_BAD; // Red for 19% and below
+      return 'var(--health-bad, #ff0000)'; // Red for 19% and below
     }
   };
 
@@ -80,7 +77,7 @@ export const TowerHealthBar: React.FC<TowerHealthBarProps> = ({
         y={slot.y - yOffset}
         width={width}
         height={height}
-        fill={GAME_CONSTANTS.HEALTHBAR_BG}
+        fill="var(--health-background, #333)"
         stroke="#000"
         strokeWidth={1}
         rx={2}

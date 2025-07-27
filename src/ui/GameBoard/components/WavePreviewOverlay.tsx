@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useGameStore } from '../../../models/store';
 import { waveCompositions } from '../../../config/waves';
-import { GAME_CONSTANTS } from '../../../utils/constants';
+// import { GAME_CONSTANTS } from '../../../utils/constants';
 import { UI_TEXTS } from '../../../utils/constants/uiTexts';
+import type { GameState } from '../../../models/gameTypes';
 
 interface WavePreviewOverlayProps {
   isVisible: boolean;
@@ -10,14 +11,14 @@ interface WavePreviewOverlayProps {
 }
 
 export const WavePreviewOverlay = ({ isVisible, onCountdownComplete }: WavePreviewOverlayProps) => {
-  const currentWave = useGameStore((state: any) => state.currentWave);
+  const currentWave = useGameStore((state: GameState) => state.currentWave);
   const [countdown, setCountdown] = useState(5);
   const [isCountingDown, setIsCountingDown] = useState(false);
 
   // Get wave composition for preview
   const waveComposition = useMemo(() => {
     const composition = waveCompositions[currentWave] || [];
-    return composition.map((enemy: any) => ({
+    return composition.map((enemy: { type: string; count: number }) => ({
       ...enemy,
       icon: getEnemyIcon(enemy.type),
       color: getEnemyColor(enemy.type)
@@ -74,7 +75,7 @@ export const WavePreviewOverlay = ({ isVisible, onCountdownComplete }: WavePrevi
         <div style={compositionStyle}>
           <h3 style={compositionTitleStyle}>Enemy Composition:</h3>
           <div style={enemyListStyle}>
-            {waveComposition.map((enemy: any, index: number) => (
+            {waveComposition.map((enemy: { type: string; count: number; icon: string; color: string }, index: number) => (
               <div key={index} style={enemyItemStyle}>
                 <span style={{ fontSize: '20px' }}>{enemy.icon}</span>
                 <span style={{ color: enemy.color, fontWeight: 'bold' }}>

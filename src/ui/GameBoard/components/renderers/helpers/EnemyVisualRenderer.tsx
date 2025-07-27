@@ -3,10 +3,6 @@ import { GAME_CONSTANTS } from '../../../../../utils/constants';
 import type { Enemy } from '../../../../../models/gameTypes';
 import './enemyVisuals.css';
 
-interface EnemyVisualRendererProps {
-  enemy: Enemy;
-}
-
 /**
  * Enemy Visual Renderer
  * Provides CSS-based visual diversification for different enemy types
@@ -78,7 +74,7 @@ export class EnemyVisualRenderer {
   /**
    * Get speed boost class when near towers
    */
-  private static getSpeedBoostClass(enemy: Enemy): string {
+  private static getSpeedBoostClass(_enemy: Enemy): string {
     // This will be applied via CSS when enemy is near towers
     return 'speed-boost-ready';
   }

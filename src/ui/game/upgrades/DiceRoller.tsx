@@ -8,7 +8,7 @@ import { DiceResult } from './DiceResult';
 import { DiceButton } from './DiceButton';
 
 
-export const DiceRoller: React.FC = () => {
+export const DiceRoller = () => {
   const diceRoll = useGameStore((state: Store) => state.diceRoll);
   const diceUsed = useGameStore((state: Store) => state.diceUsed);
   const discountMultiplier = useGameStore((state: Store) => state.discountMultiplier);
@@ -32,7 +32,7 @@ export const DiceRoller: React.FC = () => {
         // State verification after dice roll
       }, 100);
       
-    } catch (error) {
+    } catch {
       // Silent error handling for production
     }
   };

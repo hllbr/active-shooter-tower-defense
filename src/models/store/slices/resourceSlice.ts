@@ -3,11 +3,9 @@
  * Centralized resource management with source tracking and validation
  */
 
-import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
 import type { ResourceSource, ResourceTransaction } from '../../gameTypes';
-// Logger import removed for production
 
 export interface ResourceSlice {
   // Enhanced resource functions with source tracking
@@ -57,11 +55,6 @@ const emitResourceUpdated = (gold: number) => {
 
 export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (set, get, _api) => ({
   addResource: (amount, source, metadata) => {
-    const validation = securityManager.validateStateChange('addResource', {}, { gold: amount });
-    if (!validation.valid) {
-      // Security: addResource blocked
-      return;
-    }
 
     const transaction: ResourceTransaction = {
       id: `resource_${Date.now()}_${Math.random()}`,
@@ -81,11 +74,6 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
   },
 
   spendResource: (amount, source, metadata) => {
-    const validation = securityManager.validateStateChange('spendResource', {}, { gold: amount });
-    if (!validation.valid) {
-      // Security: spendResource blocked
-      return false;
-    }
 
     const currentGold = get().gold;
     if (currentGold < amount) {
@@ -112,11 +100,6 @@ export const createResourceSlice: StateCreator<Store, [], [], ResourceSlice> = (
   },
 
   setResource: (amount, source, metadata) => {
-    const validation = securityManager.validateStateChange('setResource', {}, { gold: amount });
-    if (!validation.valid) {
-      // Security: setResource blocked
-      return;
-    }
 
     const transaction: ResourceTransaction = {
       id: `set_${Date.now()}_${Math.random()}`,

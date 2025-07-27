@@ -10,13 +10,13 @@ import { toast } from 'react-toastify';
 interface ResponsiveMarketUIProps {
   isOpen: boolean;
   onClose: () => void;
-  isModal?: boolean;
+  _isModal?: boolean;
 }
 
-export const ResponsiveMarketUI: React.FC<ResponsiveMarketUIProps> = React.memo(({
+export const ResponsiveMarketUI = React.memo<ResponsiveMarketUIProps>(({
   isOpen,
   onClose,
-  isModal = false
+  _isModal = false
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   
@@ -26,14 +26,14 @@ export const ResponsiveMarketUI: React.FC<ResponsiveMarketUIProps> = React.memo(
     styles, 
     isMobile, 
     isTablet, 
-    isDesktop,
+    _isDesktop,
     getOptimalFontSize,
     getOptimalSpacing 
   } = useResponsiveUI();
 
   // Store selectors
   const gold = useGameStore(state => state.gold);
-  const currentWave = useGameStore(state => state.currentWave);
+  const _currentWave = useGameStore(state => state.currentWave);
 
   // Touch controls for close button
   const { handlers: closeHandlers } = useButtonTouchControls(onClose);
@@ -69,7 +69,7 @@ export const ResponsiveMarketUI: React.FC<ResponsiveMarketUIProps> = React.memo(
   }, [gold, marketItems]);
 
   // Touch controls for purchase buttons
-  const { handlers: purchaseHandlers } = useButtonTouchControls(handlePurchase);
+  const { handlers: _purchaseHandlers } = useButtonTouchControls(handlePurchase);
 
   // Responsive styles
   const getResponsiveContainerStyles = (): React.CSSProperties => {

@@ -26,6 +26,9 @@ import { SynergyDisplay } from '../TowerSpot/components/SynergyDisplay';
 // Import new components
 import { WavePreviewOverlay } from './components/WavePreviewOverlay';
 import { UnlockAnimation } from '../common/UnlockAnimation';
+import DifficultyIndicator from '../game/DifficultyIndicator';
+import SaveLoadPanel from '../game/SaveLoadPanel';
+import { EnhancedParticleRenderer } from './components/renderers/EnhancedParticleRenderer';
 
 // Import enhanced hooks
 import { 
@@ -76,7 +79,7 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
     tickActionRegen: _tickActionRegen,
     showWavePreview,
     wavePreviewCountdown,
-    showWavePreviewOverlay,
+    _showWavePreviewOverlay,
     hideWavePreviewOverlay,
     startWavePreviewCountdown,
     notifications
@@ -99,6 +102,9 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
     description: '',
     icon: ''
   });
+
+  // Save/Load panel state
+  const [saveLoadPanelOpen, setSaveLoadPanelOpen] = useState(false);
 
   const shouldShowUpgradeScreen = useMemo(() => 
     isRefreshing && !isGameOver, 
@@ -134,6 +140,10 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
     onChallengeClick?.();
   }, [onChallengeClick]);
 
+  const handleSaveLoadClick = useCallback(() => {
+    setSaveLoadPanelOpen(true);
+  }, []);
+
   // Wave preview countdown handler
   const handleWavePreviewCountdownComplete = useCallback(() => {
     hideWavePreviewOverlay();
@@ -147,6 +157,21 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
 
   // Game effects hook
   const { screenShake, screenShakeIntensity, dimensions } = useGameEffects(unlockingSlots || new Set());
+  
+  // ✅ NEW: Enhanced visual effects integration
+  useEffect(() => {
+    const updateEnhancedEffects = () => {
+      import('../../game-systems/effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+        enhancedVisualEffectsManager.update(16); // 60 FPS update
+      });
+    };
+    
+    const effectInterval = setInterval(updateEnhancedEffects, 16);
+    
+    return () => {
+      clearInterval(effectInterval);
+    };
+  }, []);
 
   // Tower drag hook
   const towerDragState = useTowerDrag();
@@ -245,10 +270,14 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
       <GameStatsPanel 
         onSettingsClick={handleSettingsClick}
         onChallengeClick={handleChallengeClick}
+        onSaveLoadClick={handleSaveLoadClick}
       />
 
       {/* Energy Warning */}
       <EnergyWarning />
+
+      {/* Difficulty Indicator */}
+      <DifficultyIndicator isVisible={isStarted && !isRefreshing} />
 
       {/* Wave Preview Overlay */}
       <WavePreviewOverlay
@@ -283,6 +312,13 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
         />
       )}
 
+      {/* ✅ NEW: Enhanced Particle Effects Renderer */}
+      <EnhancedParticleRenderer
+        width={dimensions.width}
+        height={dimensions.height}
+        isActive={isStarted && !isRefreshing}
+      />
+
       {/* Conditional Renderer */}
       <ConditionalRenderer />
 
@@ -313,6 +349,12 @@ export const GameBoard = React.memo(({ onSettingsClick, onChallengeClick }: Game
       {shouldShowGameOverScreen && (
         <GameOverScreen />
       )}
+
+      {/* Save/Load Panel */}
+      <SaveLoadPanel
+        isOpen={saveLoadPanelOpen}
+        onClose={() => setSaveLoadPanelOpen(false)}
+      />
     </div>
   );
 }); 

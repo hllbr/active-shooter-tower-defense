@@ -1,23 +1,27 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { performanceSettings } from '../../utils/settings/PerformanceSettings';
 import { PerformanceModeSelector } from './PerformanceModeSelector';
 import { getSettings, saveSettings } from '../../utils/settings';
 import { enhancedAudioManager } from '../../utils/sound/EnhancedAudioManager';
 import { HelpfulTipsPanel } from './HelpfulTipsPanel';
+import { AccessibilitySettings } from './AccessibilitySettings';
+import { AnalyticsSettings } from './AnalyticsSettings';
+import { accessibilityManager } from '../../utils/accessibility/AccessibilityManager';
 import './SettingsPanel.css';
 import { useGameStore } from '../../models/store';
+import type { Settings } from '../../utils/settings';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type SettingsTab = 'audio' | 'performance' | 'tips';
+type SettingsTab = 'audio' | 'performance' | 'accessibility' | 'analytics' | 'tips';
 
 export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
   const setPaused = useGameStore(state => state.setPaused);
   const [showPerformanceSelector, setShowPerformanceSelector] = useState(false);
-  const [settings, setSettingsState] = useState(getSettings());
+  const [settings, setSettingsState] = useState<Settings>(getSettings());
   const [activeTab, setActiveTab] = useState<SettingsTab>('audio');
 
   const currentPerformanceMode = performanceSettings.getMode();
@@ -26,6 +30,11 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
     if (isOpen) setPaused(true);
     return () => setPaused(false);
   }, [isOpen, setPaused]);
+
+  // Initialize accessibility manager
+  useEffect(() => {
+    accessibilityManager.initialize(settings);
+  }, [settings]);
 
   const handleVolumeChange = useCallback((type: 'sfxVolume' | 'musicVolume', value: number) => {
     const newSettings = { ...settings, [type]: value };
@@ -54,6 +63,11 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
     setSettingsState(newSettings);
     saveSettings(newSettings);
   }, [settings]);
+
+  const handleSettingsChange = useCallback((newSettings: Settings) => {
+    setSettingsState(newSettings);
+    saveSettings(newSettings);
+  }, []);
 
   const testDiceSound = useCallback(() => {
     import('../../utils/sound').then(({ playSoundForTest }) => {
@@ -94,12 +108,24 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
             >
               ⚡ Performans
             </button>
-            <button
-              className={`settings-tab-button ${activeTab === 'tips' ? 'active' : ''}`}
-              onClick={() => setActiveTab('tips')}
-            >
-              💡 İpuçları
-            </button>
+                              <button
+                    className={`settings-tab-button ${activeTab === 'accessibility' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('accessibility')}
+                  >
+                    ♿ Erişilebilirlik
+                  </button>
+                  <button
+                    className={`settings-tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('analytics')}
+                  >
+                    📊 Analitik
+                  </button>
+                  <button
+                    className={`settings-tab-button ${activeTab === 'tips' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('tips')}
+                  >
+                    💡 İpuçları
+                  </button>
           </div>
 
           {/* Tab Content */}
@@ -171,12 +197,13 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
 
                     {/* Test Sound Button */}
                     <div className="setting-row">
-                      <button 
+                      <label>Ses Testi</label>
+                      <button
                         className="test-sound-button"
                         onClick={testDiceSound}
                         disabled={settings.mute}
                       >
-                        🎲 Zar Sesini Test Et
+                        🎲 Zar Sesi Test Et
                       </button>
                     </div>
                   </div>
@@ -194,36 +221,37 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                   </div>
                   
                   <div className="card-content">
-                    {/* Current Performance Mode */}
                     <div className="setting-row">
                       <label>Performans Modu</label>
                       <div className="performance-display">
-                        <div className="mode-badge">
-                          <span>🎯</span>
-                          {currentPerformanceMode === 'clean' ? 'Temiz Mod' : 
-                           currentPerformanceMode === 'balanced' ? 'Dengeli Mod' : 'Normal Mod'}
+                        <div className="performance-info">
+                          <div className="performance-label">Mevcut Mod</div>
+                          <div className="performance-value">
+                            {currentPerformanceMode}
+                            <span className={`performance-indicator ${currentPerformanceMode === 'high' ? 'good' : currentPerformanceMode === 'medium' ? 'warning' : 'poor'}`}></span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Change Mode Button */}
                     <div className="setting-row">
-                      <button 
+                      <label>Mod Değiştir</label>
+                      <button
                         className="change-mode-button"
                         onClick={() => setShowPerformanceSelector(true)}
                       >
-                        🔄 Mod Değiştir
+                        🔄 Performans Modu Seç
                       </button>
                     </div>
 
-                    {/* Health Bar Toggle */}
+                    {/* Health Bar Visibility */}
                     <div className="setting-row">
-                      <label>Kule Sağlık Çubukları</label>
+                      <label>Sağlık Çubukları</label>
                       <div className="mute-control">
                         <button 
                           className={`mute-toggle-button ${settings.healthBarAlwaysVisible ? 'active' : 'muted'}`}
                           onClick={handleHealthBarToggle}
-                          title={settings.healthBarAlwaysVisible ? 'Hover Moduna Geç' : 'Her Zaman Göster'}
+                          title={settings.healthBarAlwaysVisible ? 'Hover Moduna Geç' : 'Her Zaman Görünür Moduna Geç'}
                         >
                           <span className="speaker-icon">
                             {settings.healthBarAlwaysVisible ? '👁️' : '👁️‍🗨️'}
@@ -234,53 +262,50 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                         </button>
                       </div>
                     </div>
-
-                    <div className="performance-tips">
-                      <h4>💡 Performans İpuçları</h4>
-                      <ul>
-                        <li>🎯 <strong>Temiz Mod:</strong> En iyi performans için önerilir</li>
-                        <li>🔊 <strong>Ses Azaltma:</strong> Ses seviyesini düşürmek CPU kullanımını azaltır</li>
-                        <li>👁️ <strong>Animasyon Azaltma:</strong> Animasyonları kapatmak FPS'i artırır</li>
-                        <li>📱 <strong>Mobil Cihazlar:</strong> Temiz modu kullanın</li>
-                      </ul>
-                    </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {activeTab === 'accessibility' && (
+              <AccessibilitySettings 
+                settings={settings}
+                onSettingsChange={handleSettingsChange}
+              />
+            )}
+
+            {activeTab === 'analytics' && (
+              <AnalyticsSettings onClose={onClose} />
+            )}
+
             {activeTab === 'tips' && (
               <div className="tips-tab-content">
-                <HelpfulTipsPanel isVisible={true} />
+                <HelpfulTipsPanel />
               </div>
             )}
           </div>
 
-          {/* Footer */}
+          {/* Settings Footer */}
           <div className="settings-footer">
-            <button 
+            <button
               className="reset-button"
               onClick={() => {
-                if (confirm('Tüm ayarları varsayılana döndürmek istediğinizden emin misiniz?')) {
-                  const defaultSettings = { mute: false, sfxVolume: 0.7, musicVolume: 0.5, healthBarAlwaysVisible: false };
-                  setSettingsState(defaultSettings);
-                  saveSettings(defaultSettings);
-                  performanceSettings.setMode('normal');
-                  
-                  // Use enhanced audio manager for smooth reset
-                  enhancedAudioManager.updateSFXVolume(defaultSettings.sfxVolume);
-                  enhancedAudioManager.updateMusicVolume(defaultSettings.musicVolume);
-                }
+                const defaultSettings = getSettings();
+                setSettingsState(defaultSettings);
+                accessibilityManager.updateSettings(defaultSettings);
+                saveSettings(defaultSettings);
               }}
             >
-              🔄 Varsayılana Dön
+              🔄 Varsayılana Sıfırla
             </button>
-            
-            <button 
+            <button
               className="save-button"
-              onClick={onClose}
+              onClick={() => {
+                saveSettings(settings);
+                onClose();
+              }}
             >
-              ✓ Tamam
+              💾 Kaydet ve Kapat
             </button>
           </div>
         </div>
@@ -289,6 +314,7 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
       {/* Performance Mode Selector Modal */}
       {showPerformanceSelector && (
         <PerformanceModeSelector
+          isVisible={showPerformanceSelector}
           onClose={() => setShowPerformanceSelector(false)}
         />
       )}

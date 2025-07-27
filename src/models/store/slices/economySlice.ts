@@ -1,8 +1,6 @@
-import { securityManager } from '../../../security/SecurityManager';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
 import type { ResourceSource } from '../../gameTypes';
-// Logger import removed for production
 import { transactionQueue } from '../TransactionQueue';
 
 export interface EconomySlice {
@@ -17,12 +15,6 @@ export interface EconomySlice {
 
 export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (set, _get, _api) => ({
   addGold: (amount, source = 'manual') => {
-    const validation = securityManager.validateStateChange('addGold', {}, { gold: amount });
-    if (!validation.valid) {
-      // Security: addGold blocked
-      return;
-    }
-    
     // Use the new resource system if available
     const { addResource } = _get();
     if (addResource) {
@@ -33,12 +25,6 @@ export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (se
   },
 
   spendGold: (amount, source = 'purchase') => {
-    const validation = securityManager.validateStateChange('spendGold', {}, { gold: amount });
-    if (!validation.valid) {
-      // Security: spendGold blocked
-      return false;
-    }
-    
     // Check if we have enough gold before spending
     const currentGold = _get().gold;
     if (currentGold < amount) {
@@ -60,11 +46,6 @@ export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (se
   },
 
   setGold: (amount) => {
-    const validation = securityManager.validateStateChange('setGold', {}, { gold: amount });
-    if (!validation.valid) {
-      // Security: setGold blocked
-      return;
-    }
     set(() => ({ gold: amount }));
   },
 
@@ -85,7 +66,7 @@ export const createEconomySlice: StateCreator<Store, [], [], EconomySlice> = (se
         await Promise.resolve(callback());
         // Purchase transaction successful
         return true;
-      } catch (error) {
+      } catch {
         // Rollback if callback fails
         const { addResource } = _get();
         if (addResource) addResource(amount, 'refund', { originalAmount: amount });

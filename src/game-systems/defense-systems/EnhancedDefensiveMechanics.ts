@@ -3,7 +3,7 @@
  * Implements advanced trench and wall mechanics with level progression
  */
 
-import { useGameStore } from '../../models/store';
+// import { useGameStore } from '../../models/store'; // Unused import removed
 import { SimplifiedParticleSystem } from '../effects-system/SimplifiedParticleSystem';
 import { playSound } from '../../utils/sound';
 
@@ -194,14 +194,14 @@ export class EnhancedDefensiveMechanics {
    * Handle wall collision with enhanced mechanics
    */
   private handleWallCollision(
-    enemy: any,
-    slot: any,
+    enemy: { position: { x: number; y: number }; type?: string; velocityX?: number; velocityY?: number; frozenUntil?: number },
+    slot: { tower?: { wallStrength: number; health: number; maxHealth: number } },
     slotIdx: number,
-    actions: any,
+    actions: { hitWall: (slotIdx: number) => void },
     isSpecialEnemy: boolean
   ): void {
     const { position, type } = enemy;
-    const wallStrength = slot.tower.wallStrength;
+    const wallStrength = slot.tower?.wallStrength || 0;
     const wallLevel = this.getWallLevel(wallStrength);
     const wallConfig = this.WALL_LEVELS[wallLevel - 1];
     
@@ -211,7 +211,7 @@ export class EnhancedDefensiveMechanics {
 
     // Apply knockback only for special enemies
     if (isSpecialEnemy) {
-      this.applyKnockbackEffect(enemy, type);
+      this.applyKnockbackEffect(enemy, type || 'Basic');
     }
 
     // Damage the wall
@@ -237,29 +237,31 @@ export class EnhancedDefensiveMechanics {
    * Handle trench collision with enhanced mechanics
    */
   private handleTrenchCollision(
-    enemy: any,
-    slot: any,
-    isSpecialEnemy: boolean
+    enemy: { position: { x: number; y: number }; speed?: number; frozenUntil?: number },
+    slot: { modifier?: { type: string; level?: number } },
+    _isSpecialEnemy: boolean
   ): void {
-    const trenchLevel = slot.modifier.level || 1;
-    const trenchConfig = this.TRENCH_LEVELS[trenchLevel - 1];
+    const trenchLevel = slot.modifier?.level || 1;
+    const _trenchConfig = this.TRENCH_LEVELS[trenchLevel - 1];
     
-    if (!trenchConfig) return;
+    if (!_trenchConfig) return;
 
     // Apply slow effect
-    const slowMultiplier = 1 - (trenchConfig.slowPercentage / 100);
-    enemy.speed *= slowMultiplier;
+    const slowMultiplier = 1 - (_trenchConfig.slowPercentage / 100);
+    if (enemy.speed) {
+      enemy.speed *= slowMultiplier;
+    }
 
     // Apply micro-stun for level 3+ trenches
-    if (trenchConfig.microStunDuration > 0) {
-      enemy.frozenUntil = performance.now() + trenchConfig.microStunDuration;
+    if (_trenchConfig.microStunDuration > 0) {
+      enemy.frozenUntil = performance.now() + _trenchConfig.microStunDuration;
     }
 
     // Create visual effects
-    this.createTrenchEffects(enemy.position, trenchConfig);
+    this.createTrenchEffects(enemy.position, _trenchConfig);
 
     // Update trench visual state
-    this.updateTrenchVisualState(slot.id || 'trench', trenchConfig);
+    this.updateTrenchVisualState('trench', _trenchConfig);
 
     // Update mission progress for trench usage
     this.updateMissionProgress('enemy_in_trench', { trenchLevel });
@@ -326,7 +328,7 @@ export class EnhancedDefensiveMechanics {
    */
   private createWallDestructionEffects(
     position: { x: number; y: number },
-    wallConfig: WallLevel
+    _wallConfig: WallLevel
   ): void {
     // Dust cloud with expanding radius
     this.particleSystem.createParticleEffect(position, {
@@ -357,7 +359,7 @@ export class EnhancedDefensiveMechanics {
    */
   private createTrenchEffects(
     position: { x: number; y: number },
-    trenchConfig: TrenchLevel
+    _trenchConfig: TrenchLevel
   ): void {
     // Mud splash animation
     this.particleSystem.createParticleEffect(position, {
@@ -484,7 +486,7 @@ export class EnhancedDefensiveMechanics {
   /**
    * Apply knockback effect for special enemies
    */
-  private applyKnockbackEffect(enemy: any, enemyType: string): void {
+  private applyKnockbackEffect(enemy: { velocityX?: number; velocityY?: number; frozenUntil?: number }, enemyType: string): void {
     const knockbackConfigs = {
       'Tank': { force: 60, stunDuration: 800 },
       'Golem': { force: 90, stunDuration: 1500 },
@@ -591,7 +593,7 @@ export class EnhancedDefensiveMechanics {
   cleanup(): void {
     const now = performance.now();
     
-    for (const [id, state] of this.visualStates.entries()) {
+    for (const [_id, state] of this.visualStates.entries()) {
       if (state.mudSplashActive && now > state.mudSplashTimer) {
         state.mudSplashActive = false;
       }

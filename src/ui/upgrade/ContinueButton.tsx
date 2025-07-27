@@ -7,12 +7,12 @@ interface ContinueButtonProps {
   onContinueCallback?: () => void;
 }
 
-export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallback }) => {
+export const ContinueButton = ({ onContinueCallback }: ContinueButtonProps) => {
   const nextWave = useGameStore((s: Store) => s.nextWave);
   const resetDice = useGameStore((s: Store) => s.resetDice);
   const startPreparation = useGameStore((s: Store) => s.startPreparation);
   const setRefreshing = useGameStore((s: Store) => s.setRefreshing);
-  const currentWave = useGameStore((s: Store) => s.currentWave);
+  const _currentWave = useGameStore((s: Store) => s.currentWave);
   const isRefreshing = useGameStore((s: Store) => s.isRefreshing);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -48,7 +48,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
         onContinueCallback();
       }
       
-    } catch (error) {
+    } catch {
       setRefreshing(false);
     } finally {
       setIsProcessing(false);
@@ -74,7 +74,7 @@ export const ContinueButton: React.FC<ContinueButtonProps> = ({ onContinueCallba
     
     try {
       handleContinue();
-    } catch (error) {
+    } catch {
       setRefreshing(false);
       setIsProcessing(false);
     }

@@ -76,6 +76,9 @@ export const GAME_CONSTANTS = {
     upgradeTower: 30,
     relocateTower: 15,
     specialAbility: 40,
+    deployMine: 25,
+    deploySpecializedMine: 35,
+    terrainModification: 30,
   },
   
   // Yeni Enerji Sistemi

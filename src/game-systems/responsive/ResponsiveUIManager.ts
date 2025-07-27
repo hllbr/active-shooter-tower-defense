@@ -169,9 +169,9 @@ export class ResponsiveUIManager {
     this.listeners.forEach(listener => {
       try {
         listener(this.currentConfig);
-              } catch (_error) {
-          // Error in responsive UI listener handled silently
-        }
+                    } catch {
+        // Error in responsive UI listener handled silently
+      }
     });
   }
 

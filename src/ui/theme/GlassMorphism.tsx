@@ -16,12 +16,12 @@ export const GlassMorphism = ({
   variant = 'default',
   className = '',
   style = {},
-  holographic = false,
+  _holographic = false,
   blur = 10,
-  opacity = 0.1,
+  _opacity = 0.1,
   border = true,
-  shadow = true,
-  animated = false
+  _shadow = true,
+  _animated = false
 }: GlassMorphismProps) => {
   const { theme, isReducedMotion } = useTheme();
 

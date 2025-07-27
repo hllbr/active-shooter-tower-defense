@@ -35,7 +35,7 @@ export const UpgradeScreen = React.memo(() => {
           });
           
           rollDice();
-        } catch (error) {
+        } catch {
           // Error handling
         }
       }, 500);

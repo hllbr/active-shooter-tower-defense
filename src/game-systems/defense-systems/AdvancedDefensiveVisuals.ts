@@ -108,13 +108,13 @@ export class AdvancedDefensiveVisuals {
     const isSpecialEnemy = this.isSpecialEnemy(enemyType, bossType);
 
     // Handle wall collision
-    if (slot.tower?.wallStrength > 0) {
+    if ((slot.tower?.wallStrength || 0) > 0) {
       this.handleWallCollision(enemy, slot, slotIdx, actions, isSpecialEnemy);
     }
 
     // Handle trench collision
     if (slot.modifier?.type === 'trench') {
-      this.handleTrenchCollision(enemy, slot, isSpecialEnemy);
+      this.handleTrenchCollision(enemy, slot, slotIdx, isSpecialEnemy);
     }
   }
 
@@ -122,14 +122,14 @@ export class AdvancedDefensiveVisuals {
    * Handle wall collision with enhanced visuals
    */
   private handleWallCollision(
-    enemy: any,
-    slot: any,
+    enemy: { position: { x: number; y: number }; type?: string; velocityX?: number; velocityY?: number; frozenUntil?: number },
+    slot: { tower?: { wallStrength: number } },
     slotIdx: number,
-    actions: any,
+    actions: { hitWall: (slotIdx: number) => void },
     isSpecialEnemy: boolean
   ): void {
     const { position, type } = enemy;
-    const wallStrength = slot.tower.wallStrength;
+    const wallStrength = slot.tower?.wallStrength || 0;
     const maxWallStrength = 10; // Assuming max wall strength is 10
     const healthPercentage = wallStrength / maxWallStrength;
 
@@ -158,10 +158,10 @@ export class AdvancedDefensiveVisuals {
    * Handle trench collision with enhanced visuals
    */
   private handleTrenchCollision(
-    enemy: any,
-    slot: any,
-    slotIdx: number,
-    isSpecialEnemy: boolean
+    enemy: { position: { x: number; y: number }; speed?: number; sinkingEffect?: { active: boolean; startTime: number; duration: number; depth: number } },
+    slot: { modifier?: { type: string } },
+    _slotIdx: number,
+    _isSpecialEnemy: boolean
   ): void {
     const { position } = enemy;
     const trenchLevel = this.getTrenchLevel(slot);
@@ -171,7 +171,9 @@ export class AdvancedDefensiveVisuals {
 
     // Apply progressive slowdown based on trench level
     const slowFactor = 0.2 + (trenchLevel * 0.1); // 20% to 40% slowdown
-    enemy.speed *= (1 - slowFactor);
+    if (enemy.speed) {
+      enemy.speed *= (1 - slowFactor);
+    }
 
     // Create sinking animation effect
     this.createSinkingEffect(enemy, trenchLevel);
@@ -180,14 +182,20 @@ export class AdvancedDefensiveVisuals {
   /**
    * Apply knockback effect for special enemies
    */
-  private applyKnockbackEffect(enemy: any, enemyType: string): void {
+  private applyKnockbackEffect(enemy: { position: { x: number; y: number }; velocityX?: number; velocityY?: number; frozenUntil?: number }, enemyType?: string): void {
+    if (!enemyType) return;
+    
     const config = AdvancedDefensiveVisuals.KNOCKBACK_CONFIGS[enemyType];
     if (!config?.enabled) return;
 
     // Apply knockback force
     const knockbackForce = config.force;
-    enemy.position.x -= enemy.velocityX * knockbackForce;
-    enemy.position.y -= enemy.velocityY * knockbackForce;
+    if (enemy.velocityX) {
+      enemy.position.x -= enemy.velocityX * knockbackForce;
+    }
+    if (enemy.velocityY) {
+      enemy.position.y -= enemy.velocityY * knockbackForce;
+    }
 
     // Apply stun effect
     enemy.frozenUntil = performance.now() + config.stunDuration;
@@ -339,7 +347,7 @@ export class AdvancedDefensiveVisuals {
   /**
    * Create sinking animation effect for trenches
    */
-  private createSinkingEffect(enemy: any, trenchLevel: number): void {
+  private createSinkingEffect(enemy: { sinkingEffect?: { active: boolean; startTime: number; duration: number; depth: number } }, trenchLevel: number): void {
     // Add visual sinking effect to enemy
     enemy.sinkingEffect = {
       active: true,
@@ -467,7 +475,7 @@ export class AdvancedDefensiveVisuals {
   /**
    * Get trench level for visual effects
    */
-  private getTrenchLevel(slot: any): number {
+  private getTrenchLevel(_slot: { modifier?: { type: string } }): number {
     // This would be based on trench upgrade level
     // For now, return a default level
     return 1;
@@ -530,7 +538,7 @@ export class AdvancedDefensiveVisuals {
   createUpgradeEffect(
     position: { x: number; y: number },
     type: 'wall' | 'trench',
-    newLevel: number
+    _newLevel: number
   ): void {
     const { addEffect } = useGameStore.getState();
 

@@ -74,8 +74,9 @@ export class BulletUpdateSystem {
           enemy.frozenUntil = now + bulletType.freezeDuration;
         }
         
-        // Optional: Add collision effect at the collision point
+        // ✅ NEW: Enhanced collision effects with particles
         if (collisionResult.collisionPoint) {
+          // Add traditional collision effect
           addEffect({
             id: `collision-${Date.now()}-${Math.random()}`,
             position: collisionResult.collisionPoint,
@@ -84,6 +85,17 @@ export class BulletUpdateSystem {
             life: 200,
             maxLife: 200,
           });
+          
+          // Add enhanced particle impact effect
+          setTimeout(() => {
+            import('../effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+              enhancedVisualEffectsManager.createBulletImpactEffect(
+                collisionResult.collisionPoint.x,
+                collisionResult.collisionPoint.y,
+                bullet.typeIndex.toString()
+              );
+            });
+          }, 0);
         }
         
         // Handle piercing logic

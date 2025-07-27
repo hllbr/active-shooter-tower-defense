@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS } from '../../utils/constants';
+// import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Position } from '../../models/gameTypes';
 import { spawnZoneManager } from './SpawnZoneManager';
 

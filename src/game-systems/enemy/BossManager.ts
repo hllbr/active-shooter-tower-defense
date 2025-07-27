@@ -2,6 +2,7 @@ import type { Enemy, BossLootEntry } from '../../models/gameTypes';
 import { selectBossForWave, type BossDefinition } from './BossDefinitions';
 import { useGameStore } from '../../models/store';
 import { playSound } from '../../utils/sound';
+import { dynamicDifficultyManager } from '../DynamicDifficultyManager';
 
 import { BossPhaseManager } from './BossPhaseManager';
 import {
@@ -47,7 +48,7 @@ export class BossManager {
   }
 
   /**
-   * Create a boss enemy with full advanced mechanics
+   * Create a boss enemy with full advanced mechanics and dynamic difficulty scaling
    */
   static createBoss(wave: number, position: { x: number; y: number }): Enemy | null {
     const bossDefinition = selectBossForWave(wave);
@@ -105,11 +106,14 @@ export class BossManager {
       bossEnemy.abilityCooldowns![ability] = 0;
     });
 
+    // Apply dynamic difficulty adjustment to boss
+    const adjustedBoss = dynamicDifficultyManager.applyEnemyAdjustment(bossEnemy, true);
+
     // Register boss and start entrance cinematic
     this.activeBosses.set(id, bossDefinition);
-    this.startEntranceCinematic(bossEnemy, bossDefinition);
+    this.startEntranceCinematic(adjustedBoss, bossDefinition);
 
-    return bossEnemy;
+    return adjustedBoss;
   }
 
   /**
@@ -274,6 +278,17 @@ export class BossManager {
   static handleBossDefeat(boss: Enemy): void {
     const definition = this.activeBosses.get(boss.id);
     if (!definition) return;
+
+    // ✅ NEW: Create enhanced boss death effects
+    setTimeout(() => {
+      import('../effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+        enhancedVisualEffectsManager.createBossDeathEffect(
+          boss.position.x,
+          boss.position.y,
+          boss.bossType || 'boss'
+        );
+      });
+    }, 0);
 
     this.startDefeatCinematic(boss, definition);
     this.distributeLoot(boss, definition);

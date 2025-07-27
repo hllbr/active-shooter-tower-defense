@@ -394,7 +394,7 @@ export class AutoUpgradeManager {
     towerUpgradeListeners.forEach(listener => {
       try {
         listener(tower, tower.level - 1, tower.level);
-      } catch (error) {
+      } catch {
         // Error logging removed for production optimization
       }
     });

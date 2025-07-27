@@ -6,6 +6,7 @@ import type {
   IPerformanceTracker,
   WaveSpawnConfig
 } from './types';
+import { dynamicDifficultyManager } from '../DynamicDifficultyManager';
 
 export class AdaptiveSpawnStrategy implements ISpawnStrategy {
   private lastSpawnTime = 0;
@@ -20,10 +21,13 @@ export class AdaptiveSpawnStrategy implements ISpawnStrategy {
     const accelerationFactor = Math.pow(config.spawnRateAcceleration, currentSpawnCount);
 
     const performanceModifier = this.tracker.getAdaptiveDifficultyModifier();
+    
+    // Apply dynamic difficulty spawn rate adjustment
+    const dynamicSpawnRateModifier = dynamicDifficultyManager.getSpawnRateAdjustment();
 
     const progressionScaling = Math.max(0.3, 1.0 - waveNumber * 0.02);
 
-    const finalDelay = baseDelay * accelerationFactor * performanceModifier * progressionScaling;
+    const finalDelay = baseDelay * accelerationFactor * performanceModifier * dynamicSpawnRateModifier * progressionScaling;
 
     return Math.max(200, finalDelay);
   }
@@ -79,7 +83,8 @@ export class AdaptiveSpawnStrategy implements ISpawnStrategy {
     enemy.health = Math.floor(enemy.health * performanceModifier);
     enemy.speed = Math.floor(enemy.speed * performanceModifier);
 
-    return enemy;
+    // Apply dynamic difficulty adjustment as final scaling
+    return dynamicDifficultyManager.applyEnemyAdjustment(enemy, enemy.isSpecial || false);
   }
 
   private getWaveConfig(waveNumber: number): WaveSpawnConfig {

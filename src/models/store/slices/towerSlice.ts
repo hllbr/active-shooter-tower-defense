@@ -5,6 +5,7 @@ import { unlockSlotAction } from '../actions/unlockSlot';
 import type { StateCreator } from 'zustand';
 import type { Store } from '../index';
 import { towerSynergyManager } from '../../../game-systems/tower-system/TowerSynergyManager';
+import { gameAnalytics } from '../../../game-systems/analytics/GameAnalyticsManager';
 
 export interface TowerSlice {
   /** Currently selected tower slot index */
@@ -39,9 +40,37 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
   selectedSlot: null,
   selectSlot: (slotIdx) => set({ selectedSlot: slotIdx }),
   buildTower: (slotIdx, free = false, towerType = 'attack', towerClass?: TowerClass, manual = true) =>
-    set((state: Store) => buildTowerAction(state, slotIdx, free, towerType, towerClass, manual)),
+    set((state: Store) => {
+      const result = buildTowerAction(state, slotIdx, free, towerType, towerClass, manual);
+      
+      // Track analytics event
+      if (result.towerSlots && result.towerSlots[slotIdx]?.tower) {
+        gameAnalytics.trackEvent('tower_built', {
+          slotIndex: slotIdx,
+          towerType,
+          towerClass,
+          free,
+          manual,
+          totalTowers: (result.towers || state.towers).length
+        });
+      }
+      
+      return result;
+    }),
 
-  unlockSlot: (slotIdx) => set((state: Store) => unlockSlotAction(state, slotIdx)),
+  unlockSlot: (slotIdx) => set((state: Store) => {
+    const result = unlockSlotAction(state, slotIdx);
+    
+    // Track analytics event
+    if (result.towerSlots && result.towerSlots[slotIdx]?.unlocked) {
+      gameAnalytics.trackEvent('slot_unlocked', {
+        slotIndex: slotIdx,
+        unlockCost: GAME_CONSTANTS.TOWER_SLOT_UNLOCK_GOLD[slotIdx] || 2400
+      });
+    }
+    
+    return result;
+  }),
 
   damageTower: (slotIdx, dmg) => set((state: Store) => {
     const slot = state.towerSlots[slotIdx] as TowerSlot;
@@ -58,6 +87,16 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
       newSlots[slotIdx] = { ...slot, tower: null, wasDestroyed: true };
       const newTowers = state.towers.filter((t) => t.id !== slot.tower!.id);
       const shouldGameOver = newTowers.length === 0 && state.isStarted && !state.isGameOver;
+      
+      // Track analytics event
+      gameAnalytics.trackEvent('tower_destroyed', {
+        slotIndex: slotIdx,
+        towerType: slot.tower.towerType,
+        damage: dmg,
+        remainingTowers: newTowers.length,
+        gameOver: shouldGameOver
+      });
+      
       if (shouldGameOver) {
         import('../../../game-systems/EnemySpawner').then(({ stopEnemyWave }) => { stopEnemyWave(); });
         setTimeout(() => { import('../../../utils/sound').then(({ playContextualSound }) => { playContextualSound('defeat'); }); }, 100);
@@ -256,10 +295,19 @@ export const createTowerSlice: StateCreator<Store, [], [], TowerSlice> = (set, _
 
   performTileAction: (slotIdx, action) => set((state: Store) => {
     if (state.actionsRemaining < 1) return {};
+    
+    // Check energy cost for terrain modification
+    const energyCost = GAME_CONSTANTS.MAP_ACTION_ENERGY[action];
+    if (state.energy < energyCost) return {};
+    
     const newSlots = [...state.towerSlots];
     const slot = newSlots[slotIdx];
     slot.modifier = { type: action, expiresAt: Date.now() + 30000 };
-    return { towerSlots: newSlots, actionsRemaining: state.actionsRemaining - 1 };
+    return { 
+      towerSlots: newSlots, 
+      actionsRemaining: state.actionsRemaining - 1,
+      energy: state.energy - energyCost
+    };
   }),
 
   addTowerUpgradeListener: (fn) => set((state: Store) => ({ towerUpgradeListeners: [...state.towerUpgradeListeners, fn] })),

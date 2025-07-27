@@ -1,5 +1,5 @@
 import { useGameStore } from '../../models/store';
-import { GAME_CONSTANTS } from '../../utils/constants';
+// import { GAME_CONSTANTS } from '../../utils/constants';
 import type { Enemy, TowerSlot, Position } from '../../models/gameTypes';
 import { TargetFinder } from './TargetFinder';
 import { advancedEnemyPool } from '../memory/AdvancedEnemyPool';

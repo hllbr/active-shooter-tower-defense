@@ -2,6 +2,7 @@ import type { StateCreator } from 'zustand';
 import type { Enemy, Bullet, Effect } from '../../gameTypes';
 import { GAME_CONSTANTS } from '../../../utils/constants';
 import type { Store } from '../index';
+import { dynamicDifficultyManager } from '../../../game-systems/DynamicDifficultyManager';
 
 export interface EnemySlice {
   addEnemy: (enemy: Enemy) => void;
@@ -91,6 +92,23 @@ export const createEnemySlice: StateCreator<Store, [], [], EnemySlice> = (set, g
     const state = get();
     const { towerSlots } = state;
     const enemyObj = state.enemies.find((e) => e.id === enemyId);
+    
+    // Record damage dealt for dynamic difficulty tracking
+    dynamicDifficultyManager.recordDamageDealt(dmg);
+    
+    // ✅ NEW: Create enhanced visual effects for enemy damage
+    if (enemyObj) {
+      setTimeout(() => {
+        import('../../../game-systems/effects-system/EnhancedVisualEffectsManager').then(({ enhancedVisualEffectsManager }) => {
+          enhancedVisualEffectsManager.createEnemyDamageEffect(
+            enemyObj.position.x,
+            enemyObj.position.y,
+            dmg,
+            enemyObj.type
+          );
+        });
+      }, 0);
+    }
     
     set((state: Store) => {
       const enemy = state.enemies.find((e) => e.id === enemyId);

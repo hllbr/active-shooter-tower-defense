@@ -248,7 +248,7 @@ export class UnlockManager {
     this.unlockListeners.forEach(listener => {
       try {
         listener(event);
-      } catch (error) {
+      } catch {
         // Unlock listener error
       }
     });

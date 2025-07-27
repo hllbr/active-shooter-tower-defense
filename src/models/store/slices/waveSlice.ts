@@ -3,6 +3,7 @@ import { GAME_CONSTANTS } from '../../../utils/constants';
 import { WavePerformanceTracker, ProceduralWaveGenerator, InWaveScalingManager } from '../../../config/waveConfig';
 import type { Store } from '../index';
 import type { WaveStatus } from '../../gameTypes';
+import { gameAnalytics } from '../../../game-systems/analytics/GameAnalyticsManager';
 
 export interface WaveSlice {
   currentWave: number;
@@ -85,6 +86,14 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
       return {};
     }
 
+    // Track analytics event
+    gameAnalytics.trackEvent('wave_start', {
+      waveNumber: state.currentWave,
+      towersCount: state.towers.length,
+      gold: state.gold,
+      energy: state.energy
+    });
+
     // ✅ NEW: Start in-wave scaling tracking
     InWaveScalingManager.startWave(state.currentWave);
     
@@ -123,6 +132,16 @@ export const createWaveSlice: StateCreator<Store, [], [], WaveSlice> = (set, _ge
     // ✅ NEW: Record wave completion for performance tracking
     const completionTime = performance.now() - state.waveStartTime;
     WavePerformanceTracker.recordWaveCompletion(state.currentWave, completionTime);
+    
+    // Track analytics event
+    gameAnalytics.trackEvent('wave_complete', {
+      waveNumber: state.currentWave,
+      completionTime,
+      perfectWave: !state.lostTowerThisWave,
+      enemiesKilled: state.enemiesKilled,
+      towersRemaining: state.towers.length,
+      goldEarned: state.gold - (state.gold - 50 - (state.currentWave * 10)) // Estimate gold earned
+    });
     
     // ✅ NEW: Reset in-wave scaling
     InWaveScalingManager.reset();

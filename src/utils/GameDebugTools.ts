@@ -11,7 +11,7 @@ export class GameDebugTools {
 
   private constructor() {
     // Only enable in development mode
-    this.isEnabled = process.env.NODE_ENV === 'development';
+    this.isEnabled = typeof window !== 'undefined' && window.location.hostname === 'localhost';
   }
 
   public static getInstance(): GameDebugTools {
@@ -21,19 +21,19 @@ export class GameDebugTools {
     return GameDebugTools.instance;
   }
 
-  public log(message: string, data?: any): void {
+  public log(message: string, data?: unknown): void {
     if (this.isEnabled) {
       console.log(`[DEBUG] ${message}`, data || '');
     }
   }
 
-  public warn(message: string, data?: any): void {
+  public warn(message: string, data?: unknown): void {
     if (this.isEnabled) {
       console.warn(`[DEBUG] ${message}`, data || '');
     }
   }
 
-  public error(message: string, data?: any): void {
+  public error(message: string, data?: unknown): void {
     if (this.isEnabled) {
       console.error(`[DEBUG] ${message}`, data || '');
     }
@@ -57,7 +57,7 @@ export class GameDebugTools {
 
   public memoryUsage(): void {
     if (this.isEnabled && 'memory' in performance) {
-      const memory = (performance as any).memory;
+      const memory = (performance as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
       this.log('Memory Usage', {
         used: `${Math.round(memory.usedJSHeapSize / 1048576)} MB`,
         total: `${Math.round(memory.totalJSHeapSize / 1048576)} MB`,

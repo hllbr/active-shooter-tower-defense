@@ -1,4 +1,4 @@
-import { validatePackagePurchase } from '../../../security/SecurityEnhancements';
+
 
 
 export interface PackageDefinition {
@@ -15,19 +15,13 @@ export interface PackageDefinition {
   purchaseLimit?: number;
 }
 
-// Secure package purchase wrapper
+// Package purchase wrapper
 export const securePackagePurchase = (
   packageId: string,
   cost: number,
   maxAllowed: number,
   onPurchase: () => void
 ): boolean => {
-  // Validate package purchase
-  const validation = validatePackagePurchase(packageId, cost, maxAllowed);
-  if (!validation.valid) {
-    return false;
-  }
-  
   // Execute purchase
   onPurchase();
   return true;

@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { useGameStore } from '../../../models/store';
-import { missionManager, type SequentialMission, type GameplayReward } from '../../../game-systems/MissionManager';
+import { missionManager, type SequentialMission } from '../../../game-systems/MissionManager';
 import { playSound } from '../../../utils/sound';
 
 /**
  * Mission Display Component - Shows current mission and progress
  */
-export const MissionDisplay: React.FC = () => {
+export const MissionDisplay = () => {
   const currentMission = missionManager.getCurrentMission();
   const missionProgress = missionManager.getMissionProgress();
   const activeRewards = missionManager.getActiveGameplayRewards();
@@ -28,7 +28,7 @@ export const MissionDisplay: React.FC = () => {
   }, [currentMission]);
 
   // Handle mission completion notification
-  const handleMissionComplete = (mission: SequentialMission) => {
+  const _handleMissionComplete = (mission: SequentialMission) => {
     // Play completion sound
     playSound('mission-complete');
     
@@ -37,7 +37,6 @@ export const MissionDisplay: React.FC = () => {
       id: `mission-${mission.id}`,
       type: 'success',
       message: `🎯 Görev Tamamlandı: ${mission.name}`,
-      timestamp: Date.now(),
       duration: 5000
     });
   };

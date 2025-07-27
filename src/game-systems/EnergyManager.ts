@@ -36,6 +36,9 @@ const ENERGY_MESSAGES: Record<string, string> = {
   wall: '⚡ Duvar inşa etmek için yeterli enerji yok!',
   trench: '⚡ Hendek kazmak için yeterli enerji yok!',
   buff: '⚡ Güçlendirme uygulamak için yeterli enerji yok!',
+  deployMine: '⚡ Mayın yerleştirmek için yeterli enerji yok!',
+  deploySpecializedMine: '⚡ Özel mayın yerleştirmek için yeterli enerji yok!',
+  terrainModification: '⚡ Arazi değişikliği için yeterli enerji yok!',
   default: '⚡ Bu işlem için yeterli enerji yok!'
 };
 

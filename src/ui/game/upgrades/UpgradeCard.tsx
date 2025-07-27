@@ -3,7 +3,7 @@ import type { UpgradeCardProps } from './types';
 import { DiscountBadge } from './DiscountBadge';
 import { calculateDiscountedCost } from './utils';
 
-export const UpgradeCard: React.FC<UpgradeCardProps> = React.memo(({ upgrade, gold, diceResult, discountMultiplier }) => {
+export const UpgradeCard = React.memo<UpgradeCardProps>(({ upgrade, gold, diceResult, discountMultiplier }) => {
   const {
     name,
     description,
@@ -31,7 +31,7 @@ export const UpgradeCard: React.FC<UpgradeCardProps> = React.memo(({ upgrade, go
         import('../../../utils/sound/soundEffects').then(({ playSound }) => {
           playSound('upgrade-purchase');
         });
-      } catch (_error) {
+      } catch {
         // 🔊 ENHANCED: Play error sound on upgrade failure
         import('../../../utils/sound/soundEffects').then(({ playSound }) => {
           playSound('error');

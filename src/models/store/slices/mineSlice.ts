@@ -43,6 +43,11 @@ export const createMineSlice: StateCreator<Store, [], [], MineSlice> = (set, _ge
 
   deployMines: () => set((state: Store) => {
     if (state.mineLevel === 0) return {};
+    
+    // Check energy cost for mine deployment
+    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.deployMine;
+    if (state.energy < energyCost) return {};
+    
     const newMines: Mine[] = [];
     const mineCount = Math.min(state.mineLevel, 5);
     for (let i = 0; i < mineCount; i++) {
@@ -59,7 +64,10 @@ export const createMineSlice: StateCreator<Store, [], [], MineSlice> = (set, _ge
         placedAt: Date.now(),
       });
     }
-    return { mines: newMines };
+    return { 
+      mines: newMines,
+      energy: state.energy - energyCost
+    };
   }),
 
   deploySpecializedMine: (mineType, mineSubtype, position) => set((state: Store) => {
@@ -67,13 +75,20 @@ export const createMineSlice: StateCreator<Store, [], [], MineSlice> = (set, _ge
     if (!mineTypeConfig) return {};
     const mineConfig = mineTypeConfig[mineSubtype as keyof typeof mineTypeConfig] as MineConfig;
     if (!mineConfig) return {};
+    
+    // Check gold cost
+    if (state.gold < mineConfig.cost) return {};
+    
+    // Check energy cost for specialized mine deployment
+    const energyCost = GAME_CONSTANTS.ENERGY_COSTS.deploySpecializedMine;
+    if (state.energy < energyCost) return {};
+    
     const typeCount = state.mines.filter((m: Mine) => m.mineType === mineType).length;
     const maxForType = GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MAX_MINES_PER_TYPE[mineType];
     const totalMines = state.mines.length;
     if (typeCount >= maxForType || totalMines >= GAME_CONSTANTS.MINE_PLACEMENT_LIMITS.MAX_MINES_PER_WAVE) {
       return {};
     }
-    if (state.gold < mineConfig.cost) return {};
     const minePosition = position || getValidMinePosition(state.towerSlots);
     const tooCloseToExisting = state.mines.some((existing: Mine) => {
       const distance = Math.hypot(
@@ -105,6 +120,7 @@ export const createMineSlice: StateCreator<Store, [], [], MineSlice> = (set, _ge
     return {
       mines: [...state.mines, newMine],
       gold: state.gold - mineConfig.cost,
+      energy: state.energy - energyCost,
       totalGoldSpent: state.totalGoldSpent + mineConfig.cost,
     };
   }),
